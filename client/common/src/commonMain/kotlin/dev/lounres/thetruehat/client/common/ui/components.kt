@@ -1,4 +1,4 @@
-package dev.lounres.thetruehat.client.common
+package dev.lounres.thetruehat.client.common.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
