@@ -18,25 +18,22 @@ public data class Settings(
     val explanationTime: Int,
     val aftermathTime: Int,
     val strictMode: Boolean,
-    val termCondition: TerminationCondition,
+    val terminationCondition: TerminationCondition,
+    val wordsNumber: Int,
+    val roundsNumber: Int,
     val wordset: Wordset,
 ) {
-    public sealed interface TerminationCondition {
-        public data class Words(
-            val words: Int,
-        ): TerminationCondition
-        public data class Rounds(
-            val rounds: Int,
-        ): TerminationCondition
+    public enum class TerminationCondition {
+        WORDS, ROUNDS;
     }
     public sealed interface Wordset {
         public data class ServerDictionary(
             val dictionaryId: Int,
-        ): TerminationCondition
+        ): Wordset
         public data class HostDictionary(
             val dictionaryFileInfo: DictionaryFileInfo,
-        ): TerminationCondition
-        public data object PlayerWords: TerminationCondition
+        ): Wordset
+        public data object PlayerWords: Wordset
     }
 }
 
@@ -46,8 +43,10 @@ public data class SettingsUpdate(//TODO
     val explanationTime: Int?,
     val aftermathTime: Int?,
     val strictMode: Boolean?,
-    val termCondition: Settings.TerminationCondition,
-    val wordset: Settings.Wordset,
+    val terminationCondition: Settings.TerminationCondition?,
+    val wordsNumber: Int?,
+    val roundsNumber: Int?,
+    val wordset: Settings.Wordset?,
 )
 
 @Serializable
@@ -67,7 +66,7 @@ public data class WordExplanation(
 }
 
 @Serializable
-public data class Room(
+public data class RoomState(
     val key: String,
     val stage: Stage
 ) {
@@ -99,7 +98,7 @@ public data class Room(
                     val endTime: Long,
                 ): Stage
                 public data class Edit(
-                    val editWords: List<WordExplanation>
+                    val editWords: List<WordExplanation>?
                 ): Stage
             }
         }

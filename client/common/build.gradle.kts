@@ -14,11 +14,11 @@ kotlin {
                 // Serialization
                 api(libs.kotlinx.serialization.core)
 
-//                // Compose
+                // Compose
                 api(compose.runtime)
                 api(compose.ui)
                 api(compose.foundation)
-                api(compose.material)
+                api(compose.material3)
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 api(compose.components.resources)
 
@@ -27,6 +27,9 @@ kotlin {
                 api(libs.ktor.client.websockets)
                 api(libs.ktor.serialization.kotlinx.json)
                 api(libs.ktor.serialization.kotlinx.protobuf)
+
+                // Koin
+                api(libs.koin.core)
             }
         }
 //        val androidMain by getting {
@@ -36,7 +39,7 @@ kotlin {
 //                api("androidx.core:core-ktx:1.9.0")
 //            }
 //        }
-        desktopMain {
+        jvmMain {
             dependencies {
                 implementation(compose.desktop.common)
             }

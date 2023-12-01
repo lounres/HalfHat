@@ -7,29 +7,34 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven("https://repo.kotlin.link")
+        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+        mavenLocal()
+        maven("https://maven.pkg.jetbrains.space/kotlin/p/wasm/experimental")
+        maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
     }
 }
 
 pluginManagement {
     repositories {
-        google()
         gradlePluginPortal()
-        mavenLocal()
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+        google()
+        maven("https://maven.pkg.jetbrains.space/kotlin/p/wasm/experimental")
+        maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
+//        mavenLocal()
     }
 }
 
 plugins {
-    id("com.lounres.gradle.stal") version "0.1.0"
+    id("dev.lounres.gradle.stal") version "0.3.1"
 }
 
 stal {
     structure {
-        "api"("library", "server", "desktop", "web", "android")
+        "api"("library", "server", "desktop", /*"web",*/ "android")
         "server"("server")
         "client" {
-            "common"("library", "desktop", "web", "android")
+            "common"("library", "desktop", /*"web",*/ "android")
 //            "web"("web")
             "desktop"("desktop")
 //            "android"("android")

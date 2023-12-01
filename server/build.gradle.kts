@@ -4,9 +4,9 @@ plugins {
 }
 
 kotlin {
-    jvm("server") { withJava() }
-    sourceSets{
-        serverMain {
+    jvm { withJava() }
+    sourceSets {
+        jvmMain {
             dependencies {
                 implementation(projects.api)
                 implementation(libs.ktor.server.core)

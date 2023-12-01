@@ -22,7 +22,7 @@ public data class CJoinRoomSignal(
 public data object CLeaveRoomSignal: ClientSignal
 
 @Serializable
-@SerialName("cPlayerJoined")
+@SerialName("sPlayerJoined")
 public data class SPlayerJoinedSignal(
     val username: String,
     val playersList: List<Player>,
@@ -40,8 +40,7 @@ public data class SPlayerLeftSignal(
 @Serializable
 @SerialName("sYouJoined")
 public data class SYouJoinedSignal(
-    val key: String,
-    val room: Room,
+    val room: RoomState,
 ): ServerSignal
 
 @Serializable
