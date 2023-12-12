@@ -3,6 +3,16 @@ package dev.lounres.thetruehat.client.desktop.ui
 import androidx.compose.runtime.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
+import dev.lounres.thetruehat.client.desktop.ui.feedback.FeedbackPageUIPreview
+import dev.lounres.thetruehat.client.desktop.ui.game.roomEnter.RoomEnterPageUIPreview
+import dev.lounres.thetruehat.client.desktop.ui.game.roomFlow.roomOverview.RoomOverviewPageUIPreview1
+import dev.lounres.thetruehat.client.desktop.ui.game.roomFlow.roomOverview.RoomOverviewPageUIPreview2
+import dev.lounres.thetruehat.client.desktop.ui.game.roundBreak.RoundBreakPageUIPreview1
+import dev.lounres.thetruehat.client.desktop.ui.game.roundBreak.RoundBreakPageUIPreview2
+import dev.lounres.thetruehat.client.desktop.ui.game.roundBreak.RoundBreakPageUIPreview3
+import dev.lounres.thetruehat.client.desktop.ui.home.HomePageUIPreview
+import dev.lounres.thetruehat.client.desktop.ui.nrfa.NewsRulesFaqAboutPageUIPreview
+import dev.lounres.thetruehat.client.desktop.uiTemplates.RoundOverviewPageTemplateUIPreview
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 
@@ -40,16 +50,16 @@ fun main() = application {
         RoomEnterPageUIPreview()
     }
     TestWindow("RoomPage 1") {
-        RoomPageUIPreview1()
+        RoomOverviewPageUIPreview1()
     }
     TestWindow("RoomPage 2") {
-        RoomPageUIPreview2()
+        RoomOverviewPageUIPreview2()
     }
 //    TestWindow("RoomSettingsPage") {
 //        RoomSettingsPagePreview()
 //    }
     TestWindow("GamePage") {
-        GamePageUIPreview()
+        RoundOverviewPageTemplateUIPreview()
     }
     TestWindow("RoundEditGamePage 1") {
         RoundBreakPageUIPreview1()
@@ -59,5 +69,8 @@ fun main() = application {
     }
     TestWindow("RoundEditGamePage 3") {
         RoundBreakPageUIPreview3()
+    }
+    TestWindow("FeedbackPage") {
+        FeedbackPageUIPreview()
     }
 }
