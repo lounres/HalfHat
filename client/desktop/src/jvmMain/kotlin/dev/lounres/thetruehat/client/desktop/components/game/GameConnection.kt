@@ -19,7 +19,7 @@ class GameConnection(
     val port: Int? = null,
     val path: String? = null,
     val retryPeriod: Long,
-    val onConnect: suspend () -> Unit,
+    val onConnect: suspend DefaultClientWebSocketSession.() -> Unit,
     val onConnectionFailure: suspend () -> Unit,
 ): AutoCloseable {
     private val _incoming: Channel<ServerSignal> = Channel(capacity = Channel.UNLIMITED)

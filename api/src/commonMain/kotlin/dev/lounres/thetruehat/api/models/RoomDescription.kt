@@ -26,11 +26,11 @@ public data class RoomDescription(
         @Serializable
         public data class Words(
             val wordsLeft: Int,
-        )
+        ): UnitsUntilEnd
         @Serializable
         public data class Rounds(
             val roundsLeft: Int,
-        )
+        ): UnitsUntilEnd
     }
 
     @Serializable
@@ -53,11 +53,14 @@ public data class RoomDescription(
 
     @Serializable
     public sealed interface RoundPhase {
+        @Serializable
         public data object WaitingForPlayersToBeReady: RoundPhase
+        @Serializable
         public data class ExplanationInProgress(
             val word: String?,
             val endTime: Long,
         ): RoundPhase
+        @Serializable
         public data class EditingInProgress(
             val wordsToEdit: List<WordExplanationResult>?
         ): RoundPhase
@@ -73,12 +76,11 @@ public data class RoomDescription(
         @Serializable
         public data class GameInProgress(
             val palyersList: List<Player>,
-            val host: Int,
             val timetable: List<TimetableEntry>,
             val speaker: Int,
             val listener: Int,
             val unitsUntilEnd: UnitsUntilEnd,
-            val roundState: RoundPhase,
+            val roundPhase: RoundPhase,
         ): Phase
         @Serializable
         public data class GameEnded(

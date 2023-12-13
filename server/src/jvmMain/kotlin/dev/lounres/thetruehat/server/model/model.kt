@@ -13,7 +13,7 @@ val defaultSettings: Settings =
         strictMode = false,
         gameEndCondition = Settings.GameEndCondition.Words,
         wordsCount = 100,
-        roundsCount = 1,
+        roundsCount = 10,
         wordsSource = Settings.WordsSource.ServerDictionary(dictionaryId = 0)
     )
 
@@ -26,7 +26,6 @@ sealed interface Room {
         val room: Room
         val username: String
         val playerIndex: Int
-        var connection: Connection?
     }
 
     class Waiting(
@@ -43,35 +42,69 @@ sealed interface Room {
         }
 
         class Player(
-            override val room: Room,
+            override val room: Room.Waiting,
             override val username: String,
             override val playerIndex: Int,
-            override var connection: Connection?,
+            var connection: Connection?,
         ): Room.Player
     }
 
     class Playing(
         override val id: String,
         override val settings: Settings,
-        playerListToProcess: List<Player>,
+        playerListToProcess: List<Waiting.Player>,
     ): Room {
         override val players: List<Player> =
-            playerListToProcess.map {
-                Player(room = this, username = it.username, playerIndex = it.playerIndex, connection = it.connection)
-                    .also {
-                        val connection = it.connection
-                        if (connection != null) connection.player = it
-                    }
+            playerListToProcess.mapNotNull {
+                val connection = it.connection
+                if (connection != null) {
+                    val newPlayer = Player(
+                        room = this,
+                        username = it.username,
+                        playerIndex = it.playerIndex,
+                        connection = connection
+                    )
+                    connection.player = newPlayer
+                    newPlayer
+                } else null
             }
 
+//        val words
+
         class Player(
-            override val room: Room,
+            override val room: Room.Playing,
             override val username: String,
             override val playerIndex: Int,
-            override var connection: Connection?,
+            var connection: Connection?,
         ): Room.Player {
             var scoreExplained = 0
             var scoreGuessed = 0
         }
+    }
+
+    class Results(
+        override val id: String,
+        override val settings: Settings,
+        playerListToProcess: List<Playing.Player>,
+    ): Room {
+        override val players: List<Player> =
+            playerListToProcess.map {
+                it.connection?.let { connection -> connection.player = null }
+                Player(
+                    room = this,
+                    username = it.username,
+                    playerIndex = it.playerIndex,
+                    scoreExplained = it.scoreExplained,
+                    scoreGuessed = it.scoreGuessed
+                )
+            }
+
+        class Player(
+            override val room: Room.Results,
+            override val username: String,
+            override val playerIndex: Int,
+            val scoreExplained: Int,
+            val scoreGuessed: Int,
+        ): Room.Player
     }
 }

@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.childSlot
+import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.update
 import com.arkivanov.essenty.lifecycle.doOnDestroy
@@ -15,6 +16,8 @@ import dev.lounres.thetruehat.api.models.UserGameState
 import dev.lounres.thetruehat.client.common.utils.runOnUiThread
 import dev.lounres.thetruehat.client.desktop.components.game.roomEnter.RealRoomEnterPageComponent
 import dev.lounres.thetruehat.client.desktop.components.game.roomFlow.RealRoomFlowComponent
+import dev.lounres.thetruehat.client.desktop.components.game.roundBreak.RealRoundBreakPageComponent
+import dev.lounres.thetruehat.client.desktop.components.game.roundBreak.RoundBreakPageComponent
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.websocket.*
@@ -43,6 +46,9 @@ class RealGameFlowComponent(
         componentContext.lifecycle.doOnDestroy(coroutineScope::cancel)
     }
 
+    private val serverSignalStateFlow: MutableStateFlow<ServerSignal?> = MutableStateFlow(null)
+    private val gameStateFlow: MutableStateFlow<UserGameState?> = MutableStateFlow(null)
+
     private val gameConnection = GameConnection(
         coroutineScope = coroutineScope,
         httpClient = HttpClient(CIO) {
@@ -55,12 +61,19 @@ class RealGameFlowComponent(
         port = 3000,
         path = "/ws",
         retryPeriod = 1000,
-        onConnect = { println("Connected!") },
+        onConnect = {
+            println("Connected!")
+            val currentGameState = gameStateFlow.value
+            if (currentGameState != null)
+                sendSerialized<ClientSignal>(
+                    ClientSignal.JoinRoom(
+                        roomId = currentGameState.roomDescription.id,
+                        nickname = currentGameState.username
+                    )
+                )
+        },
         onConnectionFailure = { println("Disconnected!") },
     )
-
-    private val serverSignalStateFlow: MutableSharedFlow<ServerSignal?> = MutableStateFlow(null)
-    private val gameStateFlow: MutableStateFlow<UserGameState?> = MutableStateFlow(null)
 
     private var playerListStateFlow: MutableStateFlow<List<RoomDescription.Player>>? = null
     private var playerIndexStateFlow: MutableStateFlow<Int>? = null
@@ -69,6 +82,7 @@ class RealGameFlowComponent(
         coroutineScope.launch {
             for (serverSignal in gameConnection.incoming) {
                 serverSignalStateFlow.emit(serverSignal)
+                println("new user game state: ${serverSignal.userGameState}")
                 gameStateFlow.emit(serverSignal.userGameState)
             }
         }
@@ -108,7 +122,7 @@ class RealGameFlowComponent(
                         }
 
                         is RoomDescription.Phase.GameInProgress ->
-                            when (gamePhase.roundState) {
+                            when (gamePhase.roundPhase) {
                                 RoomDescription.RoundPhase.WaitingForPlayersToBeReady -> ChildConfiguration.RoundBreakConfiguration
                                 is RoomDescription.RoundPhase.ExplanationInProgress -> ChildConfiguration.RoundInProgressConfiguration
                                 is RoomDescription.RoundPhase.EditingInProgress -> ChildConfiguration.RoundEditingConfiguration
@@ -164,10 +178,17 @@ class RealGameFlowComponent(
                 GameFlowComponent.Child.RoomEnter(
                     component = roomEnterPageComponent
                 )
-            is ChildConfiguration.RoomFlowConfiguration ->
+            is ChildConfiguration.RoomFlowConfiguration -> {
+                val roomFlowCoroutineScope = CoroutineScope(coroutineContext)
+                componentContext.lifecycle.doOnDestroy/*(roomFlowCoroutineScope::cancel)*/ {
+                    roomFlowCoroutineScope.cancel()
+                    println("Canceled!!!")
+                }
+                val settingsValue = MutableValue(gameStateFlow.value!!.roomDescription.settings)
+                roomFlowCoroutineScope.launch { gameStateFlow.collect { println("!?!: $it"); it?.let { gameState -> settingsValue.update { gameState.roomDescription.settings } }; println("?!?: ${settingsValue.value}") } }
+                println("It's RoomFlow creation.")
                 GameFlowComponent.Child.RoomFlow(
                     component = run {
-                        println("It's RoomFlow creation.")
                         RealRoomFlowComponent(
                             componentContext = componentContext,
                             backButtonEnabled = true,
@@ -183,15 +204,35 @@ class RealGameFlowComponent(
                             roomId = configuration.roomId,
                             userList = configuration.userList,
                             playerIndex = configuration.playerIndex,
-                        ).also { println("It's RoomFlow returning.") }
+                            settings = settingsValue,
+                            onApplySettings = {
+                                coroutineScope.launch { gameConnection.outgoing.send(ClientSignal.UpdateSettings(it)) }
+                            },
+                            onStartGame = {
+                                coroutineScope.launch { gameConnection.outgoing.send(ClientSignal.StartGame) }
+                            },
+                        )
                     }
-                )
+                ).also { println("It's RoomFlow returning.") }
+            }
             ChildConfiguration.RoundBreakConfiguration ->
                 GameFlowComponent.Child.RoundBreak(
-                    component = TODO() /*RealRoundBreakPageComponent(
-                        backButtonEnabled = true,
-
-                    )*/
+                    component = RealRoundBreakPageComponent(
+                        backButtonEnabled = backButtonEnabled,
+                        wordsNumber = TODO(),
+                        volumeOn = TODO(),
+                        showFinishButton = TODO(),
+                        speakerNickname = TODO(),
+                        listenerNickname = TODO(),
+                        userRole = TODO(),
+                        onBackButtonClick = onBackButtonClick,
+                        onLanguageChange = onLanguageChange,
+                        onFeedbackButtonClick = onFeedbackButtonClick,
+                        onHatButtonClick = onHatButtonClick,
+                        onExitButtonClick = TODO(),
+                        onVolumeButtonClick = TODO(),
+                        onFinishButtonClick = TODO(),
+                    )
                 )
             ChildConfiguration.RoundInProgressConfiguration -> TODO()
             ChildConfiguration.RoundEditingConfiguration -> TODO()

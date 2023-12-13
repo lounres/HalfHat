@@ -18,7 +18,7 @@ class RealRootComponent(
 ): RootComponent {
     private val navigation = StackNavigation<ChildConfiguration>()
 
-    private var stackHeight: UInt = 1u
+    private var stackHeight: UInt = 0u
     override val childStack: Value<ChildStack<*, RootComponent.Child>> =
         componentContext.childStack(
             source = navigation,
@@ -31,8 +31,9 @@ class RealRootComponent(
         val backButtonEnabled = stackHeight != 0u
         val onBackButtonClick = { navigation.pop() }
         val onLanguageChange = { _: Language -> TODO() }
-        val onFeedbackButtonClick = { navigation.push(ChildConfiguration.FeedbackPage(stackHeight++)) }
-        val onHatButtonClick = { navigation.push(ChildConfiguration.NewRulesFaqAboutPage(stackHeight++)) }
+        val onFeedbackButtonClick = { navigation.push(ChildConfiguration.FeedbackPage(stackHeight)) }
+        val onHatButtonClick = { navigation.push(ChildConfiguration.NewRulesFaqAboutPage(stackHeight)) }
+        stackHeight++
         return when (configuration) {
             is ChildConfiguration.HomePage ->
                 RootComponent.Child.HomePage(
@@ -42,8 +43,8 @@ class RealRootComponent(
                         onLanguageChange = onLanguageChange,
                         onFeedbackButtonClick = onFeedbackButtonClick,
                         onHatButtonClick = onHatButtonClick,
-                        onCreateButtonClick = { navigation.push(ChildConfiguration.GameFLow(stackHeight++, true)) },
-                        onEnterButtonClick = { navigation.push(ChildConfiguration.GameFLow(stackHeight++)) },
+                        onCreateButtonClick = { navigation.push(ChildConfiguration.GameFLow(stackHeight, true)) },
+                        onEnterButtonClick = { navigation.push(ChildConfiguration.GameFLow(stackHeight)) },
                     )
                 )
 

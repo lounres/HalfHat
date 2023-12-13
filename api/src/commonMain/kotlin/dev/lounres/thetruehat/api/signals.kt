@@ -1,5 +1,6 @@
 package dev.lounres.thetruehat.api
 
+import dev.lounres.thetruehat.api.models.SettingsUpdate
 import dev.lounres.thetruehat.api.models.UserGameState
 import kotlinx.serialization.Serializable
 
@@ -45,6 +46,9 @@ public sealed interface ClientSignal {
 
     @Serializable
     public data object StartGame: ClientSignal
+
+    @Serializable
+    public data class UpdateSettings(val settingsUpdate: SettingsUpdate): ClientSignal
 }
 
 //@Serializable

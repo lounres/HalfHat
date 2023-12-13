@@ -30,14 +30,14 @@ public data class Settings(
 
 @Serializable
 public data class SettingsUpdate(
-    val countdownTime: Int?,
-    val explanationTime: Int?,
-    val finalGuessTime: Int?,
-    val strictMode: Boolean?,
-    val gameEndCondition: Settings.GameEndCondition?,
-    val roundsCount: Int?,
-    val wordsCount: Int?,
-    val wordsSource: Settings.WordsSource?,
+    val countdownTime: Int? = null,
+    val explanationTime: Int? = null,
+    val finalGuessTime: Int? = null,
+    val strictMode: Boolean? = null,
+    val gameEndCondition: Settings.GameEndCondition? = null,
+    val roundsCount: Int? = null,
+    val wordsCount: Int? = null,
+    val wordsSource: Settings.WordsSource? = null,
 )
 
 public fun Settings.updateWith(update: SettingsUpdate): Settings =

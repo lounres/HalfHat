@@ -1,6 +1,8 @@
 package dev.lounres.thetruehat.server
 
 import dev.lounres.thetruehat.api.ServerSignal
+import dev.lounres.thetruehat.server.model.Room
+import dev.lounres.thetruehat.server.model.state
 import io.ktor.server.websocket.*
 import kotlinx.coroutines.launch
 import kotlin.random.Random
@@ -36,4 +38,24 @@ fun generateRandomRoomId(): String {
         roomIdBuilder.append(charList[Random.nextInt(charList.size)])
     }
     return roomIdBuilder.toString()
+}
+
+fun Room.Waiting.sendStatusUpdate() {
+    for (player in this.players) {
+        println("player Player(username = ${player.username}, room = ${player.room}, connection = ${player.connection})")
+        val playerConnection = player.connection ?: continue
+        with(playerConnection.socketSession) {
+            ServerSignal.StatusUpdate(userGameState = player.state).send()
+        }
+    }
+}
+
+fun Room.Playing.sendStatusUpdate() {
+    for (player in this.players) {
+        println("player Player(username = ${player.username}, room = ${player.room}, connection = ${player.connection})")
+        val playerConnection = player.connection ?: continue
+        with(playerConnection.socketSession) {
+            ServerSignal.StatusUpdate(userGameState = player.state).send()
+        }
+    }
 }

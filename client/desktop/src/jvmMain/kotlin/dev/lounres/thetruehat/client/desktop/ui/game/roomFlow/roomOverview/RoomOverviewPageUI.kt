@@ -56,6 +56,10 @@ fun RoomOverviewPageUI(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 val playerIndex by component.playerIndex.collectAsState()
+                val userListMaybe by component.userList.collectAsState()
+                val userList by remember { derivedStateOf { userListMaybe ?: emptyList() } }
+                val firstOnline by remember { derivedStateOf { userList.indexOfFirst { it.online } } }
+                val isHost by remember { derivedStateOf { playerIndex == firstOnline } }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -63,27 +67,28 @@ fun RoomOverviewPageUI(
                         text = component.roomId,
                         fontSize = 30.sp,
                     )
-                    IconButton(
-                        onClick = {  }
-                    ) {
-                        Icon(
-                            Icons.Default.Settings,
-                            contentDescription = null,
-                        )
-                    }
+                    if (isHost)
+                        IconButton(
+                            onClick = component.onSettingsButtonClick
+                        ) {
+                            Icon(
+                                Icons.Default.Settings,
+                                contentDescription = null,
+                            )
+                        }
                 }
                 Row(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Button(
-                        onClick = { },
+                        onClick = component.onRoomIdCopy,
                         shape = CircleShape,
                     ) {
                         Text("Копир. ключ")
                     }
                     Spacer(modifier = Modifier.width(5.dp))
                     Button(
-                        onClick = { },
+                        onClick = component.onRoomLinkCopy,
                         shape = CircleShape,
                     ) {
                         Text("Копир. ссылку")
@@ -92,10 +97,7 @@ fun RoomOverviewPageUI(
                 Spacer(modifier = Modifier.height(10.dp))
                 Column {
                     Divider()
-                    val userListMaybe by component.userList.collectAsState()
-                    val userList by remember { derivedStateOf { userListMaybe ?: emptyList() } }
-                    val firstOnline by remember { derivedStateOf { userList.indexOfFirst { it.online } } }
-                    for ((index, user) in userList.withIndex()) {
+                    for ((index, user) in userList.withIndex()) if (user.online) {
                         Box(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
                             if (index == firstOnline)
                                 Image(
@@ -120,11 +122,11 @@ fun RoomOverviewPageUI(
                     }
                 }
                 Spacer(modifier = Modifier.height(20.dp))
-                if (playerIndex == 0)
+                if (isHost) // TODO: Move such logic to component.
                     Button(
                         modifier = Modifier.fillMaxWidth(),
                         shape = CircleShape,
-                        onClick = {},
+                        onClick = component.onStartGameButtonClick,
                     ) {
                         Text(
                             "Начать игру",

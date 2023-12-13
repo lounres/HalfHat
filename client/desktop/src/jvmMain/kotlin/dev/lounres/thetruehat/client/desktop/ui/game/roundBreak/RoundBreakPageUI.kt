@@ -116,7 +116,7 @@ fun RoundBreakPageUI(
                         enabled = userRole == RoundBreakPageComponent.UserRole.SpeakerWaiting || userRole == RoundBreakPageComponent.UserRole.ListenerWaiting,
                         modifier = Modifier.fillMaxWidth(),
                         shape = CircleShape,
-                        onClick = {},
+                        onClick = { TODO() },
                     ) {
                         Text(
                             when (userRole) {

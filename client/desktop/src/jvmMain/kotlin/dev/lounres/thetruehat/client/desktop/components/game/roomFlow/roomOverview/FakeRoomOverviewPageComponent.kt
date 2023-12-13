@@ -22,7 +22,12 @@ class FakeRoomOverviewPageComponent(
     override val onLanguageChange: (language: Language) -> Unit = {}
     override val onFeedbackButtonClick: () -> Unit = {}
     override val onHatButtonClick: () -> Unit = {}
+    override val onSettingsButtonClick: () -> Unit = {}
+    override val onRoomIdCopy: () -> Unit = {}
+    override val onRoomLinkCopy: () -> Unit = {}
 
     override val userList: StateFlow<List<RoomDescription.Player>?> = MutableStateFlow(userList)
     override val playerIndex: StateFlow<Int?> = MutableStateFlow(playerIndex)
+
+    override val onStartGameButtonClick: () -> Unit = {}
 }

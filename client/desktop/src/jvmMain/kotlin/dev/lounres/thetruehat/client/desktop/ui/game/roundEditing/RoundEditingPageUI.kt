@@ -85,7 +85,7 @@ fun RoundEditingPageUI(
         }
         Button(
             modifier = Modifier.fillMaxWidth(),
-            onClick = {},
+            onClick = { TODO() },
         ) {
             Text(
                 text = "Подтверждаю",

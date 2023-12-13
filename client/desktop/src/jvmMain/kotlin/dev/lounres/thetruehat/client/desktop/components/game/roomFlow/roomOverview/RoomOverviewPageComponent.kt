@@ -11,8 +11,13 @@ interface RoomOverviewPageComponent {
     val onLanguageChange: (language: Language) -> Unit
     val onFeedbackButtonClick: () -> Unit
     val onHatButtonClick: () -> Unit
+    val onSettingsButtonClick: () -> Unit
+    val onRoomIdCopy: () -> Unit
+    val onRoomLinkCopy: () -> Unit
 
     val roomId: String
     val userList: StateFlow<List<RoomDescription.Player>?>
     val playerIndex: StateFlow<Int?>
+
+    val onStartGameButtonClick: () -> Unit
 }

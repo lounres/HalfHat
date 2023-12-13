@@ -11,6 +11,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import dev.lounres.thetruehat.api.models.Settings
 import dev.lounres.thetruehat.client.desktop.components.game.roomFlow.roomSettings.FakeRoomSettingsPageComponent
 import dev.lounres.thetruehat.client.desktop.components.game.roomFlow.roomSettings.RoomSettingsPageComponent
 import dev.lounres.thetruehat.client.desktop.uiTemplates.TheTrueHatPageWithHatTemplateUI
@@ -62,12 +64,16 @@ fun RoomSettingsPageUI(
                 )
                 Box {
                     var expanded by remember { mutableStateOf(false) }
+                    val gameEndCondition by component.gameEndCondition.subscribeAsState()
                     OutlinedButton(
                         shape = CircleShape,
                         onClick = { expanded = !expanded },
                     ) {
                         Text(
-                            text = "пока не кончатся слова",
+                            text = when(gameEndCondition) {
+                                Settings.GameEndCondition.Words -> "пока не кончатся слова"
+                                Settings.GameEndCondition.Rounds -> "заданное число кругов"
+                            },
                             fontSize = 20.sp,
                         )
                     }
@@ -82,7 +88,10 @@ fun RoomSettingsPageUI(
                                     fontSize = 20.sp,
                                 )
                             },
-                            onClick = { /* TODO */ }
+                            onClick = {
+                                expanded = false
+                                component.onWordsGameEndConditionChoice()
+                            }
                         )
                         DropdownMenuItem(
                             text = {
@@ -91,7 +100,10 @@ fun RoomSettingsPageUI(
                                     fontSize = 20.sp,
                                 )
                             },
-                            onClick = { /* TODO */ }
+                            onClick = {
+                                expanded = false
+                                component.onRoundsGameEndConditionChoice()
+                            }
                         )
                     }
                 }
@@ -128,16 +140,16 @@ fun RoomSettingsPageUI(
                                     fontSize = 20.sp,
                                 )
                             },
-                            onClick = { /* TODO */ }
+                            onClick = { TODO() }
                         )
                         DropdownMenuItem(
                             text = {
                                 Text(
-                                    text = "заданное число кругов",
+                                    text = "TODO...",
                                     fontSize = 20.sp,
                                 )
                             },
-                            onClick = { /* TODO */ }
+                            onClick = { TODO() }
                         )
                     }
                 }
@@ -147,19 +159,38 @@ fun RoomSettingsPageUI(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text(
-                    text = "Количество слов",
-                    fontSize = 20.sp,
-                )
-                TextField(
-                    modifier = Modifier.width(90.dp),
-                    value = "100", // TODO
-                    onValueChange = { /* TODO */ },
-                    textStyle = TextStyle(
-                        fontSize = 20.sp,
-                        textAlign = TextAlign.Center,
-                    ),
-                )
+                when(component.gameEndCondition.subscribeAsState().value) {
+                    Settings.GameEndCondition.Words -> {
+                        Text(
+                            text = "Количество слов",
+                            fontSize = 20.sp,
+                        )
+                        TextField(
+                            modifier = Modifier.width(90.dp),
+                            value = component.wordsCount.subscribeAsState().value.toString(),
+                            onValueChange = component.onWordsCountChange,
+                            textStyle = TextStyle(
+                                fontSize = 20.sp,
+                                textAlign = TextAlign.Center,
+                            ),
+                        )
+                    }
+                    Settings.GameEndCondition.Rounds -> {
+                        Text(
+                            text = "Количество кругов",
+                            fontSize = 20.sp,
+                        )
+                        TextField(
+                            modifier = Modifier.width(90.dp),
+                            value = component.roundsCount.subscribeAsState().value.toString(),
+                            onValueChange = component.onRoundsCountChange,
+                            textStyle = TextStyle(
+                                fontSize = 20.sp,
+                                textAlign = TextAlign.Center,
+                            ),
+                        )
+                    }
+                }
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -172,8 +203,8 @@ fun RoomSettingsPageUI(
                 )
                 TextField(
                     modifier = Modifier.width(90.dp),
-                    value = "3", // TODO
-                    onValueChange = { /* TODO */ },
+                    value = component.countdownTime.subscribeAsState().value.toString(),
+                    onValueChange = component.onCountdownTimeChange,
                     textStyle = TextStyle(
                         fontSize = 20.sp,
                         textAlign = TextAlign.Center,
@@ -191,8 +222,8 @@ fun RoomSettingsPageUI(
                 )
                 TextField(
                     modifier = Modifier.width(90.dp),
-                    value = "40", // TODO
-                    onValueChange = { /* TODO */ },
+                    value = component.explanationTime.subscribeAsState().value.toString(),
+                    onValueChange = component.onExplanationTimeChange,
                     textStyle = TextStyle(
                         fontSize = 20.sp,
                         textAlign = TextAlign.Center,
@@ -210,8 +241,8 @@ fun RoomSettingsPageUI(
                 )
                 TextField(
                     modifier = Modifier.width(90.dp),
-                    value = "3", // TODO
-                    onValueChange = { /* TODO */ },
+                    value = component.finalGuessTime.subscribeAsState().value.toString(),
+                    onValueChange = component.onFinalGuessTimeChange,
                     textStyle = TextStyle(
                         fontSize = 20.sp,
                         textAlign = TextAlign.Center,
@@ -224,8 +255,8 @@ fun RoomSettingsPageUI(
                 horizontalArrangement = Arrangement.Start,
             ) {
                 Checkbox(
-                    checked = false, // TODO
-                    onCheckedChange = { /* TODO */ },
+                    checked = component.strictMode.subscribeAsState().value,
+                    onCheckedChange = component.onStrictModeChange,
                 )
                 Text(
                     text = "Строгий режим",
@@ -238,7 +269,7 @@ fun RoomSettingsPageUI(
                 horizontalArrangement = Arrangement.Center,
             ) {
                 Button(
-                   onClick = {},
+                   onClick = component.onApplySettingsButtonClick,
                 ) {
                     Text(
                         text = "Применить",
@@ -247,7 +278,7 @@ fun RoomSettingsPageUI(
                 }
                 Spacer(modifier = Modifier.width(10.dp))
                 OutlinedButton(
-                    onClick = {},
+                    onClick = component.onCancelButtonClick,
                 ) {
                     Text(
                         text = "Отмена",
