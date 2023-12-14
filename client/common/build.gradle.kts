@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
+
 plugins {
 //    alias(libs.plugins.android.library)
     alias(libs.plugins.compose)
@@ -5,11 +7,22 @@ plugins {
 }
 
 kotlin {
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        browser()
+        nodejs()
+        d8()
+    }
+
     sourceSets {
         commonMain {
             dependencies {
                 // API
                 api(projects.api)
+
+                // Decompose
+                implementation(libs.decompose)
+                implementation(libs.decompose.extensions.compose.multiplatform)
 
                 // Serialization
                 api(libs.kotlinx.serialization.core)
@@ -18,6 +31,7 @@ kotlin {
                 api(compose.runtime)
                 api(compose.ui)
                 api(compose.foundation)
+                api(compose.material)
                 api(compose.material3)
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 api(compose.components.resources)
@@ -29,7 +43,7 @@ kotlin {
                 api(libs.ktor.serialization.kotlinx.protobuf)
 
                 // Koin
-                api(libs.koin.core)
+//                api(libs.koin.core)
             }
         }
 //        val androidMain by getting {
@@ -42,6 +56,12 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation(compose.desktop.common)
+                implementation(libs.ktor.client.cio)
+            }
+        }
+        wasmJsMain {
+            dependencies {
+                implementation(libs.ktor.client.js)
             }
         }
     }

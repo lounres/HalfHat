@@ -20,8 +20,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.thetruehat.client.desktop.components.nrfa.NewsRulesFaqAboutPageComponent
-import dev.lounres.thetruehat.client.desktop.components.nrfa.FakeNewsRulesFaqAboutPageComponent
+import dev.lounres.thetruehat.client.common.components.nrfa.FakeNewsRulesFaqAboutPageComponent
+import dev.lounres.thetruehat.client.common.components.nrfa.NewsRulesFaqAboutPageComponent
 import dev.lounres.thetruehat.client.desktop.uiTemplates.TheTrueHatPageTemplateUI
 
 

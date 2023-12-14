@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lounres.thetruehat.api.localization.Language
-import dev.lounres.thetruehat.client.common.ui.CircleButtonWithIcon
+import dev.lounres.thetruehat.client.common.uiComponents.CircleButtonWithIcon
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 

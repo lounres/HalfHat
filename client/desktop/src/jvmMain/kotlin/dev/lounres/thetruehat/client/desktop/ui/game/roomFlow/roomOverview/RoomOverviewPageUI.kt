@@ -13,8 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.thetruehat.client.desktop.components.game.roomFlow.roomOverview.FakeRoomOverviewPageComponent
-import dev.lounres.thetruehat.client.desktop.components.game.roomFlow.roomOverview.RoomOverviewPageComponent
+import dev.lounres.thetruehat.client.common.components.game.roomFlow.roomOverview.FakeRoomOverviewPageComponent
+import dev.lounres.thetruehat.client.common.components.game.roomFlow.roomOverview.RoomOverviewPageComponent
 import dev.lounres.thetruehat.client.desktop.uiTemplates.TheTrueHatPageWithHatTemplateUI
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource

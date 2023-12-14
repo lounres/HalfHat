@@ -2,7 +2,7 @@ package dev.lounres.thetruehat.client.desktop.ui
 
 import androidx.compose.runtime.Composable
 import com.arkivanov.decompose.extensions.compose.stack.Children
-import dev.lounres.thetruehat.client.desktop.components.RootComponent
+import dev.lounres.thetruehat.client.common.components.RootComponent
 import dev.lounres.thetruehat.client.desktop.ui.feedback.FeedbackPageUI
 import dev.lounres.thetruehat.client.desktop.ui.game.GameFlowUI
 import dev.lounres.thetruehat.client.desktop.ui.home.HomePageUI

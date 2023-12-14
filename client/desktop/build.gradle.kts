@@ -14,13 +14,16 @@ kotlin {
             dependencies {
                 implementation(projects.client.common)
 
-                implementation(libs.ktor.client.cio)
-                runtimeOnly(libs.logback.classic)
-
-                implementation(compose.desktop.currentOs)
-
+                // Decompose
                 implementation(libs.decompose)
                 implementation(libs.decompose.extensions.compose.multiplatform)
+
+                // Compose
+                implementation(compose.desktop.currentOs)
+
+                // Ktor
+                implementation(libs.ktor.client.cio)
+                runtimeOnly(libs.logback.classic)
             }
         }
     }

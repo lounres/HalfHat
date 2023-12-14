@@ -3,7 +3,7 @@ package dev.lounres.thetruehat.client.desktop.ui.game.roomFlow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import dev.lounres.thetruehat.client.desktop.components.game.roomFlow.RoomFlowComponent
+import dev.lounres.thetruehat.client.common.components.game.roomFlow.RoomFlowComponent
 import dev.lounres.thetruehat.client.desktop.ui.game.roomFlow.roomOverview.RoomOverviewPageUI
 import dev.lounres.thetruehat.client.desktop.ui.game.roomFlow.roomSettings.RoomSettingsPageUI
 

@@ -13,8 +13,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import dev.lounres.thetruehat.api.models.Settings
-import dev.lounres.thetruehat.client.desktop.components.game.roomFlow.roomSettings.FakeRoomSettingsPageComponent
-import dev.lounres.thetruehat.client.desktop.components.game.roomFlow.roomSettings.RoomSettingsPageComponent
+import dev.lounres.thetruehat.client.common.components.game.roomFlow.roomSettings.FakeRoomSettingsPageComponent
+import dev.lounres.thetruehat.client.common.components.game.roomFlow.roomSettings.RoomSettingsPageComponent
 import dev.lounres.thetruehat.client.desktop.uiTemplates.TheTrueHatPageWithHatTemplateUI
 
 

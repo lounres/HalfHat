@@ -14,8 +14,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import dev.lounres.thetruehat.client.desktop.components.game.roomEnter.FakeRoomEnterPageComponent
-import dev.lounres.thetruehat.client.desktop.components.game.roomEnter.RoomEnterPageComponent
+import dev.lounres.thetruehat.client.common.components.game.roomEnter.FakeRoomEnterPageComponent
+import dev.lounres.thetruehat.client.common.components.game.roomEnter.RoomEnterPageComponent
 import dev.lounres.thetruehat.client.desktop.uiTemplates.TheTrueHatPageWithHatTemplateUI
 
 

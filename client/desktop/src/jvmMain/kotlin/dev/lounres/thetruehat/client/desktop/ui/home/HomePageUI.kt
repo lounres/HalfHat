@@ -11,8 +11,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.thetruehat.client.desktop.components.home.HomePageComponent
-import dev.lounres.thetruehat.client.desktop.components.home.FakeHomePageComponent
+import dev.lounres.thetruehat.client.common.components.home.FakeHomePageComponent
+import dev.lounres.thetruehat.client.common.components.home.HomePageComponent
 import dev.lounres.thetruehat.client.desktop.uiTemplates.TheTrueHatPageWithHatTemplateUI
 
 

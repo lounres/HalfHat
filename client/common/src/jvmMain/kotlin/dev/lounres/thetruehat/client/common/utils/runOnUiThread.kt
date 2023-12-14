@@ -3,7 +3,7 @@ package dev.lounres.thetruehat.client.common.utils
 import javax.swing.SwingUtilities
 
 
-public fun <T> runOnUiThread(block: () -> T): T {
+public actual fun <T> runOnUiThread(block: () -> T): T {
     if (SwingUtilities.isEventDispatchThread()) {
         return block()
     }

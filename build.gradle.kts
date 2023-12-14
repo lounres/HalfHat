@@ -7,6 +7,7 @@ import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
+    alias(libs.plugins.compose) apply false
 }
 
 allprojects {
@@ -39,9 +40,7 @@ stal {
             pluginManager.withPlugin(rootProject.libs.plugins.kotlin.multiplatform) {
                 configure<KotlinMultiplatformExtension> {
                     @OptIn(ExperimentalWasmDsl::class)
-                    wasmJs {
-                        browser()
-                    }
+                    wasmJs()
                 }
             }
         }

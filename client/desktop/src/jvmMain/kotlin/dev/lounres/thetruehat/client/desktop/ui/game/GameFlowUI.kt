@@ -4,7 +4,7 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import dev.lounres.thetruehat.client.desktop.components.game.GameFlowComponent
+import dev.lounres.thetruehat.client.common.components.game.GameFlowComponent
 import dev.lounres.thetruehat.client.desktop.ui.game.gameResults.GameResultsPageUI
 import dev.lounres.thetruehat.client.desktop.ui.game.roomEnter.RoomEnterPageUI
 import dev.lounres.thetruehat.client.desktop.ui.game.roomFlow.RoomFlowUI

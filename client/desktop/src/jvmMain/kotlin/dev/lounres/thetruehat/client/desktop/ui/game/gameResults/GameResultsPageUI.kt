@@ -8,9 +8,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.thetruehat.client.common.ui.Table
-import dev.lounres.thetruehat.client.desktop.components.game.gameResults.FakeGameResultsPageComponent
-import dev.lounres.thetruehat.client.desktop.components.game.gameResults.GameResultsPageComponent
+import dev.lounres.thetruehat.client.common.components.game.gameResults.FakeGameResultsPageComponent
+import dev.lounres.thetruehat.client.common.components.game.gameResults.GameResultsPageComponent
+import dev.lounres.thetruehat.client.common.uiComponents.Table
 import dev.lounres.thetruehat.client.desktop.uiTemplates.TheTrueHatPageWithHatTemplateUI
 
 

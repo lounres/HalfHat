@@ -12,8 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.thetruehat.client.desktop.components.feedback.FakeFeedbackPageComponent
-import dev.lounres.thetruehat.client.desktop.components.feedback.FeedbackPageComponent
+import dev.lounres.thetruehat.client.common.components.feedback.FakeFeedbackPageComponent
+import dev.lounres.thetruehat.client.common.components.feedback.FeedbackPageComponent
 import dev.lounres.thetruehat.client.desktop.uiTemplates.TheTrueHatPageWithHatTemplateUI
 
 

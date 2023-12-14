@@ -12,8 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 import dev.lounres.thetruehat.api.models.RoomDescription
-import dev.lounres.thetruehat.client.desktop.components.game.roundEditing.FakeRoundEditingPageComponent
-import dev.lounres.thetruehat.client.desktop.components.game.roundEditing.RoundEditingPageComponent
+import dev.lounres.thetruehat.client.common.components.game.roundEditing.FakeRoundEditingPageComponent
+import dev.lounres.thetruehat.client.common.components.game.roundEditing.RoundEditingPageComponent
 import dev.lounres.thetruehat.client.desktop.uiTemplates.RoundPageTemplateUI
 
 

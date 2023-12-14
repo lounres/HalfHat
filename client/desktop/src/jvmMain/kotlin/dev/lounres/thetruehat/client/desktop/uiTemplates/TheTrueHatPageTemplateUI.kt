@@ -11,7 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import dev.lounres.thetruehat.api.localization.Language
-import dev.lounres.thetruehat.client.common.ui.CircleButtonWithIcon
+import dev.lounres.thetruehat.client.common.uiComponents.CircleButtonWithIcon
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 

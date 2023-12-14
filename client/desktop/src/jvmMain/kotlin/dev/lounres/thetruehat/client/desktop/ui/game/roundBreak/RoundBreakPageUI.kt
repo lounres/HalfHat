@@ -13,8 +13,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import dev.lounres.thetruehat.client.desktop.components.game.roundBreak.FakeRoundBreakPageComponent
-import dev.lounres.thetruehat.client.desktop.components.game.roundBreak.RoundBreakPageComponent
+import dev.lounres.thetruehat.client.common.components.game.roundBreak.FakeRoundBreakPageComponent
+import dev.lounres.thetruehat.client.common.components.game.roundBreak.RoundBreakPageComponent
 import dev.lounres.thetruehat.client.desktop.uiTemplates.RoundOverviewPageTemplateUI
 
 
