@@ -10,11 +10,6 @@ plugins {
     alias(libs.plugins.compose) apply false
 }
 
-allprojects {
-    group = "dev.lounres"
-    version = "1.0.0"
-}
-
 val jvmTargetVersion: String by project
 
 fun PluginManager.withPlugin(pluginDep: PluginDependency, block: AppliedPlugin.() -> Unit) = withPlugin(pluginDep.pluginId, block)
@@ -40,7 +35,12 @@ stal {
             pluginManager.withPlugin(rootProject.libs.plugins.kotlin.multiplatform) {
                 configure<KotlinMultiplatformExtension> {
                     @OptIn(ExperimentalWasmDsl::class)
-                    wasmJs()
+                    wasmJs {
+                        moduleName = project.path.substring(startIndex = 1).replace(':', '-')
+                        browser()
+                        nodejs()
+                        d8()
+                    }
                 }
             }
         }
@@ -61,7 +61,6 @@ stal {
                     all {
                         languageSettings {
                             progressiveMode = true
-                            languageVersion = "1.9"
                             enableLanguageFeature("ContextReceivers")
                             optIn("kotlin.contracts.ExperimentalContracts")
                             optIn("kotlin.ExperimentalStdlibApi")

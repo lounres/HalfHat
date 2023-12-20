@@ -14,10 +14,6 @@ kotlin {
             dependencies {
                 implementation(projects.client.common)
 
-                // Decompose
-                implementation(libs.decompose)
-                implementation(libs.decompose.extensions.compose.multiplatform)
-
                 // Compose
                 implementation(compose.desktop.currentOs)
 

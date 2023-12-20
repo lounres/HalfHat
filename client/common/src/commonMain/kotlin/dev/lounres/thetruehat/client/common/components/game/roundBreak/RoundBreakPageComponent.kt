@@ -2,13 +2,14 @@ package dev.lounres.thetruehat.client.common.components.game.roundBreak
 
 import com.arkivanov.decompose.value.Value
 import dev.lounres.thetruehat.api.localization.Language
+import dev.lounres.thetruehat.api.models.RoomDescription
 
 
 public interface RoundBreakPageComponent {
-    public val userRole: UserRole
+    public val userRole: Value<UserRole>
 
     public val backButtonEnabled: Boolean
-    public val wordsNumber: Value<Int>
+    public val unitsUntilEnd: Value<RoomDescription.UnitsUntilEnd>
     public val volumeOn: Value<Boolean>
     public val showFinishButton: Value<Boolean>
     public val speakerNickname: Value<String>
@@ -20,6 +21,7 @@ public interface RoundBreakPageComponent {
     public val onExitButtonClick: () -> Unit
     public val onVolumeButtonClick: () -> Unit
     public val onFinishButtonClick: () -> Unit
+    public val onReadyButtonClick: () -> Unit
 
 
     public sealed interface UserRole {

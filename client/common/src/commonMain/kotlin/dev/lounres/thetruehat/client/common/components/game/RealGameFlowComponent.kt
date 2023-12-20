@@ -12,15 +12,25 @@ import com.arkivanov.essenty.lifecycle.doOnDestroy
 import dev.lounres.thetruehat.api.*
 import dev.lounres.thetruehat.api.localization.Language
 import dev.lounres.thetruehat.api.models.RoomDescription
+import dev.lounres.thetruehat.api.models.Settings
 import dev.lounres.thetruehat.api.models.UserGameState
+import dev.lounres.thetruehat.api.signals.ClientSignal
+import dev.lounres.thetruehat.api.signals.ServerSignal
 import dev.lounres.thetruehat.client.common.components.game.roomEnter.RealRoomEnterPageComponent
 import dev.lounres.thetruehat.client.common.components.game.roomFlow.RealRoomFlowComponent
 import dev.lounres.thetruehat.client.common.components.game.roundBreak.RealRoundBreakPageComponent
+import dev.lounres.thetruehat.client.common.components.game.roundBreak.RoundBreakPageComponent
+import dev.lounres.thetruehat.client.common.components.game.roundCountdown.RealRoundCountdownPageComponent
+import dev.lounres.thetruehat.client.common.components.game.roundEditing.RealRoundEditingPageComponent
+import dev.lounres.thetruehat.client.common.components.game.roundInProgress.RealRoundInProgressPageComponent
+import dev.lounres.thetruehat.client.common.components.game.roundInProgress.RoundInProgressPageComponent
+import dev.lounres.thetruehat.client.common.logger
 import dev.lounres.thetruehat.client.common.utils.defaultHttpClient
 import dev.lounres.thetruehat.client.common.utils.runOnUiThread
 import io.ktor.client.plugins.websocket.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.serializer
 import kotlin.coroutines.CoroutineContext
@@ -37,6 +47,11 @@ public class RealGameFlowComponent(
     generateNewRoomId: Boolean = false,
 ): GameFlowComponent {
     private val coroutineScope: CoroutineScope = CoroutineScope(coroutineContext + SupervisorJob()) // TODO: Understand what SupervisorJob does.
+    private fun activate(childToActivate: ChildConfiguration) {
+        runOnUiThread {
+            navigation.activate(childToActivate)
+        }
+    }
 
     init {
         componentContext.lifecycle.doOnDestroy(coroutineScope::cancel)
@@ -44,6 +59,23 @@ public class RealGameFlowComponent(
 
     private val serverSignalStateFlow: MutableStateFlow<ServerSignal?> = MutableStateFlow(null)
     private val gameStateFlow: MutableStateFlow<UserGameState?> = MutableStateFlow(null)
+
+    private val roomId: MutableValue<String> = MutableValue("")
+    private val settings: MutableValue<Settings> = MutableValue(defaultSettings)
+    private val playersList: MutableValue<List<RoomDescription.Player>> = MutableValue(emptyList())
+    private val playerIndex: MutableValue<Int> = MutableValue(0)
+    private val unitsUntilEnd: MutableValue<RoomDescription.UnitsUntilEnd> = MutableValue(RoomDescription.UnitsUntilEnd.Words(0))
+    private val volumeOn: MutableValue<Boolean> = MutableValue(true)
+    private val showFinishButton: MutableValue<Boolean> = MutableValue(false)
+    private val speakerNickname: MutableValue<String> = MutableValue("")
+    private val listenerNickname: MutableValue<String> = MutableValue("")
+    private val roundBreakUserRole: MutableValue<RoundBreakPageComponent.UserRole> = MutableValue(RoundBreakPageComponent.UserRole.ListenerWaiting)
+    private val roundInProgressUserRole: MutableValue<RoundInProgressPageComponent.UserRole> = MutableValue(RoundInProgressPageComponent.UserRole.Listener)
+    private val wordToExplain: MutableValue<String> = MutableValue("")
+    private val countsUntilStart: MutableValue<Int> = MutableValue(0)
+    private var countsUntilStartJob: Job? = null
+    private val countsUntilEnd: MutableValue<Int> = MutableValue(0) // TODO: Actually implement timer
+    private var countsUntilEndJob: Job? = null
 
     private val gameConnection = GameConnection(
         coroutineScope = coroutineScope,
@@ -53,7 +85,6 @@ public class RealGameFlowComponent(
         path = "/ws",
         retryPeriod = 1000,
         onConnect = {
-            println("Connected!")
             val currentGameState = gameStateFlow.value
             if (currentGameState != null)
                 sendSerialized<ClientSignal>(
@@ -63,17 +94,15 @@ public class RealGameFlowComponent(
                     )
                 )
         },
-        onConnectionFailure = { println("Disconnected!") },
+        onConnectionFailure = {
+            // TODO: Add error badge
+        },
     )
-
-    private var playerListStateFlow: MutableStateFlow<List<RoomDescription.Player>>? = null
-    private var playerIndexStateFlow: MutableStateFlow<Int>? = null
 
     init {
         coroutineScope.launch {
             for (serverSignal in gameConnection.incoming) {
                 serverSignalStateFlow.emit(serverSignal)
-                println("new user game state: ${serverSignal.userGameState}")
                 gameStateFlow.emit(serverSignal.userGameState)
             }
         }
@@ -83,50 +112,106 @@ public class RealGameFlowComponent(
                     null -> {}
                     is ServerSignal.StatusUpdate -> {}
                     is ServerSignal.RequestError -> {
-                        // TODO
-                        println(serverSignal.errorMessage)
+                        logger.warn { serverSignal.errorMessage }
+                        // TODO: Add error badge
                     }
                     is ServerSignal.ProvideFreeRoomId -> roomEnterPageComponent.roomIdField.update { serverSignal.freeRoomId }
-                    is ServerSignal.GameStarts -> TODO()
+                    is ServerSignal.ProvideRoomResults -> TODO()
                 }
             }
         }
         coroutineScope.launch {
             gameStateFlow.collect { gameState ->
-                println("New signal to process!")
+                // TODO: Refactor child activation
                 val childToActivate = run {
                     if (gameState == null) return@run ChildConfiguration.RoomEnterPageConfiguration
 
+                    roomId.update { gameState.roomDescription.id }
+                    settings.update { gameState.roomDescription.settings }
+                    playerIndex.update { gameState.userIndex }
+
                     when (val gamePhase = gameState.roomDescription.phase) {
                         is RoomDescription.Phase.WaitingForPlayers -> {
-                            playerListStateFlow =
-                                playerListStateFlow ?: MutableStateFlow(gamePhase.currentPlayersList)
-                            playerIndexStateFlow =
-                                playerIndexStateFlow ?: MutableStateFlow(gameState.userIndex)
-                            playerListStateFlow!!.update { gamePhase.currentPlayersList }
-                            playerIndexStateFlow!!.update { gameState.userIndex }
+                            playersList.update { gamePhase.currentPlayersList }
                             ChildConfiguration.RoomFlowConfiguration(
                                 roomId = gameState.roomDescription.id,
-                                userList = playerListStateFlow!!,
-                                playerIndex = playerIndexStateFlow!!,
+                                playerIndex = playerIndex,
                             )
                         }
+                        is RoomDescription.Phase.GameInProgress -> {
+                            unitsUntilEnd.update { gamePhase.unitsUntilEnd }
+                            showFinishButton.update { gamePhase.playersList.indexOfFirst { it.online } == gameState.userIndex }
+                            speakerNickname.update { gamePhase.playersList[gamePhase.speaker].username }
+                            listenerNickname.update { gamePhase.playersList[gamePhase.listener].username }
 
-                        is RoomDescription.Phase.GameInProgress ->
-                            when (gamePhase.roundPhase) {
-                                RoomDescription.RoundPhase.WaitingForPlayersToBeReady -> ChildConfiguration.RoundBreakConfiguration
-                                is RoomDescription.RoundPhase.ExplanationInProgress -> ChildConfiguration.RoundInProgressConfiguration
-                                is RoomDescription.RoundPhase.EditingInProgress -> ChildConfiguration.RoundEditingConfiguration
+                            when (val roundPhase = gamePhase.roundPhase) {
+                                is RoomDescription.RoundPhase.WaitingForPlayersToBeReady -> {
+                                    roundBreakUserRole.update {
+                                        when(gameState.userIndex) {
+                                            gamePhase.speaker ->
+                                                if (roundPhase.speakerReady) RoundBreakPageComponent.UserRole.SpeakerReady
+                                                else RoundBreakPageComponent.UserRole.SpeakerWaiting
+                                            gamePhase.listener ->
+                                                if (roundPhase.listenerReady) RoundBreakPageComponent.UserRole.ListenerReady
+                                                else RoundBreakPageComponent.UserRole.ListenerWaiting
+                                            else -> RoundBreakPageComponent.UserRole.SpeakerIn(0u) // TODO: Implement schedule
+                                        }
+                                    }
+                                    ChildConfiguration.RoundBreakConfiguration
+                                }
+                                is RoomDescription.RoundPhase.Countdown -> {
+                                    val millisecondsUntilStart = roundPhase.millisecondsUntilStart
+                                    val secondsUntilStart = millisecondsUntilStart / 1000
+                                    countsUntilStart.update { (secondsUntilStart + 1).toInt() }
+                                    countsUntilStartJob?.cancel()
+                                    countsUntilStartJob = coroutineScope.launch {
+                                        delay(millisecondsUntilStart % 1000)
+                                        countsUntilStart.update { it-1 }
+                                        for (i in 0 ..< secondsUntilStart) {
+                                            delay(1000)
+                                            countsUntilStart.update { it-1 }
+                                        }
+                                        countsUntilStartJob = null
+                                    }
+                                    ChildConfiguration.RoundCountdownConfiguration
+                                }
+                                is RoomDescription.RoundPhase.ExplanationInProgress -> {
+                                    roundInProgressUserRole.update {
+                                        when(gameState.userIndex) {
+                                            gamePhase.speaker -> {
+                                                wordToExplain.update { roundPhase.word!! }
+                                                RoundInProgressPageComponent.UserRole.Speaker(wordToExplain)
+                                            }
+                                            gamePhase.listener ->
+                                                RoundInProgressPageComponent.UserRole.Listener
+                                            else -> RoundInProgressPageComponent.UserRole.SpeakerIn(0u) // TODO: Implement schedule
+                                        }
+                                    }
+                                    val millisecondsUntilEnd = roundPhase.millisecondsUntilEnd
+                                    val secondsUntilEnd = millisecondsUntilEnd / 1000
+                                    countsUntilEnd.update { (secondsUntilEnd + 1).toInt() }
+                                    countsUntilEndJob?.cancel()
+                                    countsUntilEndJob = coroutineScope.launch {
+                                        delay(millisecondsUntilEnd % 1000)
+                                        countsUntilEnd.update { it-1 }
+                                        for (i in 0 ..< secondsUntilEnd) {
+                                            delay(1000)
+                                            countsUntilEnd.update { it-1 }
+                                        }
+                                        countsUntilEndJob = null
+                                    }
+                                    ChildConfiguration.RoundInProgressConfiguration
+                                }
+                                is RoomDescription.RoundPhase.EditingInProgress ->
+                                    ChildConfiguration.RoundEditingConfiguration(
+                                        resultsToEdit = roundPhase.wordsToEdit
+                                    )
                             }
-
+                        }
                         is RoomDescription.Phase.GameEnded -> ChildConfiguration.GameResultsConfiguration
-                    }.also { println("Foo!") }
+                    }
                 }
-                runOnUiThread {
-                    navigation.activate(childToActivate)
-                }
-                println("Hello!")
-                println(childSlot.value.child?.instance)
+                activate(childToActivate)
             }
         }
     }
@@ -145,9 +230,7 @@ public class RealGameFlowComponent(
             },
             onLetsGoAction = { roomId, nickname ->
                 coroutineScope.launch(Dispatchers.Default) {
-                    println("Sending JoinRoom")
                     gameConnection.outgoing.send(ClientSignal.JoinRoom(roomId = roomId, nickname = nickname))
-                    println("Sent JoinRoom")
                 }
             },
         )
@@ -163,21 +246,13 @@ public class RealGameFlowComponent(
         serializer = serializer<ChildConfiguration>(),
         initialConfiguration = { ChildConfiguration.RoomEnterPageConfiguration }
     ) { configuration, componentContext ->
-        println("New child to create.")
+        logger.info { "New child slot configuration in GameFlowComponent: $configuration" }
         when(configuration) {
             is ChildConfiguration.RoomEnterPageConfiguration ->
                 GameFlowComponent.Child.RoomEnter(
                     component = roomEnterPageComponent
                 )
             is ChildConfiguration.RoomFlowConfiguration -> {
-                val roomFlowCoroutineScope = CoroutineScope(coroutineContext)
-                componentContext.lifecycle.doOnDestroy/*(roomFlowCoroutineScope::cancel)*/ {
-                    roomFlowCoroutineScope.cancel()
-                    println("Canceled!!!")
-                }
-                val settingsValue = MutableValue(gameStateFlow.value!!.roomDescription.settings)
-                roomFlowCoroutineScope.launch { gameStateFlow.collect { println("!?!: $it"); it?.let { gameState -> settingsValue.update { gameState.roomDescription.settings } }; println("?!?: ${settingsValue.value}") } }
-                println("It's RoomFlow creation.")
                 GameFlowComponent.Child.RoomFlow(
                     component = run {
                         RealRoomFlowComponent(
@@ -193,9 +268,9 @@ public class RealGameFlowComponent(
                             onFeedbackButtonClick = onFeedbackButtonClick,
                             onHatButtonClick = onHatButtonClick,
                             roomId = configuration.roomId,
-                            userList = configuration.userList,
+                            userList = playersList,
                             playerIndex = configuration.playerIndex,
-                            settings = settingsValue,
+                            settings = settings,
                             onApplySettings = {
                                 coroutineScope.launch { gameConnection.outgoing.send(ClientSignal.UpdateSettings(it)) }
                             },
@@ -204,31 +279,168 @@ public class RealGameFlowComponent(
                             },
                         )
                     }
-                ).also { println("It's RoomFlow returning.") }
+                )
             }
-            ChildConfiguration.RoundBreakConfiguration ->
+            is ChildConfiguration.RoundBreakConfiguration ->
                 GameFlowComponent.Child.RoundBreak(
                     component = RealRoundBreakPageComponent(
-                        backButtonEnabled = backButtonEnabled,
-                        wordsNumber = TODO(),
-                        volumeOn = TODO(),
-                        showFinishButton = TODO(),
-                        speakerNickname = TODO(),
-                        listenerNickname = TODO(),
-                        userRole = TODO(),
-                        onBackButtonClick = onBackButtonClick,
+                        backButtonEnabled = true,
+                        unitsUntilEnd = unitsUntilEnd,
+                        volumeOn = volumeOn,
+                        showFinishButton = showFinishButton,
+                        speakerNickname = speakerNickname,
+                        listenerNickname = listenerNickname,
+                        userRole = roundBreakUserRole,
+                        onBackButtonClick = {
+                            navigation.activate(ChildConfiguration.RoomEnterPageConfiguration)
+                            coroutineScope.launch {
+                                gameConnection.outgoing.send(ClientSignal.LeaveRoom)
+                            }
+                        },
                         onLanguageChange = onLanguageChange,
                         onFeedbackButtonClick = onFeedbackButtonClick,
                         onHatButtonClick = onHatButtonClick,
-                        onExitButtonClick = TODO(),
-                        onVolumeButtonClick = TODO(),
-                        onFinishButtonClick = TODO(),
+                        onExitButtonClick = {
+                            navigation.activate(ChildConfiguration.RoomEnterPageConfiguration)
+                            coroutineScope.launch {
+                                gameConnection.outgoing.send(ClientSignal.LeaveRoom)
+                            }
+                        },
+                        onVolumeButtonClick = { volumeOn.update { !it } },
+                        onFinishButtonClick = {
+                            coroutineScope.launch { gameConnection.outgoing.send(ClientSignal.EndGame) }
+                        },
+                        onReadyButtonClick = {
+                            coroutineScope.launch { gameConnection.outgoing.send(ClientSignal.ReadyForTheRound) }
+                        },
                     )
                 )
-            ChildConfiguration.RoundInProgressConfiguration -> TODO()
-            ChildConfiguration.RoundEditingConfiguration -> TODO()
+            ChildConfiguration.RoundCountdownConfiguration ->
+                GameFlowComponent.Child.RoundCountdown(
+                    component = RealRoundCountdownPageComponent(
+                        backButtonEnabled = true,
+                        unitsUntilEnd = unitsUntilEnd,
+                        showFinishButton = showFinishButton,
+                        volumeOn = volumeOn,
+                        countsUntilStart = countsUntilStart,
+                        onBackButtonClick = {
+                            navigation.activate(ChildConfiguration.RoomEnterPageConfiguration)
+                            coroutineScope.launch {
+                                gameConnection.outgoing.send(ClientSignal.LeaveRoom)
+                            }
+                        },
+                        onLanguageChange = onLanguageChange,
+                        onFeedbackButtonClick = onFeedbackButtonClick,
+                        onHatButtonClick = onHatButtonClick,
+                        onVolumeButtonClick = { volumeOn.update { !it } },
+                        onFinishButtonClick = {
+                            coroutineScope.launch { gameConnection.outgoing.send(ClientSignal.EndGame) }
+                        },
+                        onExitButtonClick = {
+                            navigation.activate(ChildConfiguration.RoomEnterPageConfiguration)
+                            coroutineScope.launch {
+                                gameConnection.outgoing.send(ClientSignal.LeaveRoom)
+                            }
+                        },
+                    )
+                )
+            ChildConfiguration.RoundInProgressConfiguration ->
+                GameFlowComponent.Child.RoundInProgress(
+                    component = RealRoundInProgressPageComponent(
+                        backButtonEnabled = true,
+                        unitsUntilEnd = unitsUntilEnd,
+                        showFinishButton = showFinishButton,
+                        volumeOn = volumeOn,
+                        speakerNickname = speakerNickname,
+                        listenerNickname = listenerNickname,
+                        userRole = roundInProgressUserRole,
+                        countsUntilEnd = countsUntilEnd,
+                        onBackButtonClick = {
+                            navigation.activate(ChildConfiguration.RoomEnterPageConfiguration)
+                            coroutineScope.launch {
+                                gameConnection.outgoing.send(ClientSignal.LeaveRoom)
+                            }
+                        },
+                        onLanguageChange = onLanguageChange,
+                        onFeedbackButtonClick = onFeedbackButtonClick,
+                        onHatButtonClick = onHatButtonClick,
+                        onVolumeButtonClick = { volumeOn.update { !it } },
+                        onFinishButtonClick = {
+                            coroutineScope.launch { gameConnection.outgoing.send(ClientSignal.EndGame) }
+                        },
+                        onExitButtonClick = {
+                            navigation.activate(ChildConfiguration.RoomEnterPageConfiguration)
+                            coroutineScope.launch {
+                                gameConnection.outgoing.send(ClientSignal.LeaveRoom)
+                            }
+                        },
+                        onExplainedButtonClick = {
+                            coroutineScope.launch {
+                                gameConnection.outgoing.send(
+                                    ClientSignal.ExplanationResult(
+                                        result = RoomDescription.WordExplanationResult.State.Explained
+                                    )
+                                )
+                            }
+                        },
+                        onNotExplainedButtonClick = {
+                            coroutineScope.launch {
+                                gameConnection.outgoing.send(
+                                    ClientSignal.ExplanationResult(
+                                        result = RoomDescription.WordExplanationResult.State.NotExplained
+                                    )
+                                )
+                            }
+                        },
+                        onImproperlyExplainedButtonClick = {
+                            coroutineScope.launch {
+                                gameConnection.outgoing.send(
+                                    ClientSignal.ExplanationResult(
+                                        result = RoomDescription.WordExplanationResult.State.Mistake
+                                    )
+                                )
+                            }
+                        }
+                    )
+                )
+            is ChildConfiguration.RoundEditingConfiguration -> {
+                val mutableExplanationResults = configuration.resultsToEdit?.map { MutableValue(it) }
+                GameFlowComponent.Child.RoundEditing(
+                    component = RealRoundEditingPageComponent(
+                        backButtonEnabled = true,
+                        unitsUntilEnd = unitsUntilEnd,
+                        volumeOn = volumeOn,
+                        showFinishButton = showFinishButton,
+                        onBackButtonClick = {
+                            navigation.activate(ChildConfiguration.RoomEnterPageConfiguration)
+                            coroutineScope.launch {
+                                gameConnection.outgoing.send(ClientSignal.LeaveRoom)
+                            }
+                        },
+                        onLanguageChange = onLanguageChange,
+                        onFeedbackButtonClick = onFeedbackButtonClick,
+                        onHatButtonClick = onHatButtonClick,
+                        onExitButtonClick = {
+                            navigation.activate(ChildConfiguration.RoomEnterPageConfiguration)
+                            coroutineScope.launch {
+                                gameConnection.outgoing.send(ClientSignal.LeaveRoom)
+                            }
+                        },
+                        onVolumeButtonClick = { volumeOn.update { !it } },
+                        onFinishButtonClick = {
+                            coroutineScope.launch { gameConnection.outgoing.send(ClientSignal.EndGame) }
+                        },
+                        explanationResults = mutableExplanationResults,
+                        onSubmitButtonClick = {
+                            coroutineScope.launch {
+                                gameConnection.outgoing.send(ClientSignal.SubmitResults(mutableExplanationResults!!.map { it.value }))
+                            }
+                        }
+                    )
+                )
+            }
             ChildConfiguration.GameResultsConfiguration -> TODO()
-        }.also { println("New child: $it") }
+        }
     }
 
     @Serializable
@@ -238,15 +450,18 @@ public class RealGameFlowComponent(
         @Serializable
         public data class RoomFlowConfiguration(
             val roomId: String,
-            val userList: StateFlow<List<RoomDescription.Player>?>,
-            val playerIndex: StateFlow<Int?>,
+            val playerIndex: @Contextual Value<Int>,
         ): ChildConfiguration
         @Serializable
         public data object RoundBreakConfiguration: ChildConfiguration
         @Serializable
+        public data object RoundCountdownConfiguration: ChildConfiguration
+        @Serializable
         public data object RoundInProgressConfiguration: ChildConfiguration
         @Serializable
-        public data object RoundEditingConfiguration: ChildConfiguration
+        public data class RoundEditingConfiguration(
+            val resultsToEdit: List<RoomDescription.WordExplanationResult>?
+        ): ChildConfiguration
         @Serializable
         public data object GameResultsConfiguration: ChildConfiguration
     }

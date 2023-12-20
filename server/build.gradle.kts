@@ -9,6 +9,14 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation(projects.api)
+
+                // kotlinx.datetime
+                implementation(libs.kotlinx.datetime)
+
+                // Logging
+                implementation(libs.kotlin.logging)
+
+                // Ktor
                 implementation(libs.ktor.server.core)
                 implementation(libs.ktor.server.netty)
                 implementation(libs.ktor.server.websockets)

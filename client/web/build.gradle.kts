@@ -8,48 +8,56 @@ plugins {
 }
 
 kotlin {
+//    js {
+//        moduleName = "client-web"
+//        browser {
+//            commonWebpackConfig {
+//                outputFileName = "client-web.js"
+//            }
+//        }
+//        binaries.executable()
+//    }
+
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
-        moduleName = "client-web"
         browser {
             commonWebpackConfig {
                 outputFileName = "client-web.js"
-//                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-//                    // Uncomment and configure this if you want to open a browser different from the system default
-//                    // open = mapOf(
-//                    //     "app" to mapOf(
-//                    //         "name" to "google chrome"
-//                    //     )
-//                    // )
-//
-//                    static = (static ?: mutableListOf()).apply {
-//                        // Serve sources to debug inside browser
-//                        add(project.rootDir.path)
-//                        add(project.rootDir.path + "/client/web/")
-//                    }
-//                }
+                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
+                    // Uncomment and configure this if you want to open a browser different from the system default
+                    // open = mapOf(
+                    //     "app" to mapOf(
+                    //         "name" to "google chrome"
+                    //     )
+                    // )
+
+                    static = (static ?: mutableListOf()).apply {
+                        // Serve sources to debug inside browser
+                        add(rootDir.path + "/api")
+                        add(rootDir.path + "/client/common")
+                        add(rootDir.path + "/client/web/")
+                    }
+                }
             }
         }
         binaries.executable()
     }
+
     sourceSets {
-        wasmJsMain {
+        commonMain {
             dependencies {
                 implementation(projects.client.common)
-
-                // Compose
-                implementation(compose.runtime)
-                implementation(compose.ui)
-                implementation(compose.foundation)
-                implementation(compose.material)
-                @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
-                implementation(compose.components.resources)
+            }
+        }
+        wasmJsMain {
+            dependencies {
+//                implementation(project.dependencies.enforcedPlatform(libs.kotlin.wrappers.bom))
+//                implementation(libs.kotlin.wrappers.browser)
             }
         }
     }
 }
 
 compose {
-//    kotlinCompilerPlugin.set("1.5.3")
     experimental.web.application {}
 }

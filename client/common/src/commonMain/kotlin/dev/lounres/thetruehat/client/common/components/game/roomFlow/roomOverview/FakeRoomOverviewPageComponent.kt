@@ -1,9 +1,9 @@
 package dev.lounres.thetruehat.client.common.components.game.roomFlow.roomOverview
 
+import com.arkivanov.decompose.value.MutableValue
+import com.arkivanov.decompose.value.Value
 import dev.lounres.thetruehat.api.localization.Language
 import dev.lounres.thetruehat.api.models.RoomDescription
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 
 
 public class FakeRoomOverviewPageComponent(
@@ -26,8 +26,8 @@ public class FakeRoomOverviewPageComponent(
     override val onRoomIdCopy: () -> Unit = {}
     override val onRoomLinkCopy: () -> Unit = {}
 
-    override val userList: StateFlow<List<RoomDescription.Player>?> = MutableStateFlow(userList)
-    override val playerIndex: StateFlow<Int?> = MutableStateFlow(playerIndex)
+    override val userList: Value<List<RoomDescription.Player>> = MutableValue(userList)
+    override val playerIndex: Value<Int> = MutableValue(playerIndex)
 
     override val onStartGameButtonClick: () -> Unit = {}
 }

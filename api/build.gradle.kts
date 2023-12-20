@@ -6,12 +6,10 @@ plugins {
 }
 
 kotlin {
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        browser()
-        nodejs()
-        d8()
-    }
+//    js {
+//        browser()
+//        nodejs()
+//    }
 
     sourceSets {
         commonMain {

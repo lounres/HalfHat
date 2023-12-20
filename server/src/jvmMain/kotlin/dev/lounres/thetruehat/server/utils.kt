@@ -1,6 +1,6 @@
 package dev.lounres.thetruehat.server
 
-import dev.lounres.thetruehat.api.ServerSignal
+import dev.lounres.thetruehat.api.signals.ServerSignal
 import dev.lounres.thetruehat.server.model.Room
 import dev.lounres.thetruehat.server.model.state
 import io.ktor.server.websocket.*
@@ -10,7 +10,7 @@ import kotlin.random.Random
 
 context(WebSocketServerSession)
 fun ServerSignal.send() {
-    println("Send: $this")
+    logger.info { "Outgoing signal: $this" }
     launch { sendSerialized<ServerSignal>(this@ServerSignal) }
 }
 
@@ -18,8 +18,8 @@ fun ServerSignal.send() {
 object Config {
     val minKeyLength = 6
     val maxKeyLength = 11
-    val keyConsonant: List<Char> = listOf('б', 'в', 'г', 'д', 'ж', 'з', 'к', 'л', 'м', 'н', 'п', 'р', 'с', 'т', 'ф', 'х', 'ц', 'ч', 'ш', 'щ')
-    val keyVowels: List<Char> = listOf('а', 'е', 'и', 'о', 'у', 'э', 'ю', 'я')
+    val keyConsonant: List<Char> = listOf('Б', 'В', 'Г', 'Д', 'Ж', 'З', 'К', 'Л', 'М', 'Н', 'П', 'Р', 'С', 'Т', 'Ф', 'Х', 'Ц', 'Ч', 'Ш', 'Щ')
+    val keyVowels: List<Char> = listOf('А', 'Е', 'И', 'О', 'У', 'Э', 'Ю', 'Я')
 }
 
 // TODO: Replace with more accurate implementation
@@ -42,7 +42,6 @@ fun generateRandomRoomId(): String {
 
 fun Room.Waiting.sendStatusUpdate() {
     for (player in this.players) {
-        println("player Player(username = ${player.username}, room = ${player.room}, connection = ${player.connection})")
         val playerConnection = player.connection ?: continue
         with(playerConnection.socketSession) {
             ServerSignal.StatusUpdate(userGameState = player.state).send()
@@ -52,7 +51,6 @@ fun Room.Waiting.sendStatusUpdate() {
 
 fun Room.Playing.sendStatusUpdate() {
     for (player in this.players) {
-        println("player Player(username = ${player.username}, room = ${player.room}, connection = ${player.connection})")
         val playerConnection = player.connection ?: continue
         with(playerConnection.socketSession) {
             ServerSignal.StatusUpdate(userGameState = player.state).send()

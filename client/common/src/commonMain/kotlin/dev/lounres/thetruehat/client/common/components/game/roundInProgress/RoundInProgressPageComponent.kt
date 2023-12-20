@@ -2,17 +2,18 @@ package dev.lounres.thetruehat.client.common.components.game.roundInProgress
 
 import com.arkivanov.decompose.value.Value
 import dev.lounres.thetruehat.api.localization.Language
+import dev.lounres.thetruehat.api.models.RoomDescription
 
 
 public interface RoundInProgressPageComponent {
     public val backButtonEnabled: Boolean
-    public val wordsNumber: Int
-    public val showFinishButton: Boolean
-    public val volumeOn: Boolean
-    public val speakerNickname: String
-    public val listenerNickname: String
-    public val userRole: RoundInProgressUserRole
-    public val timeLeft: Value<Int>
+    public val unitsUntilEnd: Value<RoomDescription.UnitsUntilEnd>
+    public val showFinishButton: Value<Boolean>
+    public val volumeOn: Value<Boolean>
+    public val speakerNickname: Value<String>
+    public val listenerNickname: Value<String>
+    public val userRole: Value<UserRole>
+    public val countsUntilEnd: Value<Int>
     public val onBackButtonClick: () -> Unit
     public val onLanguageChange: (language: Language) -> Unit
     public val onFeedbackButtonClick: () -> Unit
@@ -21,11 +22,15 @@ public interface RoundInProgressPageComponent {
     public val onFinishButtonClick: () -> Unit
     public val onExitButtonClick: () -> Unit
 
+    public val onExplainedButtonClick: () -> Unit
+    public val onNotExplainedButtonClick: () -> Unit
+    public val onImproperlyExplainedButtonClick: () -> Unit
 
-    public sealed interface RoundInProgressUserRole {
-        public data class Speaker(public val wordToExplain: Value<String>): RoundInProgressUserRole
-        public data object Listener: RoundInProgressUserRole
-        public data class SpeakerIn(public val rounds: UInt): RoundInProgressUserRole
-        public data class ListenerIn(public val rounds: UInt): RoundInProgressUserRole
+
+    public sealed interface UserRole {
+        public data class Speaker(public val wordToExplain: Value<String>): UserRole
+        public data object Listener: UserRole
+        public data class SpeakerIn(public val rounds: UInt): UserRole
+        public data class ListenerIn(public val rounds: UInt): UserRole
     }
 }

@@ -6,6 +6,9 @@ kotlinx-coroutines = "1.8.0-RC"
 kotlinx-atomicfu = "0.23.1"
 kotlinx-serialization = "1.6.2"
 kotlinx-datetime = "0.5.0"
+kotlin-wrappers = "1.0.0-pre.666"
+
+kotlin-logging = "5.1.1"
 
 ktor = "3.0.0-wasm1"
 ktor-plugin = "3.0.0-beta-1"
@@ -59,6 +62,13 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 
 # kotlinx.datetime
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+
+# kotlin-wrappers
+kotlin-wrappers-bom = { module = "org.jetbrains.kotlin-wrappers:kotlin-wrappers-bom", version.ref = "kotlin-wrappers" }
+kotlin-wrappers-browser = { module = "org.jetbrains.kotlin-wrappers:kotlin-browser", version.ref = "kotlin-wrappers" }
+
+# kotlin-logging
+kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "kotlin-logging"}
 
 # Ktor
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }

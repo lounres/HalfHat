@@ -34,8 +34,8 @@ stal {
         "api"("library", "server", "desktop", "web", "android")
         "server"("server")
         "client" {
-            "common"("library", "desktop", "web", "android")
-            "web"("web")
+            "common"("library", "desktop", /*"web",*/ "android")
+//            "web"("web")
             "desktop"("desktop")
 //            "android"("android")
         }

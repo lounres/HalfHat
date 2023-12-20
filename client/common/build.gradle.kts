@@ -7,12 +7,10 @@ plugins {
 }
 
 kotlin {
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        browser()
-        nodejs()
-        d8()
-    }
+//    js {
+//        browser()
+//        nodejs()
+//    }
 
     sourceSets {
         commonMain {
@@ -21,11 +19,14 @@ kotlin {
                 api(projects.api)
 
                 // Decompose
-                implementation(libs.decompose)
-                implementation(libs.decompose.extensions.compose.multiplatform)
+                api(libs.decompose)
+                api(libs.decompose.extensions.compose.multiplatform)
 
                 // Serialization
                 api(libs.kotlinx.serialization.core)
+
+                // Logging
+                api(libs.kotlin.logging)
 
                 // Compose
                 api(compose.runtime)
@@ -46,6 +47,7 @@ kotlin {
 //                api(libs.koin.core)
             }
         }
+
 //        val androidMain by getting {
 //            dependencies {
 //                api("androidx.activity:activity-compose:1.6.1")
@@ -53,17 +55,19 @@ kotlin {
 //                api("androidx.core:core-ktx:1.9.0")
 //            }
 //        }
+
         jvmMain {
             dependencies {
                 implementation(compose.desktop.common)
                 implementation(libs.ktor.client.cio)
             }
         }
-        wasmJsMain {
-            dependencies {
-                implementation(libs.ktor.client.js)
-            }
-        }
+
+//        wasmJsMain {
+//            dependencies {
+//                implementation(libs.ktor.client.js)
+//            }
+//        }
     }
 }
 

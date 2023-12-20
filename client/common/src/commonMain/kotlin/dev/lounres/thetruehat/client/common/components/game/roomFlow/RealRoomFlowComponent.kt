@@ -14,7 +14,6 @@ import dev.lounres.thetruehat.api.models.RoomDescription
 import dev.lounres.thetruehat.api.models.Settings
 import dev.lounres.thetruehat.api.models.SettingsUpdate
 import dev.lounres.thetruehat.client.common.utils.copyToClipboard
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.serializer
 
@@ -27,8 +26,8 @@ public class RealRoomFlowComponent(
     public val onFeedbackButtonClick: () -> Unit,
     public val onHatButtonClick: () -> Unit,
     public val roomId: String,
-    public val userList: StateFlow<List<RoomDescription.Player>?>,
-    public val playerIndex: StateFlow<Int?>,
+    public val userList: Value<List<RoomDescription.Player>>,
+    public val playerIndex: Value<Int>,
     public val settings: Value<Settings>,
     public val onApplySettings: (SettingsUpdate) -> Unit,
     public val onStartGame: () -> Unit,

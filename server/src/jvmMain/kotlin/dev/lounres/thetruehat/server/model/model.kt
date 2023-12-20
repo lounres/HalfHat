@@ -1,21 +1,13 @@
 package dev.lounres.thetruehat.server.model
 
+import dev.lounres.thetruehat.api.defaultSettings
+import dev.lounres.thetruehat.api.models.RoomDescription
 import dev.lounres.thetruehat.api.models.Settings
 import dev.lounres.thetruehat.server.Connection
+import kotlinx.coroutines.Job
+import kotlinx.datetime.Instant
 import java.util.concurrent.CopyOnWriteArrayList
 
-
-val defaultSettings: Settings =
-    Settings(
-        countdownTime = 3,
-        explanationTime = 40,
-        finalGuessTime = 3,
-        strictMode = false,
-        gameEndCondition = Settings.GameEndCondition.Words,
-        wordsCount = 100,
-        roundsCount = 10,
-        wordsSource = Settings.WordsSource.ServerDictionary(dictionaryId = 0)
-    )
 
 sealed interface Room {
     val id: String
@@ -54,22 +46,69 @@ sealed interface Room {
         override val settings: Settings,
         playerListToProcess: List<Waiting.Player>,
     ): Room {
-        override val players: List<Player> =
-            playerListToProcess.mapNotNull {
-                val connection = it.connection
-                if (connection != null) {
-                    val newPlayer = Player(
-                        room = this,
-                        username = it.username,
-                        playerIndex = it.playerIndex,
-                        connection = connection
-                    )
-                    connection.player = newPlayer
-                    newPlayer
-                } else null
-            }
+        override val players: List<Player>
 
-//        val words
+        init {
+            var index = 0
+            players = playerListToProcess
+                .mapNotNull {
+                    val connection = it.connection
+                    if (connection != null) {
+                        val newPlayer = Player(
+                            room = this,
+                            username = it.username,
+                            playerIndex = index++,
+                            connection = connection
+                        )
+                        connection.player = newPlayer
+                        newPlayer
+                    } else null
+                }
+        }
+
+        val freshWords = mutableListOf(
+            "кошка",
+            "собака",
+            "утка",
+            "гусь",
+            "воробей",
+            "голубь",
+            "жираф",
+            "пантера",
+            "тигр",
+            "лев",
+            "бегемот",
+            "коршун",
+            "ястреб",
+        )
+        val wordsToEdit = mutableListOf<RoomDescription.WordExplanationResult>()
+        val usedWords = mutableListOf<RoomDescription.WordExplanationResult>()
+
+        var roundPhase: RoundPhase = RoundPhase.WaitingForPlayersToBeReady
+
+        var speaker: Int = 0
+        var listener: Int = 1
+
+        var speakerReady = false
+        var listenerReady = false
+
+        var numberOfRound = 0
+        var numberOfLap = 0
+
+        sealed interface RoundPhase {
+            data object WaitingForPlayersToBeReady: RoundPhase
+            data class Countdown(
+                val startInstant: Instant,
+                val roundStartJob: Job,
+                val strictEndJob: Job?
+            ): RoundPhase
+            data class ExplanationInProgress(
+                val endInstant: Instant,
+                val wordToExplain: String,
+                val strictEndJob: Job?
+            ): RoundPhase
+            data object EditingInProgress: RoundPhase
+        }
 
         class Player(
             override val room: Room.Playing,
@@ -85,7 +124,7 @@ sealed interface Room {
     class Results(
         override val id: String,
         override val settings: Settings,
-        playerListToProcess: List<Playing.Player>,
+        playerListToProcess: List<Playing.Player>, // TODO: Add other explanation results (history of explanation, etc.)
     ): Room {
         override val players: List<Player> =
             playerListToProcess.map {

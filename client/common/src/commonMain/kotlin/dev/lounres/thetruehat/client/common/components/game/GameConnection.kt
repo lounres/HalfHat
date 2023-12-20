@@ -1,7 +1,8 @@
 package dev.lounres.thetruehat.client.common.components.game
 
-import dev.lounres.thetruehat.api.ClientSignal
-import dev.lounres.thetruehat.api.ServerSignal
+import dev.lounres.thetruehat.api.signals.ClientSignal
+import dev.lounres.thetruehat.api.signals.ServerSignal
+import dev.lounres.thetruehat.client.common.logger
 import dev.lounres.thetruehat.client.common.utils.catchConnectionExceptionsAndRepeat
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
@@ -32,26 +33,33 @@ public class GameConnection(
             catchConnectionExceptionsAndRepeat(
                 tryBlock = {
                     httpClient.ws(host = host, port = port, path = path) {
+                        logger.info { "Connected to server." }
                         onConnect()
                         val incomingJob = launch {
                             for (frame in incoming) {
                                 val converter = converter!!
 
-                                if (!converter.isApplicable(frame)) continue
+                                if (!converter.isApplicable(frame)) {
+                                    logger.warn { "Received unexpected websocket frame: $frame" }
+                                    continue
+                                }
 
                                 val signal = converter.deserialize<ServerSignal>(content = frame)
-                                println("Incoming signal: $signal")
+                                logger.info { "Incoming signal: $signal" }
                                 _incoming.send(signal)
                             }
                         }
                         val outgoingJob = launch {
-                            for (signal in _outgoing) sendSerialized<ClientSignal>(signal)
+                            for (signal in _outgoing) {
+                                logger.info { "Outgoing signal: $signal" }
+                                sendSerialized<ClientSignal>(signal)
+                            }
                         }
                         listOf(incomingJob, outgoingJob).joinAll()
                     }
                 },
                 catchBlock = { exception ->
-                    println(exception)
+                    logger.warn(exception) { "Connection failure." }
                     onConnectionFailure()
                 }
             )
