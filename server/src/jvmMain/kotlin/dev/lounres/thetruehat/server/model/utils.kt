@@ -1,80 +1,107 @@
 package dev.lounres.thetruehat.server.model
 
-import dev.lounres.thetruehat.api.models.RoomDescription
 import dev.lounres.thetruehat.api.models.Settings
 import dev.lounres.thetruehat.api.models.UserGameState
 import dev.lounres.thetruehat.server.Connection
+import dev.lounres.thetruehat.server.availableDictionaries
 import dev.lounres.thetruehat.server.logger
 import kotlinx.datetime.Clock
+import kotlin.random.Random
 import kotlin.time.Duration
 
 
-fun Room.descriptionFor(playerIndex: Int): RoomDescription =
-    RoomDescription(
+fun Room.Waiting.descriptionFor(playerIndex: Int): UserGameState =
+    UserGameState(
         id = id,
         settings = settings,
-        phase = when(this) {
-            is Room.Waiting ->
-                RoomDescription.Phase.WaitingForPlayers(
-                    currentPlayersList = players.map { RoomDescription.Player(it.username, it.online) },
-                )
-            is Room.Playing ->
-                RoomDescription.Phase.GameInProgress(
-                    playersList = players.map { RoomDescription.Player(it.username, it.online) },
-                    speaker = speaker,
-                    listener = listener,
-                    unitsUntilEnd =
-                        when(settings.gameEndCondition) {
-                            Settings.GameEndCondition.Words ->
-                                RoomDescription.UnitsUntilEnd.Words(
-                                    freshWords.size + if (this.roundPhase is Room.Playing.RoundPhase.ExplanationInProgress) 1 else 0
-                                )
-                            Settings.GameEndCondition.Rounds -> RoomDescription.UnitsUntilEnd.Rounds(settings.roundsCount - numberOfLap)
-                        },
-                    roundPhase =
-                        when(val phase = roundPhase) {
-                            is Room.Playing.RoundPhase.Countdown ->
-                                RoomDescription.RoundPhase.Countdown(
-                                    millisecondsUntilStart = (phase.startInstant - Clock.System.now()).inWholeMilliseconds
-                                )
-                            Room.Playing.RoundPhase.WaitingForPlayersToBeReady ->
-                                RoomDescription.RoundPhase.WaitingForPlayersToBeReady(
-                                    speakerReady = speakerReady,
-                                    listenerReady = listenerReady,
-                                )
-                            is Room.Playing.RoundPhase.ExplanationInProgress ->
-                                RoomDescription.RoundPhase.ExplanationInProgress(
-                                    word = if (playerIndex == speaker) phase.wordToExplain else null,
-                                    millisecondsUntilEnd = (phase.endInstant - Clock.System.now()).inWholeMilliseconds,
-                                )
-                            Room.Playing.RoundPhase.EditingInProgress ->
-                                RoomDescription.RoundPhase.EditingInProgress(
-                                    wordsToEdit = if (playerIndex == speaker) wordsToEdit else null
-                                )
-                        },
-                )
-            is Room.Results ->
-                RoomDescription.Phase.GameEnded(
-                    results = players.map {
-                        RoomDescription.GameResult(
-                            username = it.username,
-                            scoreGuessed = it.scoreGuessed,
-                            scoreExplained = it.scoreExplained
-                        )
-                    }
-                )
-        }
+        phase = UserGameState.Phase.WaitingForPlayers(
+            availableDictionaries = availableDictionaries.map { UserGameState.ServerDictionary(id = it.id, name = it.name, wordsCount = it.words.size) },
+            currentPlayersList = players.map { UserGameState.Player(it.username, it.online) },
+            username = players[playerIndex].username,
+            userIndex = playerIndex
+        )
     )
+
+fun Room.Playing.descriptionFor(playerIndex: Int): UserGameState =
+    UserGameState(
+        id = id,
+        settings = settings,
+        phase = UserGameState.Phase.GameInProgress(
+            playersList = players.map { UserGameState.Player(it.username, it.online) },
+            username = players[playerIndex].username,
+            userIndex = playerIndex,
+            speaker = speaker,
+            listener = listener,
+            unitsUntilEnd =
+            when(settings.gameEndCondition) {
+                Settings.GameEndCondition.Words ->
+                    UserGameState.UnitsUntilEnd.Words(
+                        freshWords.size + if (roundPhase is Room.Playing.RoundPhase.ExplanationInProgress) 1 else 0
+                    )
+
+                Settings.GameEndCondition.Rounds -> UserGameState.UnitsUntilEnd.Rounds(settings.roundsCount - numberOfLap)
+            },
+            roundPhase =
+            when(val phase = roundPhase) {
+                is Room.Playing.RoundPhase.Countdown ->
+                    UserGameState.RoundPhase.Countdown(
+                        millisecondsUntilStart = (phase.startInstant - Clock.System.now()).inWholeMilliseconds
+                    )
+
+                Room.Playing.RoundPhase.WaitingForPlayersToBeReady ->
+                    UserGameState.RoundPhase.WaitingForPlayersToBeReady(
+                        speakerReady = speakerReady,
+                        listenerReady = listenerReady,
+                    )
+
+                is Room.Playing.RoundPhase.ExplanationInProgress ->
+                    UserGameState.RoundPhase.ExplanationInProgress(
+                        word = if (playerIndex == speaker) phase.wordToExplain else null,
+                        millisecondsUntilEnd = (phase.endInstant - Clock.System.now()).inWholeMilliseconds,
+                    )
+
+                Room.Playing.RoundPhase.EditingInProgress ->
+                    UserGameState.RoundPhase.EditingInProgress(
+                        wordsToEdit = if (playerIndex == speaker) wordsToEdit else null
+                    )
+            },
+        )
+    )
+
+fun Room.Results.descriptionFor(playerIndex: Int?): UserGameState =
+    UserGameState(
+        id = id,
+        settings = settings,
+        phase = UserGameState.Phase.GameEnded(
+            username = playerIndex?.let { players[it].username },
+            userIndex = playerIndex,
+            results = players.map {
+                UserGameState.GameResult(
+                    username = it.username,
+                    scoreGuessed = it.scoreGuessed,
+                    scoreExplained = it.scoreExplained
+                )
+            }
+        )
+    )
+
+fun Room.descriptionFor(playerIndex: Int): UserGameState =
+    when(this) {
+        is Room.Waiting -> descriptionFor(playerIndex)
+        is Room.Playing -> descriptionFor(playerIndex)
+        is Room.Results -> descriptionFor(playerIndex as Int?)
+    }
 
 val Room.Waiting.Player.online: Boolean get() = connection != null
 val Room.Playing.Player.online: Boolean get() = connection != null
 
-val Room.Player.state: UserGameState
-    get() = UserGameState(
-        roomDescription = room.descriptionFor(playerIndex = playerIndex),
-        username = username,
-        userIndex = playerIndex,
-    )
+val Room.Player.state
+    get() = when(this) {
+        is Room.Waiting.Player -> room.descriptionFor(playerIndex)
+        is Room.Playing.Player -> room.descriptionFor(playerIndex)
+        is Room.Results.Player -> room.descriptionFor(playerIndex as Int?)
+        is Room.Results.Spectator -> room.descriptionFor(null)
+    }
 
 val Connection.state: UserGameState?
     get() = player?.state
@@ -82,12 +109,26 @@ val Connection.state: UserGameState?
 fun Room.Waiting.getOrCreatePlayerByNickname(nickname: String): Room.Waiting.Player =
     players.find { it.username == nickname } ?: addPlayer(nickname, null)
 
-val Room.Playing.isEnded
-    get() = roundPhase == Room.Playing.RoundPhase.WaitingForPlayersToBeReady &&
-            when(settings.gameEndCondition) {
-                Settings.GameEndCondition.Words -> freshWords.size == 0
-                Settings.GameEndCondition.Rounds -> numberOfLap == settings.roundsCount
-            }
+context(Random)
+fun List<String>.generateWords(wordsCount: Int): MutableList<String> {
+    val usedIndices = IntArray(wordsCount) { -1 }
+    val result = ArrayList<String>(wordsCount)
+
+    while (result.size < wordsCount) {
+        val randomIndex = nextInt(this@generateWords.size)
+        if (randomIndex in usedIndices) continue
+        usedIndices[result.size] = randomIndex
+        result.add(this@generateWords[randomIndex])
+    }
+
+    return result
+}
+
+val Room.Playing.hasNoWords: Boolean
+    get() = freshWords.size == 0
+
+val Room.Playing.isEnded: Boolean
+    get() = hasNoWords || (settings.gameEndCondition == Settings.GameEndCondition.Rounds && numberOfLap == settings.roundsCount)
 
 fun Room.Playing.prepareForRound() {
     speakerReady = false

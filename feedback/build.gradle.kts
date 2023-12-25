@@ -4,9 +4,9 @@ plugins {
 
 kotlin {
     jvm()
-    @Suppress("UNUSED_VARIABLE")
+
     sourceSets {
-        val jvmMain by getting {
+        jvmMain {
             dependencies {
                 implementation(libs.ktor.server.core)
                 implementation(libs.ktor.server.netty)
@@ -14,6 +14,16 @@ kotlin {
                 runtimeOnly(libs.logback.classic)
             }
         }
+    }
+}
+
+application {
+    mainClass = "site.m20sch57.thetruehat.feedback.MainKt"
+}
+
+jib {
+    container {
+        mainClass = "site.m20sch57.thetruehat.feedback.MainKt"
     }
 }
 

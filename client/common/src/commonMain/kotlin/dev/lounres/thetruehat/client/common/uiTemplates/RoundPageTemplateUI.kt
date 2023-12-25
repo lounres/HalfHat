@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.value.Value
 import dev.lounres.thetruehat.api.localization.Language
-import dev.lounres.thetruehat.api.models.RoomDescription
+import dev.lounres.thetruehat.api.models.UserGameState
 import dev.lounres.thetruehat.client.common.uiComponents.CircleButtonWithIcon
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
@@ -26,7 +26,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 public fun RoundPageTemplateUI(
     backButtonEnabled: Boolean,
-    unitsUntilEnd: Value<RoomDescription.UnitsUntilEnd>,
+    unitsUntilEnd: Value<UserGameState.UnitsUntilEnd>,
     volumeOn: Value<Boolean>,
     showFinishButton: Value<Boolean>,
     onBackButtonClick: () -> Unit,
@@ -54,8 +54,8 @@ public fun RoundPageTemplateUI(
             ) {
                 Text(
                     text = when (val theUnits = unitsUntilEnd.subscribeAsState().value) {
-                        is RoomDescription.UnitsUntilEnd.Words -> "${theUnits.wordsLeft} слов"
-                        is RoomDescription.UnitsUntilEnd.Rounds -> "${theUnits.roundsLeft} кругов"
+                        is UserGameState.UnitsUntilEnd.Words -> "${theUnits.wordsLeft} слов"
+                        is UserGameState.UnitsUntilEnd.Rounds -> "${theUnits.roundsLeft} кругов"
                     },
                     fontSize = 30.sp,
                 )

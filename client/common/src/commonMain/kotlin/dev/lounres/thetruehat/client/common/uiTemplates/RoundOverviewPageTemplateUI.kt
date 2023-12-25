@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.value.Value
 import dev.lounres.thetruehat.api.localization.Language
-import dev.lounres.thetruehat.api.models.RoomDescription
+import dev.lounres.thetruehat.api.models.UserGameState
 
 
 //@Preview
@@ -39,7 +39,7 @@ import dev.lounres.thetruehat.api.models.RoomDescription
 @Composable
 public fun RoundOverviewPageTemplateUI(
     backButtonEnabled: Boolean,
-    unitsUntilEnd: Value<RoomDescription.UnitsUntilEnd>,
+    unitsUntilEnd: Value<UserGameState.UnitsUntilEnd>,
     volumeOn: Value<Boolean>,
     showFinishButton: Value<Boolean>,
     speakerNickname: Value<String>,

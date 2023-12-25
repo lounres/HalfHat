@@ -12,5 +12,5 @@ public val defaultSettings: Settings =
         gameEndCondition = Settings.GameEndCondition.Words,
         wordsCount = 100,
         roundsCount = 10,
-        wordsSource = Settings.WordsSource.ServerDictionary(dictionaryId = 0)
+        wordsSource = Settings.WordsSource.ServerDictionary(id = 0)
     )

@@ -22,9 +22,8 @@ public data class Settings(
     public sealed interface WordsSource {
         @Serializable
         public data class ServerDictionary(
-            val dictionaryId: Int,
+            val id: Int,
         ): WordsSource
-        // TODO
     }
 }
 

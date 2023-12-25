@@ -5,7 +5,7 @@ import com.arkivanov.decompose.router.stack.*
 import com.arkivanov.decompose.value.Value
 import dev.lounres.thetruehat.api.localization.Language
 import dev.lounres.thetruehat.client.common.components.feedback.RealFeedbackPageComponent
-import dev.lounres.thetruehat.client.common.components.game.RealGameFlowComponent
+import dev.lounres.thetruehat.client.common.components.onlineGame.RealOnlineGameFlowComponent
 import dev.lounres.thetruehat.client.common.components.home.RealHomePageComponent
 import dev.lounres.thetruehat.client.common.components.nrfa.RealNewsRulesFaqAboutPageComponent
 import kotlinx.coroutines.Dispatchers
@@ -95,7 +95,7 @@ public class RealRootComponent(
 
             is ChildConfiguration.GameFLow ->
                 RootComponent.Child.GameFLow(
-                    RealGameFlowComponent(
+                    RealOnlineGameFlowComponent(
                         componentContext = componentContext,
                         coroutineContext = Dispatchers.Default,
                         backButtonEnabled = backButtonEnabled,

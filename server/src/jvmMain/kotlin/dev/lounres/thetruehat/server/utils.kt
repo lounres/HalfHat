@@ -1,6 +1,8 @@
 package dev.lounres.thetruehat.server
 
 import dev.lounres.thetruehat.api.signals.ServerSignal
+import dev.lounres.thetruehat.server.model.LocalDictionary
+import dev.lounres.thetruehat.server.model.LocalDictionaryDescription
 import dev.lounres.thetruehat.server.model.Room
 import dev.lounres.thetruehat.server.model.state
 import io.ktor.server.websocket.*
@@ -20,7 +22,31 @@ object Config {
     val maxKeyLength = 11
     val keyConsonant: List<Char> = listOf('Б', 'В', 'Г', 'Д', 'Ж', 'З', 'К', 'Л', 'М', 'Н', 'П', 'Р', 'С', 'Т', 'Ф', 'Х', 'Ц', 'Ч', 'Ш', 'Щ')
     val keyVowels: List<Char> = listOf('А', 'Е', 'И', 'О', 'У', 'Э', 'Ю', 'Я')
+
+    val dictionaryDescriptions: List<LocalDictionaryDescription> = listOf(
+        LocalDictionaryDescription(
+            id = 0,
+            name = "Простые русские",
+            fileName = "easy",
+        ),
+        LocalDictionaryDescription(
+            id = 1,
+            name = "Средние русские",
+            fileName = "medium",
+        ),
+        LocalDictionaryDescription(
+            id = 2,
+            name = "Сложные русские",
+            fileName = "hard",
+        ),
+    )
 }
+
+fun getDictionary(filename: String): List<String> =
+    Thread.currentThread().contextClassLoader.getResource("dictionaries/$filename")!!.readText().split('\n')
+
+val availableDictionaries: List<LocalDictionary> =
+    Config.dictionaryDescriptions.map { LocalDictionary(it.id, it.name, getDictionary(it.fileName)) }
 
 // TODO: Replace with more accurate implementation
 fun generateRandomRoomId(): String {

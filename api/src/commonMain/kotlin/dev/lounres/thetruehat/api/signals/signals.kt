@@ -1,6 +1,5 @@
 package dev.lounres.thetruehat.api.signals
 
-import dev.lounres.thetruehat.api.models.RoomDescription
 import dev.lounres.thetruehat.api.models.SettingsUpdate
 import dev.lounres.thetruehat.api.models.UserGameState
 import kotlinx.serialization.Serializable
@@ -26,12 +25,6 @@ public sealed interface ServerSignal {
     public data class ProvideFreeRoomId(
         override val userGameState: UserGameState?,
         val freeRoomId: String
-    ): ServerSignal
-
-    @Serializable
-    public data class ProvideRoomResults(
-        override val userGameState: UserGameState?,
-        val gameResult: RoomDescription.GameResult,
     ): ServerSignal
 }
 
@@ -59,8 +52,8 @@ public sealed interface ClientSignal {
     public data object ReadyForTheRound: ClientSignal
 
     @Serializable
-    public data class ExplanationResult(val result: RoomDescription.WordExplanationResult.State): ClientSignal
+    public data class ExplanationResult(val result: UserGameState.WordExplanationResult.State): ClientSignal
 
     @Serializable
-    public data class SubmitResults(val results: List<RoomDescription.WordExplanationResult>): ClientSignal
+    public data class SubmitResults(val results: List<UserGameState.WordExplanationResult>): ClientSignal
 }

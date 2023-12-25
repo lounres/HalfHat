@@ -1,6 +1,6 @@
 package dev.lounres.thetruehat.server
 
-import dev.lounres.thetruehat.api.models.RoomDescription
+import dev.lounres.thetruehat.api.models.UserGameState
 import dev.lounres.thetruehat.api.models.updateWith
 import dev.lounres.thetruehat.api.signals.ClientSignal
 import dev.lounres.thetruehat.api.signals.ServerSignal
@@ -93,8 +93,9 @@ fun main() {
                                         room.sendStatusUpdate()
                                     }
                                     is Room.Results -> {
-                                        ServerSignal.RequestError(userGameState = connection.state, errorMessage = "Игра уже закончена, вход невозможен").send()
-                                        continue
+                                        val spectator = Room.Results.Spectator(room = room)
+                                        connection.player = spectator
+                                        ServerSignal.StatusUpdate(userGameState = spectator.state).send()
                                     }
                                 }
                             }
@@ -114,12 +115,12 @@ fun main() {
                                         thePlayer.room.sendStatusUpdate()
                                     }
                                     is Room.Results.Player -> {
-                                        // TODO: Logs that something went wrong
                                         connection.player = null
-                                        ServerSignal.RequestError(
-                                            userGameState = null,
-                                            errorMessage = "Вы не в комнате",
-                                        ).send()
+                                        ServerSignal.StatusUpdate(userGameState = null).send()
+                                    }
+                                    is Room.Results.Spectator -> {
+                                        connection.player = null
+                                        ServerSignal.StatusUpdate(userGameState = null).send()
                                     }
                                 }
                             }
@@ -199,7 +200,8 @@ fun main() {
                                         val newRoom = Room.Results(id = room.id, settings = room.settings, playerListToProcess = room.players)
                                         rooms[newRoom.id] = newRoom
                                         for (otherConnection in otherConnections) if (otherConnection != null) with(otherConnection.socketSession) {
-                                            ServerSignal.StatusUpdate(userGameState = null).send()
+                                            println(otherConnection.player)
+                                            ServerSignal.StatusUpdate(userGameState = otherConnection.player?.state).send()
                                             // TODO: Send something different to show the results
                                         }
                                     }
@@ -210,35 +212,34 @@ fun main() {
                                 }
                             }
                             ClientSignal.ReadyForTheRound -> {
-                                val player = connection.player
-                                if (player == null) {
-                                    ServerSignal.RequestError(userGameState = null, errorMessage = "Вы не в комнате").send()
-                                    continue
-                                }
-                                when(val room = player.room) {
-                                    is Room.Waiting -> {
+                                when(val player = connection.player) {
+                                    null -> {
+                                        ServerSignal.RequestError(userGameState = null, errorMessage = "Вы не в комнате").send()
+                                        continue
+                                    }
+                                    is Room.Waiting.Player -> {
                                         ServerSignal.RequestError(userGameState = player.state, errorMessage = "Игра ещё не начата").send()
                                         continue
                                     }
-                                    is Room.Playing -> {
-                                        when(room.roundPhase) {
+                                    is Room.Playing.Player -> {
+                                        when(player.room.roundPhase) {
                                             is Room.Playing.RoundPhase.Countdown -> {
                                                 ServerSignal.RequestError(userGameState = player.state, errorMessage = "Игра не на стадии подготовки к раунду").send()
                                                 continue
                                             }
                                             Room.Playing.RoundPhase.WaitingForPlayersToBeReady -> {
                                                 when(player.playerIndex) {
-                                                    room.speaker -> {
-                                                        if (!room.speakerReady) {
-                                                            room.speakerReady = true
+                                                    player.room.speaker -> {
+                                                        if (!player.room.speakerReady) {
+                                                            player.room.speakerReady = true
                                                         } else {
                                                             ServerSignal.RequestError(userGameState = player.state, errorMessage = "Объясняющий уже и так готов").send()
                                                             continue
                                                         }
                                                     }
-                                                    room.listener -> {
-                                                        if (!room.listenerReady) {
-                                                            room.listenerReady = true
+                                                    player.room.listener -> {
+                                                        if (!player.room.listenerReady) {
+                                                            player.room.listenerReady = true
                                                         } else {
                                                             ServerSignal.RequestError(userGameState = player.state, errorMessage = "Отгадывающий уже и так готов").send()
                                                             continue
@@ -249,55 +250,55 @@ fun main() {
                                                         continue
                                                     }
                                                 }
-                                                if (room.speakerReady && room.listenerReady) {
+                                                if (player.room.speakerReady && player.room.listenerReady) {
                                                     val transferTime = 1 // TODO: Move the constant `1` somewhere appropriate
-                                                    val countdownTime = room.settings.countdownTime
-                                                    val explanationTime = room.settings.explanationTime
-                                                    val finalGuessTime = room.settings.finalGuessTime
+                                                    val countdownTime = player.room.settings.countdownTime
+                                                    val explanationTime = player.room.settings.explanationTime
+                                                    val finalGuessTime = player.room.settings.finalGuessTime
                                                     val startInstant = Clock.System.now() + with(Duration) { (countdownTime + transferTime).seconds }
 
                                                     val roundStartJob = GlobalScope.launch {
                                                         delay(with(Duration) { (countdownTime + transferTime).seconds })
-                                                        if (room.isEnded) {
+                                                        if (player.room.isEnded) {
                                                             logger.warn { "Round started without any words" }
                                                             val newRoom = Room.Results(
-                                                                id = room.id,
-                                                                settings = room.settings,
-                                                                playerListToProcess = room.players,
+                                                                id = player.room.id,
+                                                                settings = player.room.settings,
+                                                                playerListToProcess = player.room.players,
                                                             )
                                                             rooms[newRoom.id] = newRoom
                                                         } else {
-                                                            room.setNextWordForExplanation()
+                                                            player.room.setNextWordForExplanation()
                                                         }
-                                                        room.sendStatusUpdate()
+                                                        player.room.sendStatusUpdate()
                                                     }
                                                     val strictEndJob =
-                                                        if (room.settings.strictMode)
+                                                        if (player.room.settings.strictMode)
                                                             GlobalScope.launch {
                                                                 delay(with(Duration) { (countdownTime + explanationTime + finalGuessTime + transferTime).seconds })
-                                                                val roundPhase = room.roundPhase
+                                                                val roundPhase = player.room.roundPhase
                                                                 if (roundPhase is Room.Playing.RoundPhase.ExplanationInProgress) {
-                                                                    room.wordsToEdit.add(
-                                                                        RoomDescription.WordExplanationResult(
+                                                                    player.room.wordsToEdit.add(
+                                                                        UserGameState.WordExplanationResult(
                                                                             word = roundPhase.wordToExplain,
-                                                                            state = RoomDescription.WordExplanationResult.State.NotExplained,
+                                                                            state = UserGameState.WordExplanationResult.State.NotExplained,
                                                                         )
                                                                     )
                                                                 } else {
                                                                     logger.warn { "Unexpected room phase during strict game ending" }
                                                                 }
-                                                                room.roundPhase = Room.Playing.RoundPhase.EditingInProgress
-                                                                room.sendStatusUpdate()
+                                                                player.room.roundPhase = Room.Playing.RoundPhase.EditingInProgress
+                                                                player.room.sendStatusUpdate()
                                                             }
                                                         else null
 
-                                                    room.roundPhase = Room.Playing.RoundPhase.Countdown(
+                                                    player.room.roundPhase = Room.Playing.RoundPhase.Countdown(
                                                         startInstant = startInstant,
                                                         roundStartJob = roundStartJob,
                                                         strictEndJob = strictEndJob
                                                     )
                                                 }
-                                                room.sendStatusUpdate()
+                                                player.room.sendStatusUpdate()
                                             }
                                             is Room.Playing.RoundPhase.ExplanationInProgress -> {
                                                 ServerSignal.RequestError(userGameState = player.state, errorMessage = "Игра не на стадии подготовки к раунду").send()
@@ -309,25 +310,28 @@ fun main() {
                                             }
                                         }
                                     }
-                                    is Room.Results -> {
+                                    is Room.Results.Player -> {
+                                        ServerSignal.RequestError(userGameState = player.state, errorMessage = "Игра закончена").send()
+                                        continue
+                                    }
+                                    is Room.Results.Spectator -> {
                                         ServerSignal.RequestError(userGameState = player.state, errorMessage = "Игра закончена").send()
                                         continue
                                     }
                                 }
                             }
                             is ClientSignal.ExplanationResult -> {
-                                val player = connection.player
-                                if (player == null) {
-                                    ServerSignal.RequestError(userGameState = null, errorMessage = "Вы не в комнате").send()
-                                    continue
-                                }
-                                when(val room = player.room) {
-                                    is Room.Waiting -> {
+                                when(val player = connection.player) {
+                                    null -> {
+                                        ServerSignal.RequestError(userGameState = null, errorMessage = "Вы не в комнате").send()
+                                        continue
+                                    }
+                                    is Room.Waiting.Player -> {
                                         ServerSignal.RequestError(userGameState = player.state, errorMessage = "Игра ещё не начата").send()
                                         continue
                                     }
-                                    is Room.Playing -> {
-                                        when(val roundPhase = room.roundPhase) {
+                                    is Room.Playing.Player -> {
+                                        when(val roundPhase = player.room.roundPhase) {
                                             is Room.Playing.RoundPhase.Countdown -> {
                                                 ServerSignal.RequestError(userGameState = player.state, errorMessage = "Игра не на стадии объяснения слов").send()
                                                 continue
@@ -337,29 +341,29 @@ fun main() {
                                                 continue
                                             }
                                             is Room.Playing.RoundPhase.ExplanationInProgress -> {
-                                                if (player.playerIndex == room.speaker) {
-                                                    room.wordsToEdit.add(
-                                                        RoomDescription.WordExplanationResult(
+                                                if (player.playerIndex == player.room.speaker) {
+                                                    player.room.wordsToEdit.add(
+                                                        UserGameState.WordExplanationResult(
                                                             word = roundPhase.wordToExplain,
                                                             state = clientSignal.result,
                                                         )
                                                     )
                                                     when (clientSignal.result) {
-                                                        RoomDescription.WordExplanationResult.State.Explained -> {
-                                                            if (room.isEnded || Clock.System.now() > roundPhase.endInstant) {
+                                                        UserGameState.WordExplanationResult.State.Explained -> {
+                                                            if (player.room.hasNoWords || Clock.System.now() > roundPhase.endInstant) {
                                                                 roundPhase.strictEndJob?.cancel()
-                                                                room.roundPhase = Room.Playing.RoundPhase.EditingInProgress
+                                                                player.room.roundPhase = Room.Playing.RoundPhase.EditingInProgress
                                                             } else {
-                                                                room.setNextWordForExplanation()
+                                                                player.room.setNextWordForExplanation()
                                                             }
                                                         }
-                                                        RoomDescription.WordExplanationResult.State.NotExplained,
-                                                        RoomDescription.WordExplanationResult.State.Mistake -> {
+                                                        UserGameState.WordExplanationResult.State.NotExplained,
+                                                        UserGameState.WordExplanationResult.State.Mistake -> {
                                                             roundPhase.strictEndJob?.cancel()
-                                                            room.roundPhase = Room.Playing.RoundPhase.EditingInProgress
+                                                            player.room.roundPhase = Room.Playing.RoundPhase.EditingInProgress
                                                         }
                                                     }
-                                                    room.sendStatusUpdate()
+                                                    player.room.sendStatusUpdate()
                                                 } else {
                                                     ServerSignal.RequestError(userGameState = player.state, errorMessage = "Вы не объясняющий").send()
                                                     continue
@@ -371,7 +375,7 @@ fun main() {
                                             }
                                         }
                                     }
-                                    is Room.Results -> {
+                                    is Room.Results.Player, is Room.Results.Spectator -> {
                                         ServerSignal.RequestError(userGameState = player.state, errorMessage = "Игра закончена").send()
                                         continue
                                     }
@@ -407,16 +411,25 @@ fun main() {
                                                     ServerSignal.RequestError(userGameState = player.state, errorMessage = "Несовпадение слов редактирования раунда").send()
                                                     continue
                                                 }
-                                                val (notExplained, others) = clientSignal.results.partition { it.state == RoomDescription.WordExplanationResult.State.NotExplained }
+                                                val (notExplained, others) = clientSignal.results.partition { it.state == UserGameState.WordExplanationResult.State.NotExplained }
                                                 room.usedWords.addAll(others)
                                                 notExplained.mapTo(room.freshWords) { it.word }
                                                 room.wordsToEdit.clear()
-                                                val points = others.count { it.state == RoomDescription.WordExplanationResult.State.Explained }
+                                                val points = others.count { it.state == UserGameState.WordExplanationResult.State.Explained }
                                                 room.players[room.speaker].scoreExplained += points
                                                 room.players[room.listener].scoreGuessed += points
                                                 room.prepareForRound()
-                                                room.roundPhase = Room.Playing.RoundPhase.WaitingForPlayersToBeReady
-                                                room.sendStatusUpdate()
+                                                if (room.isEnded) {
+                                                    val newRoom = Room.Results(
+                                                        id = room.id,
+                                                        settings = room.settings,
+                                                        playerListToProcess = room.players,
+                                                    )
+                                                    rooms[newRoom.id] = newRoom
+                                                } else {
+                                                    room.roundPhase = Room.Playing.RoundPhase.WaitingForPlayersToBeReady
+                                                    room.sendStatusUpdate()
+                                                }
                                             }
                                         }
                                     }
@@ -438,8 +451,10 @@ fun main() {
                             is Room.Waiting.Player -> player.connection = null
                             is Room.Playing.Player -> player.connection = null
                             is Room.Results.Player -> {}
+                            is Room.Results.Spectator -> {}
                         }
                     }
+                    connection.player = null
                 }
             }
         }
