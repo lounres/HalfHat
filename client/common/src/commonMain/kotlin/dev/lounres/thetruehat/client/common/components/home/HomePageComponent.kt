@@ -9,6 +9,9 @@ public interface HomePageComponent {
     public val onLanguageChange: (language: Language) -> Unit
     public val onFeedbackButtonClick: () -> Unit
     public val onHatButtonClick: () -> Unit
-    public val onCreateButtonClick: () -> Unit
-    public val onEnterButtonClick: () -> Unit
+
+    public val onCreateOnlineGameButtonClick: () -> Unit
+    public val onEnterOnlineGameButtonClick: () -> Unit
+
+    public val onCreateGameTimerButtonClick: () -> Unit
 }

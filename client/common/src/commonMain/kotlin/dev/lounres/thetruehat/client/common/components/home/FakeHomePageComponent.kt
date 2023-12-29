@@ -11,6 +11,8 @@ public class FakeHomePageComponent(
     override val onFeedbackButtonClick: () -> Unit = {}
     override val onHatButtonClick: () -> Unit = {}
 
-    override val onCreateButtonClick: () -> Unit = {}
-    override val onEnterButtonClick: () -> Unit = {}
+    override val onCreateOnlineGameButtonClick: () -> Unit = {}
+    override val onEnterOnlineGameButtonClick: () -> Unit = {}
+
+    override val onCreateGameTimerButtonClick: () -> Unit = {}
 }

@@ -7,6 +7,7 @@ import com.arkivanov.decompose.value.update
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import dev.lounres.thetruehat.api.localization.Language
 import dev.lounres.thetruehat.api.models.UserGameState
+import dev.lounres.thetruehat.client.common.utils.playSound
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
@@ -36,9 +37,11 @@ public class RealRoundCountdownPageComponent(
     override val countsUntilStart: MutableValue<Long> = MutableValue(millisecondsUntilStart.value / 1000 + 1)
     private var countingDownJob = coroutineScope.launch {
         delay(millisecondsUntilStart.value % 1000)
+        if (volumeOn.value) playSound("/sounds/countdown.wav")
         countsUntilStart.update { it-1 }
         while (countsUntilStart.value > 0) {
             delay(1000)
+            if (volumeOn.value) playSound("/sounds/countdown.wav")
             countsUntilStart.update { it-1 }
         }
     }
@@ -49,9 +52,11 @@ public class RealRoundCountdownPageComponent(
             countsUntilStart.update { updatedMillisecondsUntilStart / 1000 + 1 }
             countingDownJob = coroutineScope.launch {
                 delay(updatedMillisecondsUntilStart % 1000)
+                if (volumeOn.value) playSound("/sounds/countdown.wav")
                 countsUntilStart.update { it-1 }
                 while (countsUntilStart.value > 0) {
                     delay(1000)
+                    if (volumeOn.value) playSound("/sounds/countdown.wav")
                     countsUntilStart.update { it-1 }
                 }
             }

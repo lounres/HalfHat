@@ -1,15 +1,19 @@
+import java.time.LocalDateTime
+
 plugins {
-    alias(libs.plugins.ktor)
+    alias(libs.plugins.ktor.old)
 }
 
 kotlin {
-    jvm()
+    jvm {
+        withJava()
+    }
 
     sourceSets {
         jvmMain {
             dependencies {
-                implementation(libs.ktor.server.core)
-                implementation(libs.ktor.server.netty)
+                implementation(libs.ktor.old.server.core)
+                implementation(libs.ktor.old.server.netty)
                 implementation(libs.kord.core)
                 runtimeOnly(libs.logback.classic)
             }
@@ -18,25 +22,31 @@ kotlin {
 }
 
 application {
-    mainClass = "site.m20sch57.thetruehat.feedback.MainKt"
+    mainClass = "dev.lounres.thetruehat.feedback.MainKt"
 }
 
 jib {
     container {
-        mainClass = "site.m20sch57.thetruehat.feedback.MainKt"
+        mainClass = "dev.lounres.thetruehat.feedback.MainKt"
     }
 }
 
 ktor {
     docker {
-        localImageName.set("thetruehat-feedback")
+        localImageName = "thetruehat-feedback"
+        imageTag = LocalDateTime.now().toString().replace(':', '-')
 
         portMappings.set(listOf(
             io.ktor.plugin.features.DockerPortMapping(
-                7005,
-                8080,
-                io.ktor.plugin.features.DockerPortMappingProtocol.TCP
+                outsideDocker = 2000,
+                insideDocker = 8080,
+                protocol = io.ktor.plugin.features.DockerPortMappingProtocol.TCP
             )
         ))
+
+//        environmentVariable("token", TODO())
+//        environmentVariable("channelId", TODO())
+
+//        externalRegistry = null // TODO
     }
 }

@@ -16,8 +16,12 @@ public class FakeRoomSettingsPageComponent(
     explanationTime: Int = 40,
     finalGuessTime: Int = 3,
     strictMode: Boolean = false,
-    dictionary: UserGameState.ServerDictionary,
-    availableDictionaries: List<UserGameState.ServerDictionary>,
+    dictionary: UserGameState.ServerDictionary = UserGameState.ServerDictionary(id = 0, name = "Тестовый словарь", wordsCount = 57),
+    availableDictionaries: List<UserGameState.ServerDictionary> = listOf(
+        UserGameState.ServerDictionary(id = 0, name = "Тестовый словарь", wordsCount = 57),
+        UserGameState.ServerDictionary(id = 1, name = "Тестовый словарь 2", wordsCount = 179),
+        UserGameState.ServerDictionary(id = 0, name = "Тестовый словарь 3", wordsCount = 2)
+    ),
 ) : RoomSettingsPageComponent {
     override val onBackButtonClick: () -> Unit = {}
     override val onLanguageChange: (language: Language) -> Unit = {}

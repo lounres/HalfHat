@@ -3,16 +3,16 @@ package dev.lounres.thetruehat.client.desktop.ui
 import androidx.compose.runtime.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
-import dev.lounres.thetruehat.client.common.ui.feedback.FeedbackPageUIPreview
-import dev.lounres.thetruehat.client.common.ui.onlineGame.roomEnter.RoomEnterPageUIPreview
-import dev.lounres.thetruehat.client.common.ui.onlineGame.roomFlow.roomOverview.RoomOverviewPageUIPreview1
-import dev.lounres.thetruehat.client.common.ui.onlineGame.roomFlow.roomOverview.RoomOverviewPageUIPreview2
-import dev.lounres.thetruehat.client.common.ui.onlineGame.roundBreak.RoundBreakPageUIPreview1
-import dev.lounres.thetruehat.client.common.ui.onlineGame.roundBreak.RoundBreakPageUIPreview2
-import dev.lounres.thetruehat.client.common.ui.onlineGame.roundBreak.RoundBreakPageUIPreview3
-import dev.lounres.thetruehat.client.common.ui.home.HomePageUIPreview
-import dev.lounres.thetruehat.client.common.ui.nrfa.NewsRulesFaqAboutPageUIPreview
-import dev.lounres.thetruehat.client.common.uiTemplates.RoundOverviewPageTemplateUIPreview
+import dev.lounres.thetruehat.client.desktop.ui.feedback.FeedbackPageUIPreview
+import dev.lounres.thetruehat.client.desktop.ui.home.HomePageUIPreview
+import dev.lounres.thetruehat.client.desktop.ui.nrfa.NewsRulesFaqAboutPageUIPreview
+import dev.lounres.thetruehat.client.desktop.ui.onlineGame.roomEnter.RoomEnterPageUIPreview
+import dev.lounres.thetruehat.client.desktop.ui.onlineGame.roomFlow.roomOverview.RoomOverviewPageUIPreview1
+import dev.lounres.thetruehat.client.desktop.ui.onlineGame.roomFlow.roomOverview.RoomOverviewPageUIPreview2
+import dev.lounres.thetruehat.client.desktop.ui.onlineGame.roundBreak.RoundBreakPageUIPreview1
+import dev.lounres.thetruehat.client.desktop.ui.onlineGame.roundBreak.RoundBreakPageUIPreview2
+import dev.lounres.thetruehat.client.desktop.ui.onlineGame.roundBreak.RoundBreakPageUIPreview3
+import dev.lounres.thetruehat.client.desktop.uiTemplates.RoundOverviewPageTemplateUIPreview
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 

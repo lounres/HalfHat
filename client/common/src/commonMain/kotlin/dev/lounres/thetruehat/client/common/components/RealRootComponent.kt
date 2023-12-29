@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.stack.*
 import com.arkivanov.decompose.value.Value
 import dev.lounres.thetruehat.api.localization.Language
 import dev.lounres.thetruehat.client.common.components.feedback.RealFeedbackPageComponent
+import dev.lounres.thetruehat.client.common.components.gameTimer.RealGameTimerComponent
 import dev.lounres.thetruehat.client.common.components.onlineGame.RealOnlineGameFlowComponent
 import dev.lounres.thetruehat.client.common.components.home.RealHomePageComponent
 import dev.lounres.thetruehat.client.common.components.nrfa.RealNewsRulesFaqAboutPageComponent
@@ -53,21 +54,28 @@ public class RealRootComponent(
                         onLanguageChange = onLanguageChange,
                         onFeedbackButtonClick = onFeedbackButtonClick,
                         onHatButtonClick = onHatButtonClick,
-                        onCreateButtonClick = {
+                        onCreateOnlineGameButtonClick = {
                             navigation.push(
-                                ChildConfiguration.GameFLow(
+                                ChildConfiguration.OnlineGameFLow(
                                     stackHeight,
                                     true
                                 )
                             )
                         },
-                        onEnterButtonClick = {
+                        onEnterOnlineGameButtonClick = {
                             navigation.push(
-                                ChildConfiguration.GameFLow(
+                                ChildConfiguration.OnlineGameFLow(
                                     stackHeight
                                 )
                             )
                         },
+                        onCreateGameTimerButtonClick = {
+                            navigation.push(
+                                ChildConfiguration.GameTimer(
+                                    stackHeight
+                                )
+                            )
+                        }
                     )
                 )
 
@@ -93,8 +101,8 @@ public class RealRootComponent(
                     )
                 )
 
-            is ChildConfiguration.GameFLow ->
-                RootComponent.Child.GameFLow(
+            is ChildConfiguration.OnlineGameFLow ->
+                RootComponent.Child.OnlineGameFLow(
                     RealOnlineGameFlowComponent(
                         componentContext = componentContext,
                         coroutineContext = Dispatchers.Default,
@@ -104,6 +112,19 @@ public class RealRootComponent(
                         onFeedbackButtonClick = onFeedbackButtonClick,
                         onHatButtonClick = onHatButtonClick,
                         generateNewRoomId = configuration.generateNewRoomId,
+                    )
+                )
+
+            is ChildConfiguration.GameTimer ->
+                RootComponent.Child.GameTimer(
+                    RealGameTimerComponent(
+                        componentContext = componentContext,
+                        coroutineContext = Dispatchers.Default,
+                        backButtonEnabled = backButtonEnabled,
+                        onBackButtonClick = onBackButtonClick,
+                        onLanguageChange = onLanguageChange,
+                        onFeedbackButtonClick = onFeedbackButtonClick,
+                        onHatButtonClick = onHatButtonClick,
                     )
                 )
         }
@@ -126,9 +147,13 @@ public class RealRootComponent(
             override val stackHeight: UInt,
         ): ChildConfiguration
         @Serializable
-        public data class GameFLow(
+        public data class OnlineGameFLow(
             override val stackHeight: UInt,
             val generateNewRoomId: Boolean = false,
+        ): ChildConfiguration
+        @Serializable
+        public data class GameTimer(
+            override val stackHeight: UInt,
         ): ChildConfiguration
     }
 }

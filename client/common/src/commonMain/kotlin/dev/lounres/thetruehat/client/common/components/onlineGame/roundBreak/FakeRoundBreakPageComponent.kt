@@ -13,13 +13,14 @@ public class FakeRoundBreakPageComponent(
     volumeOn: Boolean = true,
     speakerNickname: String = "Panther",
     listenerNickname: String = "Jaguar",
-    override val userRole: Value<RoundBreakPageComponent.UserRole> = MutableValue(RoundBreakPageComponent.UserRole.SpeakerReady),
+    userRole: RoundBreakPageComponent.UserRole,
 ): RoundBreakPageComponent {
     override val unitsUntilEnd: Value<UserGameState.UnitsUntilEnd> = MutableValue(unitsUntilEnd)
     override val volumeOn: Value<Boolean> = MutableValue(volumeOn)
     override val showFinishButton: Value<Boolean> = MutableValue(showFinishButton)
     override val speakerNickname: Value<String> = MutableValue(speakerNickname)
     override val listenerNickname: Value<String> = MutableValue(listenerNickname)
+    override val userRole: Value<RoundBreakPageComponent.UserRole> = MutableValue(userRole)
 
     override val onBackButtonClick: () -> Unit = {}
     override val onLanguageChange: (language: Language) -> Unit = {}
