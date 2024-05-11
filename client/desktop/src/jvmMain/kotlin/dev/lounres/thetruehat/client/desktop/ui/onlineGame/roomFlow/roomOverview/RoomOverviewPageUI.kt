@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import dev.lounres.thetruehat.client.common.components.onlineGame.roomFlow.roomOverview.FakeRoomOverviewPageComponent
 import dev.lounres.thetruehat.client.common.components.onlineGame.roomFlow.roomOverview.RoomOverviewPageComponent
+import dev.lounres.thetruehat.client.common.resources.Res
+import dev.lounres.thetruehat.client.common.resources.hat
 import dev.lounres.thetruehat.client.desktop.uiTemplates.TheTrueHatPageWithHatTemplateUI
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
@@ -96,12 +98,12 @@ public fun RoomOverviewPageUI(
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 Column {
-                    Divider()
+                    HorizontalDivider()
                     for ((index, user) in userList.withIndex()) if (user.online) {
                         Box(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
                             if (index == firstOnline)
                                 Image(
-                                    painterResource("hat.png"),
+                                    painterResource(Res.drawable.hat),
                                     contentDescription = null,
                                     modifier = Modifier.align(Alignment.CenterStart).size(20.dp)
                                 )
@@ -110,15 +112,17 @@ public fun RoomOverviewPageUI(
                             ) {
                                 Text(
                                     text = user.username,
+                                    fontSize = 20.sp,
                                 )
                                 if (index == playerIndex)
                                     Text(
                                         text = " (ты)",
-                                        fontWeight = FontWeight.Bold
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold,
                                     )
                             }
                         }
-                        Divider()
+                        HorizontalDivider()
                     }
                 }
                 Spacer(modifier = Modifier.height(20.dp))

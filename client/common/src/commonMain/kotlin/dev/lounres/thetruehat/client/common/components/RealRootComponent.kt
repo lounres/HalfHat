@@ -9,6 +9,7 @@ import dev.lounres.thetruehat.client.common.components.gameTimer.RealGameTimerCo
 import dev.lounres.thetruehat.client.common.components.onlineGame.RealOnlineGameFlowComponent
 import dev.lounres.thetruehat.client.common.components.home.RealHomePageComponent
 import dev.lounres.thetruehat.client.common.components.nrfa.RealNewsRulesFaqAboutPageComponent
+import dev.lounres.thetruehat.client.common.utils.runOnUiThread
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.serializer
@@ -20,7 +21,7 @@ public class RealRootComponent(
     private val navigation = StackNavigation<ChildConfiguration>()
 
     private var stackHeight: UInt = 0u
-    override val childStack: Value<ChildStack<*, RootComponent.Child>> =
+    override val childStack: Value<ChildStack<*, RootComponent.Child>> = runOnUiThread {
         componentContext.childStack(
             source = navigation,
             initialConfiguration = ChildConfiguration.HomePage(
@@ -29,6 +30,7 @@ public class RealRootComponent(
             serializer = serializer<ChildConfiguration>(),
             childFactory = ::createChild,
         )
+    }
 
     private fun createChild(configuration: ChildConfiguration, componentContext: ComponentContext): RootComponent.Child {
         val backButtonEnabled = stackHeight != 0u

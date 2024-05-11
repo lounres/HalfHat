@@ -14,7 +14,7 @@ kotlin {
                 implementation(libs.kotlinx.datetime)
 
                 // Logging
-                implementation(libs.kotlin.logging)
+                implementation(libs.logkube.core)
 
                 // Ktor
                 implementation(libs.ktor.server.core)

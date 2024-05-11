@@ -3,6 +3,7 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 plugins {
     java
     alias(libs.plugins.compose)
+    alias(libs.plugins.jetbrains.compose)
 //    alias(libs.plugins.ktor)
     alias(libs.plugins.kotlinx.serialization)
 }
@@ -16,6 +17,7 @@ kotlin {
 
                 // Compose
                 implementation(compose.desktop.currentOs)
+                implementation(compose.components.resources)
 
                 // Ktor
                 implementation(libs.ktor.client.cio)
@@ -31,14 +33,19 @@ task<JavaExec>("runUi") {
     mainClass = "dev.lounres.thetruehat.client.desktop.ui.MainKt"
 }
 
-compose.desktop {
-    application {
-        mainClass = "dev.lounres.thetruehat.client.desktop.MainKt"
+compose {
+    resources {
+        packageOfResClass = "dev.lounres.thetruehat.client.desktop.resources"
+    }
+    desktop {
+        application {
+            mainClass = "dev.lounres.thetruehat.client.desktop.MainKt"
 
-        nativeDistributions {
-            targetFormats(/*TargetFormat.Dmg,*/ TargetFormat.Msi, TargetFormat.Deb, )
-            packageName = "KotlinMultiplatformComposeDesktopApplication"
-            packageVersion = version as String
+            nativeDistributions {
+                targetFormats(/*TargetFormat.Dmg,*/ TargetFormat.Msi, TargetFormat.Deb)
+                packageName = "KotlinMultiplatformComposeDesktopApplication"
+                packageVersion = version as String
+            }
         }
     }
 }

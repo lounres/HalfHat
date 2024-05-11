@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lounres.thetruehat.client.common.components.home.FakeHomePageComponent
 import dev.lounres.thetruehat.client.common.components.home.HomePageComponent
+import dev.lounres.thetruehat.client.common.resources.*
 import dev.lounres.thetruehat.client.desktop.uiTemplates.TheTrueHatPageWithHatTemplateUI
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
@@ -51,7 +52,7 @@ public fun HomePageUI(component: HomePageComponent) {
                     onClick = component.onCreateOnlineGameButtonClick,
                 ) {
                     Icon(
-                        painter = painterResource("icons/internet.png"), // TODO: Fix icons sizes.
+                        painter = painterResource(Res.drawable.internet), // TODO: Fix icons sizes.
                         contentDescription = null,
                     )
                     Spacer(modifier = Modifier.width(10.dp))
@@ -68,7 +69,7 @@ public fun HomePageUI(component: HomePageComponent) {
                     onClick = component.onEnterOnlineGameButtonClick,
                 ) {
                     Icon(
-                        painter = painterResource("icons/internet.png"),
+                        painter = painterResource(Res.drawable.internet),
                         contentDescription = null,
                     )
                     Spacer(modifier = Modifier.width(10.dp))
@@ -86,7 +87,7 @@ public fun HomePageUI(component: HomePageComponent) {
                     onClick = { TODO() },
                 ) {
                     Icon(
-                        painter = painterResource("icons/wifi.png"),
+                        painter = painterResource(Res.drawable.wifi),
                         contentDescription = null,
                     )
                     Spacer(modifier = Modifier.width(10.dp))
@@ -104,7 +105,7 @@ public fun HomePageUI(component: HomePageComponent) {
                     onClick = { TODO() },
                 ) {
                     Icon(
-                        painter = painterResource("icons/wifi.png"),
+                        painter = painterResource(Res.drawable.wifi),
                         contentDescription = null,
                     )
                     Spacer(modifier = Modifier.width(10.dp))
@@ -122,7 +123,7 @@ public fun HomePageUI(component: HomePageComponent) {
                     onClick = { TODO() },
                 ) {
                     Icon(
-                        painter = painterResource("icons/devices.png"),
+                        painter = painterResource(Res.drawable.devices),
                         contentDescription = null,
                     )
                     Spacer(modifier = Modifier.width(10.dp))
@@ -139,7 +140,7 @@ public fun HomePageUI(component: HomePageComponent) {
                     onClick = component.onCreateGameTimerButtonClick,
                 ) {
                     Icon(
-                        painter = painterResource("icons/timer.png"),
+                        painter = painterResource(Res.drawable.timer),
                         contentDescription = null,
                     )
                     Spacer(modifier = Modifier.width(10.dp))

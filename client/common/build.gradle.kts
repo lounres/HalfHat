@@ -1,8 +1,7 @@
-import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
-
 plugins {
 //    alias(libs.plugins.android.library)
     alias(libs.plugins.compose)
+    alias(libs.plugins.jetbrains.compose)
     alias(libs.plugins.kotlinx.serialization)
 }
 
@@ -26,7 +25,7 @@ kotlin {
                 api(libs.kotlinx.serialization.core)
 
                 // Logging
-                api(libs.kotlin.logging)
+                api(libs.logkube.core)
 
                 // Compose
                 api(compose.runtime)
@@ -34,7 +33,6 @@ kotlin {
                 api(compose.foundation)
                 api(compose.material)
                 api(compose.material3)
-                @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 api(compose.components.resources)
 
                 // Ktor
@@ -68,6 +66,14 @@ kotlin {
 //                implementation(libs.ktor.client.js)
 //            }
 //        }
+    }
+}
+
+compose {
+    resources {
+        publicResClass = true
+        packageOfResClass = "dev.lounres.thetruehat.client.common.resources"
+        generateResClass = always
     }
 }
 

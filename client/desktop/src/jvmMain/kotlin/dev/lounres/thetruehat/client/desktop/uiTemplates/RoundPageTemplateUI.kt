@@ -5,12 +5,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.value.Value
 import dev.lounres.thetruehat.api.localization.Language
 import dev.lounres.thetruehat.api.models.UserGameState
+import dev.lounres.thetruehat.client.common.resources.Res
+import dev.lounres.thetruehat.client.common.resources.exit_black_x1_24dp
+import dev.lounres.thetruehat.client.common.resources.volume_off_black_x1_24dp
+import dev.lounres.thetruehat.client.common.resources.volume_on_black_x1_24dp
 import dev.lounres.thetruehat.client.common.uiComponents.CircleButtonWithIcon
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
@@ -61,11 +66,11 @@ public fun RoundPageTemplateUI(
                 )
                 Row {
                     CircleButtonWithIcon(
-                        icon = painterResource("icons/exit_black_x1_24dp.png"),
+                        icon = painterResource(Res.drawable.exit_black_x1_24dp),
                         onClick = onExitButtonClick,
                     )
                     CircleButtonWithIcon(
-                        icon = painterResource(if (volumeOn.subscribeAsState().value) "icons/volume_on_black_x1_24dp.png" else "icons/volume_off_black_x1_24dp.png"),
+                        icon = painterResource(if (volumeOn.subscribeAsState().value) Res.drawable.volume_on_black_x1_24dp else Res.drawable.volume_off_black_x1_24dp),
                         onClick = onVolumeButtonClick
                     )
                     if (showFinishButton.subscribeAsState().value)

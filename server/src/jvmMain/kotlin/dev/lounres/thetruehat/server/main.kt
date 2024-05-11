@@ -1,11 +1,13 @@
 package dev.lounres.thetruehat.server
 
+import dev.lounres.logKube.core.CommonLogWriter
+import dev.lounres.logKube.core.LogAcceptor
+import dev.lounres.logKube.core.Logger
 import dev.lounres.thetruehat.api.models.UserGameState
 import dev.lounres.thetruehat.api.models.updateWith
 import dev.lounres.thetruehat.api.signals.ClientSignal
 import dev.lounres.thetruehat.api.signals.ServerSignal
 import dev.lounres.thetruehat.server.model.*
-import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.serialization.deserialize
 import io.ktor.serialization.kotlinx.*
 import io.ktor.server.application.*
@@ -23,7 +25,12 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration
 
 
-val logger = KotlinLogging.logger {}
+val logger = Logger(
+    name = "TheTrueHat main server logger",
+    logAcceptors = mutableListOf(
+        LogAcceptor(CommonLogWriter),
+    )
+)
 
 val rooms: MutableMap<String, Room> = ConcurrentHashMap()
 

@@ -1,7 +1,5 @@
 package dev.lounres.thetruehat.client.common
 
-import io.github.oshai.kotlinlogging.KLogger
-import io.github.oshai.kotlinlogging.KotlinLogging
+import dev.lounres.logKube.core.Logger
 
-
-public val logger: KLogger = KotlinLogging.logger {}
+public val logger: Logger = Logger(name = "TheTrueHat main client logger")

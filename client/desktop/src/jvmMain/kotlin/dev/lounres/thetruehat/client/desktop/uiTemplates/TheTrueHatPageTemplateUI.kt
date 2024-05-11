@@ -3,14 +3,14 @@ package dev.lounres.thetruehat.client.desktop.uiTemplates
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material3.Divider
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import dev.lounres.thetruehat.api.localization.Language
+import dev.lounres.thetruehat.client.common.resources.Res
+import dev.lounres.thetruehat.client.common.resources.feedback_black_x2_24dp
+import dev.lounres.thetruehat.client.common.resources.translate_black_x2_24dp
 import dev.lounres.thetruehat.client.common.uiComponents.CircleButtonWithIcon
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
@@ -79,17 +79,17 @@ public fun TheTrueHatPageTemplateUI(
                     )
                 }
                 CircleButtonWithIcon(
-                    icon = painterResource("icons/translate_black_x2_24dp.png"),
+                    icon = painterResource(Res.drawable.translate_black_x2_24dp),
                 ) {
                     expanded = !expanded
                 }
                 CircleButtonWithIcon(
-                    icon = painterResource("icons/feedback_black_x2_24dp.png"),
+                    icon = painterResource(Res.drawable.feedback_black_x2_24dp),
                     onClick = onFeedbackButtonClick,
                 )
             }
         }
-        Divider()
+        HorizontalDivider()
         pageContent()
     }
 }

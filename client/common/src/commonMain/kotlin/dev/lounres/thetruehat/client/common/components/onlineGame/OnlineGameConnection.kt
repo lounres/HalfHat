@@ -59,7 +59,7 @@ public class OnlineGameConnection(
                     }
                 },
                 catchBlock = { exception ->
-                    logger.warn(exception) { "Connection failure." }
+                    logger.warn(throwable = exception) { "Connection failure." }
                     onConnectionFailure()
                 }
             )
