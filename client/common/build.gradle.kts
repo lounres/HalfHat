@@ -1,6 +1,6 @@
 plugins {
 //    alias(libs.plugins.android.library)
-    alias(libs.plugins.compose)
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.jetbrains.compose)
     alias(libs.plugins.kotlinx.serialization)
 }
@@ -17,13 +17,6 @@ kotlin {
                 // API
                 api(projects.api)
 
-                // Decompose
-                api(libs.decompose)
-                api(libs.decompose.extensions.compose.multiplatform)
-
-                // Serialization
-                api(libs.kotlinx.serialization.core)
-
                 // Logging
                 api(libs.logkube.core)
 
@@ -31,9 +24,13 @@ kotlin {
                 api(compose.runtime)
                 api(compose.ui)
                 api(compose.foundation)
-                api(compose.material)
                 api(compose.material3)
                 api(compose.components.resources)
+                
+                // Decompose & Essenty
+                api(libs.decompose)
+                api(libs.decompose.extensions.compose.multiplatform)
+                api(libs.essenty.lifecycle.coroutines)
 
                 // Ktor
                 api(libs.ktor.client.core)
@@ -71,8 +68,7 @@ kotlin {
 
 compose {
     resources {
-        publicResClass = true
-        packageOfResClass = "dev.lounres.thetruehat.client.common.resources"
+        packageOfResClass = "dev.lounres.halfhat.client.common.resources"
         generateResClass = always
     }
 }

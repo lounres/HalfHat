@@ -1,4 +1,4 @@
-package dev.lounres.thetruehat.client.common.utils
+package dev.lounres.halfhat.client.common.utils
 
 
 public actual fun <T> runOnUiThread(block: () -> T): T {

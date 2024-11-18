@@ -1,4 +1,4 @@
-package dev.lounres.thetruehat.client.web
+package dev.lounres.halfhat.client.web
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -9,8 +9,8 @@ import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.arkivanov.essenty.lifecycle.resume
 import com.arkivanov.essenty.lifecycle.stop
-import dev.lounres.thetruehat.client.common.components.RealRootComponent
-import dev.lounres.thetruehat.client.common.ui.RootUI
+import dev.lounres.halfhat.client.common.components.RealRootComponent
+import dev.lounres.halfhat.client.common.ui.RootUI
 import org.jetbrains.skiko.wasm.onWasmReady
 import web.dom.DocumentVisibilityState
 import web.dom.document

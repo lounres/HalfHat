@@ -1,11 +1,11 @@
-package dev.lounres.thetruehat.client.web
+package dev.lounres.halfhat.client.web
 
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.CanvasBasedWindow
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
-import dev.lounres.thetruehat.client.common.components.RealRootComponent
-import dev.lounres.thetruehat.client.common.ui.RootUI
+import dev.lounres.halfhat.client.common.components.RealRootComponent
+import dev.lounres.halfhat.client.common.ui.RootUI
 
 
 @OptIn(ExperimentalComposeUiApi::class)

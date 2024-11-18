@@ -1,29 +1,28 @@
 [versions]
-kotlin = "2.0.0-RC3"
+kotlin = "2.0.21"
 android = "8.0.0"
 
-kotlinx-coroutines = "1.8.1"
-kotlinx-atomicfu = "0.24.0"
-kotlinx-serialization = "1.6.3"
-kotlinx-datetime = "0.5.0"
-kotlin-wrappers = "1.0.0-pre.745"
+kotlinx-coroutines = "1.9.0"
+kotlinx-atomicfu = "0.25.0"
+kotlinx-serialization = "1.7.3"
+kotlinx-datetime = "0.6.1"
+kotlin-wrappers = "1.0.0-pre.816"
 
 logkube = "0.1.0"
 
-ktor-old = "2.3.11"
-ktor = "3.0.0-wasm2"
-ktor-plugin = "3.0.0-beta-1"
+ktor = "3.0.1"
 logback =  "1.5.6"
 
-jetbrains-compose = "1.6.10-rc01"
+jetbrains-compose = "1.7.1"
 
-decompose = "3.0.0"
+essenty = "2.2.1"
+decompose = "3.2.2"
 
 koin = "3.5.6"
 
-kord = "0.13.1"
+kord = "0.15.0"
 
-dokka = "1.9.20"
+dokka = "2.0.0-Beta"
 
 [plugins]
 # Kotlin plugins
@@ -35,20 +34,21 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 android-application = { id = "com.android.application", version.ref = "android" }
 android-library = { id = "com.android.library", version.ref = "android" }
 
-# Compose
-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "jetbrains-compose" }
-
 # kotlinx plugins
-kotlinx-atomicfu = { id = "org.jetbrains.kotlinx:atomicfu-gradle-plugin", version.ref = "kotlinx-atomicfu" }
+kotlinx-atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "kotlinx-atomicfu" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
-ktor = { id = "io.ktor.plugin", version.ref = "ktor-plugin" }
-ktor-old = { id = "io.ktor.plugin", version.ref = "ktor-old" }
+# Compose
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "jetbrains-compose" }
+
+ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 
 [libraries]
+# Essenty
+essenty-lifecycle-coroutines = { module = "com.arkivanov.essenty:lifecycle-coroutines", version.ref = "essenty" }
 
 # Decompose
 decompose = { module = "com.arkivanov.decompose:decompose", version.ref = "decompose" }
@@ -75,10 +75,9 @@ logkube-core = { module = "dev.lounres:logKube.core", version.ref = "logkube" }
 
 # Ktor
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
-ktor-old-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor-old" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
-ktor-old-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor-old" }
 ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.ref = "ktor" }
+ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }

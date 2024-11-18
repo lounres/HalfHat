@@ -1,6 +1,13 @@
-rootProject.name = "TheTrueHat"
+rootProject.name = "HalfHat"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
+val projectProperties = java.util.Properties()
+file("gradle.properties").inputStream().use {
+    projectProperties.load(it)
+}
+
+val koneVersion : String by projectProperties
 
 @Suppress("UnstableApiUsage")
 dependencyResolutionManagement {
@@ -11,6 +18,10 @@ dependencyResolutionManagement {
         mavenLocal()
         maven("https://maven.pkg.jetbrains.space/kotlin/p/wasm/experimental")
         maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
+    }
+    
+    versionCatalogs {
+        create("kone").from("dev.lounres:kone.versionCatalog:$koneVersion")
     }
 }
 
@@ -27,6 +38,7 @@ pluginManagement {
 
 plugins {
     id("dev.lounres.gradle.stal") version "0.3.1"
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 }
 
 stal {
@@ -34,14 +46,16 @@ stal {
         "api"("library", "server", "desktop", "web", "android")
         "server"("server")
         "client" {
-            "common"("library", "desktop", /*"web",*/ "android")
+            "common"("library", "desktop", /*"web",*/ /*"android"*/)
 //            "web"("web")
             "desktop"("desktop")
 //            "android"("android")
         }
-        "feedback"("kotlin")
     }
     tag {
         "kotlin" since { hasAnyOf("server", "desktop", "web", "android", "library") }
+        "kotlin jvm target" since { hasAnyOf("server", "desktop") }
+        "kotlin wasm-js target" since { hasAnyOf("web") }
+        "kotlin android target" since { hasAnyOf("android") }
     }
 }

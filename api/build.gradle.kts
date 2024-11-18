@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
-
 plugins {
 //    alias(libs.plugins.android.library)
     alias(libs.plugins.kotlinx.serialization)
@@ -14,7 +12,17 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(libs.kotlinx.serialization.core)
+                // Kone
+                api(kone.collections)
+                
+                // Coroutines
+                api(libs.kotlinx.coroutines.core)
+                
+                // Serialization
+                api(libs.kotlinx.serialization.core)
+                
+                // Datetime
+                api(libs.kotlinx.datetime)
             }
         }
     }

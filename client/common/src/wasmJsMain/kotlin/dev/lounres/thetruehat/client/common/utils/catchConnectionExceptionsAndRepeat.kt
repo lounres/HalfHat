@@ -1,4 +1,4 @@
-package dev.lounres.thetruehat.client.common.utils
+package dev.lounres.halfhat.client.common.utils
 
 import kotlinx.coroutines.*
 
