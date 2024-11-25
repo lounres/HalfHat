@@ -1,11 +1,11 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.jetbrains.compose)
-//    alias(libs.plugins.ktor)
-    alias(libs.plugins.kotlinx.serialization)
-    alias(libs.plugins.kotlinx.atomicfu)
+    alias(versions.plugins.kotlin.compose)
+    alias(versions.plugins.compose.multiplatform)
+//    alias(versions.plugins.ktor)
+    alias(versions.plugins.kotlinx.serialization)
+    alias(versions.plugins.kotlinx.atomicfu)
 }
 
 kotlin {
@@ -20,8 +20,8 @@ kotlin {
                 implementation(compose.components.resources)
 
                 // Ktor
-                implementation(libs.ktor.client.cio)
-                runtimeOnly(libs.logback.classic)
+                implementation(versions.ktor.client.cio)
+                runtimeOnly(versions.logback.classic)
             }
         }
     }

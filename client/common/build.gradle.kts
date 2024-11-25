@@ -1,8 +1,8 @@
 plugins {
-//    alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.jetbrains.compose)
-    alias(libs.plugins.kotlinx.serialization)
+//    alias(versions.plugins.android.library)
+    alias(versions.plugins.kotlin.compose)
+    alias(versions.plugins.compose.multiplatform)
+    alias(versions.plugins.kotlinx.serialization)
 }
 
 kotlin {
@@ -18,7 +18,7 @@ kotlin {
                 api(projects.api)
 
                 // Logging
-                api(libs.logkube.core)
+                api(versions.logKube.core)
 
                 // Compose
                 api(compose.runtime)
@@ -28,18 +28,18 @@ kotlin {
                 api(compose.components.resources)
                 
                 // Decompose & Essenty
-                api(libs.decompose)
-                api(libs.decompose.extensions.compose.multiplatform)
-                api(libs.essenty.lifecycle.coroutines)
+                api(versions.decompose)
+                api(versions.decompose.extensions.compose.multiplatform)
+                api(versions.essenty.lifecycle.coroutines)
 
                 // Ktor
-                api(libs.ktor.client.core)
-                api(libs.ktor.client.websockets)
-                api(libs.ktor.serialization.kotlinx.json)
-                api(libs.ktor.serialization.kotlinx.protobuf)
+                api(versions.ktor.client.core)
+                api(versions.ktor.client.websockets)
+                api(versions.ktor.serialization.kotlinx.json)
+                api(versions.ktor.serialization.kotlinx.protobuf)
 
                 // Koin
-//                api(libs.koin.core)
+//                api(versions.koin.core)
             }
         }
 
@@ -54,13 +54,13 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation(compose.desktop.common)
-                implementation(libs.ktor.client.cio)
+                implementation(versions.ktor.client.cio)
             }
         }
 
 //        wasmJsMain {
 //            dependencies {
-//                implementation(libs.ktor.client.js)
+//                implementation(versions.ktor.client.js)
 //            }
 //        }
     }

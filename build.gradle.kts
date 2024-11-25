@@ -1,8 +1,9 @@
 @file:OptIn(ExperimentalKotlinGradlePluginApi::class)
 
 import kotlinx.atomicfu.plugin.gradle.AtomicFUPluginExtension
-import org.gradle.accessors.dm.LibrariesForLibs
+import org.gradle.accessors.dm.LibrariesForVersions
 import org.gradle.accessors.dm.RootProjectAccessor
+import org.gradle.kotlin.dsl.getByName
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
@@ -13,14 +14,14 @@ import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 
 
 plugins {
-    alias(libs.plugins.kotlin.multiplatform) apply false
-    alias(libs.plugins.kotlin.compose) apply false
-    alias(libs.plugins.kotlinx.atomicfu) apply false
+    alias(versions.plugins.kotlin.multiplatform) apply false
+    alias(versions.plugins.kotlin.compose) apply false
+    alias(versions.plugins.kotlinx.atomicfu) apply false
 }
 
 val jvmTargetVersion: String by project
 
-val Project.libs: LibrariesForLibs get() = rootProject.extensions.getByName<LibrariesForLibs>("libs")
+val Project.versions: LibrariesForVersions get() = rootProject.extensions.getByName<LibrariesForVersions>("versions")
 val Project.projects: RootProjectAccessor get() = rootProject.extensions.getByName<RootProjectAccessor>("projects")
 fun PluginAware.apply(pluginDependency: PluginDependency) = apply(plugin = pluginDependency.pluginId)
 fun PluginAware.apply(pluginDependency: Provider<PluginDependency>) = apply(plugin = pluginDependency.get().pluginId)
@@ -31,7 +32,7 @@ fun PluginManager.withPlugins(vararg pluginDeps: Provider<PluginDependency>, blo
 inline fun <T> Iterable<T>.withEach(action: T.() -> Unit) = forEach { it.action() }
 
 allprojects {
-    pluginManager.withPlugin(rootProject.libs.plugins.kotlinx.atomicfu) {
+    pluginManager.withPlugin(versions.plugins.kotlinx.atomicfu) {
         configure<AtomicFUPluginExtension> {
             transformJvm = true
             jvmVariant = "VH"
@@ -43,7 +44,7 @@ allprojects {
 stal {
     action {
         "kotlin jvm target" {
-            pluginManager.withPlugin(rootProject.libs.plugins.kotlin.multiplatform) {
+            pluginManager.withPlugin(versions.plugins.kotlin.multiplatform) {
                 configure<KotlinMultiplatformExtension> {
                     jvmToolchain(jvmTargetVersion.toInt())
                     jvm()
@@ -51,7 +52,7 @@ stal {
             }
         }
         "kotlin wasm-js target" {
-            pluginManager.withPlugin(rootProject.libs.plugins.kotlin.multiplatform) {
+            pluginManager.withPlugin(versions.plugins.kotlin.multiplatform) {
                 configure<KotlinMultiplatformExtension> {
                     @OptIn(ExperimentalWasmDsl::class)
                     wasmJs {
@@ -64,14 +65,14 @@ stal {
             }
         }
 //        "kotlin android target" {
-//            pluginManager.withPlugin(rootProject.libs.plugins.kotlin.multiplatform) {
+//            pluginManager.withPlugin(versions.plugins.kotlin.multiplatform) {
 //                configure<KotlinMultiplatformExtension> {
 //                    android()
 //                }
 //            }
 //        }
         "kotlin" {
-            apply(libs.plugins.kotlin.multiplatform)
+            apply(versions.plugins.kotlin.multiplatform)
             configure<KotlinMultiplatformExtension> {
                 // TODO: Добавить JVM toolchain
                 compilerOptions {
@@ -88,8 +89,10 @@ stal {
                             enableLanguageFeature("ContextReceivers")
                             enableLanguageFeature("ValueClasses")
                             enableLanguageFeature("ContractSyntaxV2")
+                            enableLanguageFeature("ExplicitBackingFields")
                             optIn("kotlin.contracts.ExperimentalContracts")
                             optIn("kotlin.ExperimentalStdlibApi")
+                            optIn("kotlin.uuid.ExperimentalUuidApi")
                         }
                     }
                     commonTest {
@@ -125,7 +128,7 @@ stal {
             }
         }
         "library" {
-            pluginManager.withPlugin(rootProject.libs.plugins.kotlin.multiplatform) {
+            pluginManager.withPlugin(versions.plugins.kotlin.multiplatform) {
                 configure<KotlinMultiplatformExtension> {
                     explicitApi = ExplicitApiMode.Warning
                 }

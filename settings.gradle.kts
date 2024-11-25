@@ -7,7 +7,8 @@ file("gradle.properties").inputStream().use {
     projectProperties.load(it)
 }
 
-val koneVersion : String by projectProperties
+val versions: String by projectProperties
+val koneVersion: String by projectProperties
 
 @Suppress("UnstableApiUsage")
 dependencyResolutionManagement {
@@ -21,6 +22,7 @@ dependencyResolutionManagement {
     }
     
     versionCatalogs {
+        create("versions").from("dev.lounres:versions:$versions")
         create("kone").from("dev.lounres:kone.versionCatalog:$koneVersion")
     }
 }
@@ -32,12 +34,12 @@ pluginManagement {
         google()
         maven("https://maven.pkg.jetbrains.space/kotlin/p/wasm/experimental")
         maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
-//        mavenLocal()
+        mavenLocal()
     }
 }
 
 plugins {
-    id("dev.lounres.gradle.stal") version "0.3.1"
+    id("dev.lounres.gradle.stal") version "0.4.0"
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 }
 

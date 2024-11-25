@@ -1,6 +1,6 @@
 plugins {
-//    alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlinx.serialization)
+//    alias(versions.android.library)
+    alias(versions.plugins.kotlinx.serialization)
 }
 
 kotlin {
@@ -16,13 +16,13 @@ kotlin {
                 api(kone.collections)
                 
                 // Coroutines
-                api(libs.kotlinx.coroutines.core)
+                api(versions.kotlinx.coroutines.core)
                 
                 // Serialization
-                api(libs.kotlinx.serialization.core)
+                api(versions.kotlinx.serialization.core)
                 
                 // Datetime
-                api(libs.kotlinx.datetime)
+                api(versions.kotlinx.datetime)
             }
         }
     }

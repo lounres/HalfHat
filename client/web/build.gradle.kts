@@ -2,10 +2,10 @@ import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
-    alias(libs.plugins.compose)
-    alias(libs.plugins.jetbrains.compose)
-//    alias(libs.plugins.ktor)
-//    alias(libs.plugins.kotlinx.serialization)
+    alias(versions.plugins.compose)
+    alias(versions.plugins.jetbrains.compose)
+//    alias(versions.plugins.ktor)
+//    alias(versions.plugins.kotlinx.serialization)
 }
 
 kotlin {
@@ -52,8 +52,8 @@ kotlin {
         }
         wasmJsMain {
             dependencies {
-//                implementation(project.dependencies.enforcedPlatform(libs.kotlin.wrappers.bom))
-//                implementation(libs.kotlin.wrappers.browser)
+//                implementation(project.dependencies.enforcedPlatform(versions.kotlin.wrappers.bom))
+//                implementation(versions.kotlin.wrappers.browser)
             }
         }
     }

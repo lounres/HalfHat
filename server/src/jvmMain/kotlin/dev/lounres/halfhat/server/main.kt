@@ -44,6 +44,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.random.Random
 import kotlin.random.asKotlinRandom
+import kotlin.uuid.Uuid
 
 
 val logger = JvmLogger(
@@ -606,8 +607,11 @@ fun getRoomByIdOrCreate(id: String): Room = rooms.computeIfAbsent(id) { Room(id)
 class Connection(
     val socketSession: WebSocketServerSession,
 ) {
+    val id: Uuid = Uuid.random()
     var playerAttachmentHandle : Room.Player.AttachmentHandle? = null
-    var playerAttachmentHandleMutex = Mutex()
+    val playerAttachmentHandleMutex = Mutex()
+    
+    override fun toString(): String = "Connection#${id.toHexString()}"
 }
 
 @OptIn(DelicateCoroutinesApi::class)

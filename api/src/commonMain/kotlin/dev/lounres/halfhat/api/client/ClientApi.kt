@@ -6,7 +6,6 @@ import kotlinx.serialization.Serializable
 
 
 public object ClientApi {
-    
     @Serializable
     public sealed interface WordsSource {
         @Serializable
