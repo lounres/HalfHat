@@ -4,17 +4,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lounres.halfhat.client.desktop.resources.Res
 import dev.lounres.halfhat.client.desktop.resources.deviceGameListenerIcon_dark_png_24dp
 import dev.lounres.halfhat.client.desktop.resources.deviceGameSpeakerIcon_dark_png_24dp
+import dev.lounres.halfhat.client.desktop.ui.utils.AutoScalingText
 import org.jetbrains.compose.resources.painterResource
 
 
@@ -82,28 +81,10 @@ fun GameInProcessTemplate(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            // TODO: Rewrite this buggy shit
-            //  1. Use logarithmic binary search instead of logarithmic descent.
-            //  2. Make it also expand if needed, not only shrink
-            //  3. Reset the `readyToDraw` to initial state when the sizes of the column are changed
-            val currentTextStyle = LocalTextStyle.current.copy(fontSize = 1000.sp)
-            var textStyle by remember { mutableStateOf(currentTextStyle) }
-            var readyToDraw by remember { mutableStateOf(false) }
-            Text(
+            AutoScalingText(
                 text = word,
-                style = textStyle,
                 softWrap = false,
                 maxLines = 1,
-                modifier = Modifier.drawWithContent {
-                    if (readyToDraw) drawContent()
-                },
-                onTextLayout = { textLayoutResult ->
-                    if (textLayoutResult.hasVisualOverflow) {
-                        textStyle = textStyle.copy(fontSize = textStyle.fontSize * 0.9)
-                    } else {
-                        readyToDraw = true
-                    }
-                }
             )
         }
         Column(

@@ -97,7 +97,7 @@ sealed interface Page {
                     contentDescription = "FAQ page",
                 )
             },
-            content = { FAQPageUI() },
+            content = { FAQPageUI(it.faqPageComponent) },
         ),
         GameHistory(
             textName = "Game history",

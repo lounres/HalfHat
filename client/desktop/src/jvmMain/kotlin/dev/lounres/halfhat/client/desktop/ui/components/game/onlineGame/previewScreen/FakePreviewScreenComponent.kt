@@ -1,7 +1,7 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.previewScreen
 
 import dev.lounres.halfhat.api.server.ServerApi
-import dev.lounres.kone.collections.koneListOf
+import dev.lounres.kone.collections.list.koneListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 

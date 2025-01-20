@@ -6,36 +6,55 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.replaceCurrent
 import com.arkivanov.decompose.value.Value
+import dev.lounres.halfhat.client.desktop.storage.dictionaries.LocalDictionariesRegistry
+import dev.lounres.halfhat.client.desktop.storage.dictionaries.LocalDictionary
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.roomScreen.RealRoomScreenComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.roomSettings.RealRoomSettingsComponent
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.kone.collections.KoneList
-import dev.lounres.kone.collections.KoneSet
-import dev.lounres.kone.collections.koneListOf
-import dev.lounres.kone.collections.koneMutableSetOf
-import dev.lounres.kone.collections.toKoneList
-import dev.lounres.kone.collections.utils.mapTo
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.koneListOf
+import dev.lounres.kone.collections.set.KoneSet
+import dev.lounres.kone.collections.set.koneMutableSetOf
+import dev.lounres.kone.collections.set.toKoneMutableSet
+import dev.lounres.kone.collections.utils.any
+import dev.lounres.kone.collections.utils.random
+import dev.lounres.kone.repeat
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlin.random.Random
 
+
+class WordsProviderViaLocalDictionary(
+    private val localDictionary: LocalDictionary
+) : GameStateMachine.WordsProvider {
+    val name: String get() = localDictionary.name
+    override fun allWords(): KoneSet<String> = localDictionary.allWords
+    override fun randomWords(number: UInt): KoneSet<String> {
+        val allWords = localDictionary.allWords.toKoneMutableSet()
+        if (allWords.size < number) error("Not enough words in the dictionary")
+        val result = koneMutableSetOf<String>()
+        repeat(number) {
+            val newWord = allWords.random(Random)
+            allWords.remove(newWord)
+            result.add(newWord)
+        }
+        return result
+    }
+}
 
 class RealDeviceGamePageComponent(
     componentContext: ComponentContext,
+    localDictionariesRegistry: LocalDictionariesRegistry,
     onExitDeviceGame: () -> Unit,
     initialSettingsBuilder: GameStateMachine.GameSettingsBuilder<GameStateMachine.WordsProvider> = GameStateMachine.GameSettingsBuilder(
         preparationTimeSeconds = 3u, // TODO: Hardcoded settings!!!
         explanationTimeSeconds = 40u,
         finalGuessTimeSeconds = 3u,
         strictMode = true,
-        cachedEndConditionWordsNumber = 100u,
+        cachedEndConditionWordsNumber = 3u,
         cachedEndConditionCyclesNumber = 3u,
         gameEndConditionType = GameStateMachine.GameEndCondition.Type.Words,
-        wordsSource = GameStateMachine.WordsSource.Custom(
-            object : GameStateMachine.WordsProvider {
-                override fun randomWords(number: UInt): KoneSet<String> = (1u..number).toKoneList().mapTo(koneMutableSetOf()) { it.toString() }
-                override fun allWords(): KoneSet<String> = (1u..100u).toKoneList().mapTo(koneMutableSetOf()) { it.toString() }
-            }
-        ),
+        wordsSource = GameStateMachine.WordsSource.Custom(WordsProviderViaLocalDictionary(localDictionariesRegistry.getDictionaryByName("Простые русские слова"))),
     ),
 ) : DeviceGamePageComponent {
     
@@ -48,16 +67,20 @@ class RealDeviceGamePageComponent(
         componentContext.childStack(
             source = navigation,
             serializer = null,
-            initialConfiguration = Configuration.RoomScreen,
+            initialConfiguration = Configuration.RoomScreen(),
         ) { configuration: Configuration, componentContext: ComponentContext ->
             when (configuration) {
-                Configuration.RoomScreen ->
+                is Configuration.RoomScreen ->
                     DeviceGamePageComponent.Child.RoomScreen(
                         RealRoomScreenComponent(
                             onExitDeviceGame = onExitDeviceGame,
                             onOpenGameSettings = { navigation.replaceCurrent(Configuration.RoomSettings) },
-                            onStartGame = { navigation.replaceCurrent(Configuration.GameScreen) },
+                            onStartGame = {
+                                if (playersList.value.any { it.isBlank() }) configuration.showErrorForEmptyPlayerNames.value = true
+                                else navigation.replaceCurrent(Configuration.GameScreen)
+                            },
                             playersList = playersList,
+                            showErrorForEmptyPlayerNames = configuration.showErrorForEmptyPlayerNames,
                         )
                     )
                 Configuration.RoomSettings ->
@@ -65,7 +88,7 @@ class RealDeviceGamePageComponent(
                         RealRoomSettingsComponent(
                             initialSettingsBuilder = settingsBuilderState.value,
                             onUpdateSettingsBuilder = { settingsBuilderState.value = it },
-                            onExitSettings = { navigation.replaceCurrent(Configuration.RoomScreen) },
+                            onExitSettings = { navigation.replaceCurrent(Configuration.RoomScreen()) },
                         )
                     )
                 is Configuration.GameScreen ->
@@ -74,14 +97,16 @@ class RealDeviceGamePageComponent(
                             componentContext = componentContext,
                             playersList = playersList.value,
                             settingsBuilder = settingsBuilderState.value,
-                            onExitGame = { navigation.replaceCurrent(Configuration.RoomScreen) },
+                            onExitGame = { navigation.replaceCurrent(Configuration.RoomScreen()) },
                         )
                     )
             }
         }
     
     sealed interface Configuration {
-        data object RoomScreen : Configuration
+        data class RoomScreen(
+            val showErrorForEmptyPlayerNames: MutableStateFlow<Boolean> = MutableStateFlow(false),
+        ) : Configuration
         data object RoomSettings : Configuration
         data object GameScreen : Configuration
     }

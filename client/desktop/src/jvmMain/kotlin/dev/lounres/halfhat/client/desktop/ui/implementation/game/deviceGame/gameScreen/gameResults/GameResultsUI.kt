@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import dev.lounres.halfhat.client.desktop.resources.exitDeviceGameButton_dark_png_24dp
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.gameResults.GameResultsComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.commonIconModifier
-import dev.lounres.kone.collections.next
+import dev.lounres.kone.collections.iterables.next
 import org.jetbrains.compose.resources.painterResource
 import dev.lounres.halfhat.client.desktop.resources.Res as DesktopRes
 

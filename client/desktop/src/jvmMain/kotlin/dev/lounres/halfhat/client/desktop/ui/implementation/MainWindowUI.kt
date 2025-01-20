@@ -57,11 +57,11 @@ import dev.lounres.halfhat.client.desktop.resources.openMenuButton_dark
 import dev.lounres.halfhat.client.desktop.resources.volumeOffButton_dark_png_24dp
 import dev.lounres.halfhat.client.desktop.resources.volumeOnButton_dark_png_24dp
 import dev.lounres.halfhat.client.desktop.ui.components.MainWindowComponent
-import dev.lounres.kone.collections.KoneList
-import dev.lounres.kone.collections.addAllFrom
-import dev.lounres.kone.collections.buildKoneList
-import dev.lounres.kone.collections.next
-import dev.lounres.kone.collections.toKoneList
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.buildKoneList
+import dev.lounres.kone.collections.interop.toKoneList
+import dev.lounres.kone.collections.iterables.next
+import dev.lounres.kone.collections.list.addAllFrom
 import dev.lounres.kone.collections.utils.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource

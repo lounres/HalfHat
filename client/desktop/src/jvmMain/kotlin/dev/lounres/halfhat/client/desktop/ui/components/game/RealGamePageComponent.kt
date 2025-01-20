@@ -10,6 +10,7 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
+import dev.lounres.halfhat.client.desktop.storage.dictionaries.LocalDictionariesRegistry
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.RealDeviceGamePageComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.localGame.RealLocalGamePageComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.modeSelection.RealModeSelectionPageComponent
@@ -21,6 +22,7 @@ import kotlinx.serialization.Serializable
 
 class RealGamePageComponent(
     componentContext: ComponentContext,
+    localDictionariesRegistry: LocalDictionariesRegistry,
     volumeOn: StateFlow<Boolean>,
 ): GamePageComponent {
     private val navigation = StackNavigation<Configuration>()
@@ -63,6 +65,7 @@ class RealGamePageComponent(
                         GamePageComponent.Child.DeviceGame(
                             RealDeviceGamePageComponent(
                                 componentContext = componentContext,
+                                localDictionariesRegistry = localDictionariesRegistry,
                                 onExitDeviceGame = { navigation.pop() },
                             )
                         )

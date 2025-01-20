@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import dev.lounres.halfhat.client.desktop.resources.*
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.roomScreen.RoomScreenComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.commonIconModifier
-import dev.lounres.kone.collections.next
+import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.utils.withIndex
 import org.jetbrains.compose.resources.painterResource
 import dev.lounres.halfhat.client.desktop.resources.Res as DesktopRes

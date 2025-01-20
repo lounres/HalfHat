@@ -32,8 +32,9 @@ import dev.lounres.halfhat.client.desktop.resources.onlineGameKey_dark_png_24dp
 import dev.lounres.halfhat.client.desktop.resources.onlineGameLink_dark_png_24dp
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.roundEditing.RoundEditingComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.commonIconModifier
+import dev.lounres.halfhat.client.desktop.ui.utils.AutoScalingText
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.kone.collections.next
+import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.utils.withIndex
 import org.jetbrains.compose.resources.painterResource
 
@@ -111,10 +112,11 @@ fun RoundEditingUI(
                             modifier = Modifier.fillMaxWidth().padding(8.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            Text(
-                                // TODO: Add automatic size setting
+                            AutoScalingText(
+                                modifier = Modifier.height(128.dp),
                                 text = word,
-                                fontSize = 64.sp,
+                                softWrap = false,
+                                maxLines = 1,
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Button(
@@ -171,75 +173,6 @@ fun RoundEditingUI(
                                 }
                             }
                         }
-                        
-                        // TODO: Use row of buttons for wider screens
-//                        Column(
-//                            modifier = Modifier.fillMaxWidth().padding(8.dp),
-//                            horizontalAlignment = Alignment.CenterHorizontally,
-//                        ) {
-//                            Text( // TODO: Add automatic size setting
-//                                text = word,
-//                                fontSize = 64.sp,
-//                            )
-//                            Spacer(modifier = Modifier.height(8.dp))
-//                            Row(
-//                                modifier = Modifier.fillMaxWidth()
-//                            ) {
-//                                Button(
-//                                    modifier = Modifier.weight(1f),
-//                                    shape = CircleShape,
-//                                    enabled = state != WordExplanation.State.Explained,
-//                                    onClick = { component.onGuessed(index) },
-//                                ) {
-//                                    Row(
-//                                        modifier = Modifier.fillMaxSize(),
-//                                        verticalAlignment = Alignment.CenterVertically,
-//                                        horizontalArrangement = Arrangement.Center,
-//                                    ) {
-//                                        Text(
-//                                            text = "Guessed",
-//                                            fontSize = 8.sp,
-//                                        )
-//                                    }
-//                                }
-//                                Spacer(modifier = Modifier.width(8.dp))
-//                                Button(
-//                                    modifier = Modifier.weight(1f),
-//                                    shape = CircleShape,
-//                                    enabled = state != WordExplanation.State.NotExplained,
-//                                    onClick = { component.onNotGuessed(index) },
-//                                ) {
-//                                    Row(
-//                                        modifier = Modifier.fillMaxSize(),
-//                                        verticalAlignment = Alignment.CenterVertically,
-//                                        horizontalArrangement = Arrangement.Center,
-//                                    ) {
-//                                        Text(
-//                                            text = "Not guessed",
-//                                            fontSize = 8.sp,
-//                                        )
-//                                    }
-//                                }
-//                                Spacer(modifier = Modifier.width(8.dp))
-//                                Button(
-//                                    modifier = Modifier.weight(1f),
-//                                    shape = CircleShape,
-//                                    enabled = state != WordExplanation.State.Mistake,
-//                                    onClick = { component.onMistake(index) },
-//                                ) {
-//                                    Row(
-//                                        modifier = Modifier.fillMaxSize(),
-//                                        verticalAlignment = Alignment.CenterVertically,
-//                                        horizontalArrangement = Arrangement.Center,
-//                                    ) {
-//                                        Text(
-//                                            text = "Mistake",
-//                                            fontSize = 8.sp,
-//                                        )
-//                                    }
-//                                }
-//                            }
-//                        }
                     }
                 }
             }

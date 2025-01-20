@@ -35,7 +35,7 @@ import dev.lounres.halfhat.client.desktop.resources.shufflePlayersButton_dark_pn
 import dev.lounres.halfhat.client.desktop.resources.startDeviceGameButton_dark_png_24dp
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.roomScreen.RoomScreenComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.commonIconModifier
-import dev.lounres.kone.collections.next
+import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.utils.withIndex
 import dev.lounres.halfhat.client.desktop.resources.Res as DesktopRes
 import org.jetbrains.compose.resources.painterResource
@@ -64,6 +64,7 @@ fun RoomScreenUI(
         modifier = Modifier.fillMaxSize(),
     ) {
         val playersList = component.playersList.collectAsState().value
+        val showErrorForEmptyPlayerNames = component.showErrorForEmptyPlayerNames.collectAsState().value
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -82,12 +83,13 @@ fun RoomScreenUI(
                         contentDescription = null,
                     )
                     Spacer(modifier = Modifier.width(16.dp))
-                        TextField(
-                            modifier = Modifier.weight(1f),
-                            label = { Text(text = "Name") },
-                            value = playerName,
-                            onValueChange = { component.onChangePLayersName(index, it) },
-                        )
+                    TextField(
+                        modifier = Modifier.weight(1f),
+                        label = { Text(text = "Name") },
+                        value = playerName,
+                        onValueChange = { component.onChangePLayersName(index, it) },
+                        isError = showErrorForEmptyPlayerNames && playerName.isBlank(),
+                    )
                     Spacer(modifier = Modifier.width(16.dp))
                     IconButton(
                         onClick = { component.onRemovePLayer(index) }

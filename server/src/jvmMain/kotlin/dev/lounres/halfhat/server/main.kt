@@ -3,11 +3,11 @@ package dev.lounres.halfhat.server
 import dev.lounres.halfhat.api.client.ClientApi
 import dev.lounres.halfhat.api.server.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.kone.collections.KoneList
+import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.KoneMutableListNode
 import dev.lounres.kone.collections.KoneMutableNoddedList
 import dev.lounres.kone.collections.KoneSet
-import dev.lounres.kone.collections.emptyKoneList
+import dev.lounres.kone.collections.list.emptyKoneList
 import dev.lounres.kone.collections.implementations.KoneArrayResizableLinkedNoddedList
 import dev.lounres.kone.collections.koneMutableSetOf
 import dev.lounres.kone.collections.toKoneList

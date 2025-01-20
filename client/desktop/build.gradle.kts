@@ -6,6 +6,7 @@ plugins {
 //    alias(versions.plugins.ktor)
     alias(versions.plugins.kotlinx.serialization)
     alias(versions.plugins.kotlinx.atomicfu)
+    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
@@ -14,15 +15,30 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation(projects.client.common)
+                
+                // AppDirs
+                implementation(libs.appDirs)
 
                 // Compose
                 implementation(compose.desktop.currentOs)
-                implementation(compose.components.resources)
 
                 // Ktor
                 implementation(versions.ktor.client.cio)
                 runtimeOnly(versions.logback.classic)
+                
+                // SQLDelight
+                implementation(libs.sqldelight.driver.sqlite.jvm)
+                implementation(libs.sqldelight.async.extensions)
+                implementation(libs.sqldelight.coroutines.extensions)
             }
+        }
+    }
+}
+
+sqldelight {
+    databases {
+        create("AppDatabase") {
+            packageName = "dev.lounres.halfhat.client.localStorage.sql"
         }
     }
 }

@@ -1,6 +1,7 @@
 package dev.lounres.halfhat.client.desktop.ui.components
 
 import dev.lounres.halfhat.api.localization.Language
+import dev.lounres.halfhat.client.desktop.ui.components.faq.FAQPageComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.GamePageComponent
 import dev.lounres.halfhat.client.desktop.ui.components.home.HomePageComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.Page
@@ -17,4 +18,5 @@ interface MainWindowComponent {
 
     val homePageComponent: HomePageComponent
     val gamePageComponent: GamePageComponent
+    val faqPageComponent: FAQPageComponent
 }

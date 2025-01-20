@@ -30,8 +30,9 @@ import dev.lounres.halfhat.client.desktop.resources.Res as DesktopRes
 import dev.lounres.halfhat.client.desktop.resources.exitDeviceGameButton_dark_png_24dp
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.roundEditing.RoundEditingComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.commonIconModifier
+import dev.lounres.halfhat.client.desktop.ui.utils.AutoScalingText
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.kone.collections.next
+import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.utils.withIndex
 import org.jetbrains.compose.resources.painterResource
 
@@ -91,10 +92,11 @@ fun RoundEditingUI(
                             modifier = Modifier.fillMaxWidth().padding(8.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            Text(
-                                // TODO: Add automatic size setting
+                            AutoScalingText(
+                                modifier = Modifier.height(128.dp),
                                 text = word,
-                                fontSize = 64.sp,
+                                softWrap = false,
+                                maxLines = 1,
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Button(

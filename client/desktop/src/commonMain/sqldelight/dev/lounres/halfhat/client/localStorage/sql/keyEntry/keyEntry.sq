@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS keyEntry(
+    key TEXT PRIMARY KEY NOT NULL,
+    entry TEXT NOT NULL
+);
+
+getEntry:
+SELECT entry FROM keyEntry
+WHERE key = ?;
+
+updateEntry:
+UPDATE keyEntry
+SET entry = ?
+WHERE key = ?;

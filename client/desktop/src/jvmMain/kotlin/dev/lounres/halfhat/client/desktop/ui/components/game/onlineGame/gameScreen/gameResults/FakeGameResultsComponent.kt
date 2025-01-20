@@ -1,7 +1,7 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.gameResults
 
 import dev.lounres.halfhat.api.server.ServerApi
-import dev.lounres.kone.collections.emptyKoneList
+import dev.lounres.kone.collections.list.emptyKoneList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 

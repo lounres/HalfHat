@@ -5,7 +5,7 @@ plugins {
 }
 
 kotlin {
-    jvm { withJava() }
+    jvm { /*withJava()*/ }
     sourceSets {
         jvmMain {
             dependencies {

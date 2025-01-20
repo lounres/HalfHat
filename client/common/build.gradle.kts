@@ -58,11 +58,11 @@ kotlin {
             }
         }
 
-//        wasmJsMain {
-//            dependencies {
-//                implementation(versions.ktor.client.js)
-//            }
-//        }
+        wasmJsMain {
+            dependencies {
+                implementation(versions.ktor.client.js)
+            }
+        }
     }
 }
 

@@ -36,7 +36,6 @@ allprojects {
         configure<AtomicFUPluginExtension> {
             transformJvm = true
             jvmVariant = "VH"
-            transformJs = true
         }
     }
 }
@@ -58,8 +57,6 @@ stal {
                     wasmJs {
                         moduleName = project.path.substring(startIndex = 1).replace(':', '-')
                         browser()
-                        nodejs()
-                        d8()
                     }
                 }
             }
@@ -74,10 +71,9 @@ stal {
         "kotlin" {
             apply(versions.plugins.kotlin.multiplatform)
             configure<KotlinMultiplatformExtension> {
-                // TODO: Добавить JVM toolchain
                 compilerOptions {
                     freeCompilerArgs = freeCompilerArgs.get() + listOf(
-                        "-Xlambdas=indy",
+                        "-Xklib-duplicated-unique-name-strategy=allow-all-with-warning",
                         "-Xexpect-actual-classes",
                         "-Xconsistent-data-class-copy-visibility",
                     )
@@ -86,7 +82,7 @@ stal {
                     all {
                         languageSettings {
                             progressiveMode = true
-                            enableLanguageFeature("ContextReceivers")
+                            enableLanguageFeature("ContextParameters")
                             enableLanguageFeature("ValueClasses")
                             enableLanguageFeature("ContractSyntaxV2")
                             enableLanguageFeature("ExplicitBackingFields")

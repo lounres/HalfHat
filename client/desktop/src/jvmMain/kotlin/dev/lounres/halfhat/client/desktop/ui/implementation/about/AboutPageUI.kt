@@ -12,10 +12,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withAnnotation
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,29 +48,22 @@ fun AboutPageUI() {
         )
         val annotatedString = buildAnnotatedString {
             append("The project is developed by Gleb Minaev a.k.a. ")
-            withAnnotation(tag = "url", annotation = "https://github.com/lounres/") {
-                withStyle(SpanStyle(color = Color.Blue)) {
+            withLink(link = LinkAnnotation.Url("https://github.com/lounres/")) {
+                withStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)) {
                     append("@lounres")
                 }
             }
             append(". The project's sources are available ")
-            withAnnotation(tag = "url", annotation = "https://github.com/lounres/HalfHat") {
-                withStyle(SpanStyle(color = Color.Blue)) {
+            withLink(link = LinkAnnotation.Url("https://github.com/lounres/HalfHat")) {
+                withStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)) {
                     append("on GitHub")
                 }
             }
             append(".")
         }
-        ClickableText(
+        Text(
             modifier = Modifier.fillMaxWidth(),
             text = annotatedString,
-            onClick = { offset ->
-                annotatedString.getStringAnnotations(
-                    tag = "url", start = offset, end = offset
-                ).forEach {
-                    // TODO: Add action for clicking
-                }
-            }
         )
     }
 }

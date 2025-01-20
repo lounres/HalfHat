@@ -1,57 +1,51 @@
 package dev.lounres.halfhat.client.desktop
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBar
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Window
+import androidx.compose.runtime.remember
+import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import androidx.compose.ui.window.rememberWindowState
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.decompose.extensions.compose.lifecycle.LifecycleController
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
-import dev.lounres.halfhat.client.desktop.resources.Res
-import dev.lounres.halfhat.client.desktop.resources.deviceGamePlayerIcon_dark_png_24dp
-import dev.lounres.halfhat.client.desktop.resources.onlineGameHostMark_dark_png_24dp
+import com.arkivanov.essenty.statekeeper.StateKeeperDispatcher
+import com.arkivanov.essenty.statekeeper.saveable
+import dev.lounres.halfhat.client.common.utils.readSerializableContainer
+import dev.lounres.halfhat.client.desktop.storage.AppDatabase
+import dev.lounres.halfhat.client.desktop.storage.DriverFactory
+import dev.lounres.halfhat.client.desktop.storage.dictionaries.LocalDictionariesRegistry
 import dev.lounres.halfhat.client.desktop.ui.components.RealMainWindowComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.MainWindowUI
-import org.jetbrains.compose.resources.painterResource
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
+import java.io.File
 
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 fun main() {
+    val appDatabase = AppDatabase(DriverFactory)
+    val localDictionariesRegistry = LocalDictionariesRegistry(appDatabase)
+    
     val lifecycle = LifecycleRegistry()
+    val stateKeeper = StateKeeperDispatcher()
+    
+    val componentContext = DefaultComponentContext(lifecycle = lifecycle, stateKeeper = stateKeeper)
 
-    val componentContext = DefaultComponentContext(lifecycle = lifecycle)
+    val mainWindowState = WindowState()
 
     application(
         exitProcessOnExit = false,
     ) {
-        val windowState = rememberWindowState()
 
-        LifecycleController(lifecycle, windowState)
+        LifecycleController(lifecycle, mainWindowState)
 
-        val component = RealMainWindowComponent(
-            componentContext = componentContext,
-            onWindowCloseRequest = ::exitApplication,
-        )
+        val component = remember {
+            RealMainWindowComponent(
+                componentContext = componentContext,
+                localDictionariesRegistry = localDictionariesRegistry,
+                onWindowCloseRequest = ::exitApplication,
+            )
+        }
 
         MainWindowUI(component)
     }

@@ -23,6 +23,7 @@ import dev.lounres.halfhat.client.desktop.resources.onlineGameLink_dark_png_24dp
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.roundPreparation.RoundPreparationComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.commonIconModifier
 import org.jetbrains.compose.resources.painterResource
+import kotlin.math.min
 
 
 @Composable
@@ -109,10 +110,15 @@ fun RoundPreparationUI(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
+            val millisecondsLeft = gameState.millisecondsLeft
             Text(
-                text = (gameState.millisecondsLeft / 1_000u + 1u).toString(),
+                text = (millisecondsLeft / 1_000u + 1u).toString(),
                 fontSize = 256.sp,
-                color = Color.Red, // TODO: Replace with gradually changed color
+                color = Color.hsv(
+                    hue = min(millisecondsLeft, 3_000u).toInt() * 0.04f,
+                    saturation = 1f,
+                    value = 1f,
+                ),
             )
         }
         // TODO: Are the buttons needed (being disabled)

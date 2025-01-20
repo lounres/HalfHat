@@ -28,7 +28,7 @@ import dev.lounres.halfhat.client.desktop.resources.onlineGameKey_dark_png_24dp
 import dev.lounres.halfhat.client.desktop.resources.onlineGameLink_dark_png_24dp
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.gameResults.GameResultsComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.commonIconModifier
-import dev.lounres.kone.collections.next
+import dev.lounres.kone.collections.iterables.next
 import org.jetbrains.compose.resources.painterResource
 import dev.lounres.halfhat.client.desktop.resources.Res as DesktopRes
 

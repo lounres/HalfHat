@@ -20,8 +20,8 @@ import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.halfhat.logic.gameStateMachine.listener
 import dev.lounres.halfhat.logic.gameStateMachine.personalResults
 import dev.lounres.halfhat.logic.gameStateMachine.speaker
-import dev.lounres.kone.collections.KoneList
-import dev.lounres.kone.collections.toKoneMutableList
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.toKoneMutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch

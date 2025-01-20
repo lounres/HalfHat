@@ -35,7 +35,7 @@ import dev.lounres.halfhat.client.desktop.resources.Res as DesktopRes
 import dev.lounres.halfhat.client.desktop.resources.exitOnlineGameButton_dark_png_24dp
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.previewScreen.PreviewScreenComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.commonIconModifier
-import dev.lounres.kone.collections.next
+import dev.lounres.kone.collections.iterables.next
 import org.jetbrains.compose.resources.painterResource
 
 

@@ -1,9 +1,9 @@
-import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
-    alias(versions.plugins.compose)
-    alias(versions.plugins.jetbrains.compose)
+    alias(versions.plugins.kotlin.compose)
+    alias(versions.plugins.compose.multiplatform)
 //    alias(versions.plugins.ktor)
 //    alias(versions.plugins.kotlinx.serialization)
 }
@@ -13,17 +13,17 @@ kotlin {
 //        moduleName = "client-web"
 //        browser {
 //            commonWebpackConfig {
-//                outputFileName = "client-web.js"
+//                outputFileName = "HalfHat.js"
 //            }
 //        }
 //        binaries.executable()
 //    }
-
+    
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser {
             commonWebpackConfig {
-                outputFileName = "client-web.js"
+                outputFileName = "HalfHat.js"
                 devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
                     // Uncomment and configure this if you want to open a browser different from the system default
                     // open = mapOf(
@@ -60,5 +60,9 @@ kotlin {
 }
 
 compose {
-    experimental.web.application {}
+    resources {
+        packageOfResClass = "dev.lounres.halfhat.client.web.resources"
+        generateResClass = always
+        publicResClass = true
+    }
 }

@@ -1,5 +1,21 @@
 [versions]
+appDirs = "1.2.0"
+room = "2.7.0-alpha11"
+sqldelight = "2.0.2"
 
 [plugins]
 
+room = { id = "androidx.room", version.ref = "room" }
+sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
+
 [libraries]
+
+appDirs = { module = "ca.gosyer:kotlin-multiplatform-appdirs", version.ref = "appDirs" }
+
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+
+sqldelight-driver-sqlite-jvm = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" }
+sqldelight-async-extensions = { module = "app.cash.sqldelight:async-extensions", version.ref = "sqldelight" }
+sqldelight-coroutines-extensions = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }

@@ -1,7 +1,7 @@
 package dev.lounres.halfhat.api.client
 
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.kone.collections.KoneList
+import dev.lounres.kone.collections.list.KoneList
 import kotlinx.serialization.Serializable
 
 

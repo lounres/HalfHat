@@ -2,8 +2,8 @@ package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScr
 
 import dev.lounres.halfhat.api.server.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.kone.collections.KoneList
-import dev.lounres.kone.collections.toKoneMutableList
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.toKoneMutableList
 import kotlinx.coroutines.flow.StateFlow
 
 

@@ -16,14 +16,14 @@ sealed interface State {
     }
     data class Explanation(val millisecondsLeft: UInt): State {
         fun represent(): String {
-            val secondsLeft = (millisecondsLeft / 1000u) % 60u
+            val secondsLeft = (millisecondsLeft / 1000u + 1u) % 60u
             val minutesLeft = millisecondsLeft / 60_000u
             return "$minutesLeft:${secondsLeft.toString().padStart(2, '0')}"
         }
     }
     data class LastGuess(val millisecondsLeft: UInt): State {
         fun represent(): String {
-            val cantisecondsLeft = (millisecondsLeft / 100u) % 10u
+            val cantisecondsLeft = (millisecondsLeft / 100u + 1u) % 10u
             val secondsLeft = millisecondsLeft / 1000u
             return "$secondsLeft.${cantisecondsLeft.toString().padStart(1, '0')}"
         }

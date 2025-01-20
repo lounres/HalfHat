@@ -15,6 +15,8 @@ import dev.lounres.halfhat.client.common.utils.defaultHttpClient
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.FakeGameScreenComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.RealGameScreenComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.previewScreen.RealPreviewScreenComponent
+import dev.lounres.logKube.core.info
+import dev.lounres.logKube.core.warn
 import io.ktor.client.plugins.websocket.converter
 import io.ktor.client.plugins.websocket.sendSerialized
 import io.ktor.client.plugins.websocket.webSocket

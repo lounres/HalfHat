@@ -1,0 +1,28 @@
+CREATE TABLE IF NOT EXISTS localDictionaryDescription (
+    name TEXT PRIMARY KEY NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS localDictionaryWord (
+    name TEXT NOT NULL,
+    word TEXT NOT NULL,
+    FOREIGN KEY(name) REFERENCES localDictionaryDescription(name)
+);
+
+getDictionaryNames:
+SELECT name FROM localDictionaryDescription;
+
+getDictionaryDescriptionByName:
+SELECT * FROM localDictionaryDescription
+WHERE name = ?;
+
+createDictionaryDescription:
+INSERT INTO localDictionaryDescription (name)
+VALUES (?);
+
+getDictionaryWordsByName:
+SELECT word FROM localDictionaryWord
+WHERE name = ?;
+
+insertWordIntoDictionary:
+INSERT INTO localDictionaryWord(name, word)
+VALUES (?, ?);

@@ -1,15 +1,15 @@
 package dev.lounres.halfhat.logic.gameStateMachine
 
 import dev.lounres.halfhat.utils.scope
-import dev.lounres.kone.collections.KoneList
-import dev.lounres.kone.collections.KoneSet
-import dev.lounres.kone.collections.KoneSettableList
-import dev.lounres.kone.collections.buildKoneSet
-import dev.lounres.kone.collections.emptyKoneList
-import dev.lounres.kone.collections.indices
-import dev.lounres.kone.collections.isEmpty
-import dev.lounres.kone.collections.isNotEmpty
-import dev.lounres.kone.collections.koneMutableSetOf
+import dev.lounres.kone.collections.iterables.isEmpty
+import dev.lounres.kone.collections.iterables.isNotEmpty
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.KoneSettableList
+import dev.lounres.kone.collections.list.emptyKoneList
+import dev.lounres.kone.collections.list.indices
+import dev.lounres.kone.collections.set.KoneSet
+import dev.lounres.kone.collections.set.buildKoneSet
+import dev.lounres.kone.collections.set.koneMutableSetOf
 import dev.lounres.kone.collections.utils.count
 import dev.lounres.kone.collections.utils.filter
 import dev.lounres.kone.collections.utils.filterTo
