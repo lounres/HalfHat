@@ -1,9 +1,9 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.roomScreen
 
 import dev.lounres.kone.collections.list.KoneList
-import dev.lounres.kone.collections.list.buildKoneList
+import dev.lounres.kone.collections.list.addAllFrom
+import dev.lounres.kone.collections.list.build
 import dev.lounres.kone.collections.list.toKoneMutableList
-import dev.lounres.kone.collections.utils.plusAssign
 import dev.lounres.kone.collections.utils.shuffled
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -28,9 +28,9 @@ class RealRoomScreenComponent(
     override val onAddPLayer: () -> Unit = {
         showErrorForEmptyPlayerNames.value = false
         playersList.update {
-            buildKoneList(it.size + 1u) {
-                this += it
-                this += ""
+            KoneList.build(it.size + 1u) {
+                +it
+                +""
             }
         }
     }

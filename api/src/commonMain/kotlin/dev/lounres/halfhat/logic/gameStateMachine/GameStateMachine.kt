@@ -5,11 +5,12 @@ import dev.lounres.kone.collections.iterables.isEmpty
 import dev.lounres.kone.collections.iterables.isNotEmpty
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.KoneSettableList
-import dev.lounres.kone.collections.list.emptyKoneList
+import dev.lounres.kone.collections.list.empty
 import dev.lounres.kone.collections.list.indices
+import dev.lounres.kone.collections.set.KoneMutableSet
 import dev.lounres.kone.collections.set.KoneSet
-import dev.lounres.kone.collections.set.buildKoneSet
-import dev.lounres.kone.collections.set.koneMutableSetOf
+import dev.lounres.kone.collections.set.build
+import dev.lounres.kone.collections.set.of
 import dev.lounres.kone.collections.utils.count
 import dev.lounres.kone.collections.utils.filter
 import dev.lounres.kone.collections.utils.filterTo
@@ -273,7 +274,7 @@ public class GameStateMachine<P, WP: GameStateMachine.WordsProvider> internal co
                                 )
                             spentTimeMilliseconds < (preparationTimeSeconds + explanationTimeSeconds) * 1000u -> {
                                 val currentWord = state.restWords.random(random)
-                                val restWords = state.restWords.filterTo(koneMutableSetOf()) { it != currentWord }
+                                val restWords = state.restWords.filterTo(KoneMutableSet.of()) { it != currentWord }
                                 State.RoundExplanation(
                                     playersList = state.playersList,
                                     settings = state.settings,
@@ -292,7 +293,7 @@ public class GameStateMachine<P, WP: GameStateMachine.WordsProvider> internal co
                             }
                             spentTimeMilliseconds < (preparationTimeSeconds + explanationTimeSeconds + finalGuessTimeSeconds) * 1000u -> {
                                 val currentWord = state.restWords.random(random)
-                                val restWords = state.restWords.filterTo(koneMutableSetOf()) { it != currentWord }
+                                val restWords = state.restWords.filterTo(KoneMutableSet.of()) { it != currentWord }
                                 State.RoundLastGuess(
                                     playersList = state.playersList,
                                     settings = state.settings,
@@ -325,7 +326,7 @@ public class GameStateMachine<P, WP: GameStateMachine.WordsProvider> internal co
                                     ).also { terminalStage = true }
                                 else {
                                     val currentWord = state.restWords.random(random)
-                                    val restWords = state.restWords.filterTo(koneMutableSetOf()) { it != currentWord }
+                                    val restWords = state.restWords.filterTo(KoneMutableSet.of()) { it != currentWord }
                                     State.RoundLastGuess(
                                         playersList = state.playersList,
                                         settings = state.settings,
@@ -563,7 +564,7 @@ public class GameStateMachine<P, WP: GameStateMachine.WordsProvider> internal co
                         restWords = currentState.restWords,
                         explanationScores = currentState.explanationScores,
                         guessingScores = currentState.guessingScores,
-                        currentExplanationResults = emptyKoneList(),
+                        currentExplanationResults = KoneList.empty(),
                         timer = createTimer(
                             roundNumber = currentState.roundNumber,
                             startInstant = Clock.System.now(),
@@ -613,7 +614,7 @@ public class GameStateMachine<P, WP: GameStateMachine.WordsProvider> internal co
                         restWords = currentState.restWords,
                         explanationScores = currentState.explanationScores,
                         guessingScores = currentState.guessingScores,
-                        currentExplanationResults = emptyKoneList(),
+                        currentExplanationResults = KoneList.empty(),
                         timer = createTimer(
                             roundNumber = currentState.roundNumber,
                             startInstant = Clock.System.now(),
@@ -653,7 +654,7 @@ public class GameStateMachine<P, WP: GameStateMachine.WordsProvider> internal co
             is State.RoundExplanation ->
                 if (currentState.restWords.isNotEmpty() && wordState == WordExplanation.State.Explained) {
                     val nextCurrentWord = currentState.restWords.random(Random)
-                    val nextRestWords = currentState.restWords.filterTo(koneMutableSetOf()) { it != nextCurrentWord }
+                    val nextRestWords = currentState.restWords.filterTo(KoneMutableSet.of()) { it != nextCurrentWord }
                     State.RoundExplanation(
                         playersList = currentState.playersList,
                         settings = currentState.settings,
@@ -752,7 +753,7 @@ public class GameStateMachine<P, WP: GameStateMachine.WordsProvider> internal co
     public fun confirmWordsExplanationResults() : Result.WordsExplanationResultsConfirmationResult {
         val newState = when (val currentState = state.value) {
             is State.RoundEditing -> {
-                val newRestWords = buildKoneSet<String> {
+                val newRestWords = KoneSet.build<String> {
                     this += currentState.restWords
                     this += currentState.currentExplanationResults.filter { it.state == WordExplanation.State.NotExplained }.map { it.word }
                 }

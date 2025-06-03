@@ -1,16 +1,19 @@
 package dev.lounres.halfhat.client.desktop.ui.implementation.game.deviceGame.roomScreen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomAppBar
@@ -61,13 +64,15 @@ fun RoomScreenUI(
     component: RoomScreenComponent,
 ) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val playersList = component.playersList.collectAsState().value
         val showErrorForEmptyPlayerNames = component.showErrorForEmptyPlayerNames.collectAsState().value
         Column(
             modifier = Modifier
                 .weight(1f)
+                .widthIn(max = 480.dp)
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,

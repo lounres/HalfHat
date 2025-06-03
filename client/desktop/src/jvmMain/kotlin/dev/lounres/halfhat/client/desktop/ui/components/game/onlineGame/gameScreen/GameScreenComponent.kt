@@ -1,7 +1,5 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen
 
-import com.arkivanov.decompose.router.stack.ChildStack
-import com.arkivanov.decompose.value.Value
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.gameResults.GameResultsComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.loading.LoadingComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.roomScreen.RoomScreenComponent
@@ -11,10 +9,12 @@ import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScre
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.roundLastGuess.RoundLastGuessComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.roundPreparation.RoundPreparationComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.roundWaiting.RoundWaitingComponent
+import dev.lounres.komponentual.navigation.ChildrenStack
+import dev.lounres.kone.state.KoneState
 
 
 interface GameScreenComponent {
-    val childStack: Value<ChildStack<*, Child>>
+    val childStack: KoneState<ChildrenStack<*, Child>>
     
     sealed interface Child {
         data class Loading(val component: LoadingComponent) : Child

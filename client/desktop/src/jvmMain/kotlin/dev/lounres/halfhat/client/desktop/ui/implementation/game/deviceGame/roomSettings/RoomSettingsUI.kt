@@ -1,12 +1,17 @@
 package dev.lounres.halfhat.client.desktop.ui.implementation.game.deviceGame.roomSettings
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -66,136 +71,160 @@ fun RowScope.RoomSettingsActionsUI(
 fun RoomSettingsUI(
     component: RoomSettingsComponent
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(8.dp)
+    Box(
+        modifier = Modifier.fillMaxSize(),
     ) {
-        TextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = component.preparationTimeSeconds.collectAsState().value.toString(),
-            onValueChange = { component.preparationTimeSeconds.value = (it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }).toUInt() },
-            label = {
-                Text(
-                    text = "Readiness time",
-                )
-            },
-            singleLine = true,
-        )
-        
-        TextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = component.explanationTimeSeconds.collectAsState().value.toString(),
-            onValueChange = { component.explanationTimeSeconds.value = it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt() },
-            label = {
-                Text(
-                    text = "Readiness time",
-                )
-            },
-            singleLine = true,
-        )
-        
-        TextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = component.finalGuessTimeSeconds.collectAsState().value.toString(),
-            onValueChange = { component.finalGuessTimeSeconds.value = it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt() },
-            label = {
-                Text(
-                    text = "Readiness time",
-                )
-            },
-            singleLine = true,
-        )
-        
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "Strict mode",
-                fontSize = 16.sp,
-            )
-            Switch(
-                checked = component.strictMode.collectAsState().value,
-                onCheckedChange = { component.strictMode.value = it },
-            )
-        }
-        
-        var menuExpanded by remember { mutableStateOf(false) }
-        ExposedDropdownMenuBox(
-            modifier = Modifier.fillMaxWidth(),
-            expanded = false,
-            onExpandedChange = { menuExpanded = it },
+        Column(
+            modifier = Modifier.fillMaxHeight().widthIn(max = 480.dp).align(Alignment.Center).padding(8.dp)
         ) {
             TextField(
-                modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                value = when (component.gameEndConditionType.collectAsState().value) {
-                    GameStateMachine.GameEndCondition.Type.Words -> "Words"
-                    GameStateMachine.GameEndCondition.Type.Cycles -> "Cycles"
+                modifier = Modifier.fillMaxWidth(),
+                value = component.preparationTimeSeconds.collectAsState().value.toString(),
+                onValueChange = {
+                    component.preparationTimeSeconds.value =
+                        (it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }).toUInt()
                 },
-                onValueChange = {},
-                readOnly = true,
-                singleLine = true,
                 label = {
-                    Text(text = "Game end condition")
+                    Text(
+                        text = "Readiness time",
+                    )
                 },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = menuExpanded) },
-                colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                singleLine = true,
             )
-            ExposedDropdownMenu(
-                expanded = menuExpanded,
-                onDismissRequest = { menuExpanded = false },
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            TextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = component.explanationTimeSeconds.collectAsState().value.toString(),
+                onValueChange = {
+                    component.explanationTimeSeconds.value =
+                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                },
+                label = {
+                    Text(
+                        text = "Readiness time",
+                    )
+                },
+                singleLine = true,
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            TextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = component.finalGuessTimeSeconds.collectAsState().value.toString(),
+                onValueChange = {
+                    component.finalGuessTimeSeconds.value =
+                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                },
+                label = {
+                    Text(
+                        text = "Readiness time",
+                    )
+                },
+                singleLine = true,
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                DropdownMenuItem(
-                    text = { Text(text = "Words", style = MaterialTheme.typography.bodyLarge) },
-                    onClick = {
-                        component.gameEndConditionType.value = GameStateMachine.GameEndCondition.Type.Words
-                        menuExpanded = false
-                    },
-                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                Text(
+                    text = "Strict mode",
+                    fontSize = 16.sp,
                 )
-                DropdownMenuItem(
-                    text = { Text(text = "Cycles") },
-                    onClick = {
-                        component.gameEndConditionType.value = GameStateMachine.GameEndCondition.Type.Cycles
-                        menuExpanded = false
-                    },
-                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                Switch(
+                    checked = component.strictMode.collectAsState().value,
+                    onCheckedChange = { component.strictMode.value = it },
                 )
             }
-        }
-        
-        when (component.gameEndConditionType.collectAsState().value) {
-            GameStateMachine.GameEndCondition.Type.Words -> {
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            var menuExpanded by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(
+                modifier = Modifier.fillMaxWidth(),
+                expanded = false,
+                onExpandedChange = { menuExpanded = it },
+            ) {
                 TextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = component.cachedEndConditionWordsNumber.collectAsState().value.toString(),
-                    onValueChange = {
-                        component.cachedEndConditionWordsNumber.value =
-                            it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                    modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                    value = when (component.gameEndConditionType.collectAsState().value) {
+                        GameStateMachine.GameEndCondition.Type.Words -> "Words"
+                        GameStateMachine.GameEndCondition.Type.Cycles -> "Cycles"
                     },
-                    label = {
-                        Text(
-                            text = "The number of words",
-                        )
-                    },
+                    onValueChange = {},
+                    readOnly = true,
                     singleLine = true,
+                    label = {
+                        Text(text = "Game end condition")
+                    },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = menuExpanded) },
+                    colors = ExposedDropdownMenuDefaults.textFieldColors(),
                 )
+                ExposedDropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(text = "Words", style = MaterialTheme.typography.bodyLarge) },
+                        onClick = {
+                            component.gameEndConditionType.value = GameStateMachine.GameEndCondition.Type.Words
+                            menuExpanded = false
+                        },
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                    )
+                    DropdownMenuItem(
+                        text = { Text(text = "Cycles") },
+                        onClick = {
+                            component.gameEndConditionType.value = GameStateMachine.GameEndCondition.Type.Cycles
+                            menuExpanded = false
+                        },
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                    )
+                }
             }
-            GameStateMachine.GameEndCondition.Type.Cycles -> {
-                TextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = component.cachedEndConditionCyclesNumber.collectAsState().value.toString(),
-                    onValueChange = {
-                        component.cachedEndConditionWordsNumber.value =
-                            it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
-                    },
-                    label = {
-                        Text(
-                            text = "The number of cycles",
-                        )
-                    },
-                    singleLine = true,
-                )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            when (component.gameEndConditionType.collectAsState().value) {
+                GameStateMachine.GameEndCondition.Type.Words -> {
+                    TextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = component.cachedEndConditionWordsNumber.collectAsState().value.toString(),
+                        onValueChange = {
+                            component.cachedEndConditionWordsNumber.value =
+                                it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                        },
+                        label = {
+                            Text(
+                                text = "The number of words",
+                            )
+                        },
+                        singleLine = true,
+                    )
+                }
+                
+                GameStateMachine.GameEndCondition.Type.Cycles -> {
+                    TextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = component.cachedEndConditionCyclesNumber.collectAsState().value.toString(),
+                        onValueChange = {
+                            component.cachedEndConditionWordsNumber.value =
+                                it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                        },
+                        label = {
+                            Text(
+                                text = "The number of cycles",
+                            )
+                        },
+                        singleLine = true,
+                    )
+                }
             }
         }
     }

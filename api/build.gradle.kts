@@ -13,7 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 // Kone
-                api(kone.collections)
+                api(versions.kone.collections)
                 
                 // Coroutines
                 api(versions.kotlinx.coroutines.core)

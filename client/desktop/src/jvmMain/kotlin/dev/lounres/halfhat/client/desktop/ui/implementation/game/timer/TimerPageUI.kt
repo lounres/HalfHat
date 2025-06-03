@@ -1,13 +1,16 @@
 package dev.lounres.halfhat.client.desktop.ui.implementation.game.timer
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Button
 import androidx.compose.material.Text
@@ -49,92 +52,107 @@ fun RowScope.TimerPageActionsUI(
 fun TimerPageUI(
     component: TimerPageComponent
 ) {
-    val timerState by component.timerState.collectAsState()
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Box(
+        modifier = Modifier.fillMaxSize(),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
+            modifier = Modifier.fillMaxHeight().widthIn(max = 480.dp).align(Alignment.Center).padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
         ) {
-            when(val timerStateValue = timerState) {
-                State.Finished -> {
-                    val preparationTime by component.preparationTimeSetting.collectAsState()
-                    val explanationTime by component.explanationTimeSetting.collectAsState()
-                    val lastGuessTime by component.lastGuessTimeSetting.collectAsState()
+            val timerState by component.timerState.collectAsState()
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                when (val timerStateValue = timerState) {
+                    State.Finished -> {
+                        val preparationTime by component.preparationTimeSetting.collectAsState()
+                        val explanationTime by component.explanationTimeSetting.collectAsState()
+                        val lastGuessTime by component.lastGuessTimeSetting.collectAsState()
+                        
+                        OutlinedTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            value = preparationTime,
+                            onValueChange = {
+                                component.preparationTimeSetting.value = it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }
+                            },
+                            label = { androidx.compose.material3.Text(text = "Countdown duration") },
+                            suffix = { androidx.compose.material3.Text(text = " seconds") },
+                            singleLine = true,
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        OutlinedTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            value = explanationTime,
+                            onValueChange = {
+                                component.explanationTimeSetting.value = it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }
+                            },
+                            label = { androidx.compose.material3.Text(text = "Explanation duration") },
+                            suffix = { androidx.compose.material3.Text(text = " seconds") },
+                            singleLine = true,
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        OutlinedTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            value = lastGuessTime,
+                            onValueChange = {
+                                component.lastGuessTimeSetting.value = it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }
+                            },
+                            label = { androidx.compose.material3.Text(text = "Last guess duration") },
+                            suffix = { androidx.compose.material3.Text(text = " seconds") },
+                            singleLine = true,
+                        )
+                    }
                     
-                    OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = preparationTime,
-                        onValueChange = { component.preparationTimeSetting.value = it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" } },
-                        label = { androidx.compose.material3.Text(text = "Countdown duration") },
-                        suffix = { androidx.compose.material3.Text(text = " seconds") },
-                        singleLine = true,
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = explanationTime,
-                        onValueChange = { component.explanationTimeSetting.value = it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" } },
-                        label = { androidx.compose.material3.Text(text = "Explanation duration") },
-                        suffix = { androidx.compose.material3.Text(text = " seconds") },
-                        singleLine = true,
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = lastGuessTime,
-                        onValueChange = { component.lastGuessTimeSetting.value = it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" } },
-                        label = { androidx.compose.material3.Text(text = "Last guess duration") },
-                        suffix = { androidx.compose.material3.Text(text = " seconds") },
-                        singleLine = true,
-                    )
+                    is State.Preparation ->
+                        Text(
+                            text = timerStateValue.represent(),
+                            fontSize = 256.sp,
+                            color = Color.Red, // TODO: Replace with gradually changed color
+                        )
+                    
+                    is State.Explanation ->
+                        Text(
+                            text = timerStateValue.represent(),
+                            fontSize = 128.sp,
+                        )
+                    
+                    is State.LastGuess ->
+                        Text(
+                            text = timerStateValue.represent(),
+                            fontSize = 128.sp,
+                            color = Color.Red,
+                        )
                 }
-                is State.Preparation ->
-                    Text(
-                        text = timerStateValue.represent(),
-                        fontSize = 256.sp,
-                        color = Color.Red, // TODO: Replace with gradually changed color
-                    )
-                is State.Explanation ->
-                    Text(
-                        text = timerStateValue.represent(),
-                        fontSize = 128.sp,
-                    )
-                is State.LastGuess ->
-                    Text(
-                        text = timerStateValue.represent(),
-                        fontSize = 128.sp,
-                        color = Color.Red,
-                    )
             }
-        }
-        Spacer(modifier = Modifier.height(32.dp))
-        Button(
-            modifier = Modifier.fillMaxWidth(0.4847561f),
-            onClick = {
-                when (timerState) {
-                    State.Finished -> component.onStartTimer()
-                    is State.Preparation,
-                    is State.Explanation,
-                    is State.LastGuess -> component.onResetTimer()
-                }
-            },
-            shape = CircleShape,
-        ) {
-            Text(
-                text = when (timerState) {
-                    State.Finished -> "START"
-                    is State.Preparation,
-                    is State.Explanation,
-                    is State.LastGuess -> "RESET"
+            Spacer(modifier = Modifier.height(32.dp))
+            Button(
+                modifier = Modifier.fillMaxWidth(0.4847561f),
+                onClick = {
+                    when (timerState) {
+                        State.Finished -> component.onStartTimer()
+                        is State.Preparation,
+                        is State.Explanation,
+                        is State.LastGuess,
+                            -> component.onResetTimer()
+                    }
                 },
-                fontSize = 24.sp,
-            )
+                shape = CircleShape,
+            ) {
+                Text(
+                    text = when (timerState) {
+                        State.Finished -> "START"
+                        is State.Preparation,
+                        is State.Explanation,
+                        is State.LastGuess,
+                            -> "RESET"
+                    },
+                    fontSize = 24.sp,
+                )
+            }
         }
     }
 }

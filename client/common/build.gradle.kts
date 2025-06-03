@@ -16,21 +16,21 @@ kotlin {
             dependencies {
                 // API
                 api(projects.api)
+                
+                // Components
+                api(projects.client.componentual)
+                api(projects.kone.stateAndCompose)
 
                 // Logging
-                api(versions.logKube.core)
+                api(logKube.core)
 
                 // Compose
                 api(compose.runtime)
                 api(compose.ui)
                 api(compose.foundation)
                 api(compose.material3)
+                api("org.jetbrains.compose.material3:material3-window-size-class:${versions.versions.compose.multiplatform.get()}")
                 api(compose.components.resources)
-                
-                // Decompose & Essenty
-                api(versions.decompose)
-                api(versions.decompose.extensions.compose.multiplatform)
-                api(versions.essenty.lifecycle.coroutines)
 
                 // Ktor
                 api(versions.ktor.client.core)

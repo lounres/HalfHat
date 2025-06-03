@@ -2,7 +2,7 @@ package dev.lounres.halfhat.client.desktop.ui.implementation.game.deviceGame.gam
 
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
-import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import androidx.compose.runtime.collectAsState
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.GameScreenComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.game.deviceGame.gameScreen.gameResults.GameResultsActionsUI
 import dev.lounres.halfhat.client.desktop.ui.implementation.game.deviceGame.gameScreen.gameResults.GameResultsUI
@@ -18,13 +18,14 @@ import dev.lounres.halfhat.client.desktop.ui.implementation.game.deviceGame.game
 import dev.lounres.halfhat.client.desktop.ui.implementation.game.deviceGame.gameScreen.roundPreparation.RoundPreparationUI
 import dev.lounres.halfhat.client.desktop.ui.implementation.game.deviceGame.gameScreen.roundWaiting.RoundWaitingActionsUI
 import dev.lounres.halfhat.client.desktop.ui.implementation.game.deviceGame.gameScreen.roundWaiting.RoundWaitingUI
+import dev.lounres.kone.state.subscribeAsState
 
 
 @Composable
 fun RowScope.GameScreenActionsUI(
     component: GameScreenComponent,
 ) {
-    when (val child: GameScreenComponent.Child = component.childStack.subscribeAsState().value.active.instance) {
+    when (val child: GameScreenComponent.Child = component.childStack.subscribeAsState().value.active.component) {
         is GameScreenComponent.Child.Loading -> LoadingActionsUI(child.component)
         is GameScreenComponent.Child.RoundWaiting -> RoundWaitingActionsUI(child.component)
         is GameScreenComponent.Child.RoundPreparation -> RoundPreparationActionsUI(child.component)
@@ -39,7 +40,7 @@ fun RowScope.GameScreenActionsUI(
 fun GameScreenUI(
     component: GameScreenComponent,
 ) {
-    when (val child: GameScreenComponent.Child = component.childStack.subscribeAsState().value.active.instance) {
+    when (val child: GameScreenComponent.Child = component.childStack.subscribeAsState().value.active.component) {
         is GameScreenComponent.Child.Loading -> LoadingUI(child.component)
         is GameScreenComponent.Child.RoundWaiting -> RoundWaitingUI(child.component)
         is GameScreenComponent.Child.RoundPreparation -> RoundPreparationUI(child.component)

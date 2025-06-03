@@ -2,7 +2,8 @@ package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScr
 
 import dev.lounres.halfhat.api.server.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.kone.collections.list.emptyKoneList
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.empty
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -10,7 +11,7 @@ class FakeRoundEditingComponent(
     initialGameState: ServerApi.OnlineGame.State.RoundEditing =
         ServerApi.OnlineGame.State.RoundEditing(
             role = TODO(),
-            playersList = emptyKoneList(),
+            playersList = KoneList.empty(),
             userIndex = 0u,
             settings = ServerApi.Settings(
                 preparationTimeSeconds = 0u,
@@ -23,9 +24,9 @@ class FakeRoundEditingComponent(
             cycleNumber = 0u,
             speakerIndex = 0u,
             listenerIndex = 0u,
-            explanationScores = emptyKoneList(),
-            guessingScores = emptyKoneList(),
-            wordsToEdit = emptyKoneList(),
+            explanationScores = KoneList.empty(),
+            guessingScores = KoneList.empty(),
+            wordsToEdit = KoneList.empty(),
         ),
 ) : RoundEditingComponent {
     override val onCopyOnlineGameKey: () -> Unit = {}

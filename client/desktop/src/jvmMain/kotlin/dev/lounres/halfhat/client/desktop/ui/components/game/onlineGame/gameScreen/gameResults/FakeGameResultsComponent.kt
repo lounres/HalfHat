@@ -1,7 +1,8 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.gameResults
 
 import dev.lounres.halfhat.api.server.ServerApi
-import dev.lounres.kone.collections.list.emptyKoneList
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.empty
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -10,9 +11,9 @@ class FakeGameResultsComponent(
     initialGameState: ServerApi.OnlineGame.State.GameResults =
         ServerApi.OnlineGame.State.GameResults(
             role = TODO(),
-            playersList = emptyKoneList(),
+            playersList = KoneList.empty(),
             userIndex = 0u,
-            results = emptyKoneList(),
+            results = KoneList.empty(),
         ),
 ) : GameResultsComponent {
     override val onCopyOnlineGameKey: () -> Unit = {}

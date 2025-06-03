@@ -1,18 +1,27 @@
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+
 plugins {
     alias(versions.plugins.kotlinx.serialization)
     alias(versions.plugins.kotlinx.atomicfu)
-    alias(versions.plugins.ktor)
+//    alias(versions.plugins.ktor)
 }
 
 kotlin {
-    jvm { /*withJava()*/ }
+    jvm {
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        binaries {
+            executable {
+                mainClass = "dev.lounres.halfhat.server.MainKt"
+            }
+        }
+    }
     sourceSets {
         jvmMain {
             dependencies {
                 implementation(projects.api)
 
                 // Logging
-                implementation(versions.logKube.core)
+                implementation(logKube.core)
 
                 // Ktor
                 implementation(versions.ktor.server.core)
@@ -26,6 +35,6 @@ kotlin {
     }
 }
 
-application {
-    mainClass = "dev.lounres.halfhat.server.MainKt"
-}
+//application {
+//    mainClass = "dev.lounres.halfhat.server.MainKt"
+//}

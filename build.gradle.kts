@@ -7,7 +7,6 @@ import org.gradle.kotlin.dsl.getByName
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.js.yarn.yarn
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
@@ -18,8 +17,6 @@ plugins {
     alias(versions.plugins.kotlin.compose) apply false
     alias(versions.plugins.kotlinx.atomicfu) apply false
 }
-
-val jvmTargetVersion: String by project
 
 val Project.versions: LibrariesForVersions get() = rootProject.extensions.getByName<LibrariesForVersions>("versions")
 val Project.projects: RootProjectAccessor get() = rootProject.extensions.getByName<RootProjectAccessor>("projects")
@@ -45,7 +42,10 @@ stal {
         "kotlin jvm target" {
             pluginManager.withPlugin(versions.plugins.kotlin.multiplatform) {
                 configure<KotlinMultiplatformExtension> {
-                    jvmToolchain(jvmTargetVersion.toInt())
+                    jvmToolchain {
+                        languageVersion = JavaLanguageVersion.of(project.extra["jvmTargetVersion"] as String)
+                        vendor = JvmVendorSpec.matching(project.extra["jvmVendor"] as String)
+                    }
                     jvm()
                 }
             }
@@ -55,7 +55,7 @@ stal {
                 configure<KotlinMultiplatformExtension> {
                     @OptIn(ExperimentalWasmDsl::class)
                     wasmJs {
-                        moduleName = project.path.substring(startIndex = 1).replace(':', '-')
+                        outputModuleName = project.path.substring(startIndex = 1).replace(':', '-')
                         browser()
                     }
                 }
@@ -83,12 +83,14 @@ stal {
                         languageSettings {
                             progressiveMode = true
                             enableLanguageFeature("ContextParameters")
+                            enableLanguageFeature("NestedTypeAliases")
                             enableLanguageFeature("ValueClasses")
                             enableLanguageFeature("ContractSyntaxV2")
                             enableLanguageFeature("ExplicitBackingFields")
                             optIn("kotlin.contracts.ExperimentalContracts")
                             optIn("kotlin.ExperimentalStdlibApi")
                             optIn("kotlin.uuid.ExperimentalUuidApi")
+                            optIn("kotlin.concurrent.atomics.ExperimentalAtomicApi")
                         }
                     }
                     commonTest {
@@ -100,11 +102,6 @@ stal {
             }
             afterEvaluate {
                 the<KotlinMultiplatformExtension>().targets.withType<KotlinJvmTarget> {
-                    @OptIn(ExperimentalKotlinGradlePluginApi::class)
-                    compilerOptions {
-                        jvmTarget = JvmTarget.fromTarget(jvmTargetVersion)
-                        freeCompilerArgs = freeCompilerArgs.get() + listOf("-Xlambdas=indy")
-                    }
                     testRuns.all {
                         executionTask {
                             useJUnitPlatform()
@@ -112,15 +109,6 @@ stal {
                     }
                 }
                 yarn.lockFileDirectory = rootDir.resolve("gradle")
-            }
-            pluginManager.withPlugin("org.gradle.java") {
-                configure<JavaPluginExtension> {
-                    sourceCompatibility = JavaVersion.toVersion(jvmTargetVersion)
-                    targetCompatibility = JavaVersion.toVersion(jvmTargetVersion)
-                }
-                tasks.withType<Test> {
-                    useJUnitPlatform()
-                }
             }
         }
         "library" {

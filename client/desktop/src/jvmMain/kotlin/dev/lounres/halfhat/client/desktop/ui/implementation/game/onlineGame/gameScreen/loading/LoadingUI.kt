@@ -2,6 +2,7 @@ package dev.lounres.halfhat.client.desktop.ui.implementation.game.onlineGame.gam
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -58,7 +59,7 @@ fun RowScope.LoadingActionsUI(
 }
 
 @Composable
-fun LoadingUI(
+fun ColumnScope.LoadingUI(
     component: LoadingComponent
 ) {
     Box(

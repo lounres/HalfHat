@@ -40,104 +40,108 @@ fun RowScope.RoundPreparationActionsUI(
 fun RoundPreparationUI(
     component: RoundPreparationComponent,
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Box(
+        modifier = Modifier.fillMaxSize(),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+            modifier = Modifier.fillMaxHeight().widthIn(max = 480.dp).align(Alignment.Center).padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+            Column(
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Icon(
-                        painter = painterResource(DesktopRes.drawable.deviceGameSpeakerIcon_dark_png_24dp),
-                        modifier = Modifier.size(24.dp),
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "${component.speaker.collectAsState().value} explains",
-                        fontSize = 16.sp,
-                    )
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "${component.listener.collectAsState().value} guesses",
-                        fontSize = 16.sp,
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        painter = painterResource(DesktopRes.drawable.deviceGameListenerIcon_dark_png_24dp),
-                        modifier = Modifier.size(24.dp),
-                        contentDescription = null
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            painter = painterResource(DesktopRes.drawable.deviceGameSpeakerIcon_dark_png_24dp),
+                            modifier = Modifier.size(24.dp),
+                            contentDescription = null
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "${component.speaker.collectAsState().value} explains",
+                            fontSize = 16.sp,
+                        )
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "${component.listener.collectAsState().value} guesses",
+                            fontSize = 16.sp,
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            painter = painterResource(DesktopRes.drawable.deviceGameListenerIcon_dark_png_24dp),
+                            modifier = Modifier.size(24.dp),
+                            contentDescription = null
+                        )
+                    }
                 }
             }
-        }
-        Column(
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            val millisecondsLeft = component.millisecondsLeft.collectAsState().value
-            Text(
-                text = (millisecondsLeft / 1_000u + 1u).toString(),
-                fontSize = 256.sp,
-                color = Color.hsv(
-                    hue = min(millisecondsLeft, 3_000u).toInt() * 0.04f,
-                    saturation = 1f,
-                    value = 1f,
-                ),
-            )
-        }
-        // TODO: Are the buttons needed (being disabled)
-//        Column(
-//            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-//            horizontalAlignment = Alignment.CenterHorizontally,
-//        ) {
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
+            Column(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                val millisecondsLeft = component.millisecondsLeft.collectAsState().value
+                Text(
+                    text = (millisecondsLeft / 1_000u + 1u).toString(),
+                    fontSize = 256.sp,
+                    color = Color.hsv(
+                        hue = min(millisecondsLeft, 3_000u).toInt() * 0.04f,
+                        saturation = 1f,
+                        value = 1f,
+                    ),
+                )
+            }
+            // TODO: Are the buttons needed (being disabled)
+//            Column(
+//                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+//                horizontalAlignment = Alignment.CenterHorizontally,
 //            ) {
-//                Button(
-//                    modifier = Modifier.weight(1f),
-//                    shape = CircleShape,
-//                    onClick = onNotGuessed,
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
 //                ) {
-//                    Text(
-//                        text = "Not guessed",
-//                        fontSize = 16.sp,
-//                    )
+//                    Button(
+//                        modifier = Modifier.weight(1f),
+//                        shape = CircleShape,
+//                        onClick = onNotGuessed,
+//                    ) {
+//                        Text(
+//                            text = "Not guessed",
+//                            fontSize = 16.sp,
+//                        )
+//                    }
+//                    Spacer(modifier = Modifier.width(16.dp))
+//                    Button(
+//                        modifier = Modifier.weight(1f),
+//                        shape = CircleShape,
+//                        onClick = onMistake,
+//                    ) {
+//                        Text(
+//                            text = "Mistake",
+//                            fontSize = 16.sp,
+//                        )
+//                    }
 //                }
-//                Spacer(modifier = Modifier.width(16.dp))
+//                Spacer(modifier = Modifier.height(8.dp))
 //                Button(
-//                    modifier = Modifier.weight(1f),
+//                    modifier = Modifier.fillMaxWidth(),
 //                    shape = CircleShape,
-//                    onClick = onMistake,
+//                    onClick = onGuessed,
 //                ) {
 //                    Text(
-//                        text = "Mistake",
-//                        fontSize = 16.sp,
+//                        text = "Guessed",
+//                        fontSize = 32.sp,
 //                    )
 //                }
 //            }
-//            Spacer(modifier = Modifier.height(8.dp))
-//            Button(
-//                modifier = Modifier.fillMaxWidth(),
-//                shape = CircleShape,
-//                onClick = onGuessed,
-//            ) {
-//                Text(
-//                    text = "Guessed",
-//                    fontSize = 32.sp,
-//                )
-//            }
-//        }
+        }
     }
 }

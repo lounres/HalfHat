@@ -1,7 +1,7 @@
 [versions]
 appDirs = "1.2.0"
 room = "2.7.0-alpha11"
-sqldelight = "2.0.2"
+sqldelight = "2.1.0"
 
 [plugins]
 

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,9 +22,33 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.lounres.halfhat.client.desktop.resources.faqPage_dark_png_24dp
+import dev.lounres.halfhat.client.desktop.resources.Res as DesktopRes
 import dev.lounres.halfhat.client.desktop.ui.components.faq.FAQPageComponent
 import dev.lounres.halfhat.client.desktop.ui.components.faq.questionsAndAnswers
+import dev.lounres.halfhat.client.desktop.ui.components.game.GamePageComponent
+import dev.lounres.halfhat.client.desktop.ui.implementation.commonIconModifier
+import org.jetbrains.compose.resources.painterResource
 
+
+@Composable
+fun FAQPageIcon(
+    isSelected: Boolean,
+) {
+    Icon(
+        painter = painterResource(DesktopRes.drawable.faqPage_dark_png_24dp),
+        modifier = commonIconModifier,
+        contentDescription = "FAQ page",
+    )
+}
+
+@Composable
+fun FAQPageBadge(
+    component: FAQPageComponent,
+    isSelected: Boolean,
+) {
+
+}
 
 // TODO: Review "FAQ" page thoroughly
 @OptIn(ExperimentalTextApi::class)

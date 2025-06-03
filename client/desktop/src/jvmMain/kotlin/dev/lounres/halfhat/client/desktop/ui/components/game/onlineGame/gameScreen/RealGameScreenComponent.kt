@@ -1,16 +1,10 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen
 
-import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.router.stack.ChildStack
-import com.arkivanov.decompose.router.stack.StackNavigation
-import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.router.stack.replaceCurrent
-import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import dev.lounres.halfhat.api.client.ClientApi
 import dev.lounres.halfhat.api.server.ServerApi
-import dev.lounres.halfhat.client.common.ui.utils.updateCurrent
 import dev.lounres.halfhat.client.common.utils.runOnUiThread
+import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.gameResults.RealGameResultsComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.loading.RealLoadingComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.roomScreen.RealRoomScreenComponent
@@ -21,7 +15,14 @@ import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScre
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.roundPreparation.RealRoundPreparationComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.roundWaiting.RealRoundWaitingComponent
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
+import dev.lounres.komponentual.navigation.ChildrenStack
+import dev.lounres.komponentual.navigation.MutableStackNavigation
+import dev.lounres.komponentual.navigation.replaceCurrent
+import dev.lounres.komponentual.navigation.updateCurrent
 import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.of
+import dev.lounres.kone.misc.router.uiChildrenFromRunningToForegroundStack
+import dev.lounres.kone.state.KoneState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +30,7 @@ import kotlinx.coroutines.launch
 
 
 class RealGameScreenComponent(
-    componentContext: ComponentContext,
+    componentContext: UIComponentContext,
     gameStateFlow: StateFlow<ServerApi.OnlineGame.State?>,
     onExitOnlineGame: () -> Unit,
     onApplySettings: (ClientApi.SettingsBuilder) -> Unit,
@@ -45,24 +46,26 @@ class RealGameScreenComponent(
     private fun copyKey() { TODO() }
     private fun copyLink() { TODO() }
 
-    private val navigation = StackNavigation<Configuration>()
+    private val navigation = MutableStackNavigation<Configuration>()
 
-    override val childStack: Value<ChildStack<Configuration, GameScreenComponent.Child>> =
-        componentContext.childStack(
+    override val childStack: KoneState<ChildrenStack<Configuration, GameScreenComponent.Child>> =
+        componentContext.uiChildrenFromRunningToForegroundStack(
             source = navigation,
-            serializer = null,
-            initialConfiguration =
-                when(val gameState = gameStateFlow.value) {
-                    null -> Configuration.Loading
-                    is ServerApi.OnlineGame.State.GameInitialisation -> Configuration.RoomScreen(MutableStateFlow(gameState))
-                    is ServerApi.OnlineGame.State.RoundWaiting -> Configuration.RoundWaiting(MutableStateFlow(gameState))
-                    is ServerApi.OnlineGame.State.RoundPreparation -> Configuration.RoundPreparation(MutableStateFlow(gameState))
-                    is ServerApi.OnlineGame.State.RoundExplanation -> Configuration.RoundExplanation(MutableStateFlow(gameState))
-                    is ServerApi.OnlineGame.State.RoundLastGuess -> Configuration.RoundLastGuess(MutableStateFlow(gameState))
-                    is ServerApi.OnlineGame.State.RoundEditing -> Configuration.RoundEditing(MutableStateFlow(gameState))
-                    is ServerApi.OnlineGame.State.GameResults -> Configuration.GameResults(MutableStateFlow(gameState))
-                },
-        ) { configuration, componentContext ->
+            initialStack = {
+                KoneList.of(
+                    when(val gameState = gameStateFlow.value) {
+                        null -> Configuration.Loading
+                        is ServerApi.OnlineGame.State.GameInitialisation -> Configuration.RoomScreen(MutableStateFlow(gameState))
+                        is ServerApi.OnlineGame.State.RoundWaiting -> Configuration.RoundWaiting(MutableStateFlow(gameState))
+                        is ServerApi.OnlineGame.State.RoundPreparation -> Configuration.RoundPreparation(MutableStateFlow(gameState))
+                        is ServerApi.OnlineGame.State.RoundExplanation -> Configuration.RoundExplanation(MutableStateFlow(gameState))
+                        is ServerApi.OnlineGame.State.RoundLastGuess -> Configuration.RoundLastGuess(MutableStateFlow(gameState))
+                        is ServerApi.OnlineGame.State.RoundEditing -> Configuration.RoundEditing(MutableStateFlow(gameState))
+                        is ServerApi.OnlineGame.State.GameResults -> Configuration.GameResults(MutableStateFlow(gameState))
+                    }
+                )
+            },
+        ) { configuration, _ ->
             when(configuration) {
                 Configuration.Loading ->
                     GameScreenComponent.Child.Loading(

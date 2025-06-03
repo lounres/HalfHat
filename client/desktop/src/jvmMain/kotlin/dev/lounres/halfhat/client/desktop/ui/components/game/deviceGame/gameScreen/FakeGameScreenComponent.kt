@@ -1,9 +1,9 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen
 
-import com.arkivanov.decompose.router.stack.ChildStack
-import com.arkivanov.decompose.value.MutableValue
-import com.arkivanov.decompose.value.Value
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.roundPreparation.FakeRoundPreparationComponent
+import dev.lounres.komponentual.navigation.ChildrenStack
+import dev.lounres.kone.state.KoneMutableState
+import dev.lounres.kone.state.KoneState
 
 
 class FakeGameScreenComponent(
@@ -11,5 +11,5 @@ class FakeGameScreenComponent(
 ) : GameScreenComponent {
     override val onExitGame: () -> Unit = {}
     
-    override val childStack: Value<ChildStack<*, GameScreenComponent.Child>> = MutableValue(ChildStack("", child))
+    override val childStack: KoneState<ChildrenStack<*, GameScreenComponent.Child>> = KoneMutableState(ChildrenStack("", child))
 }

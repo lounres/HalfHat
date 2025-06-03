@@ -1,8 +1,8 @@
 package dev.lounres.halfhat.client.desktop.ui.implementation.game.onlineGame.gameScreen
 
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
-import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.GameScreenComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.game.onlineGame.gameScreen.gameResults.GameResultsActionsUI
 import dev.lounres.halfhat.client.desktop.ui.implementation.game.onlineGame.gameScreen.gameResults.GameResultsUI
@@ -22,13 +22,14 @@ import dev.lounres.halfhat.client.desktop.ui.implementation.game.onlineGame.game
 import dev.lounres.halfhat.client.desktop.ui.implementation.game.onlineGame.gameScreen.roundPreparation.RoundPreparationUI
 import dev.lounres.halfhat.client.desktop.ui.implementation.game.onlineGame.gameScreen.roundWaiting.RoundWaitingActionsUI
 import dev.lounres.halfhat.client.desktop.ui.implementation.game.onlineGame.gameScreen.roundWaiting.RoundWaitingUI
+import dev.lounres.kone.state.subscribeAsState
 
 
 @Composable
 fun RowScope.GameScreenActionsUI(
     component: GameScreenComponent
 ) {
-    when (val child = component.childStack.subscribeAsState().value.active.instance) {
+    when (val child = component.childStack.subscribeAsState().value.active.component) {
         is GameScreenComponent.Child.Loading -> LoadingActionsUI(child.component)
         is GameScreenComponent.Child.RoomScreen -> RoomScreenActionsUI(child.component)
         is GameScreenComponent.Child.RoomSettings -> RoomSettingsActionsUI(child.component)
@@ -42,10 +43,10 @@ fun RowScope.GameScreenActionsUI(
 }
 
 @Composable
-fun GameScreenUI(
+fun ColumnScope.GameScreenUI(
     component: GameScreenComponent
 ) {
-    when (val child = component.childStack.subscribeAsState().value.active.instance) {
+    when (val child = component.childStack.subscribeAsState().value.active.component) {
         is GameScreenComponent.Child.Loading -> LoadingUI(child.component)
         is GameScreenComponent.Child.RoomScreen -> RoomScreenUI(child.component)
         is GameScreenComponent.Child.RoomSettings -> RoomSettingsUI(child.component)

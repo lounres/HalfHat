@@ -55,7 +55,7 @@ fun RowScope.RoomScreenActionsUI(
 }
 
 @Composable
-fun RoomScreenUI(
+fun ColumnScope.RoomScreenUI(
     component: RoomScreenComponent,
 ) {
     Column(

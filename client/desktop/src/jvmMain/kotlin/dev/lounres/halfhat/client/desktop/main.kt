@@ -3,46 +3,33 @@ package dev.lounres.halfhat.client.desktop
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.remember
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import com.arkivanov.decompose.DefaultComponentContext
-import com.arkivanov.decompose.extensions.compose.lifecycle.LifecycleController
-import com.arkivanov.essenty.lifecycle.LifecycleRegistry
-import com.arkivanov.essenty.statekeeper.StateKeeperDispatcher
-import com.arkivanov.essenty.statekeeper.saveable
-import dev.lounres.halfhat.client.common.utils.readSerializableContainer
 import dev.lounres.halfhat.client.desktop.storage.AppDatabase
 import dev.lounres.halfhat.client.desktop.storage.DriverFactory
 import dev.lounres.halfhat.client.desktop.storage.dictionaries.LocalDictionariesRegistry
 import dev.lounres.halfhat.client.desktop.ui.components.RealMainWindowComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.MainWindowUI
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.json.Json
-import java.io.File
 
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 fun main() {
     val appDatabase = AppDatabase(DriverFactory)
     val localDictionariesRegistry = LocalDictionariesRegistry(appDatabase)
-    
-    val lifecycle = LifecycleRegistry()
-    val stateKeeper = StateKeeperDispatcher()
-    
-    val componentContext = DefaultComponentContext(lifecycle = lifecycle, stateKeeper = stateKeeper)
-
-    val mainWindowState = WindowState()
 
     application(
         exitProcessOnExit = false,
     ) {
-
-        LifecycleController(lifecycle, mainWindowState)
-
         val component = remember {
             RealMainWindowComponent(
-                componentContext = componentContext,
                 localDictionariesRegistry = localDictionariesRegistry,
+                windowState = WindowState(
+//                    placement = WindowPlacement.Maximized,
+                    size = DpSize(360.dp, 640.dp), // Mi Note 3
+//                    size = DpSize(540.dp, 1200.dp), // POCO X5 Pro 5G
+                ),
                 onWindowCloseRequest = ::exitApplication,
             )
         }

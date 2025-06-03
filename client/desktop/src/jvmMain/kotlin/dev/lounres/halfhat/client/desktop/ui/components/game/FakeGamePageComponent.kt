@@ -1,13 +1,14 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game
 
-import com.arkivanov.decompose.router.stack.ChildStack
-import com.arkivanov.decompose.value.MutableValue
-import com.arkivanov.decompose.value.Value
 import dev.lounres.halfhat.client.desktop.ui.components.game.modeSelection.FakeModeSelectionPageComponent
+import dev.lounres.komponentual.navigation.ChildrenSlot
+import dev.lounres.kone.state.KoneMutableState
+import dev.lounres.kone.state.KoneState
 
 
 class FakeGamePageComponent(
     child: GamePageComponent.Child = GamePageComponent.Child.ModeSelection(FakeModeSelectionPageComponent())
 ): GamePageComponent {
-    override val childStack: Value<ChildStack<*, GamePageComponent.Child>> = MutableValue(ChildStack("", child))
+    override val currentChild: KoneState<ChildrenSlot<*, GamePageComponent.Child>> =
+        KoneMutableState(ChildrenSlot("", child))
 }

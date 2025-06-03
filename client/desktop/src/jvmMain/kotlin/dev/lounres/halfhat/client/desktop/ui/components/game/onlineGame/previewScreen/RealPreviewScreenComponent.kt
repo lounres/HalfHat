@@ -1,8 +1,8 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.previewScreen
 
-import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import dev.lounres.halfhat.api.server.ServerApi
+import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.coroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 
 
 class RealPreviewScreenComponent(
-    componentContext: ComponentContext,
+    componentContext: UIComponentContext,
     override val onExitOnlineGame: () -> Unit,
     onFetchFreeRoomId: () -> Unit,
     freeRoomIdFlow: Flow<String>,

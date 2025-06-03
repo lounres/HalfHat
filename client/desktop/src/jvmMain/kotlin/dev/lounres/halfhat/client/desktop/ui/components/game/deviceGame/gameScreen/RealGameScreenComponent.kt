@@ -1,14 +1,8 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen
 
-import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.router.stack.ChildStack
-import com.arkivanov.decompose.router.stack.StackNavigation
-import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.router.stack.replaceCurrent
-import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
-import dev.lounres.halfhat.client.common.ui.utils.updateCurrent
 import dev.lounres.halfhat.client.common.utils.runOnUiThread
+import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.gameResults.RealGameResultsComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.loading.RealLoadingComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.roundEditing.RealRoundEditingComponent
@@ -20,8 +14,14 @@ import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.halfhat.logic.gameStateMachine.listener
 import dev.lounres.halfhat.logic.gameStateMachine.personalResults
 import dev.lounres.halfhat.logic.gameStateMachine.speaker
+import dev.lounres.komponentual.navigation.ChildrenStack
+import dev.lounres.komponentual.navigation.MutableStackNavigation
+import dev.lounres.komponentual.navigation.updateCurrent
 import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.collections.list.toKoneMutableList
+import dev.lounres.kone.misc.router.uiChildrenFromRunningToForegroundStack
+import dev.lounres.kone.state.KoneState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -31,7 +31,7 @@ import kotlin.random.Random
 
 
 class RealGameScreenComponent(
-    componentContext: ComponentContext,
+    componentContext: UIComponentContext,
     playersList: KoneList<String>,
     settingsBuilder: GameStateMachine.GameSettingsBuilder<GameStateMachine.WordsProvider>,
     override val onExitGame: () -> Unit,
@@ -48,14 +48,12 @@ class RealGameScreenComponent(
         random = Random, // TODO: Move the variable upward
     )
     
-    private val navigation = StackNavigation<Configuration>()
+    private val navigation = MutableStackNavigation<Configuration>()
     
-    override val childStack: Value<ChildStack<Configuration, GameScreenComponent.Child>> =
-        componentContext.childStack(
+    override val childStack: KoneState<ChildrenStack<Configuration, GameScreenComponent.Child>> =
+        componentContext.uiChildrenFromRunningToForegroundStack(
             source = navigation,
-            serializer = null,
-            initialConfiguration = Configuration.Loading,
-            handleBackButton = false,
+            initialStack = { KoneList.of(Configuration.Loading) },
         ) { configuration, componentContext ->
             when(configuration) {
                 Configuration.Loading ->

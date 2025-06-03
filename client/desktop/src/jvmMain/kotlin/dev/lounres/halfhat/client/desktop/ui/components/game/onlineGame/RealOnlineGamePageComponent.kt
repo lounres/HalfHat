@@ -1,103 +1,108 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame
 
-import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.router.stack.ChildStack
-import com.arkivanov.decompose.router.stack.StackNavigation
-import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.router.stack.replaceCurrent
-import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import dev.lounres.halfhat.api.client.ClientApi
 import dev.lounres.halfhat.api.server.BetterBeReplaced
 import dev.lounres.halfhat.api.server.ServerApi
 import dev.lounres.halfhat.client.common.logger
 import dev.lounres.halfhat.client.common.utils.defaultHttpClient
-import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.FakeGameScreenComponent
+import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.RealGameScreenComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.previewScreen.RealPreviewScreenComponent
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.of
+import dev.lounres.komponentual.lifecycle.UIComponentLifecycle
+import dev.lounres.komponentual.lifecycle.UIComponentLifecycleKey
+import dev.lounres.komponentual.navigation.ChildrenStack
+import dev.lounres.komponentual.navigation.MutableStackNavigation
+import dev.lounres.komponentual.navigation.replaceCurrent
+import dev.lounres.kone.misc.router.uiChildrenFromRunningToForegroundStack
+import dev.lounres.kone.state.KoneState
 import dev.lounres.logKube.core.info
 import dev.lounres.logKube.core.warn
-import io.ktor.client.plugins.websocket.converter
-import io.ktor.client.plugins.websocket.sendSerialized
-import io.ktor.client.plugins.websocket.webSocket
-import io.ktor.serialization.deserialize
-import kotlinx.coroutines.CoroutineScope
+import io.ktor.client.plugins.websocket.*
+import io.ktor.serialization.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.io.IOException
 
 
 class RealOnlineGamePageComponent(
-    componentContext: ComponentContext,
+    componentContext: UIComponentContext,
     onExitOnlineGame: () -> Unit
 ) : OnlineGamePageComponent {
     
     private val outgoingSignals = Channel<ClientApi.Signal>(Channel.UNLIMITED)
     
+    override val connectionStatus: MutableStateFlow<ConnectionStatus> = MutableStateFlow(ConnectionStatus.Disconnected)
     private val freeRoomIdFlow = MutableSharedFlow<String>(extraBufferCapacity = 1)
     private val roomDescriptionFlow = MutableSharedFlow<ServerApi.RoomDescription>(extraBufferCapacity = 1)
     private val gameStateFlow = MutableStateFlow<ServerApi.OnlineGame.State?>(null)
     
     init {
-        with(componentContext.coroutineScope(Dispatchers.Default)) {
-            launch {
-                while (true) {
-                    try {
-                        defaultHttpClient.webSocket(host = "localhost", port = 3000, path = "/ws") {
-                            val converter = converter!!
-                            launch {
-                                for (signal in outgoingSignals) {
-                                    sendSerialized<ClientApi.Signal>(signal)
-                                }
-                            }
-                            for (frame in incoming) {
-                                if (!converter.isApplicable(frame)) {
-                                    logger.info(
-                                        items = {
-                                            mapOf(
-                                                "frame" to frame.toString(),
-                                            )
-                                        }
-                                    ) { "Received inconvertible frame" }
-                                    continue
-                                }
-                                val signal = converter.deserialize<ServerApi.Signal>(frame)
-                                
-                                when (signal) {
-                                    @OptIn(BetterBeReplaced::class)
-                                    ServerApi.Signal.UnspecifiedError -> {} // TODO
-                                    is ServerApi.Signal.Error -> {} // TODO
-                                    is ServerApi.Signal.OnlineGameStateUpdate -> gameStateFlow.value = signal.state
-                                    is ServerApi.Signal.RoomInfo -> roomDescriptionFlow.emit(signal.info)
-                                }
+        componentContext.coroutineScope(Dispatchers.Default).launch {
+            while (true) {
+                try {
+                    defaultHttpClient.webSocket(host = "localhost", port = 3000, path = "/ws") {
+                        connectionStatus.value = ConnectionStatus.Connected
+                        val converter = converter!!
+                        launch {
+                            for (signal in outgoingSignals) {
+                                sendSerialized<ClientApi.Signal>(signal)
                             }
                         }
-                    } catch (exception: IOException) {
-                        logger.warn(throwable = exception) { "Online game websocket connection exception" }
+                        for (frame in incoming) {
+                            if (!converter.isApplicable(frame)) {
+                                logger.info(
+                                    items = {
+                                        mapOf(
+                                            "frame" to frame.toString(),
+                                        )
+                                    }
+                                ) { "Received inconvertible frame" }
+                                continue
+                            }
+                            val signal = converter.deserialize<ServerApi.Signal>(frame)
+                            
+                            when (signal) {
+                                @OptIn(BetterBeReplaced::class)
+                                ServerApi.Signal.UnspecifiedError -> {} // TODO
+                                is ServerApi.Signal.Error -> {} // TODO
+                                is ServerApi.Signal.OnlineGameStateUpdate -> gameStateFlow.value = signal.state
+                                is ServerApi.Signal.RoomInfo -> roomDescriptionFlow.emit(signal.info)
+                            }
+                        }
+                        cancel()
                     }
-                    delay(1000)
+                } catch (exception: IOException) {
+                    logger.warn(throwable = exception) { "Online game websocket connection exception" }
                 }
+                connectionStatus.value = ConnectionStatus.Disconnected
+                delay(1000)
             }
         }
     }
     
-    private val navigation = StackNavigation<Configuration>()
+    private val navigation = MutableStackNavigation<Configuration>()
     
-    override val childStack: Value<ChildStack<Configuration, OnlineGamePageComponent.Child>> =
-        componentContext.childStack(
+    override val childStack: KoneState<ChildrenStack<Configuration, OnlineGamePageComponent.Child>> =
+        componentContext.uiChildrenFromRunningToForegroundStack(
             source = navigation,
-            serializer = null,
-            initialConfiguration = Configuration.PreviewScreen,
-        ) { configuration: Configuration, componentContext: ComponentContext ->
+            initialStack = { KoneList.of(Configuration.PreviewScreen) },
+        ) { configuration: Configuration, lifecycle: UIComponentLifecycle ->
             when (configuration) {
                 Configuration.PreviewScreen ->
                     OnlineGamePageComponent.Child.PreviewScreen(
                         RealPreviewScreenComponent(
-                            componentContext = componentContext,
+                            componentContext = UIComponentContext {
+                                UIComponentLifecycleKey correspondsTo lifecycle
+                            },
                             onExitOnlineGame = onExitOnlineGame,
                             onFetchFreeRoomId = { outgoingSignals.trySend(ClientApi.Signal.FetchFreeRoomId) },
                             freeRoomIdFlow = freeRoomIdFlow,
@@ -118,7 +123,9 @@ class RealOnlineGamePageComponent(
                 Configuration.GameScreen ->
                     OnlineGamePageComponent.Child.GameScreen(
                         RealGameScreenComponent(
-                            componentContext = componentContext,
+                            componentContext = UIComponentContext {
+                                UIComponentLifecycleKey correspondsTo lifecycle
+                            },
                             gameStateFlow = gameStateFlow,
                             onExitOnlineGame = {
                                 outgoingSignals.trySend(ClientApi.Signal.OnlineGame.LeaveRoom)

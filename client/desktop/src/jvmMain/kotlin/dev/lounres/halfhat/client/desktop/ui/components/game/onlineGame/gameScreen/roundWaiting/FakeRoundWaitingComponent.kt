@@ -2,7 +2,8 @@ package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScr
 
 import dev.lounres.halfhat.api.server.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.kone.collections.list.koneListOf
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.empty
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -11,7 +12,7 @@ class FakeRoundWaitingComponent(
     initialGameState: ServerApi.OnlineGame.State.RoundWaiting =
         ServerApi.OnlineGame.State.RoundWaiting(
             role = TODO(),
-            playersList = koneListOf(),
+            playersList = KoneList.empty(),
             userIndex = 0u,
             settings = ServerApi.Settings(
                 preparationTimeSeconds = 0u,
@@ -24,8 +25,8 @@ class FakeRoundWaitingComponent(
             cycleNumber = 0u,
             speakerIndex = 0u,
             listenerIndex = 0u,
-            explanationScores = koneListOf(),
-            guessingScores = koneListOf(),
+            explanationScores = KoneList.empty(),
+            guessingScores = KoneList.empty(),
             speakerReady = false,
             listenerReady = false,
         ),

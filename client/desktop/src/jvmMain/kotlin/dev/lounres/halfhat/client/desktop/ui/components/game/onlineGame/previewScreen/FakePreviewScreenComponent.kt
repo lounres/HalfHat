@@ -1,7 +1,8 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.previewScreen
 
 import dev.lounres.halfhat.api.server.ServerApi
-import dev.lounres.kone.collections.list.koneListOf
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.of
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -12,7 +13,7 @@ class FakePreviewScreenComponent(
         PreviewScreenComponent.RoomPreview.Present(
             ServerApi.RoomDescription(
                 name = initialRoomSearchEntry,
-                playersList = koneListOf(
+                playersList = KoneList.of(
                     ServerApi.PlayerDescription(name = "Полина", isOnline = true),
                     ServerApi.PlayerDescription(name = "Глеб", isOnline = true),
                     ServerApi.PlayerDescription(name = "Ваня", isOnline = true),

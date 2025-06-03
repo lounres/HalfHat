@@ -2,7 +2,8 @@ package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScr
 
 import dev.lounres.halfhat.api.server.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.kone.collections.list.koneListOf
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.of
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -11,7 +12,7 @@ class FakeRoomScreenComponent(
     initialGameState: ServerApi.OnlineGame.State.GameInitialisation =
         ServerApi.OnlineGame.State.GameInitialisation(
             role = TODO(),
-            playersList = koneListOf(
+            playersList = KoneList.of(
                 ServerApi.PlayerDescription(name = "Panther", isOnline = true),
                 ServerApi.PlayerDescription(name = "Tiger", isOnline = false),
             ),

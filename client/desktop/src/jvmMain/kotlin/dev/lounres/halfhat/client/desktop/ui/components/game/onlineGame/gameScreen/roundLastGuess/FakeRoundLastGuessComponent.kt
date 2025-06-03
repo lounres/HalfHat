@@ -2,7 +2,8 @@ package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScr
 
 import dev.lounres.halfhat.api.server.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.kone.collections.list.emptyKoneList
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.empty
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -11,7 +12,7 @@ class FakeRoundLastGuessComponent(
     initialGameState: ServerApi.OnlineGame.State.RoundLastGuess =
         ServerApi.OnlineGame.State.RoundLastGuess(
             role = TODO(),
-            playersList = emptyKoneList(),
+            playersList = KoneList.empty(),
             userIndex = 0u,
             settings = ServerApi.Settings(
                 preparationTimeSeconds = 0u,
@@ -24,8 +25,8 @@ class FakeRoundLastGuessComponent(
             cycleNumber = 0u,
             speakerIndex = 0u,
             listenerIndex = 0u,
-            explanationScores = emptyKoneList(),
-            guessingScores = emptyKoneList(),
+            explanationScores = KoneList.empty(),
+            guessingScores = KoneList.empty(),
             millisecondsLeft = 29_000u,
         ),
 ) : RoundLastGuessComponent {

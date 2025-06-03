@@ -3,14 +3,15 @@ package dev.lounres.halfhat.server
 import dev.lounres.halfhat.api.client.ClientApi
 import dev.lounres.halfhat.api.server.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
+import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.list.KoneList
-import dev.lounres.kone.collections.KoneMutableListNode
-import dev.lounres.kone.collections.KoneMutableNoddedList
-import dev.lounres.kone.collections.KoneSet
-import dev.lounres.kone.collections.list.emptyKoneList
-import dev.lounres.kone.collections.implementations.KoneArrayResizableLinkedNoddedList
-import dev.lounres.kone.collections.koneMutableSetOf
-import dev.lounres.kone.collections.toKoneList
+import dev.lounres.kone.collections.list.KoneMutableListNode
+import dev.lounres.kone.collections.list.KoneMutableNoddedList
+import dev.lounres.kone.collections.list.empty
+import dev.lounres.kone.collections.list.implementations.KoneArrayResizableLinkedNoddedList
+import dev.lounres.kone.collections.set.KoneMutableSet
+import dev.lounres.kone.collections.set.KoneSet
+import dev.lounres.kone.collections.set.of
 import dev.lounres.kone.collections.utils.filter
 import dev.lounres.kone.collections.utils.firstIndexOf
 import dev.lounres.kone.collections.utils.firstThatOrNull
@@ -18,11 +19,14 @@ import dev.lounres.kone.collections.utils.forEach
 import dev.lounres.kone.collections.utils.forEachIndexed
 import dev.lounres.kone.collections.utils.map
 import dev.lounres.kone.collections.utils.mapTo
-import dev.lounres.kone.comparison.absoluteEquality
-import dev.lounres.kone.context.invoke
+import dev.lounres.kone.relations.absoluteEquality
+import dev.lounres.kone.contexts.invoke
 import dev.lounres.logKube.core.DefaultJvmLogWriter
 import dev.lounres.logKube.core.JvmLogger
 import dev.lounres.logKube.core.LogAcceptor
+import dev.lounres.logKube.core.debug
+import dev.lounres.logKube.core.info
+import dev.lounres.logKube.core.warn
 import io.ktor.serialization.deserialize
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.server.application.install
@@ -49,8 +53,8 @@ import kotlin.uuid.Uuid
 
 val logger = JvmLogger(
     name = "HalfHat main server logger",
-    logAcceptors = mutableListOf(
-        LogAcceptor(DefaultJvmLogWriter) /*{ it.level >= Level.INFO }*/,
+    logAcceptors = listOf(
+        LogAcceptor(DefaultJvmLogWriter) /*{ it.logLevel >= LogLevel.INFO }*/,
     )
 )
 
@@ -114,7 +118,7 @@ class Room(
     private val playersRegistry: KoneMutableNoddedList<Player> = KoneArrayResizableLinkedNoddedList()
     
     private val gameStateMachine = GameStateMachine.FromInitialization(
-        playersList = emptyKoneList<Player>(),
+        playersList = KoneList.empty<Player>(),
         settingsBuilder = GameStateMachine.GameSettingsBuilder<OnlineGameWordsProvider>( // TODO: Hardcoded settings!
             preparationTimeSeconds = 3u,
             explanationTimeSeconds = 40u,
@@ -126,7 +130,7 @@ class Room(
             wordsSource = GameStateMachine.WordsSource.Custom (
                 object : OnlineGameWordsProvider.ServerDictionary {
                     override val name: String = "Default dictionary"
-                    override fun randomWords(number: UInt): KoneSet<String> = (1u..number).toKoneList().mapTo(koneMutableSetOf()) { it.toString() }
+                    override fun randomWords(number: UInt): KoneSet<String> = (1u..number).toKoneList().mapTo(KoneMutableSet.of()) { it.toString() }
                     override fun allWords(): KoneSet<String> = randomWords(100u)
                 }
             )
@@ -503,7 +507,7 @@ class Room(
                                     GameStateMachine.WordsSource.Custom(
                                         object : OnlineGameWordsProvider.ServerDictionary {
                                             override val name: String = clientWordsSource.name
-                                            override fun randomWords(number: UInt): KoneSet<String> = (1u..number).toKoneList().mapTo(koneMutableSetOf()) { it.toString() }
+                                            override fun randomWords(number: UInt): KoneSet<String> = (1u..number).toKoneList().mapTo(KoneMutableSet.of()) { it.toString() }
                                             override fun allWords(): KoneSet<String> = randomWords(100u)
                                         }
                                     )
@@ -667,7 +671,7 @@ fun main() {
                                             room?.description
                                                 ?: ServerApi.RoomDescription(
                                                     name = signal.roomId,
-                                                    playersList = emptyKoneList(),
+                                                    playersList = KoneList.empty(),
                                                     state = ServerApi.RoomStateType.GameInitialisation
                                                 )
                                         )
@@ -884,6 +888,22 @@ fun main() {
                             }
                         }
                     }
+                } catch (exception: Exception) {
+                    logger.warn(
+                        throwable = exception,
+                        items = {
+                            mapOf("connection" to connection.toString())
+                        }
+                    ) { "Caught exception during WebSocket connection" }
+                    throw exception
+                } catch (exception: Error) {
+                    logger.warn(
+                        throwable = exception,
+                        items = {
+                            mapOf("connection" to connection.toString())
+                        }
+                    ) { "Caught error during WebSocket connection" }
+                    throw exception
                 } finally {
                     logger.info(
                         items = {

@@ -49,58 +49,62 @@ fun RowScope.RoundWaitingActionsUI(
 fun RoundWaitingUI(
     component: RoundWaitingComponent,
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+    Box(
+        modifier = Modifier.fillMaxSize(),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxHeight().widthIn(max = 480.dp).align(Alignment.Center).padding(16.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().align(Alignment.Start),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start,
+            Column(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
             ) {
-                Icon(
-                    painter = painterResource(DesktopRes.drawable.deviceGameSpeakerIcon_dark_png_24dp),
-                    modifier = Modifier.size(24.dp),
-                    contentDescription = null
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "${component.speaker.collectAsState().value} explains",
-                    fontSize = 24.sp,
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth().align(Alignment.Start),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start,
+                ) {
+                    Icon(
+                        painter = painterResource(DesktopRes.drawable.deviceGameSpeakerIcon_dark_png_24dp),
+                        modifier = Modifier.size(24.dp),
+                        contentDescription = null
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "${component.speaker.collectAsState().value} explains",
+                        fontSize = 24.sp,
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth().align(Alignment.End),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    Text(
+                        text = "${component.listener.collectAsState().value} guesses",
+                        fontSize = 24.sp,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        painter = painterResource(DesktopRes.drawable.deviceGameListenerIcon_dark_png_24dp),
+                        modifier = Modifier.size(24.dp),
+                        contentDescription = null
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth().align(Alignment.End),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End,
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                shape = CircleShape,
+                onClick = component.onStartRound,
             ) {
                 Text(
-                    text = "${component.listener.collectAsState().value} guesses",
-                    fontSize = 24.sp,
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    painter = painterResource(DesktopRes.drawable.deviceGameListenerIcon_dark_png_24dp),
-                    modifier = Modifier.size(24.dp),
-                    contentDescription = null
+                    text = "Start",
+                    fontSize = 32.sp,
                 )
             }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            shape = CircleShape,
-            onClick = component.onStartRound,
-        ) {
-            Text(
-                text = "Start",
-                fontSize = 32.sp,
-            )
         }
     }
 }

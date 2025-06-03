@@ -1,6 +1,7 @@
 package dev.lounres.halfhat.client.desktop.logic.timer
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -45,7 +46,7 @@ fun CoroutineScope.timerJob(
     val lastGuessEndMark = explanationEndMark + lastGuessTimeMilliseconds
 
     val startInstant = Clock.System.now()
-    return launch {
+    return launch(start = CoroutineStart.LAZY) {
         while (true) {
             val currentInstant = Clock.System.now()
             val spentTime = (currentInstant - startInstant).inWholeMilliseconds.toUInt()

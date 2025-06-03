@@ -5,16 +5,19 @@ plugins {
     alias(versions.plugins.compose.multiplatform)
 //    alias(versions.plugins.ktor)
     alias(versions.plugins.kotlinx.serialization)
-    alias(versions.plugins.kotlinx.atomicfu)
+//    alias(versions.plugins.kotlinx.atomicfu)
     alias(libs.plugins.sqldelight)
 }
 
 kotlin {
-    jvm { withJava() }
     sourceSets {
         jvmMain {
             dependencies {
                 implementation(projects.client.common)
+                
+                // Kone
+                implementation(versions.kone.maybe)
+                implementation(versions.kone.util.misc)
                 
                 // AppDirs
                 implementation(libs.appDirs)
