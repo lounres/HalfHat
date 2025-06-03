@@ -24,7 +24,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import dev.lounres.halfhat.api.localization.Language
-import dev.lounres.halfhat.client.common.ui.utils.IgnoringMutableInteractionSource
 import dev.lounres.halfhat.client.desktop.resources.*
 import dev.lounres.halfhat.client.desktop.ui.components.MainWindowComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.about.AboutPageBadge
@@ -288,7 +287,6 @@ fun MainWindowContentUI(
                                     component.language.value = Language.English
                                     openLanguageSelectionDialog.value = false
                                 },
-                                interactionSource = IgnoringMutableInteractionSource,
                             )
                             Text(text = "English")
                         }
@@ -320,7 +318,6 @@ fun MainWindowContentUI(
                                     component.language.value = Language.Russian
                                     openLanguageSelectionDialog.value = false
                                 },
-                                interactionSource = IgnoringMutableInteractionSource,
                             )
                             Text(text = "Русский")
                         }

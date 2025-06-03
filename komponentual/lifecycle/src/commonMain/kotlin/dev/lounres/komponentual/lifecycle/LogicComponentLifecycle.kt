@@ -163,19 +163,27 @@ internal class MergingLogicComponentLifecycleImpl(
         }
 }
 
+public fun MutableLogicComponentLifecycle.moveTo(state: LogicComponentLifecycleState) {
+    when (state) {
+        LogicComponentLifecycleState.Destroyed -> apply(LogicComponentLifecycleTransition.Destroy)
+        LogicComponentLifecycleState.Initialized -> apply(LogicComponentLifecycleTransition.Stop)
+        LogicComponentLifecycleState.Running -> apply(LogicComponentLifecycleTransition.Run)
+    }
+}
+
 public fun LogicComponentLifecycle.attach(child: MutableLogicComponentLifecycle) {
     val subscription = subscribe { child.apply(it) }
     child.subscribe(onDestroy = { subscription.cancel() })
     if (child.state == LogicComponentLifecycleState.Destroyed) subscription.cancel()
 }
 
-public fun LogicComponentLifecycle.createChild(optionalLogicComponentLifecycle: LogicComponentLifecycle? = null): LogicComponentLifecycle {
+public fun LogicComponentLifecycle.child(controllingLifecycle: LogicComponentLifecycle? = null): LogicComponentLifecycle {
     val directChild = MutableLogicComponentLifecycle().also { child -> this.attach(child) }
-    return if (optionalLogicComponentLifecycle == null) directChild else mergeLogicComponentLifecycles(directChild, optionalLogicComponentLifecycle)
+    return if (controllingLifecycle == null) directChild else mergeLogicComponentLifecycles(directChild, controllingLifecycle)
 }
 
 public fun CoroutineScope.attachTo(lifecycle: LogicComponentLifecycle) {
-    lifecycle.subscribe(onDestroy = { this.cancel() })
+    lifecycle.subscribe(onStop = { this.cancel() }, onDestroy = { this.cancel() })
 }
 
 public fun LogicComponentLifecycle.coroutineScope(context: CoroutineContext): CoroutineScope =

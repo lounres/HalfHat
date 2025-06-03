@@ -70,7 +70,7 @@ public fun <
             for (configuration in nextState.configurations) if (configuration !in components)
                 components[configuration] = createChild(configuration, nextState)
             
-            result.element = publicNavigationStateMapper(nextState, components)
+            result.value = publicNavigationStateMapper(nextState, components)
         }
     )
     

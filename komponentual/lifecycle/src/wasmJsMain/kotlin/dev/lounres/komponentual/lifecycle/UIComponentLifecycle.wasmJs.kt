@@ -6,12 +6,11 @@ public actual enum class UIComponentLifecycleState {
 }
 
 public actual enum class UIComponentLifecycleTransition {
-    Destroy, Run, /*Stop,*/ Appear, Disappear, Focus, Defocus
+    Destroy, Run, Appear, Disappear, Focus, Defocus
 }
 
 public inline fun UIComponentLifecycle.subscribe(
     crossinline onRun: () -> Unit = {},
-//    crossinline onStop: () -> Unit = {},
     crossinline onAppear: () -> Unit = {},
     crossinline onDisappear: () -> Unit = {},
     crossinline onFocus: () -> Unit = {},
@@ -21,7 +20,6 @@ public inline fun UIComponentLifecycle.subscribe(
     subscribe {
         when (it) {
             UIComponentLifecycleTransition.Run -> onRun()
-//            UIComponentLifecycleTransition.Stop -> onStop()
             UIComponentLifecycleTransition.Appear -> onAppear()
             UIComponentLifecycleTransition.Disappear -> onDisappear()
             UIComponentLifecycleTransition.Focus -> onFocus()

@@ -1,17 +1,16 @@
 package dev.lounres.halfhat.client.common.logic.components.game.timer
 
-import dev.lounres.halfhat.client.common.logic.timer.TimerState
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import dev.lounres.kone.state.KoneMutableState
+import dev.lounres.kone.state.KoneState
 
 
 public interface TimerComponent {
-    public val timerState: StateFlow<TimerState>
+    public val timerState: KoneState<TimerState>
     
-    public val preparationTimeSetting: MutableStateFlow<UInt>
-    public val explanationTimeSetting: MutableStateFlow<UInt>
-    public val lastGuessTimeSetting: MutableStateFlow<UInt>
-    
-    public fun startTimer()
+    public fun startTimer(
+        preparationTimeSetting: UInt,
+        explanationTimeSetting: UInt,
+        lastGuessTimeSetting: UInt,
+    )
     public fun resetTimer()
 }

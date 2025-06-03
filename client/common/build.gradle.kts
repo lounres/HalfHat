@@ -18,7 +18,7 @@ kotlin {
                 api(projects.api)
                 
                 // Components
-                api(projects.client.componentual)
+                api(projects.client.components)
                 api(projects.kone.stateAndCompose)
 
                 // Logging

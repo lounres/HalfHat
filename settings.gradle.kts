@@ -57,7 +57,7 @@ stal {
         "api"("library", "server", "desktop", "web", "android")
         "server"("server")
         "client" {
-            "componentual"("library", "desktop", "web", /*"android"*/)
+            "components"("library", "desktop", "web", /*"android"*/)
             "common"("library", "desktop", "web", /*"android"*/)
             "desktop"("desktop")
             "web"("web")

@@ -1,12 +1,12 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game
 
+import dev.lounres.halfhat.client.common.ui.components.game.timer.RealTimerPageComponent
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.desktop.storage.dictionaries.LocalDictionariesRegistry
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.RealDeviceGamePageComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.localGame.RealLocalGamePageComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.modeSelection.RealModeSelectionPageComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.RealOnlineGamePageComponent
-import dev.lounres.halfhat.client.desktop.ui.components.game.timer.RealTimerPageComponent
 import dev.lounres.komponentual.lifecycle.UIComponentLifecycleKey
 import dev.lounres.komponentual.navigation.ChildrenSlot
 import dev.lounres.komponentual.navigation.MutableSlotNavigation

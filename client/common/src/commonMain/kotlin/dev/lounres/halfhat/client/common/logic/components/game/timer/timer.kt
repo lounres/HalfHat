@@ -1,4 +1,4 @@
-package dev.lounres.halfhat.client.common.logic.timer
+package dev.lounres.halfhat.client.common.logic.components.game.timer
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job

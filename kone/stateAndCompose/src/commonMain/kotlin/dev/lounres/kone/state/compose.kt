@@ -10,8 +10,8 @@ import androidx.compose.runtime.structuralEqualityPolicy
 
 
 @Composable
-public fun <Element> KoneState<Element>.subscribeAsState(policy: SnapshotMutationPolicy<Element> = structuralEqualityPolicy()): State<Element> {
-    val state = remember(this, policy) { mutableStateOf(element, policy) }
+public fun <Value> KoneState<Value>.subscribeAsState(policy: SnapshotMutationPolicy<Value> = structuralEqualityPolicy()): State<Value> {
+    val state = remember(this, policy) { mutableStateOf(value, policy) }
     
     DisposableEffect(this) {
         val disposable = subscribe { state.value = it }

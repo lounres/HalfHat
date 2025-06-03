@@ -19,35 +19,35 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 
-public interface KoneState<out Element> {
-    public val element: Element
+public interface KoneState<out Value> {
+    public val value: Value
     
-    public fun subscribe(observer: (Element) -> Unit): Cancellation
+    public fun subscribe(observer: (Value) -> Unit): Cancellation
     
     public fun interface Cancellation {
         public fun cancel()
     }
 }
 
-public interface KoneMutableState<Element> : KoneState<Element> {
-    override var element: Element
+public interface KoneMutableState<Value> : KoneState<Value> {
+    override var value: Value
     
-    public fun compareAndSet(expected: Element, new: Element): Boolean
+    public fun compareAndSet(expected: Value, new: Value): Boolean
 }
 
-public fun <Element> KoneMutableState(
-    initialElement: Element,
-    elementEquality: Equality<Element> = defaultEquality()
-): KoneMutableState<Element> = KoneMutableStateImpl(initialElement, elementEquality)
+public fun <Value> KoneMutableState(
+    initialElement: Value,
+    elementEquality: Equality<Value> = defaultEquality()
+): KoneMutableState<Value> = KoneMutableStateImpl(initialElement, elementEquality)
 
-internal class KoneMutableStateImpl<Element>(
-    initialElement: Element,
-    private val elementEquality: Equality<Element>
-) : KoneMutableState<Element> {
+internal class KoneMutableStateImpl<Value>(
+    initialElement: Value,
+    private val elementEquality: Equality<Value>
+) : KoneMutableState<Value> {
     private val observersLock = ReentrantLock()
-    private val observers: KoneMutableNoddedList<(Element) -> Unit> = KoneTwoThreeTreeList()
+    private val observers: KoneMutableNoddedList<(Value) -> Unit> = KoneTwoThreeTreeList()
     private val automaton =
-        LockingAutomaton<Element, Element>(
+        LockingAutomaton<Value, Value>(
             initialState = initialElement,
             checkTransition = { previousState, transition ->
                 if (elementEquality { previousState eq transition }) None
@@ -58,68 +58,68 @@ internal class KoneMutableStateImpl<Element>(
             }
         )
     
-    override var element: Element
+    override var value: Value
         get() = automaton.state
         set(value) {
             automaton.apply(value)
         }
     
-    override fun compareAndSet(expected: Element, new: Element): Boolean =
+    override fun compareAndSet(expected: Value, new: Value): Boolean =
         automaton.applyMaybe { current ->
             if (elementEquality { current eq expected }) Some(new)
             else None
         }
     
-    override fun subscribe(observer: (Element) -> Unit): KoneState.Cancellation =
+    override fun subscribe(observer: (Value) -> Unit): KoneState.Cancellation =
         observersLock.withLock {
             val node = observers.addNode(observer)
             KoneState.Cancellation { node.remove() }
         }
 }
 
-public fun <Element> KoneMutableState<Element>.update(function: (Element) -> Element) {
+public fun <Value> KoneMutableState<Value>.update(function: (Value) -> Value) {
     while (true) {
-        val previousElement = element
+        val previousElement = value
         val nextElement = function(previousElement)
         
         if (compareAndSet(previousElement, nextElement)) return
     }
 }
 
-public fun <Element> KoneMutableState<Element>.updateAndGet(function: (Element) -> Element): Element {
+public fun <Value> KoneMutableState<Value>.updateAndGet(function: (Value) -> Value): Value {
     while (true) {
-        val previousElement = element
+        val previousElement = value
         val nextElement = function(previousElement)
         
         if (compareAndSet(previousElement, nextElement)) return nextElement
     }
 }
 
-public fun <Element> KoneMutableState<Element>.getAndUpdate(function: (Element) -> Element): Element {
+public fun <Value> KoneMutableState<Value>.getAndUpdate(function: (Value) -> Value): Value {
     while (true) {
-        val previousElement = element
+        val previousElement = value
         val nextElement = function(previousElement)
         
         if (compareAndSet(previousElement, nextElement)) return previousElement
     }
 }
 
-public fun <Element, Result> KoneState<Element>.map(elementEquality: Equality<Result> = defaultEquality(), transform: (Element) -> Result): KoneState<Result> {
+public fun <Value, Result> KoneState<Value>.map(elementEquality: Equality<Result> = defaultEquality(), transform: (Value) -> Result): KoneState<Result> {
     val temporaryLock = ReentrantLock()
     temporaryLock.withLock {
         val temporarySubscription = subscribe { temporaryLock.withLock {  } }
-        val result = KoneMutableState(transform(element), elementEquality)
-        subscribe { result.element = transform(it) }
+        val result = KoneMutableState(transform(value), elementEquality)
+        subscribe { result.value = transform(it) }
         temporarySubscription.cancel()
         return result
     }
 }
 
-public fun <Element> KoneState<Element>.toStateFlow(): StateFlow<Element> {
+public fun <Value> KoneState<Value>.toStateFlow(): StateFlow<Value> {
     val temporaryLock = ReentrantLock()
     temporaryLock.withLock {
         val temporarySubscription = subscribe { temporaryLock.withLock {  } }
-        val result = MutableStateFlow(element)
+        val result = MutableStateFlow(value)
         subscribe { result.value = it }
         temporarySubscription.cancel()
         return result

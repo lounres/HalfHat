@@ -54,7 +54,6 @@ public actual fun MutableUIComponentLifecycle(): MutableUIComponentLifecycle =
             
             UIComponentLifecycleState.Running ->
                 when (transition) {
-//                            UIComponentLifecycleTransition.Stop -> Some(UIComponentLifecycleState.Initialized)
                     UIComponentLifecycleTransition.Appear -> Some(UIComponentLifecycleState.Background)
                     UIComponentLifecycleTransition.Destroy -> Some(UIComponentLifecycleState.Destroyed)
                     else -> None
@@ -111,7 +110,6 @@ internal class MergingUIComponentLifecycleImpl(
                 }
             UIComponentLifecycleState.Running ->
                 when (transition) {
-//                    UIComponentLifecycleTransition.Stop -> Some(UIComponentLifecycleState.Initialized)
                     UIComponentLifecycleTransition.Appear -> Some(UIComponentLifecycleState.Background)
                     UIComponentLifecycleTransition.Destroy -> Some(UIComponentLifecycleState.Destroyed)
                     else -> None

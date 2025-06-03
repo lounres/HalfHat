@@ -1,6 +1,8 @@
 package dev.lounres.komponentual.lifecycle
 
 import dev.lounres.kone.registry.RegistryKey
+import kotlinx.atomicfu.locks.ReentrantLock
+import kotlinx.atomicfu.locks.withLock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlin.coroutines.CoroutineContext
@@ -34,15 +36,19 @@ public expect fun mergeUIComponentLifecycles(
 
 public expect fun MutableUIComponentLifecycle.moveTo(state: UIComponentLifecycleState)
 
-public fun UIComponentLifecycle.attach(child: MutableUIComponentLifecycle) {
-    val subscription = subscribe { child.apply(it) }
-    child.subscribe { if (it == UIComponentLifecycleTransition.Destroy) subscription.cancel() }
-    if (child.state == UIComponentLifecycleState.Destroyed) subscription.cancel()
+internal fun UIComponentLifecycle.attach(child: MutableUIComponentLifecycle) {
+    val temporaryLock = ReentrantLock()
+    temporaryLock.withLock {
+        val temporarySubscription = subscribe { temporaryLock.withLock {} }
+        child.moveTo(state)
+        subscribe { child.apply(it) }
+        temporarySubscription.cancel()
+    }
 }
 
-public fun UIComponentLifecycle.createChild(optionalUIComponentLifecycle: UIComponentLifecycle? = null): UIComponentLifecycle =
-    if (optionalUIComponentLifecycle == null) MutableUIComponentLifecycle().also { this.attach(it) }
-    else mergeUIComponentLifecycles(this, optionalUIComponentLifecycle)
+public fun UIComponentLifecycle.child(controllingLifecycle: UIComponentLifecycle? = null): UIComponentLifecycle =
+    if (controllingLifecycle == null) MutableUIComponentLifecycle().also { this.attach(it) }
+    else mergeUIComponentLifecycles(this, controllingLifecycle)
 
 public fun CoroutineScope.attachTo(lifecycle: UIComponentLifecycle) {
     lifecycle.subscribe { if (it == UIComponentLifecycleTransition.Destroy) cancel() }
