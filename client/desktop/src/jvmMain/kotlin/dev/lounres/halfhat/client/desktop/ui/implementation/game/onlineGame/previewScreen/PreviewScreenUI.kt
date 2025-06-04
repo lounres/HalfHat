@@ -46,15 +46,7 @@ import org.jetbrains.compose.resources.painterResource
 fun RowScope.PreviewScreenActionsUI(
     component: PreviewScreenComponent,
 ) {
-    IconButton(
-        onClick = component.onExitOnlineGame
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.exitOnlineGameButton_dark_png_24dp),
-            contentDescription = "Exit device game"
-        )
-    }
+
 }
 
 @OptIn(ExperimentalLayoutApi::class)

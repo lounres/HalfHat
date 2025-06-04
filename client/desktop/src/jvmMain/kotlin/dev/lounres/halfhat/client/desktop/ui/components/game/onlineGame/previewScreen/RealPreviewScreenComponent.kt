@@ -11,7 +11,6 @@ import kotlinx.coroutines.launch
 
 class RealPreviewScreenComponent(
     componentContext: UIComponentContext,
-    override val onExitOnlineGame: () -> Unit,
     onFetchFreeRoomId: () -> Unit,
     freeRoomIdFlow: Flow<String>,
     onFetchRoomInfo: (roomId: String) -> Unit,

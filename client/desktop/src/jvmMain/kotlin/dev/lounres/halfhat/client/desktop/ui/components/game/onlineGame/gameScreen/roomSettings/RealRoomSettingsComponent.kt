@@ -8,9 +8,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class RealRoomSettingsComponent(
     onApplySettings: (ClientApi.SettingsBuilder) -> Unit,
     override val onDiscardSettings: () -> Unit,
-    override val onCopyOnlineGameKey: () -> Unit,
-    override val onCopyOnlineGameLink: () -> Unit,
-    override val onExitOnlineGame: () -> Unit,
     
     initialPreparationTimeSeconds: UInt,
     initialExplanationTimeSeconds: UInt,

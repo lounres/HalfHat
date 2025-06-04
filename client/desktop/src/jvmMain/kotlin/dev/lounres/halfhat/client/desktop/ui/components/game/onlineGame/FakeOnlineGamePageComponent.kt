@@ -12,7 +12,10 @@ class FakeOnlineGamePageComponent(
     initialChild: OnlineGamePageComponent.Child = OnlineGamePageComponent.Child.PreviewScreen(FakePreviewScreenComponent()),
     initialConnectionStatus: ConnectionStatus = ConnectionStatus.Connected
 ) : OnlineGamePageComponent {
+    override val onExitOnlineGameMode: () -> Unit = {}
+    
+    override val connectionStatus: StateFlow<ConnectionStatus> = MutableStateFlow(initialConnectionStatus)
+    
     override val childStack: KoneState<ChildrenStack<*, OnlineGamePageComponent.Child>> =
         KoneMutableState(ChildrenStack(Unit, initialChild))
-    override val connectionStatus: StateFlow<ConnectionStatus> = MutableStateFlow(initialConnectionStatus)
 }

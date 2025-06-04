@@ -7,16 +7,14 @@ import dev.lounres.halfhat.client.common.logger
 import dev.lounres.halfhat.client.common.utils.defaultHttpClient
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStack
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.RealGameScreenComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.previewScreen.RealPreviewScreenComponent
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycle
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleKey
 import dev.lounres.komponentual.navigation.ChildrenStack
 import dev.lounres.komponentual.navigation.MutableStackNavigation
 import dev.lounres.komponentual.navigation.replaceCurrent
-import dev.lounres.kone.misc.router.uiChildrenFromRunningToForegroundStack
 import dev.lounres.kone.state.KoneState
 import dev.lounres.logKube.core.info
 import dev.lounres.logKube.core.warn
@@ -28,14 +26,13 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.io.IOException
 
 
 class RealOnlineGamePageComponent(
     componentContext: UIComponentContext,
-    onExitOnlineGame: () -> Unit
+    override val onExitOnlineGameMode: () -> Unit,
 ) : OnlineGamePageComponent {
     
     private val outgoingSignals = Channel<ClientApi.Signal>(Channel.UNLIMITED)
@@ -92,18 +89,15 @@ class RealOnlineGamePageComponent(
     private val navigation = MutableStackNavigation<Configuration>()
     
     override val childStack: KoneState<ChildrenStack<Configuration, OnlineGamePageComponent.Child>> =
-        componentContext.uiChildrenFromRunningToForegroundStack(
+        componentContext.uiChildrenDefaultStack(
             source = navigation,
             initialStack = { KoneList.of(Configuration.PreviewScreen) },
-        ) { configuration: Configuration, lifecycle: UIComponentLifecycle ->
+        ) { configuration: Configuration, componentContext: UIComponentContext ->
             when (configuration) {
                 Configuration.PreviewScreen ->
                     OnlineGamePageComponent.Child.PreviewScreen(
                         RealPreviewScreenComponent(
-                            componentContext = UIComponentContext {
-                                UIComponentLifecycleKey correspondsTo lifecycle
-                            },
-                            onExitOnlineGame = onExitOnlineGame,
+                            componentContext = componentContext,
                             onFetchFreeRoomId = { outgoingSignals.trySend(ClientApi.Signal.FetchFreeRoomId) },
                             freeRoomIdFlow = freeRoomIdFlow,
                             onFetchRoomInfo = { outgoingSignals.trySend(ClientApi.Signal.FetchRoomInfo(it)) },
@@ -123,13 +117,11 @@ class RealOnlineGamePageComponent(
                 Configuration.GameScreen ->
                     OnlineGamePageComponent.Child.GameScreen(
                         RealGameScreenComponent(
-                            componentContext = UIComponentContext {
-                                UIComponentLifecycleKey correspondsTo lifecycle
-                            },
+                            componentContext = componentContext,
                             gameStateFlow = gameStateFlow,
                             onExitOnlineGame = {
                                 outgoingSignals.trySend(ClientApi.Signal.OnlineGame.LeaveRoom)
-                                navigation.replaceCurrent(Configuration.GameScreen)
+                                navigation.replaceCurrent(Configuration.PreviewScreen)
                             },
                             onApplySettings = {
                                 outgoingSignals.trySend(ClientApi.Signal.OnlineGame.UpdateSettings(it))

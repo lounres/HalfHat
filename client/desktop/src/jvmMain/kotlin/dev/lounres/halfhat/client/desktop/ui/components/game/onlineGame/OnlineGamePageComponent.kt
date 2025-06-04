@@ -12,9 +12,11 @@ enum class ConnectionStatus {
 }
 
 interface OnlineGamePageComponent {
-    val childStack: KoneState<ChildrenStack<*, Child>>
+    val onExitOnlineGameMode: () -> Unit
     
     val connectionStatus: StateFlow<ConnectionStatus>
+    
+    val childStack: KoneState<ChildrenStack<*, Child>>
     
     sealed interface Child {
         data class PreviewScreen(val component: PreviewScreenComponent) : Child

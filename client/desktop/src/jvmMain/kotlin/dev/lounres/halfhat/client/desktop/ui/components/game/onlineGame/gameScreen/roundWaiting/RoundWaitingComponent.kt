@@ -6,9 +6,6 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface RoundWaitingComponent {
     val onFinishGame: () -> Unit
-    val onCopyOnlineGameKey: () -> Unit
-    val onCopyOnlineGameLink: () -> Unit
-    val onExitOnlineGame: () -> Unit
     
     val gameState: StateFlow<ServerApi.OnlineGame.State.RoundWaiting>
     

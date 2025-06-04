@@ -2,7 +2,6 @@ package dev.lounres.halfhat.client.desktop.ui.implementation.game.deviceGame
 
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.DeviceGamePageComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.game.deviceGame.gameScreen.GameScreenActionsUI
 import dev.lounres.halfhat.client.desktop.ui.implementation.game.deviceGame.gameScreen.GameScreenUI

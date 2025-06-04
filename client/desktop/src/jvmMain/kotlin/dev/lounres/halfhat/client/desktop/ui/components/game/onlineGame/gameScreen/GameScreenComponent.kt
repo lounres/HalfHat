@@ -14,6 +14,10 @@ import dev.lounres.kone.state.KoneState
 
 
 interface GameScreenComponent {
+    val onExitOnlineGame: () -> Unit
+    val onCopyOnlineGameKey: () -> Unit
+    val onCopyOnlineGameLink: () -> Unit
+    
     val childStack: KoneState<ChildrenStack<*, Child>>
     
     sealed interface Child {

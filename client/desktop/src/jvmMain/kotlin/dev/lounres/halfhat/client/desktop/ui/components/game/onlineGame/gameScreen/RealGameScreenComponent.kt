@@ -5,6 +5,7 @@ import dev.lounres.halfhat.api.server.ServerApi
 import dev.lounres.halfhat.client.common.utils.runOnUiThread
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStack
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.gameResults.RealGameResultsComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.loading.RealLoadingComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.roomScreen.RealRoomScreenComponent
@@ -21,7 +22,6 @@ import dev.lounres.komponentual.navigation.replaceCurrent
 import dev.lounres.komponentual.navigation.updateCurrent
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
-import dev.lounres.kone.misc.router.uiChildrenFromRunningToForegroundStack
 import dev.lounres.kone.state.KoneState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,7 +32,7 @@ import kotlinx.coroutines.launch
 class RealGameScreenComponent(
     componentContext: UIComponentContext,
     gameStateFlow: StateFlow<ServerApi.OnlineGame.State?>,
-    onExitOnlineGame: () -> Unit,
+    override val onExitOnlineGame: () -> Unit,
     onApplySettings: (ClientApi.SettingsBuilder) -> Unit,
     onStartGame: () -> Unit,
     onFinishGame: () -> Unit,
@@ -42,14 +42,14 @@ class RealGameScreenComponent(
     onUpdateExplanationResults: (KoneList<GameStateMachine.WordExplanation>) -> Unit,
     onConfirmExplanationResults: () -> Unit,
 ) : GameScreenComponent {
-
-    private fun copyKey() { TODO() }
-    private fun copyLink() { TODO() }
+    
+    override val onCopyOnlineGameKey: () -> Unit = { TODO() }
+    override val onCopyOnlineGameLink: () -> Unit = { TODO() }
 
     private val navigation = MutableStackNavigation<Configuration>()
 
     override val childStack: KoneState<ChildrenStack<Configuration, GameScreenComponent.Child>> =
-        componentContext.uiChildrenFromRunningToForegroundStack(
+        componentContext.uiChildrenDefaultStack(
             source = navigation,
             initialStack = {
                 KoneList.of(
@@ -70,18 +70,11 @@ class RealGameScreenComponent(
                 Configuration.Loading ->
                     GameScreenComponent.Child.Loading(
                         RealLoadingComponent(
-                            onCopyOnlineGameKey = ::copyKey,
-                            onCopyOnlineGameLink = ::copyLink,
-                            onExitOnlineGame = onExitOnlineGame,
                         )
                     )
                 is Configuration.RoomScreen ->
                     GameScreenComponent.Child.RoomScreen(
                         RealRoomScreenComponent(
-                            onCopyOnlineGameKey = ::copyKey,
-                            onCopyOnlineGameLink = ::copyLink,
-                            onExitOnlineGame = onExitOnlineGame,
-                            
                             gameStateFlow = configuration.stateFlow,
                             
                             onOpenGameSettings = { navigation.replaceCurrent(Configuration.RoomSettings(configuration.stateFlow)) },
@@ -98,9 +91,6 @@ class RealGameScreenComponent(
                             onDiscardSettings = {
                                 navigation.replaceCurrent(Configuration.RoomScreen(configuration.stateFlow))
                             },
-                            onCopyOnlineGameKey = ::copyKey,
-                            onCopyOnlineGameLink = ::copyLink,
-                            onExitOnlineGame = onExitOnlineGame,
                             
                             initialPreparationTimeSeconds = configuration.stateFlow.value.settingsBuilder.preparationTimeSeconds,
                             initialExplanationTimeSeconds = configuration.stateFlow.value.settingsBuilder.explanationTimeSeconds,
@@ -115,9 +105,6 @@ class RealGameScreenComponent(
                     GameScreenComponent.Child.RoundWaiting(
                         RealRoundWaitingComponent(
                             onFinishGame = onFinishGame,
-                            onCopyOnlineGameKey = ::copyKey,
-                            onCopyOnlineGameLink = ::copyLink,
-                            onExitOnlineGame = onExitOnlineGame,
                             
                             gameState = configuration.stateFlow,
                             
@@ -128,20 +115,12 @@ class RealGameScreenComponent(
                 is Configuration.RoundPreparation ->
                     GameScreenComponent.Child.RoundPreparation(
                         RealRoundPreparationComponent(
-                            onCopyOnlineGameKey = ::copyKey,
-                            onCopyOnlineGameLink = ::copyLink,
-                            onExitOnlineGame = onExitOnlineGame,
-                            
                             gameState = configuration.stateFlow,
                         )
                     )
                 is Configuration.RoundExplanation ->
                     GameScreenComponent.Child.RoundExplanation(
                         RealRoundExplanationComponent(
-                            onCopyOnlineGameKey = ::copyKey,
-                            onCopyOnlineGameLink = ::copyLink,
-                            onExitOnlineGame = onExitOnlineGame,
-                            
                             gameState = configuration.stateFlow,
                             
                             onExplanationResult = onExplanationResult,
@@ -150,10 +129,6 @@ class RealGameScreenComponent(
                 is Configuration.RoundLastGuess ->
                     GameScreenComponent.Child.RoundLastGuess(
                         RealRoundLastGuessComponent(
-                            onCopyOnlineGameKey = ::copyKey,
-                            onCopyOnlineGameLink = ::copyLink,
-                            onExitOnlineGame = onExitOnlineGame,
-                            
                             gameState = configuration.stateFlow,
                             
                             onExplanationResult = onExplanationResult,
@@ -162,10 +137,6 @@ class RealGameScreenComponent(
                 is Configuration.RoundEditing ->
                     GameScreenComponent.Child.RoundEditing(
                         RealRoundEditingComponent(
-                            onCopyOnlineGameKey = ::copyKey,
-                            onCopyOnlineGameLink = ::copyLink,
-                            onExitOnlineGame = onExitOnlineGame,
-                            
                             gameState = configuration.stateFlow,
                             
                             onUpdateExplanationResults = onUpdateExplanationResults,
@@ -176,10 +147,6 @@ class RealGameScreenComponent(
                 is Configuration.GameResults ->
                     GameScreenComponent.Child.GameResults(
                         RealGameResultsComponent(
-                            onCopyOnlineGameKey = ::copyKey,
-                            onCopyOnlineGameLink = ::copyLink,
-                            onExitOnlineGame = onExitOnlineGame,
-                            
                             gameState = configuration.stateFlow,
                         )
                     )

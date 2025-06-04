@@ -3,6 +3,7 @@ package dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScr
 import dev.lounres.halfhat.client.common.utils.runOnUiThread
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStack
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.gameResults.RealGameResultsComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.loading.RealLoadingComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.roundEditing.RealRoundEditingComponent
@@ -20,7 +21,6 @@ import dev.lounres.komponentual.navigation.updateCurrent
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.collections.list.toKoneMutableList
-import dev.lounres.kone.misc.router.uiChildrenFromRunningToForegroundStack
 import dev.lounres.kone.state.KoneState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,7 +51,7 @@ class RealGameScreenComponent(
     private val navigation = MutableStackNavigation<Configuration>()
     
     override val childStack: KoneState<ChildrenStack<Configuration, GameScreenComponent.Child>> =
-        componentContext.uiChildrenFromRunningToForegroundStack(
+        componentContext.uiChildrenDefaultStack(
             source = navigation,
             initialStack = { KoneList.of(Configuration.Loading) },
         ) { configuration, componentContext ->

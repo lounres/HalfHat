@@ -1,8 +1,12 @@
 package dev.lounres.halfhat.client.desktop.ui.implementation.game.onlineGame
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.IconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,13 +17,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.lounres.halfhat.client.desktop.resources.exitDeviceGameButton_dark_png_24dp
+import dev.lounres.halfhat.client.desktop.resources.gameSettingsaButton_dark_png_24dp
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.ConnectionStatus
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.OnlineGamePageComponent
+import dev.lounres.halfhat.client.desktop.ui.implementation.commonIconModifier
 import dev.lounres.halfhat.client.desktop.ui.implementation.game.onlineGame.gameScreen.GameScreenActionsUI
 import dev.lounres.halfhat.client.desktop.ui.implementation.game.onlineGame.gameScreen.GameScreenUI
 import dev.lounres.halfhat.client.desktop.ui.implementation.game.onlineGame.previewScreen.PreviewScreenActionsUI
 import dev.lounres.halfhat.client.desktop.ui.implementation.game.onlineGame.previewScreen.PreviewScreenUI
 import dev.lounres.kone.state.subscribeAsState
+import org.jetbrains.compose.resources.painterResource
+import dev.lounres.halfhat.client.desktop.resources.Res as DesktopRes
 
 
 @Composable
@@ -30,6 +39,15 @@ fun RowScope.OnlineGamePageActionsUI(
         is OnlineGamePageComponent.Child.PreviewScreen -> PreviewScreenActionsUI(child.component)
         is OnlineGamePageComponent.Child.GameScreen -> GameScreenActionsUI(child.component)
     }
+    IconButton(
+        onClick = component.onExitOnlineGameMode
+    ) {
+        Icon(
+            modifier = commonIconModifier,
+            painter = painterResource(DesktopRes.drawable.exitDeviceGameButton_dark_png_24dp), // TODO: Copy the icons
+            contentDescription = "Exit online game"
+        )
+    }
 }
 
 @Composable
@@ -39,35 +57,51 @@ fun ColumnScope.OnlineGamePageUI(
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
-        Surface(
+        Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
-            shape = CircleShape,
-            color = Color.White,
-            shadowElevation = 4.dp,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp, horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+            Surface(
+                modifier = Modifier.weight(1f),
+                shape = CircleShape,
+                color = Color.White,
+                border = BorderStroke(1.dp, color = Color.Gray)
             ) {
-                val connectionStatus by component.connectionStatus.collectAsState()
-                Text(
-                    text = when (connectionStatus) {
-                        ConnectionStatus.Connected -> "Connected"
-                        ConnectionStatus.Disconnected -> "Connecting..."
-                    },
-                    fontSize = 16.sp,
-                )
-                Canvas(
-                    modifier = Modifier.size(8.dp),
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp, horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    drawCircle(
-                        color = when (connectionStatus) {
-                            ConnectionStatus.Connected -> Color.Green
-                            ConnectionStatus.Disconnected -> Color.Red
+                    val connectionStatus by component.connectionStatus.collectAsState()
+                    Text(
+                        text = when (connectionStatus) {
+                            ConnectionStatus.Connected -> "Connected"
+                            ConnectionStatus.Disconnected -> "Connecting..."
                         },
+                        fontSize = 16.sp,
                     )
+                    Canvas(
+                        modifier = Modifier.size(8.dp),
+                    ) {
+                        drawCircle(
+                            color = when (connectionStatus) {
+                                ConnectionStatus.Connected -> Color.Green
+                                ConnectionStatus.Disconnected -> Color.Red
+                            },
+                        )
+                    }
                 }
+            }
+            Spacer(modifier = Modifier.width(4.dp))
+            OutlinedIconButton(
+                onClick = { TODO() },
+                border = BorderStroke(1.dp, color = Color.Gray),
+            ) {
+                Icon(
+                    modifier = commonIconModifier,
+                    painter = painterResource(DesktopRes.drawable.gameSettingsaButton_dark_png_24dp), // TODO: Replace in future
+                    contentDescription = "Connection settings",
+                )
             }
         }
         when (val child = component.childStack.subscribeAsState().value.active.component) {

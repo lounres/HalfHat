@@ -1,6 +1,7 @@
 package dev.lounres.halfhat.client.desktop.ui.implementation.game.onlineGame.gameScreen.gameResults
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -37,37 +38,11 @@ import dev.lounres.halfhat.client.desktop.resources.Res as DesktopRes
 fun RowScope.GameResultsActionsUI(
     component: GameResultsComponent
 ) {
-    IconButton(
-        onClick = component.onCopyOnlineGameKey
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.onlineGameKey_dark_png_24dp),
-            contentDescription = "Copy online game key"
-        )
-    }
-    IconButton(
-        onClick = component.onCopyOnlineGameLink
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.onlineGameLink_dark_png_24dp),
-            contentDescription = "Copy online game link"
-        )
-    }
-    IconButton(
-        onClick = component.onExitOnlineGame
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.exitDeviceGameButton_dark_png_24dp), // TODO: Copy the icons
-            contentDescription = "Exit online game"
-        )
-    }
+
 }
 
 @Composable
-fun GameResultsUI(
+fun ColumnScope.GameResultsUI(
     component: GameResultsComponent
 ) {
     val gameState by component.gameState.collectAsState()
@@ -151,4 +126,11 @@ fun GameResultsUI(
             }
         }
     }
+}
+
+@Composable
+fun RowScope.GameResultsButtonsUI(
+    component: GameResultsComponent
+) {
+
 }

@@ -5,10 +5,6 @@ import kotlinx.coroutines.flow.StateFlow
 
 
 interface RoundEditingComponent {
-    val onCopyOnlineGameKey: () -> Unit
-    val onCopyOnlineGameLink: () -> Unit
-    val onExitOnlineGame: () -> Unit
-    
     val gameState: StateFlow<ServerApi.OnlineGame.State.RoundEditing>
     
     val onGuessed: (UInt) -> Unit

@@ -8,10 +8,6 @@ import kotlinx.coroutines.flow.StateFlow
 
 
 class RealRoundEditingComponent(
-    override val onCopyOnlineGameKey: () -> Unit,
-    override val onCopyOnlineGameLink: () -> Unit,
-    override val onExitOnlineGame: () -> Unit,
-    
     override val gameState: StateFlow<ServerApi.OnlineGame.State.RoundEditing>,
     
     onUpdateExplanationResults: (KoneList<GameStateMachine.WordExplanation>) -> Unit,

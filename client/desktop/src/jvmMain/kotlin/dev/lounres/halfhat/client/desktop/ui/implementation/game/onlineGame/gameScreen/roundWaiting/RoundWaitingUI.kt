@@ -27,46 +27,19 @@ import org.jetbrains.compose.resources.painterResource
 fun RowScope.RoundWaitingActionsUI(
     component: RoundWaitingComponent,
 ) {
-    IconButton(
-        onClick = component.onFinishGame
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.finishDeviceGameButton_dark_png_24dp), // TODO: Copy the icons
-            contentDescription = "Finish online game"
-        )
-    }
-    IconButton(
-        onClick = component.onCopyOnlineGameKey
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.onlineGameKey_dark_png_24dp),
-            contentDescription = "Copy online game key"
-        )
-    }
-    IconButton(
-        onClick = component.onCopyOnlineGameLink
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.onlineGameLink_dark_png_24dp),
-            contentDescription = "Copy online game link"
-        )
-    }
-    IconButton(
-        onClick = component.onExitOnlineGame
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.exitDeviceGameButton_dark_png_24dp), // TODO: Copy the icons
-            contentDescription = "Exit online game"
-        )
-    }
+//    IconButton(
+//        onClick = component.onFinishGame
+//    ) {
+//        Icon(
+//            modifier = commonIconModifier,
+//            painter = painterResource(DesktopRes.drawable.finishDeviceGameButton_dark_png_24dp), // TODO: Copy the icons
+//            contentDescription = "Finish online game"
+//        )
+//    }
 }
 
 @Composable
-fun RoundWaitingUI(
+fun ColumnScope.RoundWaitingUI(
     component: RoundWaitingComponent,
 ) {
     val gameState by component.gameState.collectAsState()
@@ -167,5 +140,20 @@ fun RoundWaitingUI(
             }
             else -> {}
         }
+    }
+}
+
+@Composable
+fun RowScope.RoundWaitingButtonsUI(
+    component: RoundWaitingComponent,
+) {
+    IconButton(
+        onClick = component.onFinishGame
+    ) {
+        Icon(
+            modifier = commonIconModifier,
+            painter = painterResource(DesktopRes.drawable.finishDeviceGameButton_dark_png_24dp), // TODO: Copy the icons
+            contentDescription = "Finish online game"
+        )
     }
 }

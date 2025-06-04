@@ -24,8 +24,6 @@ class FakePreviewScreenComponent(
         ),
     initialEnterName: String = "РВ",
 ) : PreviewScreenComponent {
-    override val onExitOnlineGame: () -> Unit = {}
-    
     override val currentRoomSearchEntry: StateFlow<String> = MutableStateFlow(initialRoomSearchEntry)
     override val onChangeRoomSearchEntry: (String) -> Unit = {}
     override val generateRoomSearchEntry: () -> Unit = {}

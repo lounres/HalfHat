@@ -7,6 +7,7 @@ import dev.lounres.kone.collections.list.empty
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
+
 class FakeRoundEditingComponent(
     initialGameState: ServerApi.OnlineGame.State.RoundEditing =
         ServerApi.OnlineGame.State.RoundEditing(
@@ -29,10 +30,6 @@ class FakeRoundEditingComponent(
             wordsToEdit = KoneList.empty(),
         ),
 ) : RoundEditingComponent {
-    override val onCopyOnlineGameKey: () -> Unit = {}
-    override val onCopyOnlineGameLink: () -> Unit = {}
-    override val onExitOnlineGame: () -> Unit = {}
-    
     override val gameState: StateFlow<ServerApi.OnlineGame.State.RoundEditing> = MutableStateFlow(initialGameState)
     
     override val onGuessed: (UInt) -> Unit = {}

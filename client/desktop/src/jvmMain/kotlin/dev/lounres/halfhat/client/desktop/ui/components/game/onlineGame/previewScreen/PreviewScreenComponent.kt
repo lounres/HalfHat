@@ -6,8 +6,6 @@ import kotlinx.coroutines.flow.StateFlow
 
 
 interface PreviewScreenComponent {
-    val onExitOnlineGame: () -> Unit
-    
     val currentRoomSearchEntry: StateFlow<String>
     val onChangeRoomSearchEntry: (String) -> Unit
     val generateRoomSearchEntry: () -> Unit

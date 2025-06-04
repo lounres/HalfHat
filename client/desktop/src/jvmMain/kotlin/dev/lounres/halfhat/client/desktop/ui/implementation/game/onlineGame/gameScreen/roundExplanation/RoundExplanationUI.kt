@@ -1,5 +1,6 @@
 package dev.lounres.halfhat.client.desktop.ui.implementation.game.onlineGame.gameScreen.roundExplanation
 
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,37 +23,11 @@ import org.jetbrains.compose.resources.painterResource
 fun RowScope.RoundExplanationActionsUI(
     component: RoundExplanationComponent,
 ) {
-    IconButton(
-        onClick = component.onCopyOnlineGameKey
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.onlineGameKey_dark_png_24dp),
-            contentDescription = "Copy online game key"
-        )
-    }
-    IconButton(
-        onClick = component.onCopyOnlineGameLink
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.onlineGameLink_dark_png_24dp),
-            contentDescription = "Copy online game link"
-        )
-    }
-    IconButton(
-        onClick = component.onExitOnlineGame
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.exitDeviceGameButton_dark_png_24dp), // TODO: Copy the icons
-            contentDescription = "Exit online game"
-        )
-    }
+
 }
 
 @Composable
-fun RoundExplanationUI(
+fun ColumnScope.RoundExplanationUI(
     component: RoundExplanationComponent,
 ) {
     val gameState by component.gameState.collectAsState()
@@ -70,4 +45,11 @@ fun RoundExplanationUI(
         onNotGuessed = component.onNotGuessed,
         onMistake = component.onMistake,
     )
+}
+
+@Composable
+fun RowScope.RoundExplanationButtonsUI(
+    component: RoundExplanationComponent,
+) {
+
 }

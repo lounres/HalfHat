@@ -7,9 +7,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 interface RoomSettingsComponent {
     val onApplySettings: () -> Unit
     val onDiscardSettings: () -> Unit
-    val onCopyOnlineGameKey: () -> Unit
-    val onCopyOnlineGameLink: () -> Unit
-    val onExitOnlineGame: () -> Unit
     
     val preparationTimeSeconds: MutableStateFlow<UInt>
     val explanationTimeSeconds: MutableStateFlow<UInt>

@@ -5,10 +5,6 @@ import kotlinx.coroutines.flow.StateFlow
 
 
 interface RoomScreenComponent {
-    val onCopyOnlineGameKey: () -> Unit
-    val onCopyOnlineGameLink: () -> Unit
-    val onExitOnlineGame: () -> Unit
-    
     val gameStateFlow: StateFlow<ServerApi.OnlineGame.State.GameInitialisation>
     
     val onOpenGameSettings: () -> Unit

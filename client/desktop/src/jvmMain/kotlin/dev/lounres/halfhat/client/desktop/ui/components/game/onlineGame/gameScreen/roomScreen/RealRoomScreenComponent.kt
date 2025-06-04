@@ -5,10 +5,6 @@ import kotlinx.coroutines.flow.StateFlow
 
 
 class RealRoomScreenComponent(
-    override val onCopyOnlineGameKey: () -> Unit,
-    override val onCopyOnlineGameLink: () -> Unit,
-    override val onExitOnlineGame: () -> Unit,
-    
     override val gameStateFlow: StateFlow<ServerApi.OnlineGame.State.GameInitialisation>,
     
     override val onOpenGameSettings: () -> Unit,

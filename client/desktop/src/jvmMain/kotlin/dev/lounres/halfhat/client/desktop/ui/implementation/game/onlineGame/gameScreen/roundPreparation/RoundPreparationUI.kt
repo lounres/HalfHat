@@ -30,37 +30,11 @@ import kotlin.math.min
 fun RowScope.RoundPreparationActionsUI(
     component: RoundPreparationComponent,
 ) {
-    IconButton(
-        onClick = component.onCopyOnlineGameKey
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.onlineGameKey_dark_png_24dp),
-            contentDescription = "Copy online game key"
-        )
-    }
-    IconButton(
-        onClick = component.onCopyOnlineGameLink
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.onlineGameLink_dark_png_24dp),
-            contentDescription = "Copy online game link"
-        )
-    }
-    IconButton(
-        onClick = component.onExitOnlineGame
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.exitDeviceGameButton_dark_png_24dp), // TODO: Copy the icons
-            contentDescription = "Exit online game"
-        )
-    }
+
 }
 
 @Composable
-fun RoundPreparationUI(
+fun ColumnScope.RoundPreparationUI(
     component: RoundPreparationComponent,
 ) {
     val gameState by component.gameState.collectAsState()
@@ -168,4 +142,11 @@ fun RoundPreparationUI(
                 }
             }
     }
+}
+
+@Composable
+fun RowScope.RoundPreparationButtonsUI(
+    component: RoundPreparationComponent,
+) {
+
 }

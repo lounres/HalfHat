@@ -16,9 +16,5 @@ class FakeGameResultsComponent(
             results = KoneList.empty(),
         ),
 ) : GameResultsComponent {
-    override val onCopyOnlineGameKey: () -> Unit = {}
-    override val onCopyOnlineGameLink: () -> Unit = {}
-    override val onExitOnlineGame: () -> Unit = {}
-    
     override val gameState: StateFlow<ServerApi.OnlineGame.State.GameResults> = MutableStateFlow(initialGameState)
 }

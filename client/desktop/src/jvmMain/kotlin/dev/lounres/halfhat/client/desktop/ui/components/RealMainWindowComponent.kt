@@ -3,6 +3,7 @@ package dev.lounres.halfhat.client.desktop.ui.components
 import androidx.compose.ui.window.WindowState
 import dev.lounres.halfhat.api.localization.Language
 import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariants
 import dev.lounres.halfhat.client.desktop.storage.dictionaries.LocalDictionariesRegistry
 import dev.lounres.halfhat.client.desktop.ui.components.about.RealAboutPageComponent
 import dev.lounres.halfhat.client.desktop.ui.components.faq.RealFAQPageComponent
@@ -25,7 +26,6 @@ import dev.lounres.kone.collections.map.get
 import dev.lounres.kone.collections.set.KoneSet
 import dev.lounres.kone.collections.set.build
 import dev.lounres.kone.collections.utils.map
-import dev.lounres.kone.misc.router.uiChildrenFromRunningToForegroundVariants
 import dev.lounres.kone.state.KoneState
 import dev.lounres.kone.state.map
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,7 +53,7 @@ class RealMainWindowComponent(
     private val pageVariantsNavigation = MutableVariantsNavigation<MainWindowComponent.Child.Kind>()
     
     override val pageVariants: KoneState<ChildrenVariants<MainWindowComponent.Child.Kind, MainWindowComponent.Child>> =
-        globalComponentContext.uiChildrenFromRunningToForegroundVariants(
+        globalComponentContext.uiChildrenDefaultVariants(
             source = pageVariantsNavigation,
             allVariants = {
                 KoneSet.build {
@@ -62,10 +62,7 @@ class RealMainWindowComponent(
                 }
             },
             initialVariant = { initialSelectedPage }
-        ) { configuration, lifecycle ->
-            val context = UIComponentContext {
-                UIComponentLifecycleKey correspondsTo lifecycle
-            }
+        ) { configuration, componentContext ->
             when (configuration) {
                 MainWindowComponent.Child.Kind.Primary.Home ->
                     MainWindowComponent.Child.Primary.Home(
@@ -74,7 +71,7 @@ class RealMainWindowComponent(
                 MainWindowComponent.Child.Kind.Primary.Game ->
                     MainWindowComponent.Child.Primary.Game(
                         RealGamePageComponent(
-                            componentContext = context,
+                            componentContext = componentContext,
                             localDictionariesRegistry = localDictionariesRegistry,
                             volumeOn = volumeOn
                         )

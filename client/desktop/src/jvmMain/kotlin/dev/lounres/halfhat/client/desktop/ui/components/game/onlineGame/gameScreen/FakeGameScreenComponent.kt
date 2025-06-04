@@ -9,6 +9,10 @@ import dev.lounres.kone.state.KoneState
 class FakeGameScreenComponent(
     initialChild: GameScreenComponent.Child = GameScreenComponent.Child.RoomScreen(FakeRoomScreenComponent())
 ) : GameScreenComponent {
+    override val onCopyOnlineGameKey: () -> Unit = {}
+    override val onCopyOnlineGameLink: () -> Unit = {}
+    override val onExitOnlineGame: () -> Unit = {}
+    
     override val childStack: KoneState<ChildrenStack<*, GameScreenComponent.Child>> =
         KoneMutableState(ChildrenStack(Unit, initialChild))
 }

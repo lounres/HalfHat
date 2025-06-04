@@ -253,7 +253,7 @@ public class GameStateMachine<P, WP: GameStateMachine.WordsProvider> internal co
                 val spentTimeMilliseconds = (currentInstant - startInstant).inWholeMilliseconds.toUInt()
                 val newState = when (val state = state.value) {
                     is State.GameInitialisation -> return@scope
-                    is State.RoundWaiting -> if (state.roundNumber != roundNumber) return@launch else return@scope
+                    is State.RoundWaiting -> if (state.roundNumber != roundNumber) break else continue
                     is State.RoundPreparation ->
                         when {
                             state.roundNumber != roundNumber -> return@launch

@@ -2,6 +2,7 @@ package dev.lounres.halfhat.client.desktop.ui.implementation.game.onlineGame.gam
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -43,37 +44,11 @@ import org.jetbrains.compose.resources.painterResource
 fun RowScope.RoundEditingActionsUI(
     component: RoundEditingComponent,
 ) {
-    IconButton(
-        onClick = component.onCopyOnlineGameKey
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.onlineGameKey_dark_png_24dp),
-            contentDescription = "Copy online game key"
-        )
-    }
-    IconButton(
-        onClick = component.onCopyOnlineGameLink
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.onlineGameLink_dark_png_24dp),
-            contentDescription = "Copy online game link"
-        )
-    }
-    IconButton(
-        onClick = component.onExitOnlineGame
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.exitDeviceGameButton_dark_png_24dp), // TODO: Copy the icons
-            contentDescription = "Exit online game"
-        )
-    }
+
 }
 
 @Composable
-fun RoundEditingUI(
+fun ColumnScope.RoundEditingUI(
     component: RoundEditingComponent,
 ) {
     Column(
@@ -189,4 +164,11 @@ fun RoundEditingUI(
             )
         }
     }
+}
+
+@Composable
+fun RowScope.RoundEditingButtonsUI(
+    component: RoundEditingComponent,
+) {
+
 }

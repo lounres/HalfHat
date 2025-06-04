@@ -2,11 +2,13 @@ package dev.lounres.halfhat.client.desktop.ui.implementation.game.onlineGame.gam
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -15,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -44,56 +47,12 @@ import dev.lounres.halfhat.client.desktop.resources.Res as DesktopRes
 fun RowScope.RoomSettingsActionsUI(
     component: RoomSettingsComponent
 ) {
-    IconButton(
-        onClick = component.onApplySettings
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.applyDeviceGameSettingsButton_dark_png_24dp), // TODO: Copy the icons
-            contentDescription = "Apply settings"
-        )
-    }
-    IconButton(
-        onClick = component.onDiscardSettings
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.discardDeviceGameSettingsButton_dark_png_24dp), // TODO: Copy the icons
-            contentDescription = "Discard settings"
-        )
-    }
-    IconButton(
-        onClick = component.onCopyOnlineGameKey
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.onlineGameKey_dark_png_24dp),
-            contentDescription = "Copy online game key"
-        )
-    }
-    IconButton(
-        onClick = component.onCopyOnlineGameLink
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.onlineGameLink_dark_png_24dp),
-            contentDescription = "Copy online game link"
-        )
-    }
-    IconButton(
-        onClick = component.onExitOnlineGame
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(DesktopRes.drawable.exitDeviceGameButton_dark_png_24dp), // TODO: Copy the icons
-            contentDescription = "Exit online game"
-        )
-    }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RoomSettingsUI(
+fun ColumnScope.RoomSettingsUI(
     component: RoomSettingsComponent
 ) {
     Column(
@@ -102,7 +61,10 @@ fun RoomSettingsUI(
         TextField(
             modifier = Modifier.fillMaxWidth(),
             value = component.preparationTimeSeconds.collectAsState().value.toString(),
-            onValueChange = { component.preparationTimeSeconds.value = (it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }).toUInt() },
+            onValueChange = {
+                component.preparationTimeSeconds.value =
+                    it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+            },
             label = {
                 Text(
                     text = "Readiness time",
@@ -114,7 +76,10 @@ fun RoomSettingsUI(
         TextField(
             modifier = Modifier.fillMaxWidth(),
             value = component.explanationTimeSeconds.collectAsState().value.toString(),
-            onValueChange = { component.explanationTimeSeconds.value = it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt() },
+            onValueChange = {
+                component.explanationTimeSeconds.value =
+                    it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+            },
             label = {
                 Text(
                     text = "Readiness time",
@@ -126,7 +91,10 @@ fun RoomSettingsUI(
         TextField(
             modifier = Modifier.fillMaxWidth(),
             value = component.finalGuessTimeSeconds.collectAsState().value.toString(),
-            onValueChange = { component.finalGuessTimeSeconds.value = it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt() },
+            onValueChange = {
+                component.finalGuessTimeSeconds.value =
+                    it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+            },
             label = {
                 Text(
                     text = "Readiness time",
@@ -211,6 +179,7 @@ fun RoomSettingsUI(
                     singleLine = true,
                 )
             }
+            
             GameStateMachine.GameEndCondition.Type.Cycles -> {
                 TextField(
                     modifier = Modifier.fillMaxWidth(),
@@ -228,5 +197,29 @@ fun RoomSettingsUI(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun RowScope.RoomSettingsButtonsUI(
+    component: RoomSettingsComponent
+) {
+    IconButton(
+        onClick = component.onApplySettings
+    ) {
+        Icon(
+            modifier = commonIconModifier,
+            painter = painterResource(DesktopRes.drawable.applyDeviceGameSettingsButton_dark_png_24dp), // TODO: Copy the icons
+            contentDescription = "Apply settings"
+        )
+    }
+    IconButton(
+        onClick = component.onDiscardSettings
+    ) {
+        Icon(
+            modifier = commonIconModifier,
+            painter = painterResource(DesktopRes.drawable.discardDeviceGameSettingsButton_dark_png_24dp), // TODO: Copy the icons
+            contentDescription = "Discard settings"
+        )
     }
 }

@@ -15,9 +15,6 @@ class FakeRoomSettingsComponent(
 ) : RoomSettingsComponent {
     override val onApplySettings: () -> Unit = {}
     override val onDiscardSettings: () -> Unit = {}
-    override val onCopyOnlineGameKey: () -> Unit = {}
-    override val onCopyOnlineGameLink: () -> Unit = {}
-    override val onExitOnlineGame: () -> Unit = {}
     
     override val preparationTimeSeconds: MutableStateFlow<UInt> = MutableStateFlow(initialPreparationTimeSeconds)
     override val explanationTimeSeconds: MutableStateFlow<UInt> = MutableStateFlow(initialExplanationTimeSeconds)

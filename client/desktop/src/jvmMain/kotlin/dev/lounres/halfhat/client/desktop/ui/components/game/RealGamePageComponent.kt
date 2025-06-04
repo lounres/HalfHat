@@ -2,16 +2,15 @@ package dev.lounres.halfhat.client.desktop.ui.components.game
 
 import dev.lounres.halfhat.client.common.ui.components.game.timer.RealTimerPageComponent
 import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlot
 import dev.lounres.halfhat.client.desktop.storage.dictionaries.LocalDictionariesRegistry
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.RealDeviceGamePageComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.localGame.RealLocalGamePageComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.modeSelection.RealModeSelectionPageComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.RealOnlineGamePageComponent
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleKey
 import dev.lounres.komponentual.navigation.ChildrenSlot
 import dev.lounres.komponentual.navigation.MutableSlotNavigation
 import dev.lounres.komponentual.navigation.set
-import dev.lounres.kone.misc.router.uiChildrenToForegroundSlot
 import dev.lounres.kone.state.KoneState
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
@@ -25,13 +24,10 @@ class RealGamePageComponent(
     private val slotNavigation = MutableSlotNavigation<Configuration>()
     
     override val currentChild: KoneState<ChildrenSlot<Configuration, GamePageComponent.Child>> =
-        componentContext.uiChildrenToForegroundSlot(
+        componentContext.uiChildrenDefaultSlot(
             source = slotNavigation,
             initialConfiguration = { Configuration.ModeSelection },
-        ) { configuration, lifecycle ->
-            val componentContext = UIComponentContext {
-                UIComponentLifecycleKey correspondsTo lifecycle
-            }
+        ) { configuration, componentContext ->
             when (configuration) {
                 Configuration.ModeSelection ->
                     GamePageComponent.Child.ModeSelection(
@@ -47,7 +43,7 @@ class RealGamePageComponent(
                     GamePageComponent.Child.OnlineGame(
                         RealOnlineGamePageComponent(
                             componentContext = componentContext,
-                            onExitOnlineGame = { slotNavigation.set(Configuration.ModeSelection) },
+                            onExitOnlineGameMode = { slotNavigation.set(Configuration.ModeSelection) },
                         )
                     )
                 Configuration.LocalGame ->

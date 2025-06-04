@@ -30,10 +30,6 @@ class FakeRoundLastGuessComponent(
             millisecondsLeft = 29_000u,
         ),
 ) : RoundLastGuessComponent {
-    override val onCopyOnlineGameKey: () -> Unit = {}
-    override val onCopyOnlineGameLink: () -> Unit = {}
-    override val onExitOnlineGame: () -> Unit = {}
-    
     override val gameState: StateFlow<ServerApi.OnlineGame.State.RoundLastGuess> = MutableStateFlow(initialGameState)
     
     override val onGuessed: () -> Unit = {}

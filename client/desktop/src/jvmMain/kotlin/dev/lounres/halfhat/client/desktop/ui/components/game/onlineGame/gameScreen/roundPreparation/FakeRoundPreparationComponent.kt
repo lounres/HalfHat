@@ -30,9 +30,5 @@ class FakeRoundPreparationComponent(
             millisecondsLeft = 29_000u,
         ),
 ) : RoundPreparationComponent {
-    override val onCopyOnlineGameKey: () -> Unit = {}
-    override val onCopyOnlineGameLink: () -> Unit = {}
-    override val onExitOnlineGame: () -> Unit = {}
-    
     override val gameState: StateFlow<ServerApi.OnlineGame.State.RoundPreparation> = MutableStateFlow(initialGameState)
 }

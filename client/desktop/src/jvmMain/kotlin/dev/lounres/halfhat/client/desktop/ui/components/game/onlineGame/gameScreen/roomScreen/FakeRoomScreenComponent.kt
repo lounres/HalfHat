@@ -29,10 +29,6 @@ class FakeRoomScreenComponent(
             )
         ),
 ) : RoomScreenComponent {
-    override val onCopyOnlineGameKey: () -> Unit = {}
-    override val onCopyOnlineGameLink: () -> Unit = {}
-    override val onExitOnlineGame: () -> Unit = {}
-    
     override val gameStateFlow: StateFlow<ServerApi.OnlineGame.State.GameInitialisation> = MutableStateFlow(initialGameState)
     
     override val onOpenGameSettings: () -> Unit = {}

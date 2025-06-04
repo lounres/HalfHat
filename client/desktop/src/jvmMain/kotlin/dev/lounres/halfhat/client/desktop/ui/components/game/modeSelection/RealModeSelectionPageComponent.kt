@@ -1,12 +1,12 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.modeSelection
 
 import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultPossibility
 import dev.lounres.komponentual.navigation.ChildrenPossibility
 import dev.lounres.komponentual.navigation.MutablePossibilityNavigation
 import dev.lounres.komponentual.navigation.clear
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.maybe.None
-import dev.lounres.kone.misc.router.uiChildrenToForegroundPossibility
 import dev.lounres.kone.state.KoneState
 
 
@@ -21,7 +21,7 @@ class RealModeSelectionPageComponent(
     private val infoPopupNavigation = MutablePossibilityNavigation<ModeSelectionPageComponent.InfoPopup>()
     
     override val infoPopup: KoneState<ChildrenPossibility<ModeSelectionPageComponent.InfoPopup, ModeSelectionPageComponent.InfoPopup>> =
-        componentContext.uiChildrenToForegroundPossibility(
+        componentContext.uiChildrenDefaultPossibility(
             source = infoPopupNavigation,
             initialConfiguration = { None }
         ) { configuration, _ -> configuration }

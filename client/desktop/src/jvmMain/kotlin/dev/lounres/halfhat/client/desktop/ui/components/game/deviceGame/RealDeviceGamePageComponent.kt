@@ -1,6 +1,7 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame
 
 import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStack
 import dev.lounres.halfhat.client.desktop.storage.dictionaries.LocalDictionariesRegistry
 import dev.lounres.halfhat.client.desktop.storage.dictionaries.LocalDictionary
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent
@@ -15,16 +16,12 @@ import dev.lounres.kone.collections.set.of
 import dev.lounres.kone.collections.set.toKoneMutableSet
 import dev.lounres.kone.collections.utils.any
 import dev.lounres.kone.collections.utils.random
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycle
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleKey
 import dev.lounres.komponentual.navigation.ChildrenStack
 import dev.lounres.komponentual.navigation.MutableStackNavigation
 import dev.lounres.komponentual.navigation.replaceCurrent
-import dev.lounres.kone.misc.router.uiChildrenFromRunningToForegroundStack
 import dev.lounres.kone.repeat
 import dev.lounres.kone.state.KoneState
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlin.random.Random
 
 
@@ -68,10 +65,10 @@ class RealDeviceGamePageComponent(
     private val navigation = MutableStackNavigation<Configuration>()
     
     override val childStack: KoneState<ChildrenStack<Configuration, DeviceGamePageComponent.Child>> =
-        componentContext.uiChildrenFromRunningToForegroundStack(
+        componentContext.uiChildrenDefaultStack(
             source = navigation,
             initialStack = { KoneList.of(Configuration.RoomScreen) },
-        ) { configuration: Configuration, lifecycle: UIComponentLifecycle ->
+        ) { configuration: Configuration, componentContext: UIComponentContext ->
             when (configuration) {
                 is Configuration.RoomScreen -> {
                     val showErrorForEmptyPlayerNames = MutableStateFlow(false)
@@ -110,9 +107,7 @@ class RealDeviceGamePageComponent(
                 is Configuration.GameScreen ->
                     DeviceGamePageComponent.Child.GameScreen(
                         RealGameScreenComponent(
-                            componentContext = UIComponentContext {
-                                UIComponentLifecycleKey correspondsTo lifecycle
-                            },
+                            componentContext = componentContext,
                             playersList = playersList.value,
                             settingsBuilder = settingsBuilderState.value,
                             onExitGame = { navigation.replaceCurrent(Configuration.RoomScreen) },

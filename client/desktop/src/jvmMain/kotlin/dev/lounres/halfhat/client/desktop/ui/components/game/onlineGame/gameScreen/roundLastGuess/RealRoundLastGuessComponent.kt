@@ -6,10 +6,6 @@ import kotlinx.coroutines.flow.StateFlow
 
 
 class RealRoundLastGuessComponent(
-    override val onCopyOnlineGameKey: () -> Unit,
-    override val onCopyOnlineGameLink: () -> Unit,
-    override val onExitOnlineGame: () -> Unit,
-    
     override val gameState: StateFlow<ServerApi.OnlineGame.State.RoundLastGuess>,
     
     onExplanationResult: (GameStateMachine.WordExplanation.State) -> Unit,
