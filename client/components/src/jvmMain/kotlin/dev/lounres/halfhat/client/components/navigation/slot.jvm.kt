@@ -1,4 +1,4 @@
-package dev.lounres.kone.misc.router
+package dev.lounres.halfhat.client.components.navigation
 
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.komponentual.lifecycle.UIComponentLifecycle
@@ -12,16 +12,13 @@ import dev.lounres.kone.relations.defaultEquality
 import dev.lounres.kone.state.KoneState
 
 
-public fun <
-    Configuration,
-    Component,
-> UIComponentContext.uiChildrenToForegroundSlot(
-    configurationEquality: Equality<Configuration> = defaultEquality(),
-    configurationHashing: Hashing<Configuration>? = null,
-    configurationOrder: Order<Configuration>? = null,
+public actual fun <Configuration, Component> UIComponentContext.uiChildrenDefaultSlot(
+    configurationEquality: Equality<Configuration>,
+    configurationHashing: Hashing<Configuration>?,
+    configurationOrder: Order<Configuration>?,
     source: SlotNavigation<Configuration>,
     initialConfiguration: () -> Configuration,
-    childrenFactory: (configuration: Configuration, lifecycle: UIComponentLifecycle) -> Component,
+    childrenFactory: (configuration: Configuration, componentContext: UIComponentContext) -> Component,
 ): KoneState<ChildrenSlot<Configuration, Component>> =
     uiChildrenToSlot(
         configurationEquality = configurationEquality,

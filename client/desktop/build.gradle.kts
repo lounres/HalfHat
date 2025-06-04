@@ -1,4 +1,5 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
 
 plugins {
     alias(versions.plugins.kotlin.compose)
@@ -7,6 +8,7 @@ plugins {
     alias(versions.plugins.kotlinx.serialization)
 //    alias(versions.plugins.kotlinx.atomicfu)
     alias(libs.plugins.sqldelight)
+    alias(libs.plugins.compose.multiplatform.hotReload)
 }
 
 kotlin {
@@ -44,6 +46,14 @@ sqldelight {
             packageName = "dev.lounres.halfhat.client.localStorage.sql"
         }
     }
+}
+
+composeCompiler {
+    featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
+}
+
+tasks.jvmRunHot {
+    mainClass = "dev.lounres.halfhat.client.desktop.MainKt"
 }
 
 compose {

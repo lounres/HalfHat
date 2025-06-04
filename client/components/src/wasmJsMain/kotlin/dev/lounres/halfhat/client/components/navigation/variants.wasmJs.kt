@@ -1,0 +1,23 @@
+package dev.lounres.halfhat.client.components.navigation
+
+import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.komponentual.navigation.ChildrenVariants
+import dev.lounres.komponentual.navigation.VariantsNavigation
+import dev.lounres.kone.collections.set.KoneSet
+import dev.lounres.kone.relations.Equality
+import dev.lounres.kone.relations.Hashing
+import dev.lounres.kone.relations.Order
+import dev.lounres.kone.state.KoneState
+
+
+public actual fun <Configuration, Component> UIComponentContext.uiChildrenDefaultVariants(
+    configurationEquality: Equality<Configuration>,
+    configurationHashing: Hashing<Configuration>?,
+    configurationOrder: Order<Configuration>?,
+    source: VariantsNavigation<Configuration>,
+    allVariants: () -> KoneSet<Configuration>,
+    initialVariant: () -> Configuration,
+    childrenFactory: (configuration: Configuration, componentContext: UIComponentContext) -> Component,
+): KoneState<ChildrenVariants<Configuration, Component>> {
+    TODO("Not yet implemented")
+}
