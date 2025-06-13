@@ -1,6 +1,6 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.roomScreen
 
-import dev.lounres.halfhat.api.server.ServerApi
+import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
@@ -16,7 +16,6 @@ class FakeRoomScreenComponent(
                 ServerApi.PlayerDescription(name = "Panther", isOnline = true),
                 ServerApi.PlayerDescription(name = "Tiger", isOnline = false),
             ),
-            userIndex = 0u,
             settingsBuilder = ServerApi.SettingsBuilder(
                 preparationTimeSeconds = 3u,
                 explanationTimeSeconds = 40u,

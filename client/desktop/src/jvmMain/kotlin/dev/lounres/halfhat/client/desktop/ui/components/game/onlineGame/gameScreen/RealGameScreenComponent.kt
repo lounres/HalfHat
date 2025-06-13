@@ -1,7 +1,7 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen
 
-import dev.lounres.halfhat.api.client.ClientApi
-import dev.lounres.halfhat.api.server.ServerApi
+import dev.lounres.halfhat.api.onlineGame.ClientApi
+import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.common.utils.runOnUiThread
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope

@@ -1,7 +1,6 @@
 package dev.lounres.halfhat.client.components.navigation
 
 import dev.lounres.halfhat.client.components.UIComponentContext
-import dev.lounres.halfhat.client.components.lifecycle
 import dev.lounres.halfhat.client.components.uiChild
 import dev.lounres.komponentual.lifecycle.*
 import dev.lounres.komponentual.navigation.ChildrenSlot
@@ -40,7 +39,7 @@ public fun <
                 controllingLifecycle = controllingLifecycle,
             )
         },
-        destroyChild = { it.controllingLifecycle.apply(UIComponentLifecycleTransition.Destroy) },
+        destroyChild = { it.controllingLifecycle.move(UIComponentLifecycleTransition.Destroy) },
         updateChild = { configuration, data, nextState ->
             updateLifecycle(configuration, data.controllingLifecycle, nextState)
         },

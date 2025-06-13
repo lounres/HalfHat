@@ -5,11 +5,16 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -18,6 +23,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import kotlin.math.sqrt
@@ -29,6 +35,90 @@ internal sealed interface AutoScalingStep {
     data class FoundMaximum(val maximum: TextUnit, val ratio: Float) : AutoScalingStep
     data class FoundSegment(val start: TextUnit, val end: TextUnit, val ratio: Float) : AutoScalingStep
     data object Finished : AutoScalingStep
+}
+
+internal fun autoScale(
+    textMeasurer: TextMeasurer,
+    text: String,
+    textStyleToScale: TextStyle,
+    constraints: Constraints,
+    overflow: TextOverflow,
+    softWrap: Boolean,
+    maxLines: Int,
+    autoScalingAlpha: Float,
+    autoScalingGap: Float,
+): TextStyle {
+    var autoScalingStep: AutoScalingStep = AutoScalingStep.Initialization
+    var scaledTextStyle = textStyleToScale
+    
+    while (true) {
+        val textLayoutResult = textMeasurer.measure(
+            text = text,
+            style = scaledTextStyle,
+            constraints = constraints,
+            overflow = overflow,
+            softWrap = softWrap,
+            maxLines = maxLines,
+        )
+        when (autoScalingStep) {
+            is AutoScalingStep.Initialization ->
+                if (textLayoutResult.hasVisualOverflow) {
+                    autoScalingStep = AutoScalingStep.FoundMaximum(scaledTextStyle.fontSize, autoScalingAlpha)
+                    scaledTextStyle = scaledTextStyle.copy(fontSize = scaledTextStyle.fontSize * autoScalingAlpha)
+                } else {
+                    autoScalingStep = AutoScalingStep.FoundMinimum(scaledTextStyle.fontSize, autoScalingAlpha)
+                    scaledTextStyle = scaledTextStyle.copy(fontSize = scaledTextStyle.fontSize / autoScalingAlpha)
+                }
+            
+            is AutoScalingStep.FoundMaximum ->
+                if (textLayoutResult.hasVisualOverflow) {
+                    val ratio = autoScalingStep.ratio
+                    autoScalingStep = AutoScalingStep.FoundMaximum(scaledTextStyle.fontSize, ratio)
+                    scaledTextStyle = scaledTextStyle.copy(fontSize = scaledTextStyle.fontSize * ratio)
+                } else {
+                    val start = scaledTextStyle.fontSize
+                    val end = autoScalingStep.maximum
+                    val ratio = sqrt(autoScalingStep.ratio)
+                    autoScalingStep = AutoScalingStep.FoundSegment(start = start, end = end, ratio = ratio)
+                    scaledTextStyle = scaledTextStyle.copy(fontSize = start * ratio)
+                }
+            
+            is AutoScalingStep.FoundMinimum ->
+                if (textLayoutResult.hasVisualOverflow) {
+                    val start = autoScalingStep.minimum
+                    val end = scaledTextStyle.fontSize
+                    val ratio = sqrt(autoScalingStep.ratio)
+                    autoScalingStep = AutoScalingStep.FoundSegment(start = start, end = end, ratio = ratio)
+                    scaledTextStyle = scaledTextStyle.copy(fontSize = start * ratio)
+                } else {
+                    val ratio = autoScalingStep.ratio
+                    autoScalingStep = AutoScalingStep.FoundMinimum(scaledTextStyle.fontSize, ratio)
+                    scaledTextStyle = scaledTextStyle.copy(fontSize = scaledTextStyle.fontSize / ratio)
+                }
+            
+            is AutoScalingStep.FoundSegment ->
+                if (autoScalingStep.ratio > autoScalingGap) {
+                    scaledTextStyle = scaledTextStyle.copy(fontSize = autoScalingStep.start)
+                    autoScalingStep = AutoScalingStep.Finished
+                } else {
+                    val ratio = sqrt(autoScalingStep.ratio)
+                    if (textLayoutResult.hasVisualOverflow) {
+                        val start = autoScalingStep.start
+                        val end = scaledTextStyle.fontSize
+                        autoScalingStep = AutoScalingStep.FoundSegment(start = start, end = end, ratio = ratio)
+                        scaledTextStyle = scaledTextStyle.copy(fontSize = start * ratio)
+                    } else {
+                        val start = scaledTextStyle.fontSize
+                        val end = autoScalingStep.end
+                        autoScalingStep = AutoScalingStep.FoundSegment(start = start, end = end, ratio = ratio)
+                        scaledTextStyle = scaledTextStyle.copy(fontSize = end / ratio)
+                    }
+                }
+            
+            is AutoScalingStep.Finished -> break
+        }
+    }
+    return scaledTextStyle
 }
 
 @Composable
@@ -56,88 +146,29 @@ fun AutoScalingText(
     BoxWithConstraints(modifier = modifier) {
         require(0f < autoScalingAlpha && autoScalingAlpha <= autoScalingGap && autoScalingGap < 1f) { "Auto scaling alpha must be between 0 and 1" }
         val textColor = color.takeOrElse { style.color.takeOrElse { LocalContentColor.current } }
-        var autoScalingStep: AutoScalingStep = AutoScalingStep.Initialization
-        var scaledTextStyle =
-            style.merge(
-                color = textColor,
-                fontSize = fontSize,
-                fontWeight = fontWeight,
-                textAlign = textAlign ?: TextAlign.Unspecified,
-                lineHeight = lineHeight,
-                fontFamily = fontFamily,
-                textDecoration = textDecoration,
-                fontStyle = fontStyle,
-                letterSpacing = letterSpacing
-            )
-        val textMeasurer = rememberTextMeasurer(0)
-        
-        while (true) {
-            val textLayoutResult = textMeasurer.measure(
+        val textMeasurer = rememberTextMeasurer()
+        val scaledTextStyle =
+            autoScale(
+                textMeasurer = textMeasurer,
                 text = text,
-                style = scaledTextStyle,
+                textStyleToScale = style.merge(
+                    color = textColor,
+                    fontSize = fontSize,
+                    fontWeight = fontWeight,
+                    textAlign = textAlign ?: TextAlign.Unspecified,
+                    lineHeight = lineHeight,
+                    fontFamily = fontFamily,
+                    textDecoration = textDecoration,
+                    fontStyle = fontStyle,
+                    letterSpacing = letterSpacing
+                ),
                 constraints = constraints,
                 overflow = overflow,
                 softWrap = softWrap,
                 maxLines = maxLines,
+                autoScalingAlpha = autoScalingAlpha,
+                autoScalingGap = autoScalingGap,
             )
-            when (autoScalingStep) {
-                is AutoScalingStep.Initialization ->
-                    if (textLayoutResult.hasVisualOverflow) {
-                        autoScalingStep = AutoScalingStep.FoundMaximum(scaledTextStyle.fontSize, autoScalingAlpha)
-                        scaledTextStyle = scaledTextStyle.copy(fontSize = scaledTextStyle.fontSize * autoScalingAlpha)
-                    } else {
-                        autoScalingStep = AutoScalingStep.FoundMinimum(scaledTextStyle.fontSize, autoScalingAlpha)
-                        scaledTextStyle = scaledTextStyle.copy(fontSize = scaledTextStyle.fontSize / autoScalingAlpha)
-                    }
-                
-                is AutoScalingStep.FoundMaximum ->
-                    if (textLayoutResult.hasVisualOverflow) {
-                        val ratio = autoScalingStep.ratio
-                        autoScalingStep = AutoScalingStep.FoundMaximum(scaledTextStyle.fontSize, ratio)
-                        scaledTextStyle = scaledTextStyle.copy(fontSize = scaledTextStyle.fontSize * ratio)
-                    } else {
-                        val start = scaledTextStyle.fontSize
-                        val end = autoScalingStep.maximum
-                        val ratio = sqrt(autoScalingStep.ratio)
-                        autoScalingStep = AutoScalingStep.FoundSegment(start = start, end = end, ratio = ratio)
-                        scaledTextStyle = scaledTextStyle.copy(fontSize = start * ratio)
-                    }
-                
-                is AutoScalingStep.FoundMinimum ->
-                    if (textLayoutResult.hasVisualOverflow) {
-                        val start = autoScalingStep.minimum
-                        val end = scaledTextStyle.fontSize
-                        val ratio = sqrt(autoScalingStep.ratio)
-                        autoScalingStep = AutoScalingStep.FoundSegment(start = start, end = end, ratio = ratio)
-                        scaledTextStyle = scaledTextStyle.copy(fontSize = start * ratio)
-                    } else {
-                        val ratio = autoScalingStep.ratio
-                        autoScalingStep = AutoScalingStep.FoundMinimum(scaledTextStyle.fontSize, ratio)
-                        scaledTextStyle = scaledTextStyle.copy(fontSize = scaledTextStyle.fontSize / ratio)
-                    }
-                
-                is AutoScalingStep.FoundSegment ->
-                    if (autoScalingStep.ratio > autoScalingGap) {
-                        scaledTextStyle = scaledTextStyle.copy(fontSize = autoScalingStep.start)
-                        autoScalingStep = AutoScalingStep.Finished
-                    } else {
-                        val ratio = sqrt(autoScalingStep.ratio)
-                        if (textLayoutResult.hasVisualOverflow) {
-                            val start = autoScalingStep.start
-                            val end = scaledTextStyle.fontSize
-                            autoScalingStep = AutoScalingStep.FoundSegment(start = start, end = end, ratio = ratio)
-                            scaledTextStyle = scaledTextStyle.copy(fontSize = start * ratio)
-                        } else {
-                            val start = scaledTextStyle.fontSize
-                            val end = autoScalingStep.end
-                            autoScalingStep = AutoScalingStep.FoundSegment(start = start, end = end, ratio = ratio)
-                            scaledTextStyle = scaledTextStyle.copy(fontSize = end / ratio)
-                        }
-                    }
-                
-                is AutoScalingStep.Finished -> break
-            }
-        }
         
         BasicText(
             modifier = Modifier.align(Alignment.Center),

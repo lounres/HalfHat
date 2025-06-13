@@ -1,14 +1,14 @@
 package dev.lounres.komponentual.navigation
 
-import dev.lounres.kone.automata.LockingAutomaton
-import dev.lounres.kone.automata.apply
+import dev.lounres.kone.automata.BlockingAutomaton
+import dev.lounres.kone.automata.CheckResult
+import dev.lounres.kone.automata.move
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.map.KoneMap
 import dev.lounres.kone.collections.map.KoneMutableMap
 import dev.lounres.kone.collections.map.contains
 import dev.lounres.kone.collections.map.of
 import dev.lounres.kone.collections.set.KoneSet
-import dev.lounres.kone.maybe.Some
 import dev.lounres.kone.relations.Equality
 import dev.lounres.kone.relations.Hashing
 import dev.lounres.kone.relations.Order
@@ -55,9 +55,9 @@ public fun <
     
     val result = KoneMutableState(publicNavigationStateMapper(initialState, components))
     
-    val automaton = LockingAutomaton<InnerNavigationState, NavigationEvent>(
+    val automaton = BlockingAutomaton<InnerNavigationState, NavigationEvent, Nothing>(
         initialState = initialState,
-        checkTransition = { previousState, transition -> Some(navigationTransition(previousState, transition)) },
+        checkTransition = { previousState, transition -> CheckResult.Success(navigationTransition(previousState, transition)) },
         onTransition = { _, _, nextState ->
             for (node in components.nodesView)
                 if (node.key in nextState.configurations)
@@ -74,7 +74,7 @@ public fun <
         }
     )
     
-    source.subscribe { automaton.apply(it) }
+    source.subscribe { automaton.move(it) }
     
     return result
 }

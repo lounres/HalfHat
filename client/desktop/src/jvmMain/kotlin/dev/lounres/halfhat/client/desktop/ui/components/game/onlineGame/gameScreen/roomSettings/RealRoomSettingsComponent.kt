@@ -1,6 +1,6 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.roomSettings
 
-import dev.lounres.halfhat.api.client.ClientApi
+import dev.lounres.halfhat.api.onlineGame.ClientApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import kotlinx.coroutines.flow.MutableStateFlow
 

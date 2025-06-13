@@ -2,6 +2,7 @@ plugins {
 //    alias(versions.plugins.android.library)
     alias(versions.plugins.kotlin.compose)
     alias(versions.plugins.compose.multiplatform)
+    alias(versions.plugins.kotlinx.atomicfu)
     alias(versions.plugins.kotlinx.serialization)
 }
 
@@ -20,6 +21,7 @@ kotlin {
                 // Components
                 api(projects.client.components)
                 api(projects.kone.stateAndCompose)
+                implementation(projects.kone.kotlinConcurrentAtomics)
 
                 // Logging
                 api(logKube.core)
@@ -29,7 +31,8 @@ kotlin {
                 api(compose.ui)
                 api(compose.foundation)
                 api(compose.material3)
-                api("org.jetbrains.compose.material3:material3-window-size-class:${versions.versions.compose.multiplatform.get()}")
+                api("org.jetbrains.compose.material3:material3-window-size-class:${versions.versions.compose.multiplatform.asProvider().get()}")
+                versions.versions.compose.multiplatform.hot
                 api(compose.components.resources)
 
                 // Ktor

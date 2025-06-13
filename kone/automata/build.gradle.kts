@@ -18,7 +18,6 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(projects.kone.maybe)
                 api(versions.kotlinx.coroutines.core)
             }
         }

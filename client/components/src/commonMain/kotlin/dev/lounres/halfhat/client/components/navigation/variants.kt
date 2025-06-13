@@ -45,7 +45,7 @@ public fun <
                 controllingLifecycle = controllingLifecycle,
             )
         },
-        destroyChild = { it.controllingLifecycle.apply(UIComponentLifecycleTransition.Destroy) },
+        destroyChild = { it.controllingLifecycle.move(UIComponentLifecycleTransition.Destroy) },
         updateChild = { configuration, data, nextState ->
             updateLifecycle(configuration, data.controllingLifecycle, nextState)
         },

@@ -19,6 +19,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(projects.kone.automata)
+                implementation(projects.kone.atomicFUAtomics)
                 api(versions.kone.typeSafeRegistry)
                 api(versions.kone.collections)
                 api(versions.kotlinx.coroutines.core)

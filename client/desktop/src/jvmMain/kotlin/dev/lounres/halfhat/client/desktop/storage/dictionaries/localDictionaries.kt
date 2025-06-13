@@ -14,6 +14,7 @@ class LocalDictionary(
     val name: String,
     private val appDatabase: AppDatabase,
 ) {
+    val size: UInt get() = TODO()
     val allWords: KoneReifiedSet<String>
         get() = appDatabase.localDictionariesQueries.getDictionaryWordsByName(name = name).executeAsList().toKoneList().toKoneReifiedSet()
 }

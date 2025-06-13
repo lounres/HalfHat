@@ -25,7 +25,7 @@ import dev.lounres.kone.state.subscribeAsState
 fun RowScope.GameScreenActionsUI(
     component: GameScreenComponent,
 ) {
-    when (val child: GameScreenComponent.Child = component.childStack.subscribeAsState().value.active.component) {
+    when (val child: GameScreenComponent.Child = component.childStack.subscribeAsState().value.component) {
         is GameScreenComponent.Child.Loading -> LoadingActionsUI(child.component)
         is GameScreenComponent.Child.RoundWaiting -> RoundWaitingActionsUI(child.component)
         is GameScreenComponent.Child.RoundPreparation -> RoundPreparationActionsUI(child.component)
@@ -40,7 +40,7 @@ fun RowScope.GameScreenActionsUI(
 fun GameScreenUI(
     component: GameScreenComponent,
 ) {
-    when (val child: GameScreenComponent.Child = component.childStack.subscribeAsState().value.active.component) {
+    when (val child: GameScreenComponent.Child = component.childStack.subscribeAsState().value.component) {
         is GameScreenComponent.Child.Loading -> LoadingUI(child.component)
         is GameScreenComponent.Child.RoundWaiting -> RoundWaitingUI(child.component)
         is GameScreenComponent.Child.RoundPreparation -> RoundPreparationUI(child.component)

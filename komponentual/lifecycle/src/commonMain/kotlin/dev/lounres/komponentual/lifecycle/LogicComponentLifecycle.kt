@@ -1,17 +1,17 @@
 package dev.lounres.komponentual.lifecycle
 
+import dev.lounres.kone.automata.CheckResult
 import dev.lounres.kone.automata.SynchronousAutomaton
-import dev.lounres.kone.automata.apply
+import dev.lounres.kone.automata.move
 import dev.lounres.kone.collections.list.KoneMutableNoddedList
-import dev.lounres.kone.collections.list.implementations.KoneTwoThreeTreeList
+import dev.lounres.kone.collections.list.implementations.KoneGCLinkedList
 import dev.lounres.kone.collections.list.toKoneList
 import dev.lounres.kone.collections.utils.forEach
 import dev.lounres.kone.maybe.None
 import dev.lounres.kone.maybe.Some
-import dev.lounres.kone.maybe.computeOn
 import dev.lounres.kone.registry.RegistryKey
+import dev.lounres.utils.atomicFUAtomics.withLock
 import kotlinx.atomicfu.locks.ReentrantLock
-import kotlinx.atomicfu.locks.withLock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlin.coroutines.CoroutineContext
@@ -79,7 +79,7 @@ internal class MergingLogicComponentLifecycleImpl(
     lifecycle2: LogicComponentLifecycle,
 ) : LogicComponentLifecycle {
     private val callbacksLock = ReentrantLock()
-    private val callbacks: KoneMutableNoddedList<(LogicComponentLifecycleTransition) -> Unit> = KoneTwoThreeTreeList() // TODO: Replace with concurrent queue
+    private val callbacks: KoneMutableNoddedList<(LogicComponentLifecycleTransition) -> Unit> = KoneGCLinkedList() // TODO: Replace with concurrent queue
     private val automatonLock = ReentrantLock()
     
     private sealed interface BiTransition {
@@ -107,18 +107,18 @@ internal class MergingLogicComponentLifecycleImpl(
             LogicComponentLifecycleState.Destroyed -> None
         }
     
-    private var automaton: SynchronousAutomaton<Pair<LogicComponentLifecycleState, LogicComponentLifecycleState>, BiTransition>? = null
+    private val automaton: SynchronousAutomaton<Pair<LogicComponentLifecycleState, LogicComponentLifecycleState>, BiTransition, Nothing?>
     
     init {
         automatonLock.withLock {
             val subscription1 = lifecycle1.subscribe { transition ->
                 automatonLock.withLock {
-                    automaton!!.apply(BiTransition.FirstTransition(transition))
+                    automaton.move(BiTransition.FirstTransition(transition))
                 }
             }
             val subscription2 = lifecycle2.subscribe { transition ->
                 automatonLock.withLock {
-                    automaton!!.apply(BiTransition.SecondTransition(transition))
+                    automaton.move(BiTransition.SecondTransition(transition))
                 }
             }
             
@@ -130,8 +130,16 @@ internal class MergingLogicComponentLifecycleImpl(
                     initialState = Pair(state1, state2),
                     checkTransition = { state, transition ->
                         when (transition) {
-                            is BiTransition.FirstTransition -> checkTransition(state.first, transition.transition).computeOn { Pair(it, state.second) }
-                            is BiTransition.SecondTransition -> checkTransition(state.second, transition.transition).computeOn { Pair(state.first, it) }
+                            is BiTransition.FirstTransition ->
+                                when (val nextState = checkTransition(state.first, transition.transition)) {
+                                    None -> CheckResult.Failure(null)
+                                    is Some<LogicComponentLifecycleState> -> CheckResult.Success(Pair(nextState.value, state.second))
+                                }
+                            is BiTransition.SecondTransition ->
+                                when (val nextState = checkTransition(state.second, transition.transition)) {
+                                    None -> CheckResult.Failure(null)
+                                    is Some<LogicComponentLifecycleState> -> CheckResult.Success(Pair(state.first, nextState.value))
+                                }
                         }
                     },
                     onTransition = { previousState, transition, nextState ->
@@ -165,14 +173,14 @@ internal class MergingLogicComponentLifecycleImpl(
 
 public fun MutableLogicComponentLifecycle.moveTo(state: LogicComponentLifecycleState) {
     when (state) {
-        LogicComponentLifecycleState.Destroyed -> apply(LogicComponentLifecycleTransition.Destroy)
-        LogicComponentLifecycleState.Initialized -> apply(LogicComponentLifecycleTransition.Stop)
-        LogicComponentLifecycleState.Running -> apply(LogicComponentLifecycleTransition.Run)
+        LogicComponentLifecycleState.Destroyed -> move(LogicComponentLifecycleTransition.Destroy)
+        LogicComponentLifecycleState.Initialized -> move(LogicComponentLifecycleTransition.Stop)
+        LogicComponentLifecycleState.Running -> move(LogicComponentLifecycleTransition.Run)
     }
 }
 
 public fun LogicComponentLifecycle.attach(child: MutableLogicComponentLifecycle) {
-    val subscription = subscribe { child.apply(it) }
+    val subscription = subscribe { child.move(it) }
     child.subscribe(onDestroy = { subscription.cancel() })
     if (child.state == LogicComponentLifecycleState.Destroyed) subscription.cancel()
 }

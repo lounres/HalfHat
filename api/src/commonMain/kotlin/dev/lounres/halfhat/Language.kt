@@ -1,5 +1,4 @@
-package dev.lounres.halfhat.api.localization
-
+package dev.lounres.halfhat
 
 public enum class Language {
     Russian, English;

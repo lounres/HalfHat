@@ -12,7 +12,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -52,7 +51,6 @@ fun AboutPageBadge(
 }
 
 // TODO: Review "About" page thoroughly
-@OptIn(ExperimentalTextApi::class)
 @Composable
 fun AboutPageUI() {
     Column(

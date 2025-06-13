@@ -5,13 +5,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 
 class RealRoomSettingsComponent(
-    initialSettingsBuilder: GameStateMachine.GameSettingsBuilder<GameStateMachine.WordsProvider>,
-    onUpdateSettingsBuilder: (GameStateMachine.GameSettingsBuilder<GameStateMachine.WordsProvider>) -> Unit,
+    initialSettingsBuilder: GameStateMachine.GameSettings.Builder<GameStateMachine.WordsProvider>,
+    onUpdateSettingsBuilder: (GameStateMachine.GameSettings.Builder<GameStateMachine.WordsProvider>) -> Unit,
     onExitSettings: () -> Unit,
 ) : RoomSettingsComponent {
     override val onApplySettings: () -> Unit = {
         onUpdateSettingsBuilder(
-            GameStateMachine.GameSettingsBuilder<GameStateMachine.WordsProvider>(
+            GameStateMachine.GameSettings.Builder<GameStateMachine.WordsProvider>(
                 preparationTimeSeconds = preparationTimeSeconds.value,
                 explanationTimeSeconds = explanationTimeSeconds.value,
                 finalGuessTimeSeconds = finalGuessTimeSeconds.value,

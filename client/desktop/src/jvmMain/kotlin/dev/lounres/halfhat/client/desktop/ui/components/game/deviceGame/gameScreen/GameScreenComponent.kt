@@ -7,14 +7,14 @@ import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScre
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.roundLastGuess.RoundLastGuessComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.roundPreparation.RoundPreparationComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.roundWaiting.RoundWaitingComponent
-import dev.lounres.komponentual.navigation.ChildrenStack
+import dev.lounres.komponentual.navigation.ChildrenSlot
 import dev.lounres.kone.state.KoneState
 
 
 interface GameScreenComponent {
     val onExitGame: () -> Unit
     
-    val childStack: KoneState<ChildrenStack<*, Child>>
+    val childStack: KoneState<ChildrenSlot<*, Child>>
     
     sealed interface Child {
         class Loading(val component: LoadingComponent) : Child

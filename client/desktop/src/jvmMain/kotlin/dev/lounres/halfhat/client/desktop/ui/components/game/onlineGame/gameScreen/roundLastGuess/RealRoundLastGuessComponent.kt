@@ -1,6 +1,6 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.roundLastGuess
 
-import dev.lounres.halfhat.api.server.ServerApi
+import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import kotlinx.coroutines.flow.StateFlow
 

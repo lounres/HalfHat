@@ -1,6 +1,5 @@
 package dev.lounres.halfhat.client.desktop.ui.implementation.home
 
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import dev.lounres.halfhat.client.desktop.resources.Res as DesktopRes
@@ -30,7 +29,6 @@ fun HomePageBadge(
 
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePageUI(
     component: HomePageComponent,

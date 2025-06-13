@@ -41,7 +41,7 @@ internal fun UIComponentLifecycle.attach(child: MutableUIComponentLifecycle) {
     temporaryLock.withLock {
         val temporarySubscription = subscribe { temporaryLock.withLock {} }
         child.moveTo(state)
-        subscribe { child.apply(it) }
+        subscribe { child.move(it) }
         temporarySubscription.cancel()
     }
 }

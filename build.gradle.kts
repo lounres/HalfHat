@@ -94,6 +94,10 @@ stal {
                             optIn("kotlin.ExperimentalStdlibApi")
                             optIn("kotlin.uuid.ExperimentalUuidApi")
                             optIn("kotlin.concurrent.atomics.ExperimentalAtomicApi")
+                            optIn("androidx.compose.foundation.layout.ExperimentalLayoutApi")
+                            optIn("androidx.compose.material3.ExperimentalMaterial3Api")
+                            optIn("androidx.compose.material3.ExperimentalMaterial3ExpressiveApi")
+                            optIn("androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi")
                         }
                     }
                     commonTest {

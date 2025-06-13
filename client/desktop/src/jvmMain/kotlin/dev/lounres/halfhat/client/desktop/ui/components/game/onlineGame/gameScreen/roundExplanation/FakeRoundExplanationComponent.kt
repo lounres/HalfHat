@@ -1,6 +1,6 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.roundExplanation
 
-import dev.lounres.halfhat.api.server.ServerApi
+import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.empty
@@ -13,13 +13,13 @@ class FakeRoundExplanationComponent(
         ServerApi.OnlineGame.State.RoundExplanation(
             role = TODO(),
             playersList = KoneList.empty(),
-            userIndex = 0u,
             settings = ServerApi.Settings(
                 preparationTimeSeconds = 0u,
                 explanationTimeSeconds = 0u,
                 finalGuessTimeSeconds = 0u,
                 strictMode = true,
                 gameEndCondition = GameStateMachine.GameEndCondition.Words(100u),
+                wordsSource = TODO(),
             ),
             roundNumber = 0u,
             cycleNumber = 0u,

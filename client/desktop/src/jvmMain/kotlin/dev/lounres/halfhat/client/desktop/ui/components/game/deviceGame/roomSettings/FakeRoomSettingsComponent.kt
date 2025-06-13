@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 
 class FakeRoomSettingsComponent(
-    initialSettingsBuilder: GameStateMachine.GameSettingsBuilder<GameStateMachine.WordsProvider>,
+    initialSettingsBuilder: GameStateMachine.GameSettings.Builder<GameStateMachine.WordsProvider>,
 ) : RoomSettingsComponent {
     override val onApplySettings: () -> Unit = {}
     override val onDiscardSettings: () -> Unit = {}

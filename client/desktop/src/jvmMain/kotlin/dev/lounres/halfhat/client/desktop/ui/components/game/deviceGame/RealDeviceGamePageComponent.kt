@@ -5,6 +5,7 @@ import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStack
 import dev.lounres.halfhat.client.desktop.storage.dictionaries.LocalDictionariesRegistry
 import dev.lounres.halfhat.client.desktop.storage.dictionaries.LocalDictionary
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent
+import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.roomScreen.Player
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.roomScreen.RealRoomScreenComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.roomSettings.RealRoomSettingsComponent
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
@@ -19,6 +20,7 @@ import dev.lounres.kone.collections.utils.random
 import dev.lounres.komponentual.navigation.ChildrenStack
 import dev.lounres.komponentual.navigation.MutableStackNavigation
 import dev.lounres.komponentual.navigation.replaceCurrent
+import dev.lounres.kone.collections.utils.map
 import dev.lounres.kone.repeat
 import dev.lounres.kone.state.KoneState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +31,7 @@ class WordsProviderViaLocalDictionary(
     private val localDictionary: LocalDictionary
 ) : GameStateMachine.WordsProvider {
     val name: String get() = localDictionary.name
+    override val size: UInt get() = localDictionary.size
     override fun allWords(): KoneSet<String> = localDictionary.allWords
     override fun randomWords(number: UInt): KoneSet<String> {
         val allWords = localDictionary.allWords.toKoneMutableSet()
@@ -47,7 +50,7 @@ class RealDeviceGamePageComponent(
     componentContext: UIComponentContext,
     localDictionariesRegistry: LocalDictionariesRegistry,
     onExitDeviceGame: () -> Unit,
-    initialSettingsBuilder: GameStateMachine.GameSettingsBuilder<GameStateMachine.WordsProvider> = GameStateMachine.GameSettingsBuilder(
+    initialSettingsBuilder: GameStateMachine.GameSettings.Builder<GameStateMachine.WordsProvider> = GameStateMachine.GameSettings.Builder(
         preparationTimeSeconds = 3u, // TODO: Hardcoded settings!!!
         explanationTimeSeconds = 40u,
         finalGuessTimeSeconds = 3u,
@@ -59,8 +62,8 @@ class RealDeviceGamePageComponent(
     ),
 ) : DeviceGamePageComponent {
     
-    private val playersList: MutableStateFlow<KoneList<String>> = MutableStateFlow(KoneList.of("", "")) // TODO: Hardcoded settings!!!
-    private val settingsBuilderState: MutableStateFlow<GameStateMachine.GameSettingsBuilder<GameStateMachine.WordsProvider>> = MutableStateFlow(initialSettingsBuilder)
+    private val playersList: MutableStateFlow<KoneList<Player>> = MutableStateFlow(KoneList.of(Player(""), Player(""))) // TODO: Hardcoded settings!!!
+    private val settingsBuilderState: MutableStateFlow<GameStateMachine.GameSettings.Builder<GameStateMachine.WordsProvider>> = MutableStateFlow(initialSettingsBuilder)
     
     private val navigation = MutableStackNavigation<Configuration>()
     
@@ -77,19 +80,19 @@ class RealDeviceGamePageComponent(
                             onExitDeviceGame = onExitDeviceGame,
                             onOpenGameSettings = { navigation.replaceCurrent(Configuration.RoomSettings) },
                             onStartGame = {
-                                var playerListIsValid = true
+                                var playersListIsValid = true
                                 
-                                if (playersList.value.any { it.isBlank() }) {
+                                if (playersList.value.any { it.name.isBlank() }) {
                                     showErrorForEmptyPlayerNames.value = true
-                                    playerListIsValid = false
+                                    playersListIsValid = false
                                 }
                                 
                                 if (playersList.value.size < 2u) {
                                     // TODO: Добавить другую индикацию малого числа участников
-                                    playerListIsValid = false
+                                    playersListIsValid = false
                                 }
                                 
-                                if (playerListIsValid) navigation.replaceCurrent(Configuration.GameScreen)
+                                if (playersListIsValid) navigation.replaceCurrent(Configuration.GameScreen)
                             },
                             playersList = playersList,
                             showErrorForEmptyPlayerNames = showErrorForEmptyPlayerNames,
@@ -108,7 +111,7 @@ class RealDeviceGamePageComponent(
                     DeviceGamePageComponent.Child.GameScreen(
                         RealGameScreenComponent(
                             componentContext = componentContext,
-                            playersList = playersList.value,
+                            playersList = playersList.value.map { it.name },
                             settingsBuilder = settingsBuilderState.value,
                             onExitGame = { navigation.replaceCurrent(Configuration.RoomScreen) },
                         )

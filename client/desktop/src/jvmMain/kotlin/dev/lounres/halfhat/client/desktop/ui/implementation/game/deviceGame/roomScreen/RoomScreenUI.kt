@@ -25,6 +25,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -78,32 +79,34 @@ fun RoomScreenUI(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.height(16.dp))
-            for ((index, playerName) in playersList.withIndex()) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(DesktopRes.drawable.deviceGamePlayerIcon_dark_png_24dp),
-                        modifier = Modifier.size(24.dp),
-                        contentDescription = null,
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    TextField(
-                        modifier = Modifier.weight(1f),
-                        label = { Text(text = "Name") },
-                        value = playerName,
-                        onValueChange = { component.onChangePLayersName(index, it) },
-                        isError = showErrorForEmptyPlayerNames && playerName.isBlank(),
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    IconButton(
-                        onClick = { component.onRemovePLayer(index) }
+            for ((index, player) in playersList.withIndex()) {
+                key(player) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            painter = painterResource(DesktopRes.drawable.removePlayerButton_dark_png_24dp),
+                            painter = painterResource(DesktopRes.drawable.deviceGamePlayerIcon_dark_png_24dp),
                             modifier = Modifier.size(24.dp),
                             contentDescription = null,
                         )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        TextField(
+                            modifier = Modifier.weight(1f),
+                            label = { Text(text = "Name") },
+                            value = player.name,
+                            onValueChange = { component.onChangePLayersName(index, it) },
+                            isError = showErrorForEmptyPlayerNames && player.name.isBlank(),
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        IconButton(
+                            onClick = { component.onRemovePLayer(index) }
+                        ) {
+                            Icon(
+                                painter = painterResource(DesktopRes.drawable.removePlayerButton_dark_png_24dp),
+                                modifier = Modifier.size(24.dp),
+                                contentDescription = null,
+                            )
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(4.dp))

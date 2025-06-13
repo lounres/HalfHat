@@ -7,7 +7,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
@@ -23,7 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
-import dev.lounres.halfhat.api.localization.Language
+import dev.lounres.halfhat.Language
 import dev.lounres.halfhat.client.desktop.resources.*
 import dev.lounres.halfhat.client.desktop.ui.components.MainWindowComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.about.AboutPageBadge
@@ -50,11 +49,11 @@ import dev.lounres.halfhat.client.desktop.ui.implementation.rules.RulesPageIcon
 import dev.lounres.halfhat.client.desktop.ui.implementation.settings.SettingsPageBadge
 import dev.lounres.halfhat.client.desktop.ui.implementation.settings.SettingsPageIcon
 import dev.lounres.halfhat.client.desktop.ui.utils.WorkInProgress
-import dev.lounres.kone.collections.iterables.next
 import dev.lounres.komponentual.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.komponentual.lifecycle.UIComponentLifecycleState
 import dev.lounres.komponentual.lifecycle.UIComponentLifecycleTransition
 import dev.lounres.komponentual.lifecycle.moveTo
+import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.state.subscribeAsState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.combine
@@ -67,7 +66,6 @@ val commonIconModifier = Modifier.height(24.dp)
 
 val permanentDrawerAfterWindowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Medium
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainWindowDrawerSheetContentUI(
     component: MainWindowComponent,
@@ -175,7 +173,6 @@ fun MainWindowDrawerSheetContentUI(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainWindowDrawerContentUI(
     component: MainWindowComponent,
@@ -233,7 +230,6 @@ fun MainWindowDrawerContentUI(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainWindowContentUI(
     component: MainWindowComponent,
@@ -408,14 +404,13 @@ fun LifecycleController(
     }
     
     DisposableEffect(lifecycle) {
-        lifecycle.apply(UIComponentLifecycleTransition.Run)
+        lifecycle.move(UIComponentLifecycleTransition.Run)
         onDispose {
-            lifecycle.apply(UIComponentLifecycleTransition.Destroy)
+            lifecycle.move(UIComponentLifecycleTransition.Destroy)
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun MainWindowUI(
     component: MainWindowComponent

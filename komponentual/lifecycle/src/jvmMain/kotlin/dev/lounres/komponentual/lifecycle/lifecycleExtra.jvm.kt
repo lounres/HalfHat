@@ -1,15 +1,14 @@
 package dev.lounres.komponentual.lifecycle
 
+import dev.lounres.kone.automata.CheckResult
 import dev.lounres.kone.automata.SynchronousAutomaton
-import dev.lounres.kone.automata.apply
+import dev.lounres.kone.automata.move
 import dev.lounres.kone.collections.list.KoneMutableNoddedList
-import dev.lounres.kone.collections.list.implementations.KoneTwoThreeTreeList
+import dev.lounres.kone.collections.list.implementations.KoneGCLinkedList
 import dev.lounres.kone.collections.list.toKoneList
 import dev.lounres.kone.collections.utils.forEach
-import dev.lounres.kone.maybe.None
-import dev.lounres.kone.maybe.Some
+import dev.lounres.utils.atomicFUAtomics.withLock
 import kotlinx.atomicfu.locks.ReentrantLock
-import kotlinx.atomicfu.locks.withLock
 
 
 internal actual fun UIComponentLifecycle.attach(logicLifecycle: MutableLogicComponentLifecycle) {
@@ -18,13 +17,13 @@ internal actual fun UIComponentLifecycle.attach(logicLifecycle: MutableLogicComp
         val temporarySubscription = subscribe { temporaryLock.withLock {} }
         when (this.state) {
             UIComponentLifecycleState.Initialized -> {}
-            UIComponentLifecycleState.Destroyed -> logicLifecycle.apply(LogicComponentLifecycleTransition.Destroy)
-            else -> logicLifecycle.apply(LogicComponentLifecycleTransition.Run)
+            UIComponentLifecycleState.Destroyed -> logicLifecycle.move(LogicComponentLifecycleTransition.Destroy)
+            else -> logicLifecycle.move(LogicComponentLifecycleTransition.Run)
         }
         subscribe {
             when (it) {
-                UIComponentLifecycleTransition.Destroy -> logicLifecycle.apply(LogicComponentLifecycleTransition.Destroy)
-                UIComponentLifecycleTransition.Run -> logicLifecycle.apply(LogicComponentLifecycleTransition.Run)
+                UIComponentLifecycleTransition.Destroy -> logicLifecycle.move(LogicComponentLifecycleTransition.Destroy)
+                UIComponentLifecycleTransition.Run -> logicLifecycle.move(LogicComponentLifecycleTransition.Run)
                 else -> {}
             }
         }
@@ -37,7 +36,7 @@ internal actual class MergingUIRunningAndLogicLifecycle actual constructor(
     logicLifecycle: LogicComponentLifecycle,
 ) : LogicComponentLifecycle {
     private val callbacksLock = ReentrantLock()
-    private val callbacks: KoneMutableNoddedList<(LogicComponentLifecycleTransition) -> Unit> = KoneTwoThreeTreeList() // TODO: Replace with concurrent queue
+    private val callbacks: KoneMutableNoddedList<(LogicComponentLifecycleTransition) -> Unit> = KoneGCLinkedList() // TODO: Replace with concurrent queue
     private val automatonLock = ReentrantLock()
     
     private data class BiState(
@@ -59,18 +58,18 @@ internal actual class MergingUIRunningAndLogicLifecycle actual constructor(
         data class LogicTransition(val transition: LogicComponentLifecycleTransition) : BiTransition
     }
     
-    private var automaton: SynchronousAutomaton<BiState, BiTransition>? = null
+    private var automaton: SynchronousAutomaton<BiState, BiTransition, Nothing?>
     
     init {
         automatonLock.withLock {
             val subscription1 = uiLifecycle.subscribe { transition ->
                 automatonLock.withLock {
-                    automaton!!.apply(BiTransition.UITransition(transition))
+                    automaton.move(BiTransition.UITransition(transition))
                 }
             }
             val subscription2 = logicLifecycle.subscribe { transition ->
                 automatonLock.withLock {
-                    automaton!!.apply(BiTransition.LogicTransition(transition))
+                    automaton.move(BiTransition.LogicTransition(transition))
                 }
             }
             
@@ -86,48 +85,48 @@ internal actual class MergingUIRunningAndLogicLifecycle actual constructor(
                                 when (state.uiState) {
                                     UIComponentLifecycleState.Initialized ->
                                         when (transition.transition) {
-                                            UIComponentLifecycleTransition.Run -> Some(BiState(UIComponentLifecycleState.Running, state.logicState))
-                                            UIComponentLifecycleTransition.Destroy -> Some(BiState(UIComponentLifecycleState.Destroyed, state.logicState))
-                                            else -> None
+                                            UIComponentLifecycleTransition.Run -> CheckResult.Success(BiState(UIComponentLifecycleState.Running, state.logicState))
+                                            UIComponentLifecycleTransition.Destroy -> CheckResult.Success(BiState(UIComponentLifecycleState.Destroyed, state.logicState))
+                                            else -> CheckResult.Failure(null)
                                         }
                                     UIComponentLifecycleState.Running ->
                                         when (transition.transition) {
-                                            UIComponentLifecycleTransition.Appear -> Some(BiState(UIComponentLifecycleState.Background, state.logicState))
-                                            UIComponentLifecycleTransition.Destroy -> Some(BiState(UIComponentLifecycleState.Destroyed, state.logicState))
-                                            else -> None
+                                            UIComponentLifecycleTransition.Appear -> CheckResult.Success(BiState(UIComponentLifecycleState.Background, state.logicState))
+                                            UIComponentLifecycleTransition.Destroy -> CheckResult.Success(BiState(UIComponentLifecycleState.Destroyed, state.logicState))
+                                            else -> CheckResult.Failure(null)
                                         }
                                     UIComponentLifecycleState.Background ->
                                         when (transition.transition) {
-                                            UIComponentLifecycleTransition.Disappear -> Some(BiState(UIComponentLifecycleState.Running, state.logicState))
-                                            UIComponentLifecycleTransition.Focus -> Some(BiState(UIComponentLifecycleState.Foreground, state.logicState))
-                                            UIComponentLifecycleTransition.Destroy -> Some(BiState(UIComponentLifecycleState.Destroyed, state.logicState))
-                                            else -> None
+                                            UIComponentLifecycleTransition.Disappear -> CheckResult.Success(BiState(UIComponentLifecycleState.Running, state.logicState))
+                                            UIComponentLifecycleTransition.Focus -> CheckResult.Success(BiState(UIComponentLifecycleState.Foreground, state.logicState))
+                                            UIComponentLifecycleTransition.Destroy -> CheckResult.Success(BiState(UIComponentLifecycleState.Destroyed, state.logicState))
+                                            else -> CheckResult.Failure(null)
                                         }
                                     UIComponentLifecycleState.Foreground ->
                                         when (transition.transition) {
-                                            UIComponentLifecycleTransition.Defocus -> Some(BiState(UIComponentLifecycleState.Background, state.logicState))
-                                            UIComponentLifecycleTransition.Destroy -> Some(BiState(UIComponentLifecycleState.Destroyed, state.logicState))
-                                            else -> None
+                                            UIComponentLifecycleTransition.Defocus -> CheckResult.Success(BiState(UIComponentLifecycleState.Background, state.logicState))
+                                            UIComponentLifecycleTransition.Destroy -> CheckResult.Success(BiState(UIComponentLifecycleState.Destroyed, state.logicState))
+                                            else -> CheckResult.Failure(null)
                                         }
-                                    UIComponentLifecycleState.Destroyed -> None
+                                    UIComponentLifecycleState.Destroyed -> CheckResult.Failure(null)
                                 }
                             is BiTransition.LogicTransition ->
                                 when (state.logicState) {
                                     LogicComponentLifecycleState.Initialized ->
                                         when (transition.transition) {
-                                            LogicComponentLifecycleTransition.Run -> Some(BiState(state.uiState, LogicComponentLifecycleState.Running))
-                                            LogicComponentLifecycleTransition.Stop -> None
-                                            LogicComponentLifecycleTransition.Destroy -> Some(BiState(state.uiState, LogicComponentLifecycleState.Destroyed))
+                                            LogicComponentLifecycleTransition.Run -> CheckResult.Success(BiState(state.uiState, LogicComponentLifecycleState.Running))
+                                            LogicComponentLifecycleTransition.Stop -> CheckResult.Failure(null)
+                                            LogicComponentLifecycleTransition.Destroy -> CheckResult.Success(BiState(state.uiState, LogicComponentLifecycleState.Destroyed))
                                         }
                                     
                                     LogicComponentLifecycleState.Running ->
                                         when (transition.transition) {
-                                            LogicComponentLifecycleTransition.Run -> None
-                                            LogicComponentLifecycleTransition.Stop -> Some(BiState(state.uiState, LogicComponentLifecycleState.Initialized))
-                                            LogicComponentLifecycleTransition.Destroy -> Some(BiState(state.uiState, LogicComponentLifecycleState.Destroyed))
+                                            LogicComponentLifecycleTransition.Run -> CheckResult.Failure(null)
+                                            LogicComponentLifecycleTransition.Stop -> CheckResult.Success(BiState(state.uiState, LogicComponentLifecycleState.Initialized))
+                                            LogicComponentLifecycleTransition.Destroy -> CheckResult.Success(BiState(state.uiState, LogicComponentLifecycleState.Destroyed))
                                         }
                                     
-                                    LogicComponentLifecycleState.Destroyed -> None
+                                    LogicComponentLifecycleState.Destroyed -> CheckResult.Failure(null)
                                 }
                         }
                     },

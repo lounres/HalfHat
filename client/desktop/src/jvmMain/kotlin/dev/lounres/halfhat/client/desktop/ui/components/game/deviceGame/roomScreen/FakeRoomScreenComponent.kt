@@ -1,6 +1,7 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.roomScreen
 
 import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.utils.map
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -11,7 +12,7 @@ class FakeRoomScreenComponent(
 ): RoomScreenComponent {
     override val onExitDeviceGame: () -> Unit = {}
     
-    override val playersList: StateFlow<KoneList<String>> = MutableStateFlow(initialPlayersList)
+    override val playersList: StateFlow<KoneList<Player>> = MutableStateFlow(initialPlayersList.map { Player(it) })
     override val showErrorForEmptyPlayerNames: StateFlow<Boolean> = MutableStateFlow(initialShowErrorForEmptyPlayerNames)
     override val onChangePLayersName: (UInt, String) -> Unit = { _, _ -> }
     override val onRemovePLayer: (UInt) -> Unit = {}

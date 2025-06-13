@@ -1,4 +1,4 @@
-package dev.lounres.halfhat.client.common.utils
+package dev.lounres.utils.kotlinConcurrentAtomics
 
 import kotlin.concurrent.atomics.AtomicReference
 

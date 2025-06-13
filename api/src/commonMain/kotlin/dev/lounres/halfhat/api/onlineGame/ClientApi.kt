@@ -1,4 +1,4 @@
-package dev.lounres.halfhat.api.client
+package dev.lounres.halfhat.api.onlineGame
 
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
@@ -14,7 +14,7 @@ public object ClientApi {
 //        public data object HostDictionary: WordsSource
         @Serializable
         public data class ServerDictionary(
-            val name: String, // TODO: Replace with id
+            val id: String,
         ) : WordsSource
     }
     

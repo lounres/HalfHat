@@ -1,10 +1,13 @@
 package dev.lounres.kone.state
 
-import dev.lounres.kone.automata.LockingAutomaton
-import dev.lounres.kone.automata.apply
-import dev.lounres.kone.automata.applyMaybe
+import dev.lounres.kone.automata.BlockingAutomaton
+import dev.lounres.kone.automata.CheckResult
+import dev.lounres.kone.automata.MovementMaybeResult
+import dev.lounres.kone.automata.TransitionOrReason
+import dev.lounres.kone.automata.move
+import dev.lounres.kone.automata.moveMaybe
 import dev.lounres.kone.collections.list.KoneMutableNoddedList
-import dev.lounres.kone.collections.list.implementations.KoneTwoThreeTreeList
+import dev.lounres.kone.collections.list.implementations.KoneGCLinkedList
 import dev.lounres.kone.collections.list.toKoneList
 import dev.lounres.kone.collections.utils.forEach
 import dev.lounres.kone.contexts.invoke
@@ -45,13 +48,13 @@ internal class KoneMutableStateImpl<Value>(
     private val elementEquality: Equality<Value>
 ) : KoneMutableState<Value> {
     private val observersLock = ReentrantLock()
-    private val observers: KoneMutableNoddedList<(Value) -> Unit> = KoneTwoThreeTreeList()
+    private val observers: KoneMutableNoddedList<(Value) -> Unit> = KoneGCLinkedList()
     private val automaton =
-        LockingAutomaton<Value, Value>(
+        BlockingAutomaton<Value, Value, Nothing?>(
             initialState = initialElement,
             checkTransition = { previousState, transition ->
-                if (elementEquality { previousState eq transition }) None
-                else Some(transition)
+                if (elementEquality { previousState eq transition }) CheckResult.Failure(null)
+                else CheckResult.Success(transition)
             },
             onTransition = { _, _, nextState ->
                 observersLock.withLock { observers.toKoneList() }.forEach { it(nextState) }
@@ -61,19 +64,23 @@ internal class KoneMutableStateImpl<Value>(
     override var value: Value
         get() = automaton.state
         set(value) {
-            automaton.apply(value)
+            automaton.move(value)
         }
     
     override fun compareAndSet(expected: Value, new: Value): Boolean =
-        automaton.applyMaybe { current ->
-            if (elementEquality { current eq expected }) Some(new)
-            else None
-        }
+        automaton.moveMaybe { current ->
+            if (elementEquality { current eq expected }) TransitionOrReason.Success(new)
+            else TransitionOrReason.Failure(null)
+        } is MovementMaybeResult.Success
     
     override fun subscribe(observer: (Value) -> Unit): KoneState.Cancellation =
         observersLock.withLock {
             val node = observers.addNode(observer)
-            KoneState.Cancellation { node.remove() }
+            KoneState.Cancellation {
+                observersLock.withLock {
+                    node.remove()
+                }
+            }
         }
 }
 

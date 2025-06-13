@@ -1,17 +1,18 @@
 package dev.lounres.komponentual.lifecycle
 
+import dev.lounres.kone.automata.CheckResult
 import dev.lounres.kone.automata.SynchronousAutomaton
-import dev.lounres.kone.automata.apply
+import dev.lounres.kone.automata.move
 import dev.lounres.kone.collections.list.KoneMutableNoddedList
-import dev.lounres.kone.collections.list.implementations.KoneTwoThreeTreeList
+import dev.lounres.kone.collections.list.implementations.KoneGCLinkedList
 import dev.lounres.kone.collections.list.toKoneList
 import dev.lounres.kone.collections.utils.forEach
 import dev.lounres.kone.maybe.Maybe
 import dev.lounres.kone.maybe.None
 import dev.lounres.kone.maybe.Some
 import dev.lounres.kone.maybe.computeOn
+import dev.lounres.utils.atomicFUAtomics.withLock
 import kotlinx.atomicfu.locks.ReentrantLock
-import kotlinx.atomicfu.locks.withLock
 
 
 public actual enum class UIComponentLifecycleState {
@@ -91,7 +92,7 @@ internal class MergingUIComponentLifecycleImpl(
     lifecycle2: UIComponentLifecycle,
 ) : UIComponentLifecycle {
     private val callbacksLock = ReentrantLock()
-    private val callbacks: KoneMutableNoddedList<(UIComponentLifecycleTransition) -> Unit> = KoneTwoThreeTreeList() // TODO: Replace with concurrent queue
+    private val callbacks: KoneMutableNoddedList<(UIComponentLifecycleTransition) -> Unit> = KoneGCLinkedList() // TODO: Replace with concurrent queue
     private val automatonLock = ReentrantLock()
     
     private sealed interface BiTransition {
@@ -130,18 +131,18 @@ internal class MergingUIComponentLifecycleImpl(
             UIComponentLifecycleState.Destroyed -> None
         }
     
-    private var automaton: SynchronousAutomaton<Pair<UIComponentLifecycleState, UIComponentLifecycleState>, BiTransition>? = null
+    private var automaton: SynchronousAutomaton<Pair<UIComponentLifecycleState, UIComponentLifecycleState>, BiTransition, Nothing?>
     
     init {
         automatonLock.withLock {
             val subscription1 = lifecycle1.subscribe { transition ->
                 automatonLock.withLock {
-                    automaton!!.apply(BiTransition.FirstTransition(transition))
+                    automaton.move(BiTransition.FirstTransition(transition))
                 }
             }
             val subscription2 = lifecycle2.subscribe { transition ->
                 automatonLock.withLock {
-                    automaton!!.apply(BiTransition.SecondTransition(transition))
+                    automaton.move(BiTransition.SecondTransition(transition))
                 }
             }
             
@@ -153,8 +154,16 @@ internal class MergingUIComponentLifecycleImpl(
                     initialState = Pair(state1, state2),
                     checkTransition = { state, transition ->
                         when (transition) {
-                            is BiTransition.FirstTransition -> checkTransition(state.first, transition.transition).computeOn { Pair(it, state.second) }
-                            is BiTransition.SecondTransition -> checkTransition(state.second, transition.transition).computeOn { Pair(state.first, it) }
+                            is BiTransition.FirstTransition ->
+                                when (val result = checkTransition(state.first, transition.transition)) {
+                                    None -> CheckResult.Failure(null)
+                                    is Some<UIComponentLifecycleState> -> CheckResult.Success(Pair(result.value, state.second))
+                                }
+                            is BiTransition.SecondTransition ->
+                                when (val result = checkTransition(state.second, transition.transition)) {
+                                    None -> CheckResult.Failure(null)
+                                    is Some<UIComponentLifecycleState> -> CheckResult.Success(Pair(state.first, result.value))
+                                }
                         }
                     },
                     onTransition = { previousState, transition, nextState ->
@@ -174,7 +183,7 @@ internal class MergingUIComponentLifecycleImpl(
         }
     }
     
-    override val state: UIComponentLifecycleState get() = automaton!!.state.let { minOf(it.first, it.second) }
+    override val state: UIComponentLifecycleState get() = automaton.state.let { minOf(it.first, it.second) }
     override fun subscribe(callback: UIComponentLifecycleCallback) =
         callbacksLock.withLock {
             val node = callbacks.addNode(callback)
@@ -189,23 +198,23 @@ internal class MergingUIComponentLifecycleImpl(
 public actual fun MutableUIComponentLifecycle.moveTo(state: UIComponentLifecycleState) {
     when (state) {
         UIComponentLifecycleState.Destroyed -> {
-            apply(UIComponentLifecycleTransition.Destroy)
+            move(UIComponentLifecycleTransition.Destroy)
         }
         UIComponentLifecycleState.Initialized -> {}
         UIComponentLifecycleState.Running -> {
-            apply(UIComponentLifecycleTransition.Run)
-            apply(UIComponentLifecycleTransition.Defocus)
-            apply(UIComponentLifecycleTransition.Disappear)
+            move(UIComponentLifecycleTransition.Run)
+            move(UIComponentLifecycleTransition.Defocus)
+            move(UIComponentLifecycleTransition.Disappear)
         }
         UIComponentLifecycleState.Background -> {
-            apply(UIComponentLifecycleTransition.Run)
-            apply(UIComponentLifecycleTransition.Appear)
-            apply(UIComponentLifecycleTransition.Defocus)
+            move(UIComponentLifecycleTransition.Run)
+            move(UIComponentLifecycleTransition.Appear)
+            move(UIComponentLifecycleTransition.Defocus)
         }
         UIComponentLifecycleState.Foreground -> {
-            apply(UIComponentLifecycleTransition.Run)
-            apply(UIComponentLifecycleTransition.Appear)
-            apply(UIComponentLifecycleTransition.Focus)
+            move(UIComponentLifecycleTransition.Run)
+            move(UIComponentLifecycleTransition.Appear)
+            move(UIComponentLifecycleTransition.Focus)
         }
     }
 }

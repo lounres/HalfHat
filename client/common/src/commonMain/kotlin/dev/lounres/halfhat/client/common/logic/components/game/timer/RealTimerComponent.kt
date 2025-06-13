@@ -2,13 +2,13 @@ package dev.lounres.halfhat.client.common.logic.components.game.timer
 
 import dev.lounres.halfhat.client.common.utils.DefaultSounds
 import dev.lounres.halfhat.client.common.utils.playSound
-import dev.lounres.halfhat.client.common.utils.updateAndGet
-import dev.lounres.halfhat.client.common.utils.value
 import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.lifecycle
 import dev.lounres.komponentual.lifecycle.LogicComponentLifecycleState
 import dev.lounres.kone.state.KoneMutableState
+import dev.lounres.utils.kotlinConcurrentAtomics.updateAndGet
+import dev.lounres.utils.kotlinConcurrentAtomics.value
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

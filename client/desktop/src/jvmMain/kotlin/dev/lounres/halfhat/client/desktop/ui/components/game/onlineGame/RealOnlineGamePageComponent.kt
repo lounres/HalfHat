@@ -1,8 +1,8 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame
 
-import dev.lounres.halfhat.api.client.ClientApi
-import dev.lounres.halfhat.api.server.BetterBeReplaced
-import dev.lounres.halfhat.api.server.ServerApi
+import dev.lounres.halfhat.api.onlineGame.ClientApi
+import dev.lounres.halfhat.api.onlineGame.BetterBeReplaced
+import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.common.logger
 import dev.lounres.halfhat.client.common.utils.defaultHttpClient
 import dev.lounres.halfhat.client.components.UIComponentContext
@@ -68,11 +68,9 @@ class RealOnlineGamePageComponent(
                             val signal = converter.deserialize<ServerApi.Signal>(frame)
                             
                             when (signal) {
-                                @OptIn(BetterBeReplaced::class)
-                                ServerApi.Signal.UnspecifiedError -> {} // TODO
-                                is ServerApi.Signal.Error -> {} // TODO
-                                is ServerApi.Signal.OnlineGameStateUpdate -> gameStateFlow.value = signal.state
                                 is ServerApi.Signal.RoomInfo -> roomDescriptionFlow.emit(signal.info)
+                                is ServerApi.Signal.OnlineGameStateUpdate -> gameStateFlow.value = signal.state
+                                is ServerApi.Signal.OnlineGameError -> {} // TODO
                             }
                         }
                         cancel()

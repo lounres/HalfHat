@@ -1,6 +1,6 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.gameResults
 
-import dev.lounres.halfhat.api.server.ServerApi
+import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.empty
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,7 +12,6 @@ class FakeGameResultsComponent(
         ServerApi.OnlineGame.State.GameResults(
             role = TODO(),
             playersList = KoneList.empty(),
-            userIndex = 0u,
             results = KoneList.empty(),
         ),
 ) : GameResultsComponent {

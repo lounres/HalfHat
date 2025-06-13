@@ -1,7 +1,6 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.roomScreen
 
 import dev.lounres.kone.collections.list.KoneList
-import dev.lounres.kone.collections.list.addAllFrom
 import dev.lounres.kone.collections.list.build
 import dev.lounres.kone.collections.list.toKoneMutableList
 import dev.lounres.kone.collections.utils.shuffled
@@ -14,12 +13,12 @@ class RealRoomScreenComponent(
     override val onExitDeviceGame: () -> Unit,
     override val onOpenGameSettings: () -> Unit,
     override val onStartGame: () -> Unit,
-    override val playersList: MutableStateFlow<KoneList<String>>,
+    override val playersList: MutableStateFlow<KoneList<Player>>,
     override val showErrorForEmptyPlayerNames: MutableStateFlow<Boolean>
 ) : RoomScreenComponent {
     override val onChangePLayersName: (UInt, String) -> Unit = { index, newName ->
         showErrorForEmptyPlayerNames.value = false
-        playersList.update { it.toKoneMutableList().apply { this[index] = newName } }
+        playersList.update { it.toKoneMutableList().apply { this[index].name = newName } }
     }
     override val onRemovePLayer: (UInt) -> Unit = { playerIndex ->
         showErrorForEmptyPlayerNames.value = false
@@ -30,7 +29,7 @@ class RealRoomScreenComponent(
         playersList.update {
             KoneList.build(it.size + 1u) {
                 +it
-                +""
+                +Player("")
             }
         }
     }

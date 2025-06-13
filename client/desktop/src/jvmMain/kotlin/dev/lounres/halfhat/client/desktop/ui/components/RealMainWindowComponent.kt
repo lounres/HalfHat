@@ -1,7 +1,7 @@
 package dev.lounres.halfhat.client.desktop.ui.components
 
 import androidx.compose.ui.window.WindowState
-import dev.lounres.halfhat.api.localization.Language
+import dev.lounres.halfhat.Language
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariants
 import dev.lounres.halfhat.client.desktop.storage.dictionaries.LocalDictionariesRegistry

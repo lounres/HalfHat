@@ -1,83 +1,186 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen
 
-import dev.lounres.halfhat.client.common.utils.runOnUiThread
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
-import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStack
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlot
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.gameResults.RealGameResultsComponent
-import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.loading.RealLoadingComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.roundEditing.RealRoundEditingComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.roundExplanation.RealRoundExplanationComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.roundLastGuess.RealRoundLastGuessComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.roundPreparation.RealRoundPreparationComponent
 import dev.lounres.halfhat.client.desktop.ui.components.game.deviceGame.gameScreen.roundWaiting.RealRoundWaitingComponent
-import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.halfhat.logic.gameStateMachine.listener
-import dev.lounres.halfhat.logic.gameStateMachine.personalResults
-import dev.lounres.halfhat.logic.gameStateMachine.speaker
-import dev.lounres.komponentual.navigation.ChildrenStack
-import dev.lounres.komponentual.navigation.MutableStackNavigation
-import dev.lounres.komponentual.navigation.updateCurrent
+import dev.lounres.halfhat.logic.gameStateMachine.*
+import dev.lounres.komponentual.navigation.ChildrenSlot
+import dev.lounres.komponentual.navigation.MutableSlotNavigation
+import dev.lounres.kone.automata.CheckResult
 import dev.lounres.kone.collections.list.KoneList
-import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.collections.list.toKoneMutableList
+import dev.lounres.kone.maybe.None
 import dev.lounres.kone.state.KoneState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlin.random.Random
 
 
 class RealGameScreenComponent(
     componentContext: UIComponentContext,
     playersList: KoneList<String>,
-    settingsBuilder: GameStateMachine.GameSettingsBuilder<GameStateMachine.WordsProvider>,
+    settingsBuilder: GameStateMachine.GameSettings.Builder<GameStateMachine.WordsProvider>,
     override val onExitGame: () -> Unit,
 ) : GameScreenComponent {
     
     private val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
-    private val structuralMutex = Mutex()
     
-    private val gameStateMachine = GameStateMachine.Initialized<String, GameStateMachine.WordsProvider>(
+    private val gameStateMachine = BlockingGameStateMachine.Initialized<String, GameStateMachine.WordsProvider, Nothing?, Nothing?, Nothing?>(
+        metadata = null,
         playersList = playersList,
         settingsBuilder = settingsBuilder,
         coroutineScope = coroutineScope,
-        structuralMutex = structuralMutex,
         random = Random, // TODO: Move the variable upward
-    )
-    
-    private val navigation = MutableStackNavigation<Configuration>()
-    
-    override val childStack: KoneState<ChildrenStack<Configuration, GameScreenComponent.Child>> =
-        componentContext.uiChildrenDefaultStack(
-            source = navigation,
-            initialStack = { KoneList.of(Configuration.Loading) },
-        ) { configuration, componentContext ->
-            when(configuration) {
-                Configuration.Loading ->
-                    GameScreenComponent.Child.Loading(
-                        RealLoadingComponent(
-                            onExitGame = onExitGame,
+        checkMetadataUpdate = { _, _ -> CheckResult.Failure(null) }
+    ) { _, _, newState ->
+        navigation.navigate { currentConfiguration ->
+            when (newState) {
+                is GameStateMachine.State.GameInitialisation -> error("GameInitialisation appeared after initialization")
+                is GameStateMachine.State.RoundWaiting ->
+                    if (currentConfiguration is Configuration.RoundWaiting)
+                        currentConfiguration.apply {
+                            speaker.value = newState.speaker
+                            listener.value = newState.listener
+                        }
+                    else
+                        Configuration.RoundWaiting(
+                            speaker = MutableStateFlow(newState.speaker),
+                            listener = MutableStateFlow(newState.listener),
                         )
-                    )
+                
+                is GameStateMachine.State.RoundPreparation ->
+                    if (currentConfiguration is Configuration.RoundPreparation)
+                        currentConfiguration.apply {
+                            speaker.value = newState.speaker
+                            listener.value = newState.listener
+                            millisecondsLeft.value = newState.millisecondsLeft
+                        }
+                    else
+                        Configuration.RoundPreparation(
+                            speaker = MutableStateFlow(newState.speaker),
+                            listener = MutableStateFlow(newState.listener),
+                            millisecondsLeft = MutableStateFlow(newState.millisecondsLeft),
+                        )
+                
+                is GameStateMachine.State.RoundExplanation ->
+                    if (currentConfiguration is Configuration.RoundExplanation)
+                        currentConfiguration.apply {
+                            speaker.value = newState.speaker
+                            listener.value = newState.listener
+                            millisecondsLeft.value = newState.millisecondsLeft
+                            word.value = newState.currentWord
+                        }
+                    else
+                        Configuration.RoundExplanation(
+                            speaker = MutableStateFlow(newState.speaker),
+                            listener = MutableStateFlow(newState.listener),
+                            millisecondsLeft = MutableStateFlow(newState.millisecondsLeft),
+                            word = MutableStateFlow(newState.currentWord),
+                        )
+                
+                is GameStateMachine.State.RoundLastGuess ->
+                    if (currentConfiguration is Configuration.RoundLastGuess)
+                        currentConfiguration.apply {
+                            speaker.value = newState.speaker
+                            listener.value = newState.listener
+                            millisecondsLeft.value = newState.millisecondsLeft
+                            word.value = newState.currentWord
+                        }
+                    else
+                        Configuration.RoundLastGuess(
+                            speaker = MutableStateFlow(newState.speaker),
+                            listener = MutableStateFlow(newState.listener),
+                            millisecondsLeft = MutableStateFlow(newState.millisecondsLeft),
+                            word = MutableStateFlow(newState.currentWord),
+                        )
+                
+                is GameStateMachine.State.RoundEditing ->
+                    if (currentConfiguration is Configuration.RoundEditing)
+                        currentConfiguration.apply {
+                            wordsToEdit.value = newState.currentExplanationResults
+                        }
+                    else
+                        Configuration.RoundEditing(
+                            wordsToEdit = MutableStateFlow(newState.currentExplanationResults),
+                        )
+                
+                is GameStateMachine.State.GameResults ->
+                    if (currentConfiguration is Configuration.GameResults)
+                        currentConfiguration.apply {
+                            results.value = newState.personalResults
+                        }
+                    else
+                        Configuration.GameResults(
+                            results = MutableStateFlow(newState.personalResults),
+                        )
+            }
+        }
+        
+    }
+    
+    private val navigation = MutableSlotNavigation<Configuration>()
+    
+    override val childStack: KoneState<ChildrenSlot<Configuration, GameScreenComponent.Child>> =
+        componentContext.uiChildrenDefaultSlot<Configuration, _>(
+            source = navigation,
+            initialConfiguration = {
+                when(val state = gameStateMachine.state) {
+                    is GameStateMachine.State.GameInitialisation<*, *, *> ->
+                        error("For some reason, game initialisation was reached in initialised game")
+                    is GameStateMachine.State.RoundWaiting<String, *, *> ->
+                        Configuration.RoundWaiting(
+                            speaker = MutableStateFlow(state.speaker),
+                            listener = MutableStateFlow(state.listener),
+                        )
+                    is GameStateMachine.State.RoundPreparation<String, *, *> ->
+                        Configuration.RoundPreparation(
+                            speaker = MutableStateFlow(state.speaker),
+                            listener = MutableStateFlow(state.listener),
+                            millisecondsLeft = MutableStateFlow(state.millisecondsLeft),
+                        )
+                    is GameStateMachine.State.RoundExplanation<String, *, *> ->
+                        Configuration.RoundExplanation(
+                            speaker = MutableStateFlow(state.speaker),
+                            listener = MutableStateFlow(state.listener),
+                            millisecondsLeft = MutableStateFlow(state.millisecondsLeft),
+                            word = MutableStateFlow(state.currentWord),
+                        )
+                    is GameStateMachine.State.RoundLastGuess<String, *, *> ->
+                        Configuration.RoundLastGuess(
+                            speaker = MutableStateFlow(state.speaker),
+                            listener = MutableStateFlow(state.listener),
+                            millisecondsLeft = MutableStateFlow(state.millisecondsLeft),
+                            word = MutableStateFlow(state.currentWord),
+                        )
+                    is GameStateMachine.State.RoundEditing<String, *, *> ->
+                        Configuration.RoundEditing(
+                            wordsToEdit = MutableStateFlow(state.currentExplanationResults),
+                        )
+                    is GameStateMachine.State.GameResults<String, *> ->
+                        Configuration.GameResults(
+                            results = MutableStateFlow(state.personalResults),
+                        )
+                }
+            },
+        ) { configuration, _ ->
+            when(configuration) {
                 is Configuration.RoundWaiting ->
                     GameScreenComponent.Child.RoundWaiting(
                         RealRoundWaitingComponent(
                             onExitGame = onExitGame,
                             onFinishGame = {
-                                coroutineScope.launch {
-                                    structuralMutex.withLock {
-                                        gameStateMachine.finishGame()
-                                    }
-                                }
+                                gameStateMachine.finishGame()
                             },
                             speaker = configuration.speaker,
                             listener = configuration.listener,
                             onStartRound = {
-                                gameStateMachine.speakerReady()
-                                gameStateMachine.listenerReady()
+                                gameStateMachine.speakerAndListenerReady()
                             }
                         )
                     )
@@ -99,25 +202,13 @@ class RealGameScreenComponent(
                             millisecondsLeft = configuration.millisecondsLeft,
                             word = configuration.word,
                             onGuessed = {
-                                coroutineScope.launch {
-                                    structuralMutex.withLock {
-                                        gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.Explained)
-                                    }
-                                }
+                                gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.Explained)
                             },
                             onNotGuessed = {
-                                coroutineScope.launch {
-                                    structuralMutex.withLock {
-                                        gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.NotExplained)
-                                    }
-                                }
+                                gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.NotExplained)
                             },
                             onMistake = {
-                                coroutineScope.launch {
-                                    structuralMutex.withLock {
-                                        gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.Mistake)
-                                    }
-                                }
+                                gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.Mistake)
                             },
                         )
                     )
@@ -130,25 +221,13 @@ class RealGameScreenComponent(
                             millisecondsLeft = configuration.millisecondsLeft,
                             word = configuration.word,
                             onGuessed = {
-                                coroutineScope.launch {
-                                    structuralMutex.withLock {
-                                        gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.Explained)
-                                    }
-                                }
+                                gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.Explained)
                             },
                             onNotGuessed = {
-                                coroutineScope.launch {
-                                    structuralMutex.withLock {
-                                        gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.NotExplained)
-                                    }
-                                }
+                                gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.NotExplained)
                             },
                             onMistake = {
-                                coroutineScope.launch {
-                                    structuralMutex.withLock {
-                                        gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.Mistake)
-                                    }
-                                }
+                                gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.Mistake)
                             },
                         )
                     )
@@ -158,44 +237,28 @@ class RealGameScreenComponent(
                             onExitGame = onExitGame,
                             wordsToEdit = configuration.wordsToEdit,
                             onGuessed = { index ->
-                                coroutineScope.launch {
-                                    structuralMutex.withLock {
-                                        gameStateMachine.updateWordsExplanationResults(
-                                            configuration.wordsToEdit.value.toKoneMutableList().apply {
-                                                this[index] = GameStateMachine.WordExplanation(this[index].word, GameStateMachine.WordExplanation.State.Explained)
-                                            }
-                                        )
+                                gameStateMachine.updateWordsExplanationResults(
+                                    configuration.wordsToEdit.value.toKoneMutableList().apply {
+                                        this[index] = GameStateMachine.WordExplanation(this[index].word, GameStateMachine.WordExplanation.State.Explained)
                                     }
-                                }
+                                )
                             },
                             onNotGuessed = { index ->
-                                coroutineScope.launch {
-                                    structuralMutex.withLock {
-                                        gameStateMachine.updateWordsExplanationResults(
-                                            configuration.wordsToEdit.value.toKoneMutableList().apply {
-                                                this[index] = GameStateMachine.WordExplanation(this[index].word, GameStateMachine.WordExplanation.State.NotExplained)
-                                            }
-                                        )
+                                gameStateMachine.updateWordsExplanationResults(
+                                    configuration.wordsToEdit.value.toKoneMutableList().apply {
+                                        this[index] = GameStateMachine.WordExplanation(this[index].word, GameStateMachine.WordExplanation.State.NotExplained)
                                     }
-                                }
+                                )
                             },
                             onMistake = { index ->
-                                coroutineScope.launch {
-                                    structuralMutex.withLock {
-                                        gameStateMachine.updateWordsExplanationResults(
-                                            configuration.wordsToEdit.value.toKoneMutableList().apply {
-                                                this[index] = GameStateMachine.WordExplanation(this[index].word, GameStateMachine.WordExplanation.State.Mistake)
-                                            }
-                                        )
+                                gameStateMachine.updateWordsExplanationResults(
+                                    configuration.wordsToEdit.value.toKoneMutableList().apply {
+                                        this[index] = GameStateMachine.WordExplanation(this[index].word, GameStateMachine.WordExplanation.State.Mistake)
                                     }
-                                }
+                                )
                             },
                             onConfirm = {
-                                coroutineScope.launch {
-                                    structuralMutex.withLock {
-                                        gameStateMachine.confirmWordsExplanationResults()
-                                    }
-                                }
+                                gameStateMachine.confirmWordsExplanationResults()
                             }
                         )
                     )
@@ -209,99 +272,7 @@ class RealGameScreenComponent(
             }
         }
     
-    init {
-        coroutineScope.launch {
-            gameStateMachine.state.collect { newState ->
-                runOnUiThread {
-                    navigation.updateCurrent { currentConfiguration ->
-                        when (newState) {
-                            is GameStateMachine.State.GameInitialisation -> error("GameInitialisation appeared after initialization")
-                            is GameStateMachine.State.RoundWaiting ->
-                                if (currentConfiguration is Configuration.RoundWaiting)
-                                    currentConfiguration.apply {
-                                        speaker.value = newState.speaker
-                                        listener.value = newState.listener
-                                    }
-                                else
-                                    Configuration.RoundWaiting(
-                                        speaker = MutableStateFlow(newState.speaker),
-                                        listener = MutableStateFlow(newState.listener),
-                                    )
-                            
-                            is GameStateMachine.State.RoundPreparation ->
-                                if (currentConfiguration is Configuration.RoundPreparation)
-                                    currentConfiguration.apply {
-                                        speaker.value = newState.speaker
-                                        listener.value = newState.listener
-                                        millisecondsLeft.value = newState.millisecondsLeft
-                                    }
-                                else
-                                    Configuration.RoundPreparation(
-                                        speaker = MutableStateFlow(newState.speaker),
-                                        listener = MutableStateFlow(newState.listener),
-                                        millisecondsLeft = MutableStateFlow(newState.millisecondsLeft),
-                                    )
-                            
-                            is GameStateMachine.State.RoundExplanation ->
-                                if (currentConfiguration is Configuration.RoundExplanation)
-                                    currentConfiguration.apply {
-                                        speaker.value = newState.speaker
-                                        listener.value = newState.listener
-                                        millisecondsLeft.value = newState.millisecondsLeft
-                                        word.value = newState.currentWord
-                                    }
-                                else
-                                    Configuration.RoundExplanation(
-                                        speaker = MutableStateFlow(newState.speaker),
-                                        listener = MutableStateFlow(newState.listener),
-                                        millisecondsLeft = MutableStateFlow(newState.millisecondsLeft),
-                                        word = MutableStateFlow(newState.currentWord),
-                                    )
-                            
-                            is GameStateMachine.State.RoundLastGuess ->
-                                if (currentConfiguration is Configuration.RoundLastGuess)
-                                    currentConfiguration.apply {
-                                        speaker.value = newState.speaker
-                                        listener.value = newState.listener
-                                        millisecondsLeft.value = newState.millisecondsLeft
-                                        word.value = newState.currentWord
-                                    }
-                                else
-                                    Configuration.RoundLastGuess(
-                                        speaker = MutableStateFlow(newState.speaker),
-                                        listener = MutableStateFlow(newState.listener),
-                                        millisecondsLeft = MutableStateFlow(newState.millisecondsLeft),
-                                        word = MutableStateFlow(newState.currentWord),
-                                    )
-                            
-                            is GameStateMachine.State.RoundEditing ->
-                                if (currentConfiguration is Configuration.RoundEditing)
-                                    currentConfiguration.apply {
-                                        wordsToEdit.value = newState.currentExplanationResults
-                                    }
-                                else
-                                    Configuration.RoundEditing(
-                                        wordsToEdit = MutableStateFlow(newState.currentExplanationResults),
-                                    )
-                            
-                            is GameStateMachine.State.GameResults ->
-                                if (currentConfiguration is Configuration.GameResults)
-                                    currentConfiguration.apply {
-                                        results.value = newState.personalResults
-                                    }
-                                else
-                                    Configuration.GameResults(
-                                        results = MutableStateFlow(newState.personalResults),
-                                    )
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
     sealed interface Configuration {
-        data object Loading : Configuration
         data class RoundWaiting(
             val speaker: MutableStateFlow<String>,
             val listener: MutableStateFlow<String>,

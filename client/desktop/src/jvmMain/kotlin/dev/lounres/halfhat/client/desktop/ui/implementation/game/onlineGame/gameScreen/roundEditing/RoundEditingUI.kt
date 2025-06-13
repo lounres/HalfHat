@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.desktop.resources.Res as DesktopRes
 import dev.lounres.halfhat.client.desktop.resources.exitDeviceGameButton_dark_png_24dp
 import dev.lounres.halfhat.client.desktop.resources.onlineGameKey_dark_png_24dp
@@ -63,105 +64,113 @@ fun ColumnScope.RoundEditingUI(
         
         Spacer(modifier = Modifier.height(8.dp))
         
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-        ) {
-            val scrollState = rememberScrollState()
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .weight(1f)
-                    .verticalScroll(scrollState),
-            ) {
-                var needsSpace = false
-                for ((index, wordExplanation) in component.gameState.collectAsState().value.wordsToEdit.withIndex()) {
-                    if (needsSpace) Spacer(modifier = Modifier.height(8.dp))
-                    needsSpace = true
-                    val (word, state) = wordExplanation
-                    Card(
-                        modifier = Modifier.fillMaxWidth()
+        val role = component.gameState.collectAsState().value.role
+        
+        when (val roundRole = role.roundRole) {
+            ServerApi.OnlineGame.Role.RoundEditing.RoundRole.Player -> {}
+            ServerApi.OnlineGame.Role.RoundEditing.RoundRole.Listener -> {}
+            is ServerApi.OnlineGame.Role.RoundEditing.RoundRole.Speaker -> {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                ) {
+                    val scrollState = rememberScrollState()
+                    Column(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(1f)
+                            .verticalScroll(scrollState),
                     ) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            AutoScalingText(
-                                modifier = Modifier.height(128.dp),
-                                text = word,
-                                softWrap = false,
-                                maxLines = 1,
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = CircleShape,
-                                enabled = state != GameStateMachine.WordExplanation.State.Explained,
-                                onClick = { component.onGuessed(index) },
+                        var needsSpace = false
+                        for ((index, wordExplanation) in roundRole.wordsToEdit.withIndex()) {
+                            if (needsSpace) Spacer(modifier = Modifier.height(8.dp))
+                            needsSpace = true
+                            val (word, state) = wordExplanation
+                            Card(
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Row(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center,
+                                Column(
+                                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
-                                    Text(
-                                        text = "Guessed",
-                                        fontSize = 16.sp,
+                                    AutoScalingText(
+                                        modifier = Modifier.height(128.dp),
+                                        text = word,
+                                        softWrap = false,
+                                        maxLines = 1,
                                     )
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = CircleShape,
-                                enabled = state != GameStateMachine.WordExplanation.State.NotExplained,
-                                onClick = { component.onNotGuessed(index) },
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center,
-                                ) {
-                                    Text(
-                                        text = "Not guessed",
-                                        fontSize = 16.sp,
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = CircleShape,
-                                enabled = state != GameStateMachine.WordExplanation.State.Mistake,
-                                onClick = { component.onMistake(index) },
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center,
-                                ) {
-                                    Text(
-                                        text = "Mistake",
-                                        fontSize = 16.sp,
-                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Button(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = CircleShape,
+                                        enabled = state != GameStateMachine.WordExplanation.State.Explained,
+                                        onClick = { component.onGuessed(roundRole.wordsToEdit, index) },
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxSize(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center,
+                                        ) {
+                                            Text(
+                                                text = "Guessed",
+                                                fontSize = 16.sp,
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Button(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = CircleShape,
+                                        enabled = state != GameStateMachine.WordExplanation.State.NotExplained,
+                                        onClick = { component.onNotGuessed(roundRole.wordsToEdit, index) },
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxSize(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center,
+                                        ) {
+                                            Text(
+                                                text = "Not guessed",
+                                                fontSize = 16.sp,
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Button(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = CircleShape,
+                                        enabled = state != GameStateMachine.WordExplanation.State.Mistake,
+                                        onClick = { component.onMistake(roundRole.wordsToEdit, index) },
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxSize(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center,
+                                        ) {
+                                            Text(
+                                                text = "Mistake",
+                                                fontSize = 16.sp,
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = CircleShape,
+                    onClick = component.onConfirm
+                ) {
+                    Text(
+                        text = "Confirm",
+                        fontSize = 32.sp
+                    )
+                }
             }
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            shape = CircleShape,
-            onClick = component.onConfirm
-        ) {
-            Text(
-                text = "Confirm",
-                fontSize = 32.sp
-            )
         }
     }
 }

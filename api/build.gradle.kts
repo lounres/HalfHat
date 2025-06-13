@@ -1,6 +1,7 @@
 plugins {
 //    alias(versions.android.library)
     alias(versions.plugins.kotlinx.serialization)
+    alias(versions.plugins.kotlinx.atomicfu)
 }
 
 kotlin {
@@ -14,6 +15,8 @@ kotlin {
             dependencies {
                 // Kone
                 api(versions.kone.collections)
+                api(projects.kone.automata)
+                implementation(versions.kone.util.misc)
                 
                 // Coroutines
                 api(versions.kotlinx.coroutines.core)

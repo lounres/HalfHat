@@ -41,7 +41,7 @@ fun ColumnScope.RoomScreenUI(
     ) {
         val gameState = component.gameStateFlow.collectAsState().value
         val playersList = gameState.playersList
-        val userIndex = gameState.userIndex
+        val userIndex = gameState.role.userIndex
         Spacer(modifier = Modifier.height(16.dp))
         for ((index, player) in playersList.withIndex()) {
             Row(
@@ -86,7 +86,7 @@ fun RowScope.RoomScreenButtonsUI(
         )
     }
     Spacer(Modifier.weight(1f))
-    if (component.gameStateFlow.collectAsState().value.userIndex == 0u)
+    if (component.gameStateFlow.collectAsState().value.role.userIndex == 0u)
         FloatingActionButton(
             onClick = component.onStartGame,
             shape = CircleShape,

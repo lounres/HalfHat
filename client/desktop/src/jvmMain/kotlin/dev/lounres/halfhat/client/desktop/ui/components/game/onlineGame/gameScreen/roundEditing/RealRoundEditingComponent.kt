@@ -1,6 +1,6 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.roundEditing
 
-import dev.lounres.halfhat.api.server.ServerApi
+import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.toKoneMutableList
@@ -14,24 +14,24 @@ class RealRoundEditingComponent(
     
     override val onConfirm: () -> Unit,
 ) : RoundEditingComponent {
-    override val onGuessed: (UInt) -> Unit = {
+    override val onGuessed: (KoneList<GameStateMachine.WordExplanation>, UInt) -> Unit = { wordsToEdit, wordIndex ->
         onUpdateExplanationResults(
-            gameState.value.wordsToEdit.toKoneMutableList().apply {
-                this[it] = GameStateMachine.WordExplanation(this[it].word, GameStateMachine.WordExplanation.State.Explained)
+            wordsToEdit.toKoneMutableList().apply {
+                this[wordIndex] = GameStateMachine.WordExplanation(this[wordIndex].word, GameStateMachine.WordExplanation.State.Explained)
             }
         )
     }
-    override val onNotGuessed: (UInt) -> Unit = {
+    override val onNotGuessed: (KoneList<GameStateMachine.WordExplanation>, UInt) -> Unit = { wordsToEdit, wordIndex ->
         onUpdateExplanationResults(
-            gameState.value.wordsToEdit.toKoneMutableList().apply {
-                this[it] = GameStateMachine.WordExplanation(this[it].word, GameStateMachine.WordExplanation.State.NotExplained)
+            wordsToEdit.toKoneMutableList().apply {
+                this[wordIndex] = GameStateMachine.WordExplanation(this[wordIndex].word, GameStateMachine.WordExplanation.State.NotExplained)
             }
         )
     }
-    override val onMistake: (UInt) -> Unit = {
+    override val onMistake: (KoneList<GameStateMachine.WordExplanation>, UInt) -> Unit = { wordsToEdit, wordIndex ->
         onUpdateExplanationResults(
-            gameState.value.wordsToEdit.toKoneMutableList().apply {
-                this[it] = GameStateMachine.WordExplanation(this[it].word, GameStateMachine.WordExplanation.State.Mistake)
+            wordsToEdit.toKoneMutableList().apply {
+                this[wordIndex] = GameStateMachine.WordExplanation(this[wordIndex].word, GameStateMachine.WordExplanation.State.Mistake)
             }
         )
     }

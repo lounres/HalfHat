@@ -1,6 +1,6 @@
 package dev.lounres.halfhat.client.desktop.ui.components.game.onlineGame.gameScreen.roundEditing
 
-import dev.lounres.halfhat.api.server.ServerApi
+import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.empty
@@ -13,13 +13,13 @@ class FakeRoundEditingComponent(
         ServerApi.OnlineGame.State.RoundEditing(
             role = TODO(),
             playersList = KoneList.empty(),
-            userIndex = 0u,
             settings = ServerApi.Settings(
                 preparationTimeSeconds = 0u,
                 explanationTimeSeconds = 0u,
                 finalGuessTimeSeconds = 0u,
                 strictMode = true,
                 gameEndCondition = GameStateMachine.GameEndCondition.Words(100u),
+                wordsSource = TODO()
             ),
             roundNumber = 0u,
             cycleNumber = 0u,
@@ -27,14 +27,13 @@ class FakeRoundEditingComponent(
             listenerIndex = 0u,
             explanationScores = KoneList.empty(),
             guessingScores = KoneList.empty(),
-            wordsToEdit = KoneList.empty(),
         ),
 ) : RoundEditingComponent {
     override val gameState: StateFlow<ServerApi.OnlineGame.State.RoundEditing> = MutableStateFlow(initialGameState)
     
-    override val onGuessed: (UInt) -> Unit = {}
-    override val onNotGuessed: (UInt) -> Unit = {}
-    override val onMistake: (UInt) -> Unit = {}
+    override val onGuessed: (KoneList<GameStateMachine.WordExplanation>, UInt) -> Unit = { _, _ -> }
+    override val onNotGuessed: (KoneList<GameStateMachine.WordExplanation>, UInt) -> Unit = { _, _ -> }
+    override val onMistake: (KoneList<GameStateMachine.WordExplanation>, UInt) -> Unit = { _, _ -> }
     
     override val onConfirm: () -> Unit = {}
 }

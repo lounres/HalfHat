@@ -39,23 +39,23 @@ public actual fun mergeUIComponentLifecycles(
 public actual fun MutableUIComponentLifecycle.moveTo(state: UIComponentLifecycleState) {
     when (state) {
         UIComponentLifecycleState.Destroyed -> {
-            apply(UIComponentLifecycleTransition.Destroy)
+            move(UIComponentLifecycleTransition.Destroy)
         }
         UIComponentLifecycleState.Initialized -> {}
         UIComponentLifecycleState.Running -> {
-            apply(UIComponentLifecycleTransition.Run)
-            apply(UIComponentLifecycleTransition.Defocus)
-            apply(UIComponentLifecycleTransition.Disappear)
+            move(UIComponentLifecycleTransition.Run)
+            move(UIComponentLifecycleTransition.Defocus)
+            move(UIComponentLifecycleTransition.Disappear)
         }
         UIComponentLifecycleState.Background -> {
-            apply(UIComponentLifecycleTransition.Run)
-            apply(UIComponentLifecycleTransition.Appear)
-            apply(UIComponentLifecycleTransition.Defocus)
+            move(UIComponentLifecycleTransition.Run)
+            move(UIComponentLifecycleTransition.Appear)
+            move(UIComponentLifecycleTransition.Defocus)
         }
         UIComponentLifecycleState.Foreground -> {
-            apply(UIComponentLifecycleTransition.Run)
-            apply(UIComponentLifecycleTransition.Appear)
-            apply(UIComponentLifecycleTransition.Focus)
+            move(UIComponentLifecycleTransition.Run)
+            move(UIComponentLifecycleTransition.Appear)
+            move(UIComponentLifecycleTransition.Focus)
         }
     }
 }

@@ -96,7 +96,7 @@ fun ColumnScope.RoundPreparationUI(
             )
         }
         // TODO: Are the buttons needed (being disabled)
-        if (gameState.userIndex == gameState.speakerIndex)
+        if (gameState.role.userIndex == gameState.speakerIndex)
             Column(
                 modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                 horizontalAlignment = Alignment.CenterHorizontally,

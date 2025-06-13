@@ -86,7 +86,7 @@ fun ColumnScope.RoundWaitingUI(
             }
         }
         when {
-            gameState.userIndex == gameState.speakerIndex -> {
+            gameState.role.userIndex == gameState.speakerIndex -> {
                 Spacer(modifier = Modifier.height(8.dp))
                 if (!gameState.speakerReady)
                     Button(
@@ -112,7 +112,7 @@ fun ColumnScope.RoundWaitingUI(
                         )
                     }
             }
-            gameState.userIndex == gameState.listenerIndex -> {
+            gameState.role.userIndex == gameState.listenerIndex -> {
                 Spacer(modifier = Modifier.height(8.dp))
                 if (!gameState.listenerReady)
                     Button(
