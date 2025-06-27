@@ -5,9 +5,9 @@ import kotlin.jvm.JvmInline
 
 
 @JvmInline
-public value class AsynchronousGameStateMachine<P, WP: GameStateMachine.WordsProvider, Metadata, MetadataTransition, NoMetadataTransitionReason> @PublishedApi internal constructor(
+public value class AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason> @PublishedApi internal constructor(
     @PublishedApi
-    internal val automaton: AsynchronousAutomaton<GameStateMachine.State<P, WP, Metadata>, GameStateMachine.Transition<P, WP, MetadataTransition>, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason>>
+    internal val automaton: AsynchronousAutomaton<GameStateMachine.State<P, WPID, Metadata>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason, NoWordsProviderReason>>
 ) {
     public companion object
 }

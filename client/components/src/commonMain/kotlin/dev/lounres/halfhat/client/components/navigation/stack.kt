@@ -1,6 +1,8 @@
 package dev.lounres.halfhat.client.components.navigation
 
 import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.coroutineScope
+import dev.lounres.halfhat.client.components.launch
 import dev.lounres.halfhat.client.components.uiChild
 import dev.lounres.komponentual.lifecycle.*
 import dev.lounres.komponentual.navigation.ChildrenStack
@@ -11,10 +13,13 @@ import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.utils.last
 import dev.lounres.kone.contexts.invoke
 import dev.lounres.kone.relations.*
+import dev.lounres.kone.state.KoneAsynchronousState
 import dev.lounres.kone.state.KoneState
+import kotlinx.coroutines.Dispatchers
 
 
-public fun <
+@OptIn(DelicateLifecycleAPI::class)
+public suspend fun <
     Configuration,
     Component,
 > UIComponentContext.uiChildrenStack(
@@ -22,10 +27,10 @@ public fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     source: StackNavigation<Configuration>,
-    initialStack: () -> KoneList<Configuration>,
-    updateLifecycle: (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: InnerStackNavigationState<Configuration>) -> Unit,
-    childrenFactory: (configuration: Configuration, componentContext: UIComponentContext) -> Component,
-): KoneState<ChildrenStack<Configuration, Component>> =
+    initialStack: KoneList<Configuration>,
+    updateLifecycle: suspend (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: InnerStackNavigationState<Configuration>) -> Unit,
+    childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext) -> Component,
+): KoneAsynchronousState<ChildrenStack<Configuration, Component>> =
     childrenStack(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
@@ -33,22 +38,24 @@ public fun <
         source = source,
         initialStack = initialStack,
         createChild = { configuration, nextState ->
-            val controllingLifecycle = MutableUIComponentLifecycle()
+            val controllingLifecycle = MutableUIComponentLifecycle(this.coroutineScope(Dispatchers.Default))
             updateLifecycle(configuration, controllingLifecycle, nextState)
-            val child = childrenFactory(configuration, this.uiChild(controllingLifecycle))
+            val childContext = this.uiChild(controllingLifecycle)
+            val child = childrenFactory(configuration, childContext)
+            childContext.launch()
             Child(
                 component = child,
                 controllingLifecycle = controllingLifecycle,
             )
         },
-        destroyChild = { it.controllingLifecycle.move(UIComponentLifecycleTransition.Destroy) },
+        destroyChild = { it.controllingLifecycle.moveTo(UIComponentLifecycleState.Destroyed) },
         updateChild = { configuration, data, nextState ->
             updateLifecycle(configuration, data.controllingLifecycle, nextState)
         },
         componentAccessor = { it.component },
     )
 
-public fun <
+public suspend fun <
     Configuration,
     Component,
 > UIComponentContext.uiChildrenFromToStack(
@@ -56,11 +63,11 @@ public fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     source: StackNavigation<Configuration>,
-    initialStack: () -> KoneList<Configuration>,
+    initialStack: KoneList<Configuration>,
     inactiveState: UIComponentLifecycleState,
     activeState: UIComponentLifecycleState,
-    childrenFactory: (configuration: Configuration, componentContext: UIComponentContext) -> Component,
-): KoneState<ChildrenStack<Configuration, Component>> =
+    childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext) -> Component,
+): KoneAsynchronousState<ChildrenStack<Configuration, Component>> =
     uiChildrenStack(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
@@ -74,7 +81,7 @@ public fun <
         childrenFactory = childrenFactory,
     )
 
-public expect fun <
+public expect suspend fun <
     Configuration,
     Component,
 > UIComponentContext.uiChildrenDefaultStack(
@@ -82,6 +89,6 @@ public expect fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     source: StackNavigation<Configuration>,
-    initialStack: () -> KoneList<Configuration>,
-    childrenFactory: (configuration: Configuration, componentContext: UIComponentContext) -> Component,
-): KoneState<ChildrenStack<Configuration, Component>>
+    initialStack: KoneList<Configuration>,
+    childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext) -> Component,
+): KoneAsynchronousState<ChildrenStack<Configuration, Component>>

@@ -1,10 +1,13 @@
 package dev.lounres.komponentual.navigation
 
+import dev.lounres.kone.collections.interop.toList
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.KoneMutableList
 import dev.lounres.kone.collections.list.build
 import dev.lounres.kone.collections.list.empty
 import dev.lounres.kone.collections.list.lastIndex
+import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.collections.map.get
 import dev.lounres.kone.collections.set.KoneSet
 import dev.lounres.kone.collections.set.toKoneSet
@@ -15,10 +18,17 @@ import dev.lounres.kone.relations.Equality
 import dev.lounres.kone.relations.Hashing
 import dev.lounres.kone.relations.Order
 import dev.lounres.kone.relations.defaultEquality
+import dev.lounres.kone.state.KoneAsynchronousState
 import dev.lounres.kone.state.KoneState
 import kotlinx.atomicfu.AtomicRef
 import kotlinx.atomicfu.atomic
+import kotlinx.atomicfu.locks.ReentrantLock
+import kotlinx.atomicfu.locks.withLock
 import kotlinx.atomicfu.update
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlin.collections.map
 
 
 public typealias StackNavigationEvent<Configuration> = (stack: KoneList<Configuration>) -> KoneList<Configuration>
@@ -26,12 +36,13 @@ public typealias StackNavigationEvent<Configuration> = (stack: KoneList<Configur
 public typealias StackNavigation<Configuration> = NavigationSource<StackNavigationEvent<Configuration>>
 
 public interface MutableStackNavigation<Configuration> : StackNavigation<Configuration> {
-    public fun navigate(stackTransformation: StackNavigationEvent<Configuration>)
+    public suspend fun navigate(stackTransformation: StackNavigationEvent<Configuration>)
 }
 
-public fun <Configuration> MutableStackNavigation(): MutableStackNavigation<Configuration> = MutableStackNavigationImpl()
+public fun <Configuration> MutableStackNavigation(coroutineScope: CoroutineScope): MutableStackNavigation<Configuration> =
+    MutableStackNavigationImpl(coroutineScope = coroutineScope)
 
-public fun <Configuration> MutableStackNavigation<Configuration>.push(configuration: Configuration) {
+public suspend fun <Configuration> MutableStackNavigation<Configuration>.push(configuration: Configuration) {
     navigate { stack ->
         KoneList.build(stack.size + 1u) {
             +stack
@@ -40,11 +51,11 @@ public fun <Configuration> MutableStackNavigation<Configuration>.push(configurat
     }
 }
 
-public fun <Configuration> MutableStackNavigation<Configuration>.pop() {
+public suspend fun <Configuration> MutableStackNavigation<Configuration>.pop() {
     navigate { stack -> stack.dropLast(1u) }
 }
 
-public fun <Configuration> MutableStackNavigation<Configuration>.replaceCurrent(configuration: Configuration) {
+public suspend fun <Configuration> MutableStackNavigation<Configuration>.replaceCurrent(configuration: Configuration) {
     navigate { stack ->
         KoneList.build(stack.size + 1u) {
             +stack
@@ -54,7 +65,7 @@ public fun <Configuration> MutableStackNavigation<Configuration>.replaceCurrent(
     }
 }
 
-public fun <C> MutableStackNavigation<C>.updateCurrent(update: (C) -> C) {
+public suspend fun <C> MutableStackNavigation<C>.updateCurrent(update: (C) -> C) {
     navigate { stack ->
         KoneList.build(stack.size + 1u) {
             +stack
@@ -64,20 +75,22 @@ public fun <C> MutableStackNavigation<C>.updateCurrent(update: (C) -> C) {
     }
 }
 
-internal class MutableStackNavigationImpl<Configuration>() : MutableStackNavigation<Configuration> {
-    private val callbacksAtomicRef: AtomicRef<KoneList<(StackNavigationEvent<Configuration>) -> Unit>> = atomic(KoneList.empty())
+internal class MutableStackNavigationImpl<Configuration>(
+    private val coroutineScope: CoroutineScope,
+) : MutableStackNavigation<Configuration> {
+    private val callbacksLock = ReentrantLock()
+    private val callbacks: KoneMutableList<suspend (StackNavigationEvent<Configuration>) -> Unit> = KoneMutableList.of()
     
-    override fun subscribe(observer: (StackNavigationEvent<Configuration>) -> Unit) {
-        callbacksAtomicRef.update {
-            KoneList.build(it.size + 1u) {
-                +it
-                +observer
-            }
+    override fun subscribe(observer: suspend (StackNavigationEvent<Configuration>) -> Unit) {
+        callbacksLock.withLock {
+            callbacks.add(observer)
         }
     }
     
-    override fun navigate(stackTransformation: StackNavigationEvent<Configuration>) {
-        for (observer in callbacksAtomicRef.value) observer(stackTransformation)
+    override suspend fun navigate(stackTransformation: StackNavigationEvent<Configuration>) {
+        callbacksLock.withLock {
+            callbacks.toList()
+        }.map { coroutineScope.launch { it(stackTransformation) } }.joinAll()
     }
 }
 
@@ -105,7 +118,7 @@ public fun <Configuration, Component> ChildrenStack(configuration: Configuration
         active = ChildWithConfiguration(configuration, component),
     )
 
-public fun <
+public suspend fun <
     Configuration,
     Child,
     Component,
@@ -114,25 +127,23 @@ public fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     source: StackNavigation<Configuration>,
-    initialStack: () -> KoneList<Configuration>,
-    createChild: (configuration: Configuration, nextState: InnerStackNavigationState<Configuration>) -> Child,
-    destroyChild: (Child) -> Unit,
-    updateChild: (configuration: Configuration, data: Child, nextState: InnerStackNavigationState<Configuration>) -> Unit,
-    componentAccessor: (Child) -> Component,
-): KoneState<ChildrenStack<Configuration, Component>> =
+    initialStack: KoneList<Configuration>,
+    createChild: suspend (configuration: Configuration, nextState: InnerStackNavigationState<Configuration>) -> Child,
+    destroyChild: suspend (Child) -> Unit,
+    updateChild: suspend (configuration: Configuration, data: Child, nextState: InnerStackNavigationState<Configuration>) -> Unit,
+    componentAccessor: suspend (Child) -> Component,
+): KoneAsynchronousState<ChildrenStack<Configuration, Component>> =
     children(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
         configurationOrder = configurationOrder,
         source = source,
-        initialState = {
-            InnerStackNavigationState(
-                stack = initialStack().also { require(it.size != 0u) { "Cannot initialize a children stack without configurations" } },
-                configurationEquality = configurationEquality,
-                configurationHashing = configurationHashing,
-                configurationOrder = configurationOrder,
-            )
-        },
+        initialState = InnerStackNavigationState(
+            stack = initialStack.also { require(it.size != 0u) { "Cannot initialize a children stack without configurations" } },
+            configurationEquality = configurationEquality,
+            configurationHashing = configurationHashing,
+            configurationOrder = configurationOrder,
+        ),
         navigationTransition = { previousState, event ->
             InnerStackNavigationState(
                 stack = event(previousState.stack).also { require(it.size != 0u) { "Cannot initialize a children stack without configurations" } },

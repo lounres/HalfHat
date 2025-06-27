@@ -61,7 +61,7 @@ sealed interface OnlineGameWordsProvider: Room.WordsProvider<WordsProviderID> {
 object OnlineGameWordsProviderRegistry : Room.WordProviderRegistry<WordsProviderID, OnlineGameWordsProvider> {
     override fun contains(id: String): Boolean = id == "kek"
     
-    override fun get(id: String): OnlineGameWordsProvider = if (id == "kek") TemporaryDictionary else TODO()
+    override fun get(id: String): OnlineGameWordsProvider = if (id == "kek") TemporaryDictionary else TODO("No meaningful exception is provided")
     
     private object TemporaryDictionary: OnlineGameWordsProvider.ServerDictionary {
         override val name: String = "kek"
@@ -94,7 +94,7 @@ fun getRoomByIdOrCreate(id: String): ServerRoom = rooms.computeIfAbsent(id) {
             wordsSource = Room.WordsSource.ServerDictionary("kek")
         ),
         initialMetadataFactory = { PlayerMetadata(it) },
-        checkConnectionAttachment = { metadata, isOnline, connection -> !isOnline }
+        checkConnectionAttachment = { _, isOnline, _ -> !isOnline }
     )
 }
 
@@ -376,7 +376,7 @@ fun main() {
                             }
                             is ClientApi.Signal.OnlineGame.JoinRoom -> connection.playerAttachmentMutex.withLock {
                                 if (connection.playerAttachment != null) {
-                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.UnspecifiedError))
+                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
                                 
@@ -423,7 +423,7 @@ fun main() {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
-                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.UnspecifiedError))
+                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
                                 
@@ -434,7 +434,7 @@ fun main() {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
-                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.UnspecifiedError))
+                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
                                 
@@ -460,7 +460,7 @@ fun main() {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
-                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.UnspecifiedError))
+                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
                                 
@@ -470,7 +470,7 @@ fun main() {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
-                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.UnspecifiedError))
+                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
                                 
@@ -480,7 +480,7 @@ fun main() {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
-                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.UnspecifiedError))
+                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
                                 
@@ -490,7 +490,7 @@ fun main() {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
-                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.UnspecifiedError))
+                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
                                 
@@ -500,7 +500,7 @@ fun main() {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
-                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.UnspecifiedError))
+                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
                                 
@@ -510,7 +510,7 @@ fun main() {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
-                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.UnspecifiedError))
+                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
                                 
@@ -520,7 +520,7 @@ fun main() {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
-                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.UnspecifiedError))
+                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
                                 

@@ -12,7 +12,6 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(projects.kone.maybe)
                 api(projects.kone.state)
                 api(projects.komponentual.lifecycle)
                 api(projects.komponentual.navigation)

@@ -56,10 +56,25 @@ stal {
         "kotlin wasm-js target" {
             pluginManager.withPlugin(versions.plugins.kotlin.multiplatform) {
                 configure<KotlinMultiplatformExtension> {
+                    js {
+                        outputModuleName = project.path.substring(startIndex = 1).replace(':', '-')
+                        browser()
+                    }
                     @OptIn(ExperimentalWasmDsl::class)
                     wasmJs {
                         outputModuleName = project.path.substring(startIndex = 1).replace(':', '-')
                         browser()
+                    }
+                    sourceSets {
+                        val web by creating {
+                            dependsOn(commonMain.get())
+                        }
+                        jsMain {
+                            dependsOn(web)
+                        }
+                        wasmJsMain {
+                            dependsOn(web)
+                        }
                     }
                 }
             }
@@ -76,7 +91,7 @@ stal {
             configure<KotlinMultiplatformExtension> {
                 compilerOptions {
                     freeCompilerArgs = freeCompilerArgs.get() + listOf(
-                        "-Xklib-duplicated-unique-name-strategy=allow-all-with-warning",
+//                        "-Xklib-duplicated-unique-name-strategy=allow-all-with-warning",
                         "-Xexpect-actual-classes",
                         "-Xconsistent-data-class-copy-visibility",
                     )
@@ -90,6 +105,7 @@ stal {
                             enableLanguageFeature("ValueClasses")
                             enableLanguageFeature("ContractSyntaxV2")
                             enableLanguageFeature("ExplicitBackingFields")
+                            optIn("kotlin.time.ExperimentalTime")
                             optIn("kotlin.contracts.ExperimentalContracts")
                             optIn("kotlin.ExperimentalStdlibApi")
                             optIn("kotlin.uuid.ExperimentalUuidApi")

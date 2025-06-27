@@ -45,7 +45,6 @@ plugins {
 stal {
     structure {
         "kone" {
-            "maybe"("library", "desktop", "web", /*"android"*/)
             "atomicFUAtomics"("library", "desktop", "web", /*"android"*/)
             "kotlinConcurrentAtomics"("library", "desktop", "web", /*"android"*/)
             "automata"("library", "desktop", "web", /*"android"*/)

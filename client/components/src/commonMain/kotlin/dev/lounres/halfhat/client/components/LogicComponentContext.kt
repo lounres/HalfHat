@@ -1,5 +1,7 @@
 package dev.lounres.halfhat.client.components
 
+import dev.lounres.komponentual.lifecycle.DeferredLogicComponentLifecycle
+import dev.lounres.komponentual.lifecycle.DelicateLifecycleAPI
 import dev.lounres.komponentual.lifecycle.LogicComponentLifecycle
 import dev.lounres.komponentual.lifecycle.LogicComponentLifecycleKey
 import dev.lounres.komponentual.lifecycle.coroutineScope
@@ -25,5 +27,10 @@ public inline fun LogicComponentContext(builder: RegistryBuilder.() -> Unit): Lo
 }
 
 public val LogicComponentContext.lifecycle: LogicComponentLifecycle get() = this[LogicComponentLifecycleKey]
+
+@DelicateLifecycleAPI
+internal suspend fun LogicComponentContext.launch() {
+    (lifecycle as DeferredLogicComponentLifecycle).launch()
+}
 
 public fun LogicComponentContext.coroutineScope(context: CoroutineContext): CoroutineScope = lifecycle.coroutineScope(context)

@@ -23,32 +23,38 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import dev.lounres.halfhat.Language
-import dev.lounres.halfhat.client.desktop.resources.*
+import dev.lounres.halfhat.client.common.resources.Res
+import dev.lounres.halfhat.client.common.resources.changeLanguageButton_dark_png_24dp
+import dev.lounres.halfhat.client.common.resources.closeMenuButton_dark_png_24dp
+import dev.lounres.halfhat.client.common.resources.halfhat_logo
+import dev.lounres.halfhat.client.common.resources.openMenuButton_dark
+import dev.lounres.halfhat.client.common.resources.volumeOffButton_dark_png_24dp
+import dev.lounres.halfhat.client.common.resources.volumeOnButton_dark_png_24dp
 import dev.lounres.halfhat.client.desktop.ui.components.MainWindowComponent
-import dev.lounres.halfhat.client.desktop.ui.implementation.about.AboutPageBadge
-import dev.lounres.halfhat.client.desktop.ui.implementation.about.AboutPageIcon
-import dev.lounres.halfhat.client.desktop.ui.implementation.about.AboutPageUI
-import dev.lounres.halfhat.client.desktop.ui.implementation.faq.FAQPageBadge
-import dev.lounres.halfhat.client.desktop.ui.implementation.faq.FAQPageIcon
-import dev.lounres.halfhat.client.desktop.ui.implementation.faq.FAQPageUI
-import dev.lounres.halfhat.client.desktop.ui.implementation.feedback.FeedbackPageBadge
-import dev.lounres.halfhat.client.desktop.ui.implementation.feedback.FeedbackPageIcon
-import dev.lounres.halfhat.client.desktop.ui.implementation.game.GamePageActionsUI
-import dev.lounres.halfhat.client.desktop.ui.implementation.game.GamePageBadge
-import dev.lounres.halfhat.client.desktop.ui.implementation.game.GamePageIcon
-import dev.lounres.halfhat.client.desktop.ui.implementation.game.GamePageUI
-import dev.lounres.halfhat.client.desktop.ui.implementation.gameHistory.GameHistoryPageBadge
-import dev.lounres.halfhat.client.desktop.ui.implementation.gameHistory.GameHistoryPageIcon
-import dev.lounres.halfhat.client.desktop.ui.implementation.home.HomePageBadge
-import dev.lounres.halfhat.client.desktop.ui.implementation.home.HomePageIcon
-import dev.lounres.halfhat.client.desktop.ui.implementation.home.HomePageUI
-import dev.lounres.halfhat.client.desktop.ui.implementation.news.NewsPageBadge
-import dev.lounres.halfhat.client.desktop.ui.implementation.news.NewsPageIcon
-import dev.lounres.halfhat.client.desktop.ui.implementation.rules.RulesPageBadge
-import dev.lounres.halfhat.client.desktop.ui.implementation.rules.RulesPageIcon
-import dev.lounres.halfhat.client.desktop.ui.implementation.settings.SettingsPageBadge
-import dev.lounres.halfhat.client.desktop.ui.implementation.settings.SettingsPageIcon
-import dev.lounres.halfhat.client.desktop.ui.utils.WorkInProgress
+import dev.lounres.halfhat.client.common.ui.implementation.about.AboutPageBadge
+import dev.lounres.halfhat.client.common.ui.implementation.about.AboutPageIcon
+import dev.lounres.halfhat.client.common.ui.implementation.about.AboutPageUI
+import dev.lounres.halfhat.client.common.ui.implementation.faq.FAQPageBadge
+import dev.lounres.halfhat.client.common.ui.implementation.faq.FAQPageIcon
+import dev.lounres.halfhat.client.common.ui.implementation.faq.FAQPageUI
+import dev.lounres.halfhat.client.common.ui.implementation.feedback.FeedbackPageBadge
+import dev.lounres.halfhat.client.common.ui.implementation.feedback.FeedbackPageIcon
+import dev.lounres.halfhat.client.common.ui.implementation.game.GamePageActionsUI
+import dev.lounres.halfhat.client.common.ui.implementation.game.GamePageBadge
+import dev.lounres.halfhat.client.common.ui.implementation.game.GamePageIcon
+import dev.lounres.halfhat.client.common.ui.implementation.game.GamePageUI
+import dev.lounres.halfhat.client.common.ui.implementation.gameHistory.GameHistoryPageBadge
+import dev.lounres.halfhat.client.common.ui.implementation.gameHistory.GameHistoryPageIcon
+import dev.lounres.halfhat.client.common.ui.implementation.home.HomePageBadge
+import dev.lounres.halfhat.client.common.ui.implementation.home.HomePageIcon
+import dev.lounres.halfhat.client.common.ui.implementation.home.HomePageUI
+import dev.lounres.halfhat.client.common.ui.implementation.news.NewsPageBadge
+import dev.lounres.halfhat.client.common.ui.implementation.news.NewsPageIcon
+import dev.lounres.halfhat.client.common.ui.implementation.rules.RulesPageBadge
+import dev.lounres.halfhat.client.common.ui.implementation.rules.RulesPageIcon
+import dev.lounres.halfhat.client.common.ui.implementation.settings.SettingsPageBadge
+import dev.lounres.halfhat.client.common.ui.implementation.settings.SettingsPageIcon
+import dev.lounres.halfhat.client.common.ui.utils.WorkInProgress
 import dev.lounres.komponentual.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.komponentual.lifecycle.UIComponentLifecycleState
 import dev.lounres.komponentual.lifecycle.UIComponentLifecycleTransition
@@ -59,10 +65,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
-import dev.lounres.halfhat.client.desktop.resources.Res as DesktopRes
 
-
-val commonIconModifier = Modifier.height(24.dp)
 
 val permanentDrawerAfterWindowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Medium
 
@@ -89,7 +92,7 @@ fun MainWindowDrawerSheetContentUI(
                     ) {
                         Icon(
                             modifier = Modifier.size(24.dp),
-                            painter = painterResource(DesktopRes.drawable.closeMenuButton_dark_png_24dp),
+                            painter = painterResource(Res.drawable.closeMenuButton_dark_png_24dp),
                             contentDescription = "Close menu"
                         )
                     }
@@ -103,7 +106,7 @@ fun MainWindowDrawerSheetContentUI(
                     }
                 ) {
                     Icon(
-                        painter = painterResource(if (volumeOn) DesktopRes.drawable.volumeOnButton_dark_png_24dp else DesktopRes.drawable.volumeOffButton_dark_png_24dp),
+                        painter = painterResource(if (volumeOn) Res.drawable.volumeOnButton_dark_png_24dp else Res.drawable.volumeOffButton_dark_png_24dp),
                         modifier = Modifier.size(24.dp),
                         contentDescription = if (volumeOn) "Volume is on" else "Volume is off"
                     )
@@ -114,7 +117,7 @@ fun MainWindowDrawerSheetContentUI(
                     }
                 ) {
                     Icon(
-                        painter = painterResource(DesktopRes.drawable.changeLanguageButton_dark_png_24dp),
+                        painter = painterResource(Res.drawable.changeLanguageButton_dark_png_24dp),
                         modifier = Modifier.size(24.dp),
                         contentDescription = "Choose language of the interface"
                     )
@@ -193,7 +196,7 @@ fun MainWindowDrawerContentUI(
                     }
                 ) {
                     Icon(
-                        painter = painterResource(DesktopRes.drawable.openMenuButton_dark),
+                        painter = painterResource(Res.drawable.openMenuButton_dark),
                         modifier = Modifier.size(24.dp),
                         contentDescription = "Open menu"
                     )
@@ -415,9 +418,10 @@ fun LifecycleController(
 fun MainWindowUI(
     component: MainWindowComponent
 ) {
+    
     Window(
         title = "HalfHat — ${component.pageVariants.subscribeAsState().value.active.component.component.textName}",
-        icon = painterResource(DesktopRes.drawable.halfhat_logo),
+        icon = painterResource(Res.drawable.halfhat_logo),
         state = component.windowState,
         onCloseRequest = component.onWindowCloseRequest,
     ) {
@@ -426,9 +430,17 @@ fun MainWindowUI(
             component.windowState,
             LocalWindowInfo.current,
         )
-        MainWindowContentUI(
-            component = component,
-            windowSizeClass = calculateWindowSizeClass()
-        )
+        
+        var showContent by remember { mutableStateOf(false) }
+        
+        if (showContent)
+            MainWindowContentUI(
+                component = component,
+                windowSizeClass = calculateWindowSizeClass()
+            )
+        
+        LaunchedEffect(Unit) {
+            showContent = true
+        }
     }
 }

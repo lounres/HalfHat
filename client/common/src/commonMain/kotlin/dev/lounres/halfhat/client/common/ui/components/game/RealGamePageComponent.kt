@@ -1,0 +1,86 @@
+package dev.lounres.halfhat.client.common.ui.components.game
+
+import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.RealDeviceGamePageComponent
+import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.RealOnlineGamePageComponent
+import dev.lounres.halfhat.client.common.ui.components.game.timer.RealTimerPageComponent
+import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlot
+import dev.lounres.halfhat.client.common.ui.components.game.localGame.RealLocalGamePageComponent
+import dev.lounres.halfhat.client.common.ui.components.game.modeSelection.RealModeSelectionPageComponent
+import dev.lounres.komponentual.navigation.ChildrenSlot
+import dev.lounres.komponentual.navigation.MutableSlotNavigation
+import dev.lounres.komponentual.navigation.set
+import dev.lounres.kone.state.KoneState
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.serialization.Serializable
+
+
+public class RealGamePageComponent(
+    componentContext: UIComponentContext,
+//    localDictionariesRegistry: LocalDictionariesRegistry,
+    volumeOn: StateFlow<Boolean>,
+): GamePageComponent {
+    private val slotNavigation = MutableSlotNavigation<Configuration>()
+    
+    override val currentChild: KoneState<ChildrenSlot<Configuration, GamePageComponent.Child>> =
+        componentContext.uiChildrenDefaultSlot(
+            source = slotNavigation,
+            initialConfiguration = { Configuration.ModeSelection },
+        ) { configuration, componentContext ->
+            when (configuration) {
+                Configuration.ModeSelection ->
+                    GamePageComponent.Child.ModeSelection(
+                        RealModeSelectionPageComponent(
+                            componentContext = componentContext,
+                            onOnlineGameSelect = { slotNavigation.set(Configuration.OnlineGame) },
+                            onLocalGameSelect = { slotNavigation.set(Configuration.LocalGame) },
+                            onDeviceGameSelect = { slotNavigation.set(Configuration.DeviceGame) },
+                            onGameTimerSelect = { slotNavigation.set(Configuration.GameTimer) },
+                        )
+                    )
+                Configuration.OnlineGame ->
+                    GamePageComponent.Child.OnlineGame(
+                        RealOnlineGamePageComponent(
+                            componentContext = componentContext,
+                            onExitOnlineGameMode = { slotNavigation.set(Configuration.ModeSelection) },
+                        )
+                    )
+                Configuration.LocalGame ->
+                    GamePageComponent.Child.LocalGame(
+                        RealLocalGamePageComponent(
+                            onExitLocalGame = { slotNavigation.set(Configuration.ModeSelection) }
+                        )
+                    )
+                Configuration.DeviceGame ->
+                    GamePageComponent.Child.DeviceGame(
+                        RealDeviceGamePageComponent(
+                            componentContext = componentContext,
+//                            localDictionariesRegistry = localDictionariesRegistry,
+                            onExitDeviceGame = { slotNavigation.set(Configuration.ModeSelection) },
+                        )
+                    )
+                Configuration.GameTimer ->
+                    GamePageComponent.Child.GameTimer(
+                        RealTimerPageComponent(
+                            componentContext = componentContext,
+                            onExitTimer = { slotNavigation.set(Configuration.ModeSelection) },
+                            volumeOn = volumeOn,
+                        )
+                    )
+            }
+        }
+    
+    @Serializable
+    public sealed interface Configuration {
+        @Serializable
+        public data object ModeSelection : Configuration
+        @Serializable
+        public data object OnlineGame : Configuration
+        @Serializable
+        public data object LocalGame : Configuration
+        @Serializable
+        public data object DeviceGame : Configuration
+        @Serializable
+        public data object GameTimer: Configuration
+    }
+}

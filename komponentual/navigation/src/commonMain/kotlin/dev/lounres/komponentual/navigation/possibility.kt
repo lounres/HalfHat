@@ -1,24 +1,34 @@
 package dev.lounres.komponentual.navigation
 
+import dev.lounres.kone.collections.interop.toList
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.KoneMutableList
 import dev.lounres.kone.collections.list.build
 import dev.lounres.kone.collections.list.empty
+import dev.lounres.kone.collections.list.of
+import dev.lounres.kone.collections.list.toKoneList
 import dev.lounres.kone.collections.map.get
 import dev.lounres.kone.collections.set.KoneSet
 import dev.lounres.kone.collections.set.of
+import dev.lounres.kone.collections.utils.map
 import dev.lounres.kone.maybe.Maybe
 import dev.lounres.kone.maybe.None
 import dev.lounres.kone.maybe.Some
-import dev.lounres.kone.maybe.computeOn
+import dev.lounres.kone.maybe.map
 import dev.lounres.kone.relations.Equality
 import dev.lounres.kone.relations.Hashing
 import dev.lounres.kone.relations.Order
 import dev.lounres.kone.relations.defaultEquality
-import dev.lounres.kone.state.KoneState
+import dev.lounres.kone.state.KoneAsynchronousState
 import kotlinx.atomicfu.AtomicRef
 import kotlinx.atomicfu.atomic
+import kotlinx.atomicfu.locks.ReentrantLock
+import kotlinx.atomicfu.locks.withLock
 import kotlinx.atomicfu.update
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 
 
 public typealias PossibilityNavigationEvent<Configuration> = (Maybe<Configuration>) -> Maybe<Configuration>
@@ -26,33 +36,36 @@ public typealias PossibilityNavigationEvent<Configuration> = (Maybe<Configuratio
 public typealias PossibilityNavigation<Configuration> = NavigationSource<PossibilityNavigationEvent<Configuration>>
 
 public interface MutablePossibilityNavigation<Configuration> : PossibilityNavigation<Configuration> {
-    public fun navigate(possibilityTransformation: PossibilityNavigationEvent<Configuration>)
+    public suspend fun navigate(possibilityTransformation: PossibilityNavigationEvent<Configuration>)
 }
 
-public fun <Configuration> MutablePossibilityNavigation(): MutablePossibilityNavigation<Configuration> = MutablePossibilityNavigationImpl()
+public fun <Configuration> MutablePossibilityNavigation(coroutineScope: CoroutineScope): MutablePossibilityNavigation<Configuration> =
+    MutablePossibilityNavigationImpl(coroutineScope = coroutineScope)
 
-public fun <Configuration> MutablePossibilityNavigation<Configuration>.set(configuration: Configuration) {
+public suspend fun <Configuration> MutablePossibilityNavigation<Configuration>.set(configuration: Configuration) {
     navigate { Some(configuration) }
 }
 
-public fun <Configuration> MutablePossibilityNavigation<Configuration>.clear() {
+public suspend fun <Configuration> MutablePossibilityNavigation<Configuration>.clear() {
     navigate { None }
 }
 
-internal class MutablePossibilityNavigationImpl<Configuration>() : MutablePossibilityNavigation<Configuration> {
-    private val callbacksAtomicRef: AtomicRef<KoneList<(PossibilityNavigationEvent<Configuration>) -> Unit>> = atomic(KoneList.empty())
+internal class MutablePossibilityNavigationImpl<Configuration>(
+    private val coroutineScope: CoroutineScope,
+) : MutablePossibilityNavigation<Configuration> {
+    private val callbacksLock = ReentrantLock()
+    private val callbacks: KoneMutableList<suspend (PossibilityNavigationEvent<Configuration>) -> Unit> = KoneMutableList.of()
     
-    override fun subscribe(observer: (PossibilityNavigationEvent<Configuration>) -> Unit) {
-        callbacksAtomicRef.update {
-            KoneList.build(it.size + 1u) {
-                +it
-                +observer
-            }
+    override fun subscribe(observer: suspend (PossibilityNavigationEvent<Configuration>) -> Unit) {
+        callbacksLock.withLock {
+            callbacks.add(observer)
         }
     }
     
-    override fun navigate(possibilityTransformation: PossibilityNavigationEvent<Configuration>) {
-        for (observer in callbacksAtomicRef.value) observer(possibilityTransformation)
+    override suspend fun navigate(possibilityTransformation: PossibilityNavigationEvent<Configuration>) {
+        callbacksLock.withLock {
+            callbacks.toList()
+        }.map { coroutineScope.launch { it(possibilityTransformation) } }.joinAll()
     }
 }
 
@@ -80,7 +93,7 @@ public class InnerPossibilityNavigationState<Configuration> internal constructor
 
 public typealias ChildrenPossibility<Configuration, Component> = Maybe<ChildWithConfiguration<Configuration, Component>>
 
-public fun <
+public suspend fun <
     Configuration,
     Child,
     Component,
@@ -89,22 +102,20 @@ public fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     source: PossibilityNavigation<Configuration>,
-    initialConfiguration: () -> Maybe<Configuration>,
-    createChild: (configuration: Configuration, nextState: InnerPossibilityNavigationState<Configuration>) -> Child,
-    destroyChild: (Child) -> Unit,
-    updateChild: (configuration: Configuration, data: Child, nextState: InnerPossibilityNavigationState<Configuration>) -> Unit,
-    componentAccessor: (Child) -> Component,
-): KoneState<ChildrenPossibility<Configuration, Component>> =
+    initialConfiguration: Maybe<Configuration>,
+    createChild: suspend (configuration: Configuration, nextState: InnerPossibilityNavigationState<Configuration>) -> Child,
+    destroyChild: suspend (Child) -> Unit,
+    updateChild: suspend (configuration: Configuration, data: Child, nextState: InnerPossibilityNavigationState<Configuration>) -> Unit,
+    componentAccessor: suspend (Child) -> Component,
+): KoneAsynchronousState<ChildrenPossibility<Configuration, Component>> =
     children(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
         configurationOrder = configurationOrder,
         source = source,
-        initialState = {
-            InnerPossibilityNavigationState(
-                current = initialConfiguration()
-            )
-        },
+        initialState = InnerPossibilityNavigationState(
+            current = initialConfiguration
+        ),
         navigationTransition = { previousState, event ->
             InnerPossibilityNavigationState(
                 current = event(previousState.current)
@@ -113,7 +124,7 @@ public fun <
         createChild = createChild,
         destroyChild = destroyChild,
         updateChild = updateChild,
-        publicNavigationStateMapper = { innerState, componentByConfiguration ->
-            innerState.current.computeOn { ChildWithConfiguration(it, componentAccessor(componentByConfiguration[it])) }
+        publicNavigationStateMapper = { innerState, childByConfiguration ->
+            innerState.current.map { ChildWithConfiguration(it, componentAccessor(childByConfiguration[it])) }
         },
     )

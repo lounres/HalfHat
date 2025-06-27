@@ -8,9 +8,7 @@ import kotlin.random.Random
 @PublishedApi
 internal val DefaultRandom: Random = Random
 
-public val <P, WP : GameStateMachine.WordsProvider, Metadata> SynchronousGameStateMachine<P, WP, Metadata, *, *>.state: GameStateMachine.State<P, WP, Metadata> get() = automaton.state
-public val <P, WP : GameStateMachine.WordsProvider, Metadata> AsynchronousGameStateMachine<P, WP, Metadata, *, *>.state: GameStateMachine.State<P, WP, Metadata> get() = automaton.state
-public val <P, WP : GameStateMachine.WordsProvider, Metadata> BlockingGameStateMachine<P, WP, Metadata, *, *>.state: GameStateMachine.State<P, WP, Metadata> get() = automaton.state
+public val <P, WPID, Metadata> AsynchronousGameStateMachine<P, WPID, *, Metadata, *, *>.state: GameStateMachine.State<P, WPID, Metadata> get() = automaton.state
 
 public val <P> GameStateMachine.State.RoundWaiting<P, *, *>.speaker: P get() = playersList[speakerIndex]
 public val <P> GameStateMachine.State.RoundWaiting<P, *, *>.listener: P get() = playersList[listenerIndex]

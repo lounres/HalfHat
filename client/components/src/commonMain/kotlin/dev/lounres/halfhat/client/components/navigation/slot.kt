@@ -1,6 +1,8 @@
 package dev.lounres.halfhat.client.components.navigation
 
 import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.coroutineScope
+import dev.lounres.halfhat.client.components.launch
 import dev.lounres.halfhat.client.components.uiChild
 import dev.lounres.komponentual.lifecycle.*
 import dev.lounres.komponentual.navigation.ChildrenSlot
@@ -9,10 +11,13 @@ import dev.lounres.komponentual.navigation.SlotNavigation
 import dev.lounres.komponentual.navigation.childrenSlot
 import dev.lounres.kone.contexts.invoke
 import dev.lounres.kone.relations.*
+import dev.lounres.kone.state.KoneAsynchronousState
 import dev.lounres.kone.state.KoneState
+import kotlinx.coroutines.Dispatchers
 
 
-public fun <
+@OptIn(DelicateLifecycleAPI::class)
+public suspend fun <
     Configuration,
     Component,
 > UIComponentContext.uiChildrenSlot(
@@ -20,10 +25,10 @@ public fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     source: SlotNavigation<Configuration>,
-    initialConfiguration: () -> Configuration,
-    updateLifecycle: (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: InnerSlotNavigationState<Configuration>) -> Unit,
-    childrenFactory: (configuration: Configuration, componentContext: UIComponentContext) -> Component,
-): KoneState<ChildrenSlot<Configuration, Component>> =
+    initialConfiguration: Configuration,
+    updateLifecycle: suspend (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: InnerSlotNavigationState<Configuration>) -> Unit,
+    childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext) -> Component,
+): KoneAsynchronousState<ChildrenSlot<Configuration, Component>> =
     childrenSlot(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
@@ -31,22 +36,24 @@ public fun <
         source = source,
         initialConfiguration = initialConfiguration,
         createChild = { configuration, nextState ->
-            val controllingLifecycle = MutableUIComponentLifecycle()
+            val controllingLifecycle = MutableUIComponentLifecycle(this.coroutineScope(Dispatchers.Default))
             updateLifecycle(configuration, controllingLifecycle, nextState)
-            val child = childrenFactory(configuration, this.uiChild(controllingLifecycle))
+            val childContext = this.uiChild(controllingLifecycle)
+            val child = childrenFactory(configuration, childContext)
+            childContext.launch()
             Child(
                 component = child,
                 controllingLifecycle = controllingLifecycle,
             )
         },
-        destroyChild = { it.controllingLifecycle.move(UIComponentLifecycleTransition.Destroy) },
+        destroyChild = { it.controllingLifecycle.moveTo(UIComponentLifecycleState.Destroyed) },
         updateChild = { configuration, data, nextState ->
             updateLifecycle(configuration, data.controllingLifecycle, nextState)
         },
         componentAccessor = { it.component },
     )
 
-public fun <
+public suspend fun <
     Configuration,
     Component,
 > UIComponentContext.uiChildrenToSlot(
@@ -54,10 +61,10 @@ public fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     source: SlotNavigation<Configuration>,
-    initialConfiguration: () -> Configuration,
+    initialConfiguration: Configuration,
     activeState: UIComponentLifecycleState,
-    childrenFactory: (configuration: Configuration, componentContext: UIComponentContext) -> Component,
-): KoneState<ChildrenSlot<Configuration, Component>> =
+    childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext) -> Component,
+): KoneAsynchronousState<ChildrenSlot<Configuration, Component>> =
     uiChildrenSlot(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
@@ -71,7 +78,7 @@ public fun <
         childrenFactory = childrenFactory,
     )
 
-public expect fun <
+public expect suspend fun <
     Configuration,
     Component,
 > UIComponentContext.uiChildrenDefaultSlot(
@@ -79,6 +86,6 @@ public expect fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     source: SlotNavigation<Configuration>,
-    initialConfiguration: () -> Configuration,
-    childrenFactory: (configuration: Configuration, componentContext: UIComponentContext) -> Component,
-): KoneState<ChildrenSlot<Configuration, Component>>
+    initialConfiguration: Configuration,
+    childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext) -> Component,
+): KoneAsynchronousState<ChildrenSlot<Configuration, Component>>

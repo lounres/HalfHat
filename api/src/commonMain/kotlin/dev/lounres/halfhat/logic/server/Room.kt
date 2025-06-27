@@ -151,6 +151,7 @@ public class Room<
                         return@moveMaybe TransitionOrReason.Failure(null)
                     }
                     TransitionOrReason.Success(GameStateMachine.Transition.UpdateGame.InitialiseGame)
+                    TODO()
                 }
                 when (result) {
                     is MovementMaybeResult.NoTransition -> TODO()

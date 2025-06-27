@@ -2,15 +2,16 @@ package dev.lounres.halfhat.client.desktop.ui.components
 
 import androidx.compose.ui.window.WindowState
 import dev.lounres.halfhat.Language
-import dev.lounres.halfhat.client.desktop.ui.components.about.AboutPageComponent
-import dev.lounres.halfhat.client.desktop.ui.components.faq.FAQPageComponent
-import dev.lounres.halfhat.client.desktop.ui.components.feedback.FeedbackPageComponent
-import dev.lounres.halfhat.client.desktop.ui.components.game.GamePageComponent
-import dev.lounres.halfhat.client.desktop.ui.components.gameHistory.GameHistoryPageComponent
-import dev.lounres.halfhat.client.desktop.ui.components.home.HomePageComponent
-import dev.lounres.halfhat.client.desktop.ui.components.news.NewsPageComponent
-import dev.lounres.halfhat.client.desktop.ui.components.rules.RulesPageComponent
-import dev.lounres.halfhat.client.desktop.ui.components.settings.SettingsPageComponent
+import dev.lounres.halfhat.client.common.ui.components.PageComponent
+import dev.lounres.halfhat.client.common.ui.components.about.AboutPageComponent
+import dev.lounres.halfhat.client.common.ui.components.faq.FAQPageComponent
+import dev.lounres.halfhat.client.common.ui.components.feedback.FeedbackPageComponent
+import dev.lounres.halfhat.client.common.ui.components.game.GamePageComponent
+import dev.lounres.halfhat.client.common.ui.components.gameHistory.GameHistoryPageComponent
+import dev.lounres.halfhat.client.common.ui.components.home.HomePageComponent
+import dev.lounres.halfhat.client.common.ui.components.news.NewsPageComponent
+import dev.lounres.halfhat.client.common.ui.components.rules.RulesPageComponent
+import dev.lounres.halfhat.client.common.ui.components.settings.SettingsPageComponent
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.komponentual.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.komponentual.navigation.ChildrenVariants

@@ -1,6 +1,8 @@
 package dev.lounres.halfhat.client.components.navigation
 
 import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.coroutineScope
+import dev.lounres.halfhat.client.components.launch
 import dev.lounres.halfhat.client.components.uiChild
 import dev.lounres.komponentual.lifecycle.*
 import dev.lounres.komponentual.navigation.ChildrenPossibility
@@ -11,10 +13,12 @@ import dev.lounres.kone.contexts.invoke
 import dev.lounres.kone.maybe.Maybe
 import dev.lounres.kone.maybe.Some
 import dev.lounres.kone.relations.*
-import dev.lounres.kone.state.KoneState
+import dev.lounres.kone.state.KoneAsynchronousState
+import kotlinx.coroutines.Dispatchers
 
 
-public fun <
+@OptIn(DelicateLifecycleAPI::class)
+public suspend fun <
     Configuration,
     Component,
 > UIComponentContext.uiChildrenPossibility(
@@ -22,10 +26,10 @@ public fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     source: PossibilityNavigation<Configuration>,
-    initialConfiguration: () -> Maybe<Configuration>,
-    updateLifecycle: (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: InnerPossibilityNavigationState<Configuration>) -> Unit,
-    childrenFactory: (configuration: Configuration, componentContext: UIComponentContext) -> Component,
-): KoneState<ChildrenPossibility<Configuration, Component>> =
+    initialConfiguration: Maybe<Configuration>,
+    updateLifecycle: suspend (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: InnerPossibilityNavigationState<Configuration>) -> Unit,
+    childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext) -> Component,
+): KoneAsynchronousState<ChildrenPossibility<Configuration, Component>> =
     childrenPossibility(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
@@ -33,22 +37,24 @@ public fun <
         source = source,
         initialConfiguration = initialConfiguration,
         createChild = { configuration, nextState ->
-            val controllingLifecycle = MutableUIComponentLifecycle()
+            val controllingLifecycle = MutableUIComponentLifecycle(this.coroutineScope(Dispatchers.Default))
             updateLifecycle(configuration, controllingLifecycle, nextState)
-            val child = childrenFactory(configuration, this.uiChild(controllingLifecycle))
+            val childContext = this.uiChild(controllingLifecycle)
+            val child = childrenFactory(configuration, childContext)
+            childContext.launch()
             Child(
                 component = child,
                 controllingLifecycle = controllingLifecycle,
             )
         },
-        destroyChild = { it.controllingLifecycle.move(UIComponentLifecycleTransition.Destroy) },
+        destroyChild = { it.controllingLifecycle.moveTo(UIComponentLifecycleState.Destroyed) },
         updateChild = { configuration, data, nextState ->
             updateLifecycle(configuration, data.controllingLifecycle, nextState)
         },
         componentAccessor = { it.component },
     )
 
-public fun <
+public suspend fun <
     Configuration,
     Component,
 > UIComponentContext.uiChildrenToPossibility(
@@ -56,10 +62,10 @@ public fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     source: PossibilityNavigation<Configuration>,
-    initialConfiguration: () -> Maybe<Configuration>,
+    initialConfiguration: Maybe<Configuration>,
     activeState: UIComponentLifecycleState,
-    childrenFactory: (configuration: Configuration, componentContext: UIComponentContext) -> Component,
-): KoneState<ChildrenPossibility<Configuration, Component>> =
+    childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext) -> Component,
+): KoneAsynchronousState<ChildrenPossibility<Configuration, Component>> =
     uiChildrenPossibility(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
@@ -73,7 +79,7 @@ public fun <
         childrenFactory = childrenFactory,
     )
 
-public expect fun <
+public expect suspend fun <
     Configuration,
     Component,
 > UIComponentContext.uiChildrenDefaultPossibility(
@@ -81,6 +87,6 @@ public expect fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     source: PossibilityNavigation<Configuration>,
-    initialConfiguration: () -> Maybe<Configuration>,
+    initialConfiguration: Maybe<Configuration>,
     childrenFactory: (configuration: Configuration, componentContext: UIComponentContext) -> Component,
-): KoneState<ChildrenPossibility<Configuration, Component>>
+): KoneAsynchronousState<ChildrenPossibility<Configuration, Component>>

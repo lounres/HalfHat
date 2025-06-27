@@ -1,7 +1,6 @@
 package dev.lounres.halfhat.client.common.logic.components.game.timer
 
 import dev.lounres.halfhat.client.common.utils.DefaultSounds
-import dev.lounres.halfhat.client.common.utils.playSound
 import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.lifecycle
@@ -34,7 +33,7 @@ public class RealTimerComponent(
         lastGuessTimeSetting: UInt,
     ) {
         if (componentContext.lifecycle.state == LogicComponentLifecycleState.Running)
-            coroutineScope.launch {
+//            coroutineScope.launch {
                 timerJob.updateAndGet {
                     it.cancel()
                     coroutineScope.timerJob(
@@ -49,18 +48,19 @@ public class RealTimerComponent(
                             when(it) {
                                 is TimerState.Preparation ->
                                     if (oldTimerState !is TimerState.Preparation || (oldTimerState.millisecondsLeft / 1000u) != (it.millisecondsLeft / 1000u))
-                                        playSound(DefaultSounds.preparationCountdown)
+                                        coroutineScope.launch { DefaultSounds.preparationCountdown.await().play() }
                                 is TimerState.Explanation ->
                                     if (oldTimerState is TimerState.Preparation)
-                                        playSound(DefaultSounds.explanationStart)
+                                        coroutineScope.launch { DefaultSounds.explanationStart.await().play() }
                                 is TimerState.LastGuess ->
                                     if (oldTimerState is TimerState.Preparation || oldTimerState is TimerState.Explanation)
-                                        playSound(DefaultSounds.finalGuessStart)
-                                TimerState.Finished -> playSound(DefaultSounds.finalGuessEnd)
+                                        coroutineScope.launch { DefaultSounds.finalGuessStart.await().play() }
+                                TimerState.Finished ->
+                                    coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
                             }
                     }
                 }.start()
-            }
+//            }
     }
     override fun resetTimer() {
         coroutineScope.launch {

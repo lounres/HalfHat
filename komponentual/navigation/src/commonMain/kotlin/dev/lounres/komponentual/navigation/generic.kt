@@ -1,6 +1,6 @@
 package dev.lounres.komponentual.navigation
 
-import dev.lounres.kone.automata.BlockingAutomaton
+import dev.lounres.kone.automata.AsynchronousAutomaton
 import dev.lounres.kone.automata.CheckResult
 import dev.lounres.kone.automata.move
 import dev.lounres.kone.collections.iterables.next
@@ -13,19 +13,19 @@ import dev.lounres.kone.relations.Equality
 import dev.lounres.kone.relations.Hashing
 import dev.lounres.kone.relations.Order
 import dev.lounres.kone.relations.defaultEquality
-import dev.lounres.kone.state.KoneMutableState
-import dev.lounres.kone.state.KoneState
+import dev.lounres.kone.state.KoneAsynchronousState
+import dev.lounres.kone.state.KoneMutableAsynchronousState
 
 
 public fun interface NavigationSource<out Event> {
-    public fun subscribe(observer: (Event) -> Unit)
+    public fun subscribe(observer: suspend (Event) -> Unit)
 }
 
 public interface NavigationState<Configuration> {
     public val configurations: KoneSet<Configuration>
 }
 
-public fun <
+public suspend fun <
     Configuration,
     InnerNavigationState : NavigationState<Configuration>,
     PublicNavigationState,
@@ -36,15 +36,13 @@ public fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     source: NavigationSource<NavigationEvent>,
-    initialState: () -> InnerNavigationState,
-    navigationTransition: (previousState: InnerNavigationState, event: NavigationEvent) -> InnerNavigationState,
-    createChild: (configuration: Configuration, nextState: InnerNavigationState) -> Child,
-    destroyChild: (Child) -> Unit,
-    updateChild: (configuration: Configuration, data: Child, nextState: InnerNavigationState) -> Unit,
-    publicNavigationStateMapper: (InnerNavigationState, KoneMap<Configuration, Child>) -> PublicNavigationState,
-): KoneState<PublicNavigationState> {
-    val initialState = initialState()
-    
+    initialState: InnerNavigationState,
+    navigationTransition: suspend (previousState: InnerNavigationState, event: NavigationEvent) -> InnerNavigationState,
+    createChild: suspend (configuration: Configuration, nextState: InnerNavigationState) -> Child,
+    destroyChild: suspend (Child) -> Unit,
+    updateChild: suspend (configuration: Configuration, data: Child, nextState: InnerNavigationState) -> Unit,
+    publicNavigationStateMapper: suspend (InnerNavigationState, KoneMap<Configuration, Child>) -> PublicNavigationState,
+): KoneAsynchronousState<PublicNavigationState> {
     val components = KoneMutableMap.of<Configuration, Child>(
         keyEquality = configurationEquality,
         keyHashing = configurationHashing,
@@ -53,9 +51,9 @@ public fun <
     for (configuration in initialState.configurations)
         components[configuration] = createChild(configuration, initialState)
     
-    val result = KoneMutableState(publicNavigationStateMapper(initialState, components))
+    val result = KoneMutableAsynchronousState(publicNavigationStateMapper(initialState, components))
     
-    val automaton = BlockingAutomaton<InnerNavigationState, NavigationEvent, Nothing>(
+    val automaton = AsynchronousAutomaton<InnerNavigationState, NavigationEvent, Nothing>(
         initialState = initialState,
         checkTransition = { previousState, transition -> CheckResult.Success(navigationTransition(previousState, transition)) },
         onTransition = { _, _, nextState ->
@@ -70,7 +68,7 @@ public fun <
             for (configuration in nextState.configurations) if (configuration !in components)
                 components[configuration] = createChild(configuration, nextState)
             
-            result.value = publicNavigationStateMapper(nextState, components)
+            result.set(publicNavigationStateMapper(nextState, components))
         }
     )
     

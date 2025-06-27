@@ -1,62 +1,22 @@
 package dev.lounres.halfhat.client.desktop
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalWideNavigationRail
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.WideNavigationRail
-import androidx.compose.material3.WideNavigationRailItem
-import androidx.compose.material3.WideNavigationRailValue
-import androidx.compose.material3.rememberWideNavigationRailState
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import dev.lounres.halfhat.client.desktop.resources.Res
-import dev.lounres.halfhat.client.desktop.resources.aboutPage_dark_png_24dp
-import dev.lounres.halfhat.client.desktop.resources.closeMenuButton_dark_png_24dp
-import dev.lounres.halfhat.client.desktop.resources.deviceGamePlayerIcon_dark_png_24dp
-import dev.lounres.halfhat.client.desktop.resources.openMenuButton_dark
-import dev.lounres.halfhat.client.desktop.storage.AppDatabase
-import dev.lounres.halfhat.client.desktop.storage.DriverFactory
-import dev.lounres.halfhat.client.desktop.storage.dictionaries.LocalDictionariesRegistry
+import dev.lounres.halfhat.client.common.logic.wordsProviders.DeviceGameWordsProviderRegistry
 import dev.lounres.halfhat.client.desktop.ui.components.RealMainWindowComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.MainWindowUI
-import dev.lounres.halfhat.client.desktop.ui.implementation.commonIconModifier
-import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.painterResource
 
 
 fun main() {
-    val appDatabase = AppDatabase(DriverFactory)
-    val localDictionariesRegistry = LocalDictionariesRegistry(appDatabase)
-
     application(
         exitProcessOnExit = false,
     ) {
         val component = remember {
             RealMainWindowComponent(
-                localDictionariesRegistry = localDictionariesRegistry,
+                deviceGameWordsProviderRegistry = DeviceGameWordsProviderRegistry,
                 windowState = WindowState(
 //                    placement = WindowPlacement.Maximized,
                     size = DpSize(360.dp, 640.dp), // Mi Note 3
@@ -65,7 +25,7 @@ fun main() {
                 onWindowCloseRequest = ::exitApplication,
             )
         }
-
+        
         MainWindowUI(component)
     }
     

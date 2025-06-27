@@ -2,18 +2,19 @@ package dev.lounres.halfhat.client.desktop.ui.components
 
 import androidx.compose.ui.window.WindowState
 import dev.lounres.halfhat.Language
+import dev.lounres.halfhat.client.common.logic.wordsProviders.DeviceGameWordsProviderRegistry
+import dev.lounres.halfhat.client.common.logic.wordsProviders.DeviceGameWordsProviderRegistryKey
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariants
-import dev.lounres.halfhat.client.desktop.storage.dictionaries.LocalDictionariesRegistry
-import dev.lounres.halfhat.client.desktop.ui.components.about.RealAboutPageComponent
-import dev.lounres.halfhat.client.desktop.ui.components.faq.RealFAQPageComponent
-import dev.lounres.halfhat.client.desktop.ui.components.feedback.RealFeedbackPageComponent
-import dev.lounres.halfhat.client.desktop.ui.components.game.RealGamePageComponent
-import dev.lounres.halfhat.client.desktop.ui.components.gameHistory.RealGameHistoryPageComponent
-import dev.lounres.halfhat.client.desktop.ui.components.home.RealHomePageComponent
-import dev.lounres.halfhat.client.desktop.ui.components.news.RealNewsPageComponent
-import dev.lounres.halfhat.client.desktop.ui.components.rules.RealRulesPageComponent
-import dev.lounres.halfhat.client.desktop.ui.components.settings.RealSettingsPageComponent
+import dev.lounres.halfhat.client.common.ui.components.about.RealAboutPageComponent
+import dev.lounres.halfhat.client.common.ui.components.faq.RealFAQPageComponent
+import dev.lounres.halfhat.client.common.ui.components.feedback.RealFeedbackPageComponent
+import dev.lounres.halfhat.client.common.ui.components.game.RealGamePageComponent
+import dev.lounres.halfhat.client.common.ui.components.gameHistory.RealGameHistoryPageComponent
+import dev.lounres.halfhat.client.common.ui.components.home.RealHomePageComponent
+import dev.lounres.halfhat.client.common.ui.components.news.RealNewsPageComponent
+import dev.lounres.halfhat.client.common.ui.components.rules.RealRulesPageComponent
+import dev.lounres.halfhat.client.common.ui.components.settings.RealSettingsPageComponent
 import dev.lounres.komponentual.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.komponentual.lifecycle.UIComponentLifecycleKey
 import dev.lounres.komponentual.navigation.ChildrenVariants
@@ -32,7 +33,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 
 class RealMainWindowComponent(
-    localDictionariesRegistry: LocalDictionariesRegistry,
+    deviceGameWordsProviderRegistry: DeviceGameWordsProviderRegistry,
     
     override val windowState: WindowState = WindowState(),
     override val onWindowCloseRequest: () -> Unit = {},
@@ -45,6 +46,7 @@ class RealMainWindowComponent(
     override val globalLifecycle: MutableUIComponentLifecycle = MutableUIComponentLifecycle()
     private val globalComponentContext = UIComponentContext {
         UIComponentLifecycleKey correspondsTo globalLifecycle
+        DeviceGameWordsProviderRegistryKey correspondsTo deviceGameWordsProviderRegistry
     }
     
     override val volumeOn: MutableStateFlow<Boolean> = MutableStateFlow(initialVolumeOn)
@@ -72,7 +74,7 @@ class RealMainWindowComponent(
                     MainWindowComponent.Child.Primary.Game(
                         RealGamePageComponent(
                             componentContext = componentContext,
-                            localDictionariesRegistry = localDictionariesRegistry,
+//                            localDictionariesRegistry = localDictionariesRegistry,
                             volumeOn = volumeOn
                         )
                     )

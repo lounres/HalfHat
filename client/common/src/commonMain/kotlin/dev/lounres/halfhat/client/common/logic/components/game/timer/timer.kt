@@ -31,7 +31,7 @@ public fun CoroutineScope.timerJob(
     preparationTime: UInt,
     explanationTime: UInt,
     lastGuessTime: UInt,
-    onStateUpdate: (state: TimerState) -> Unit,
+    onStateUpdate: suspend (state: TimerState) -> Unit,
 ): Job {
     val preparationTimeMilliseconds = preparationTime * 1000u - 1u
     val explanationTimeMilliseconds = explanationTime * 1000u

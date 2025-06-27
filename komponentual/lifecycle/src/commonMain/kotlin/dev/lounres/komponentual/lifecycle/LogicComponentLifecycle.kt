@@ -1,17 +1,8 @@
 package dev.lounres.komponentual.lifecycle
 
-import dev.lounres.kone.automata.CheckResult
-import dev.lounres.kone.automata.SynchronousAutomaton
-import dev.lounres.kone.automata.move
-import dev.lounres.kone.collections.list.KoneMutableNoddedList
-import dev.lounres.kone.collections.list.implementations.KoneGCLinkedList
-import dev.lounres.kone.collections.list.toKoneList
-import dev.lounres.kone.collections.utils.forEach
-import dev.lounres.kone.maybe.None
-import dev.lounres.kone.maybe.Some
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.registry.RegistryKey
-import dev.lounres.utils.atomicFUAtomics.withLock
-import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlin.coroutines.CoroutineContext
@@ -21,174 +12,108 @@ public enum class LogicComponentLifecycleState {
     Destroyed, Initialized, Running
 }
 
-public enum class LogicComponentLifecycleTransition {
-    Run, Stop, Destroy
+public enum class LogicComponentLifecycleTransition(public val target: LogicComponentLifecycleState) {
+    Run(target = LogicComponentLifecycleState.Running),
+    Stop(target = LogicComponentLifecycleState.Initialized),
+    Destroy(target = LogicComponentLifecycleState.Destroyed)
 }
 
-public typealias LogicComponentLifecycleCallback = (LogicComponentLifecycleTransition) -> Unit
+public typealias LogicComponentLifecycleCallback = suspend (LogicComponentLifecycleTransition) -> Unit
+
+public typealias LogicComponentLifecycleSubscription = Lifecycle.Subscription<LogicComponentLifecycleState>
 
 public typealias LogicComponentLifecycle = Lifecycle<LogicComponentLifecycleState, LogicComponentLifecycleTransition>
 
 public typealias MutableLogicComponentLifecycle = MutableLifecycle<LogicComponentLifecycleState, LogicComponentLifecycleTransition>
 
+@DelicateLifecycleAPI
+public typealias DeferredLogicComponentLifecycle = DeferredLifecycle<LogicComponentLifecycleState, LogicComponentLifecycleTransition>
+
 public data object LogicComponentLifecycleKey : RegistryKey<LogicComponentLifecycle>
 
 public inline fun LogicComponentLifecycle.subscribe(
-    crossinline onRun: () -> Unit = {},
-    crossinline onStop: () -> Unit = {},
-    crossinline onDestroy: () -> Unit = {},
-) {
-    subscribe {
-        when (it) {
-            LogicComponentLifecycleTransition.Run -> onRun()
-            LogicComponentLifecycleTransition.Stop -> onStop()
-            LogicComponentLifecycleTransition.Destroy -> onDestroy()
-        }
+    crossinline onRun: suspend () -> Unit = {},
+    crossinline onStop: suspend () -> Unit = {},
+    crossinline onDestroy: suspend () -> Unit = {},
+): LogicComponentLifecycleSubscription = subscribe {
+    when (it) {
+        LogicComponentLifecycleTransition.Run -> onRun()
+        LogicComponentLifecycleTransition.Stop -> onStop()
+        LogicComponentLifecycleTransition.Destroy -> onDestroy()
     }
 }
 
-public fun MutableLogicComponentLifecycle(): MutableLogicComponentLifecycle =
-    MutableLifecycle(LogicComponentLifecycleState.Initialized) { previousState, transition ->
-        when (previousState) {
-            LogicComponentLifecycleState.Initialized ->
-                when (transition) {
-                    LogicComponentLifecycleTransition.Run -> Some(LogicComponentLifecycleState.Running)
-                    LogicComponentLifecycleTransition.Stop -> None
-                    LogicComponentLifecycleTransition.Destroy -> Some(LogicComponentLifecycleState.Destroyed)
-                }
-            LogicComponentLifecycleState.Running ->
-                when (transition) {
-                    LogicComponentLifecycleTransition.Run -> None
-                    LogicComponentLifecycleTransition.Stop -> Some(LogicComponentLifecycleState.Initialized)
-                    LogicComponentLifecycleTransition.Destroy -> Some(LogicComponentLifecycleState.Destroyed)
-                }
-            LogicComponentLifecycleState.Destroyed -> None
-        }
+internal fun checkNextState(previousState: LogicComponentLifecycleState, nextState: LogicComponentLifecycleState): Boolean =
+    when (previousState) {
+        LogicComponentLifecycleState.Initialized ->
+            when (nextState) {
+                LogicComponentLifecycleState.Initialized -> false
+                LogicComponentLifecycleState.Running -> true
+                LogicComponentLifecycleState.Destroyed -> true
+            }
+        
+        LogicComponentLifecycleState.Running ->
+            when (nextState) {
+                LogicComponentLifecycleState.Initialized -> true
+                LogicComponentLifecycleState.Running -> false
+                LogicComponentLifecycleState.Destroyed -> true
+            }
+        
+        LogicComponentLifecycleState.Destroyed -> false
     }
 
-public fun mergeLogicComponentLifecycles(
+internal fun decomposeTransition(previousState: LogicComponentLifecycleState, nextState: LogicComponentLifecycleState): KoneList<LogicComponentLifecycleTransition> =
+    when (previousState) {
+        LogicComponentLifecycleState.Initialized ->
+            when (nextState) {
+                LogicComponentLifecycleState.Initialized -> error("Unexpected logic component lifecycle transition")
+                LogicComponentLifecycleState.Running -> KoneList.of(LogicComponentLifecycleTransition.Run)
+                LogicComponentLifecycleState.Destroyed -> KoneList.of(LogicComponentLifecycleTransition.Destroy)
+            }
+        
+        LogicComponentLifecycleState.Running ->
+            when (nextState) {
+                LogicComponentLifecycleState.Initialized -> KoneList.of(LogicComponentLifecycleTransition.Stop)
+                LogicComponentLifecycleState.Running -> error("Unexpected logic component lifecycle transition")
+                LogicComponentLifecycleState.Destroyed -> KoneList.of(LogicComponentLifecycleTransition.Destroy)
+            }
+        
+        LogicComponentLifecycleState.Destroyed -> error("Unexpected logic component lifecycle transition")
+    }
+
+public fun MutableLogicComponentLifecycle(coroutineScope: CoroutineScope): MutableLogicComponentLifecycle =
+    MutableLifecycle(coroutineScope, LogicComponentLifecycleState.Initialized, ::checkNextState, ::decomposeTransition)
+
+@DelicateLifecycleAPI
+public fun LogicComponentLifecycle.childDeferring(coroutineScope: CoroutineScope): DeferredLogicComponentLifecycle =
+    childDeferring(
+        coroutineScope = coroutineScope,
+        initialState = LogicComponentLifecycleState.Initialized,
+        mapState = { it },
+        mapTransition = { _, transition -> transition.target },
+        checkNextState = ::checkNextState,
+        decomposeTransition = ::decomposeTransition,
+        outputState = { it },
+    )
+
+@DelicateLifecycleAPI
+public fun Lifecycle.Companion.mergeLogicComponentLifecyclesDeferring(
     lifecycle1: LogicComponentLifecycle,
     lifecycle2: LogicComponentLifecycle,
-): LogicComponentLifecycle = MergingLogicComponentLifecycleImpl(
-    lifecycle1 = lifecycle1,
-    lifecycle2 = lifecycle2,
-)
-
-internal class MergingLogicComponentLifecycleImpl(
-    lifecycle1: LogicComponentLifecycle,
-    lifecycle2: LogicComponentLifecycle,
-) : LogicComponentLifecycle {
-    private val callbacksLock = ReentrantLock()
-    private val callbacks: KoneMutableNoddedList<(LogicComponentLifecycleTransition) -> Unit> = KoneGCLinkedList() // TODO: Replace with concurrent queue
-    private val automatonLock = ReentrantLock()
-    
-    private sealed interface BiTransition {
-        val transition: LogicComponentLifecycleTransition
-        data class FirstTransition(override val transition: LogicComponentLifecycleTransition) : BiTransition
-        data class SecondTransition(override val transition: LogicComponentLifecycleTransition) : BiTransition
-    }
-    
-    private fun checkTransition(state: LogicComponentLifecycleState, transition: LogicComponentLifecycleTransition) =
-        when (state) {
-            LogicComponentLifecycleState.Initialized ->
-                when (transition) {
-                    LogicComponentLifecycleTransition.Run -> Some(LogicComponentLifecycleState.Running)
-                    LogicComponentLifecycleTransition.Stop -> None
-                    LogicComponentLifecycleTransition.Destroy -> Some(LogicComponentLifecycleState.Destroyed)
-                }
-            
-            LogicComponentLifecycleState.Running ->
-                when (transition) {
-                    LogicComponentLifecycleTransition.Run -> None
-                    LogicComponentLifecycleTransition.Stop -> Some(LogicComponentLifecycleState.Initialized)
-                    LogicComponentLifecycleTransition.Destroy -> Some(LogicComponentLifecycleState.Destroyed)
-                }
-            
-            LogicComponentLifecycleState.Destroyed -> None
-        }
-    
-    private val automaton: SynchronousAutomaton<Pair<LogicComponentLifecycleState, LogicComponentLifecycleState>, BiTransition, Nothing?>
-    
-    init {
-        automatonLock.withLock {
-            val subscription1 = lifecycle1.subscribe { transition ->
-                automatonLock.withLock {
-                    automaton.move(BiTransition.FirstTransition(transition))
-                }
-            }
-            val subscription2 = lifecycle2.subscribe { transition ->
-                automatonLock.withLock {
-                    automaton.move(BiTransition.SecondTransition(transition))
-                }
-            }
-            
-            val state1 = lifecycle1.state
-            val state2 = lifecycle2.state
-            
-            automaton =
-                SynchronousAutomaton(
-                    initialState = Pair(state1, state2),
-                    checkTransition = { state, transition ->
-                        when (transition) {
-                            is BiTransition.FirstTransition ->
-                                when (val nextState = checkTransition(state.first, transition.transition)) {
-                                    None -> CheckResult.Failure(null)
-                                    is Some<LogicComponentLifecycleState> -> CheckResult.Success(Pair(nextState.value, state.second))
-                                }
-                            is BiTransition.SecondTransition ->
-                                when (val nextState = checkTransition(state.second, transition.transition)) {
-                                    None -> CheckResult.Failure(null)
-                                    is Some<LogicComponentLifecycleState> -> CheckResult.Success(Pair(state.first, nextState.value))
-                                }
-                        }
-                    },
-                    onTransition = { previousState, transition, nextState ->
-                        if (minOf(previousState.first, previousState.second) != minOf(nextState.first, nextState.second))
-                            callbacksLock.withLock { callbacks.toKoneList() }.forEach { it(transition.transition) }
-                        if (transition.transition == LogicComponentLifecycleTransition.Destroy) {
-                            subscription1.cancel()
-                            subscription2.cancel()
-                        }
-                    },
-                )
-            
-            if (state1 == LogicComponentLifecycleState.Destroyed || state2 == LogicComponentLifecycleState.Destroyed) {
-                subscription1.cancel()
-                subscription2.cancel()
-            }
-        }
-    }
-    
-    override val state: LogicComponentLifecycleState get() = automaton!!.state.let { minOf(it.first, it.second) }
-    override fun subscribe(callback: LogicComponentLifecycleCallback) =
-        callbacksLock.withLock {
-            val node = callbacks.addNode(callback)
-            Lifecycle.Subscription {
-                callbacksLock.withLock {
-                    node.remove()
-                }
-            }
-        }
-}
-
-public fun MutableLogicComponentLifecycle.moveTo(state: LogicComponentLifecycleState) {
-    when (state) {
-        LogicComponentLifecycleState.Destroyed -> move(LogicComponentLifecycleTransition.Destroy)
-        LogicComponentLifecycleState.Initialized -> move(LogicComponentLifecycleTransition.Stop)
-        LogicComponentLifecycleState.Running -> move(LogicComponentLifecycleTransition.Run)
-    }
-}
-
-public fun LogicComponentLifecycle.attach(child: MutableLogicComponentLifecycle) {
-    val subscription = subscribe { child.move(it) }
-    child.subscribe(onDestroy = { subscription.cancel() })
-    if (child.state == LogicComponentLifecycleState.Destroyed) subscription.cancel()
-}
-
-public fun LogicComponentLifecycle.child(controllingLifecycle: LogicComponentLifecycle? = null): LogicComponentLifecycle {
-    val directChild = MutableLogicComponentLifecycle().also { child -> this.attach(child) }
-    return if (controllingLifecycle == null) directChild else mergeLogicComponentLifecycles(directChild, controllingLifecycle)
-}
+    coroutineScope: CoroutineScope,
+): DeferredLogicComponentLifecycle =
+    mergeDeferring(
+        lifecycle1 = lifecycle1,
+        lifecycle2 = lifecycle2,
+        coroutineScope = coroutineScope,
+        initialState = Pair(LogicComponentLifecycleState.Initialized, LogicComponentLifecycleState.Initialized),
+        mergeStates = { state1, state2 -> Pair(state1, state2) },
+        mapTransition1 = { state, transition1 -> Pair(transition1.target, state.second) },
+        mapTransition2 = { state, transition2 -> Pair(state.first, transition2.target) },
+        checkNextState = { previousState, nextState -> checkNextState(minOf(previousState.first, previousState.second), minOf(nextState.first, nextState.second)) },
+        decomposeTransition = { previousState, nextState -> decomposeTransition(minOf(previousState.first, previousState.second), minOf(nextState.first, nextState.second)) },
+        outputState = { minOf(it.first, it.second) }
+    )
 
 public fun CoroutineScope.attachTo(lifecycle: LogicComponentLifecycle) {
     lifecycle.subscribe(onStop = { this.cancel() }, onDestroy = { this.cancel() })

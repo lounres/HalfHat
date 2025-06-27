@@ -4,30 +4,32 @@ import dev.lounres.kone.automata.AsynchronousAutomaton
 import dev.lounres.kone.automata.CheckResult
 import dev.lounres.kone.automata.move
 import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.scope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.sync.Mutex
+import kotlin.math.min
 import kotlin.random.Random
 
 
-public fun <P, WP: GameStateMachine.WordsProvider, Metadata, MetadataTransition, NoMetadataTransitionReason> AsynchronousGameStateMachine(
+public fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason> AsynchronousGameStateMachine(
     coroutineScope: CoroutineScope,
     random: Random = DefaultRandom,
     mutex: Mutex = Mutex(),
-    initialState: GameStateMachine.State<P, WP, Metadata>,
-    checkMetadataUpdate: suspend AsynchronousGameStateMachine<P, WP, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
-        previousState: GameStateMachine.State<P, WP, Metadata>,
+    initialState: GameStateMachine.State<P, WPID, Metadata>,
+    checkMetadataUpdate: suspend AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
+        previousState: GameStateMachine.State<P, WPID, Metadata>,
         metadataTransition: MetadataTransition
     ) -> CheckResult<Metadata, NoMetadataTransitionReason>,
-    metadataTransformer: suspend AsynchronousGameStateMachine<P, WP, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
-        previousState: GameStateMachine.State<P, WP, Metadata>,
-        transition: GameStateMachine.Transition.UpdateGame<P, WP>
+    metadataTransformer: suspend AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
+        previousState: GameStateMachine.State<P, WPID, Metadata>,
+        transition: GameStateMachine.Transition.UpdateGame<P, WPID, NoWordsProviderReason>
     ) -> Metadata = { previousState, _ -> previousState.metadata },
-    onTransition: suspend AsynchronousGameStateMachine<P, WP, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
-        previousState: GameStateMachine.State<P, WP, Metadata>,
-        transition: GameStateMachine.Transition<P, WP, MetadataTransition>,
-        nextState: GameStateMachine.State<P, WP, Metadata>
+    onTransition: suspend AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
+        previousState: GameStateMachine.State<P, WPID, Metadata>,
+        transition: GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>,
+        nextState: GameStateMachine.State<P, WPID, Metadata>
     ) -> Unit = { _, _, _ -> },
-): AsynchronousGameStateMachine<P, WP, Metadata, MetadataTransition, NoMetadataTransitionReason> =
+): AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason> =
     AsynchronousGameStateMachine(
         automaton = AsynchronousAutomaton(
             mutex = mutex,
@@ -48,27 +50,27 @@ public fun <P, WP: GameStateMachine.WordsProvider, Metadata, MetadataTransition,
     )
 
 @Suppress("FunctionName")
-public fun <P, WP: GameStateMachine.WordsProvider, Metadata, MetadataTransition, NoMetadataTransitionReason> AsynchronousGameStateMachine.Companion.Initialization(
+public fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason> AsynchronousGameStateMachine.Companion.Initialization(
     coroutineScope: CoroutineScope,
     random: Random = DefaultRandom,
     mutex: Mutex = Mutex(),
     metadata: Metadata,
     playersList: KoneList<P>,
-    settingsBuilder: GameStateMachine.GameSettings.Builder<WP>,
-    checkMetadataUpdate: suspend AsynchronousGameStateMachine<P, WP, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
-        previousState: GameStateMachine.State<P, WP, Metadata>,
+    settingsBuilder: GameStateMachine.GameSettings.Builder<WPID>,
+    checkMetadataUpdate: suspend AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
+        previousState: GameStateMachine.State<P, WPID, Metadata>,
         metadataTransition: MetadataTransition
     ) -> CheckResult<Metadata, NoMetadataTransitionReason>,
-    metadataTransformer: suspend AsynchronousGameStateMachine<P, WP, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
-        previousState: GameStateMachine.State<P, WP, Metadata>,
-        transition: GameStateMachine.Transition.UpdateGame<P, WP>
+    metadataTransformer: suspend AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
+        previousState: GameStateMachine.State<P, WPID, Metadata>,
+        transition: GameStateMachine.Transition.UpdateGame<P, WPID, NoWordsProviderReason>
     ) -> Metadata = { previousState, _ -> previousState.metadata },
-    onTransition: suspend AsynchronousGameStateMachine<P, WP, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
-        previousState: GameStateMachine.State<P, WP, Metadata>,
-        transition: GameStateMachine.Transition<P, WP, MetadataTransition>,
-        nextState: GameStateMachine.State<P, WP, Metadata>
+    onTransition: suspend AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
+        previousState: GameStateMachine.State<P, WPID, Metadata>,
+        transition: GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>,
+        nextState: GameStateMachine.State<P, WPID, Metadata>
     ) -> Unit = { _, _, _ -> },
-): AsynchronousGameStateMachine<P, WP, Metadata, MetadataTransition, NoMetadataTransitionReason> = AsynchronousGameStateMachine(
+): AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason> = AsynchronousGameStateMachine(
     coroutineScope = coroutineScope,
     random = random,
     mutex = mutex,
@@ -76,57 +78,6 @@ public fun <P, WP: GameStateMachine.WordsProvider, Metadata, MetadataTransition,
         metadata = metadata,
         playersList = playersList,
         settingsBuilder = settingsBuilder,
-    ),
-    checkMetadataUpdate = checkMetadataUpdate,
-    metadataTransformer = metadataTransformer,
-    onTransition = onTransition,
-)
-
-@Suppress("FunctionName")
-public fun <P, WP: GameStateMachine.WordsProvider, Metadata, MetadataTransition, NoMetadataTransitionReason> AsynchronousGameStateMachine.Companion.Initialized(
-    coroutineScope: CoroutineScope,
-    random: Random = DefaultRandom,
-    mutex: Mutex = Mutex(),
-    metadata: Metadata,
-    playersList: KoneList<P>,
-    settingsBuilder: GameStateMachine.GameSettings.Builder<WP>,
-    checkMetadataUpdate: suspend AsynchronousGameStateMachine<P, WP, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
-        previousState: GameStateMachine.State<P, WP, Metadata>,
-        metadataTransition: MetadataTransition
-    ) -> CheckResult<Metadata, NoMetadataTransitionReason>,
-    metadataTransformer: suspend AsynchronousGameStateMachine<P, WP, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
-        previousState: GameStateMachine.State<P, WP, Metadata>,
-        transition: GameStateMachine.Transition.UpdateGame<P, WP>
-    ) -> Metadata = { previousState, _ -> previousState.metadata },
-    onTransition: suspend AsynchronousGameStateMachine<P, WP, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
-        previousState: GameStateMachine.State<P, WP, Metadata>,
-        transition: GameStateMachine.Transition<P, WP, MetadataTransition>,
-        nextState: GameStateMachine.State<P, WP, Metadata>
-    ) -> Unit = { _, _, _ -> },
-): AsynchronousGameStateMachine<P, WP, Metadata, MetadataTransition, NoMetadataTransitionReason> = AsynchronousGameStateMachine(
-    coroutineScope = coroutineScope,
-    random = random,
-    mutex = mutex,
-    initialState = GameStateMachine.State.RoundWaiting(
-        metadata = metadata,
-        playersList = playersList,
-        settings = settingsBuilder.build(),
-        roundNumber = 0u,
-        cycleNumber = 0u,
-        speakerIndex = 0u,
-        listenerIndex = 1u,
-        restWords = when (val wordsSource = settingsBuilder.wordsSource) {
-            GameStateMachine.WordsSource.Players -> TODO()
-            is GameStateMachine.WordsSource.Custom<*> ->
-                when (settingsBuilder.gameEndConditionType) {
-                    GameStateMachine.GameEndCondition.Type.Words -> wordsSource.provider.randomWords(settingsBuilder.cachedEndConditionWordsNumber)
-                    GameStateMachine.GameEndCondition.Type.Cycles -> wordsSource.provider.allWords()
-                }
-        },
-        explanationScores = KoneList(playersList.size) { 0u },
-        guessingScores = KoneList(playersList.size) { 0u },
-        speakerReady = false,
-        listenerReady = false,
     ),
     checkMetadataUpdate = checkMetadataUpdate,
     metadataTransformer = metadataTransformer,

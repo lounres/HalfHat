@@ -261,6 +261,7 @@ public object ServerApi {
             
             public data object AttachmentIsDenied : Error
             public data object AttachmentIsAlreadySevered : Error
+            public data object NoAttachmentWhenItIsNeeded : Error
             public data object NotHostChangingGameSettings : Error
             public data object CannotUpdateGameSettingsAfterInitialization : Error
             public data object NotEnoughPlayersForInitialization : Error

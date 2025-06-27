@@ -11,11 +11,11 @@ import dev.lounres.kone.collections.list.implementations.KoneGCLinkedList
 import dev.lounres.kone.collections.list.toKoneList
 import dev.lounres.kone.collections.utils.forEach
 import dev.lounres.kone.contexts.invoke
-import dev.lounres.kone.maybe.None
-import dev.lounres.kone.maybe.Some
 import dev.lounres.kone.relations.Equality
 import dev.lounres.kone.relations.defaultEquality
 import dev.lounres.kone.relations.eq
+import kotlinx.atomicfu.locks.ReentrantLock
+import kotlinx.atomicfu.locks.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
@@ -25,10 +25,10 @@ import kotlinx.coroutines.sync.withLock
 public interface KoneAsynchronousState<out Value> {
     public val value: Value
     
-    public suspend fun subscribe(observer: suspend (Value) -> Unit): Cancellation
+    public fun subscribe(observer: suspend (Value) -> Unit): Cancellation
     
     public fun interface Cancellation {
-        public suspend fun cancel()
+        public fun cancel()
     }
 }
 
@@ -47,7 +47,7 @@ internal class KoneMutableAsynchronousStateImpl<Value>(
     initialElement: Value,
     private val elementEquality: Equality<Value>
 ) : KoneMutableAsynchronousState<Value> {
-    private val observersMutex = Mutex() // TODO: Maybe it should replaced with reentrant lock or concurrent queue
+    private val observersLock = ReentrantLock() // TODO: Maybe it should replaced with reentrant lock or concurrent queue
     private val observers: KoneMutableNoddedList<suspend (Value) -> Unit> = KoneGCLinkedList()
     private val automaton =
         AsynchronousAutomaton<Value, Value, Nothing?>(
@@ -57,7 +57,7 @@ internal class KoneMutableAsynchronousStateImpl<Value>(
                 else CheckResult.Success(transition)
             },
             onTransition = { _, _, nextState ->
-                observersMutex.withLock { observers.toKoneList() }.forEach { it(nextState) }
+                observersLock.withLock { observers.toKoneList() }.forEach { it(nextState) }
             }
         )
     
@@ -74,11 +74,11 @@ internal class KoneMutableAsynchronousStateImpl<Value>(
             else TransitionOrReason.Failure(null)
         } is MovementMaybeResult.Success
     
-    override suspend fun subscribe(observer: suspend (Value) -> Unit): KoneAsynchronousState.Cancellation =
-        observersMutex.withLock {
+    override fun subscribe(observer: suspend (Value) -> Unit): KoneAsynchronousState.Cancellation =
+        observersLock.withLock {
             val node = observers.addNode(observer)
             KoneAsynchronousState.Cancellation {
-                observersMutex.withLock {
+                observersLock.withLock {
                     node.remove()
                 }
             }

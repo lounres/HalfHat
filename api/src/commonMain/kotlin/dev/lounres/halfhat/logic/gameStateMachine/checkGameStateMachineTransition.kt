@@ -21,27 +21,28 @@ import dev.lounres.kone.collections.utils.sortByDescending
 import dev.lounres.kone.scope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import kotlin.math.min
 import kotlin.random.Random
+import kotlin.time.Clock
 
 
 @PublishedApi
-internal inline fun <P, WP: GameStateMachine.WordsProvider, Metadata, MetadataTransition, NoMetadataTransitionReason, GSM> GSM.checkGameStateMachineTransition(
+internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason, GSM> GSM.checkGameStateMachineTransition(
     coroutineScope: CoroutineScope,
     random: Random = DefaultRandom,
-    crossinline moveState: suspend GSM.(GameStateMachine.Transition<P, WP, MetadataTransition>) -> Unit,
-    checkMetadataUpdate: GSM.(previousState: GameStateMachine.State<P, WP, Metadata>, metadataTransition: MetadataTransition) -> CheckResult<Metadata, NoMetadataTransitionReason>,
-    metadataTransformer: GSM.(previousState: GameStateMachine.State<P, WP, Metadata>, transition: GameStateMachine.Transition.UpdateGame<P, WP>) -> Metadata = { previousState, _ -> previousState.metadata },
-    previousState: GameStateMachine.State<P, WP, Metadata>,
-    transition: GameStateMachine.Transition<P, WP, MetadataTransition>,
-): CheckResult<GameStateMachine.State<P, WP, Metadata>, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason>> =
+    crossinline moveState: suspend GSM.(GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>) -> Unit,
+    checkMetadataUpdate: GSM.(previousState: GameStateMachine.State<P, WPID, Metadata>, metadataTransition: MetadataTransition) -> CheckResult<Metadata, NoMetadataTransitionReason>,
+    metadataTransformer: GSM.(previousState: GameStateMachine.State<P, WPID, Metadata>, transition: GameStateMachine.Transition.UpdateGame<P, WPID, NoWordsProviderReason>) -> Metadata = { previousState, _ -> previousState.metadata },
+    previousState: GameStateMachine.State<P, WPID, Metadata>,
+    transition: GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>,
+): CheckResult<GameStateMachine.State<P, WPID, Metadata>, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason, NoWordsProviderReason>> =
     when(transition) {
         is GameStateMachine.Transition.UpdateMetadata<MetadataTransition> -> scope {
-            val newMetadata = checkMetadataUpdate(previousState, transition.metadataTransition).let {
-                when (it) {
-                    is CheckResult.Failure<NoMetadataTransitionReason> -> TODO()
-                    is CheckResult.Success<Metadata> -> it.nextState
+            val newMetadata = checkMetadataUpdate(previousState, transition.metadataTransition).let { metadataUpdate ->
+                when (metadataUpdate) {
+                    is CheckResult.Failure<NoMetadataTransitionReason> ->
+                        return@scope CheckResult.Failure(GameStateMachine.NoNextStateReason.NoMetadataUpdate(metadataUpdate.reason))
+                    is CheckResult.Success<Metadata> -> metadataUpdate.nextState
                 }
             }
             val nextState = when (previousState) {
@@ -142,7 +143,7 @@ internal inline fun <P, WP: GameStateMachine.WordsProvider, Metadata, MetadataTr
             }
             CheckResult.Success(nextState)
         }
-        is GameStateMachine.Transition.UpdateGame.UpdateGameSettings<P, WP> ->
+        is GameStateMachine.Transition.UpdateGame.UpdateGameSettings<P, WPID> ->
             when (previousState) {
                 is GameStateMachine.State.GameInitialisation ->
                     CheckResult.Success(
@@ -169,30 +170,41 @@ internal inline fun <P, WP: GameStateMachine.WordsProvider, Metadata, MetadataTr
                     
                     if (playersList.size < 2u) return@scope CheckResult.Failure(GameStateMachine.NoNextStateReason.NotEnoughPlayersForInitialization)
                     
-                    CheckResult.Success(
-                        GameStateMachine.State.RoundWaiting(
-                            metadata = metadataTransformer(previousState, transition),
-                            playersList = playersList,
-                            settings = settingsBuilder.build(),
-                            roundNumber = 0u,
-                            cycleNumber = 0u,
-                            speakerIndex = 0u,
-                            listenerIndex = 1u,
-                            restWords = when (val wordsSource = settingsBuilder.wordsSource) {
-                                GameStateMachine.WordsSource.Players -> TODO()
-                                is GameStateMachine.WordsSource.Custom<*> ->
-                                    when (settingsBuilder.gameEndConditionType) {
-                                        GameStateMachine.GameEndCondition.Type.Words ->
-                                            wordsSource.provider.randomWords(min(wordsSource.provider.size, settingsBuilder.cachedEndConditionWordsNumber))
-                                        GameStateMachine.GameEndCondition.Type.Cycles -> wordsSource.provider.allWords()
-                                    }
-                            },
-                            explanationScores = KoneList(playersList.size) { 0u },
-                            guessingScores = KoneList(playersList.size) { 0u },
-                            speakerReady = false,
-                            listenerReady = false,
-                        )
-                    )
+                    when (val wordsSource = settingsBuilder.wordsSource) {
+                        GameStateMachine.WordsSource.Players -> TODO()
+                        is GameStateMachine.WordsSource.Custom -> {
+                            val wordsProviderOrReason = transition.wordsProviderRegistry.getOrNull(wordsSource.providerId)
+                            
+                            when (wordsProviderOrReason) {
+                                is GameStateMachine.WordsProviderRegistry.ResultOrReason.Failure ->
+                                    CheckResult.Failure(GameStateMachine.NoNextStateReason.NoWordsProvider(wordsProviderOrReason.reason))
+                                is GameStateMachine.WordsProviderRegistry.ResultOrReason.Success ->
+                                    CheckResult.Success(
+                                        GameStateMachine.State.RoundWaiting(
+                                            metadata = metadataTransformer(previousState, transition),
+                                            playersList = playersList,
+                                            settings = settingsBuilder.build(),
+                                            roundNumber = 0u,
+                                            cycleNumber = 0u,
+                                            speakerIndex = 0u,
+                                            listenerIndex = 1u,
+                                            restWords = when (settingsBuilder.gameEndConditionType) {
+                                                GameStateMachine.GameEndCondition.Type.Words -> {
+                                                    val provider = wordsProviderOrReason.result
+                                                    provider.randomWords(min(provider.size, settingsBuilder.cachedEndConditionWordsNumber))
+                                                }
+                                                GameStateMachine.GameEndCondition.Type.Cycles -> wordsProviderOrReason.result.allWords()
+                                            },
+                                            explanationScores = KoneList(playersList.size) { 0u },
+                                            guessingScores = KoneList(playersList.size) { 0u },
+                                            speakerReady = false,
+                                            listenerReady = false,
+                                        )
+                                    )
+                            }
+                        }
+                    }
+                    TODO()
                 }
                 
                 is GameStateMachine.State.RoundWaiting,

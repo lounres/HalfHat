@@ -20,3 +20,15 @@ public fun <Value> KoneState<Value>.subscribeAsState(policy: SnapshotMutationPol
     
     return state
 }
+
+@Composable
+public fun <Value> KoneAsynchronousState<Value>.subscribeAsState(policy: SnapshotMutationPolicy<Value> = structuralEqualityPolicy()): State<Value> {
+    val state = remember(this, policy) { mutableStateOf(value, policy) }
+    
+    DisposableEffect(this) {
+        val disposable = subscribe { state.value = it }
+        onDispose { disposable.cancel() }
+    }
+    
+    return state
+}

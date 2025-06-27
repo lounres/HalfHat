@@ -9,18 +9,34 @@ plugins {
 }
 
 kotlin {
-//    js {
-//        moduleName = "client-web"
-//        browser {
-//            commonWebpackConfig {
-//                outputFileName = "HalfHat.js"
-//            }
-//        }
-//        binaries.executable()
-//    }
+    js {
+        outputModuleName = "client-web"
+        browser {
+            commonWebpackConfig {
+                outputFileName = "HalfHat.js"
+                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
+                    // Uncomment and configure this if you want to open a browser different from the system default
+                    // open = mapOf(
+                    //     "app" to mapOf(
+                    //         "name" to "google chrome"
+                    //     )
+                    // )
+                    
+                    static = (static ?: mutableListOf()).apply {
+                        // Serve sources to debug inside browser
+                        add(rootDir.path + "/api")
+                        add(rootDir.path + "/client/common")
+                        add(rootDir.path + "/client/web/")
+                    }
+                }
+            }
+        }
+        binaries.executable()
+    }
     
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
+        outputModuleName = "client-web"
         browser {
             commonWebpackConfig {
                 outputFileName = "HalfHat.js"
@@ -48,6 +64,11 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(projects.client.common)
+            }
+        }
+        jsMain {
+            dependencies {
+                implementation(kotlin("stdlib"))
             }
         }
         wasmJsMain {
