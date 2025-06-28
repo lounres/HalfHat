@@ -52,10 +52,6 @@ import dev.lounres.halfhat.client.common.ui.implementation.settings.SettingsPage
 import dev.lounres.halfhat.client.common.ui.implementation.settings.SettingsPageIcon
 import dev.lounres.halfhat.client.common.ui.utils.WorkInProgress
 import dev.lounres.halfhat.client.web.ui.components.MainWindowComponent
-import dev.lounres.komponentual.lifecycle.MutableUIComponentLifecycle
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleState
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleTransition
-import dev.lounres.komponentual.lifecycle.moveTo
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.state.subscribeAsState
 import kotlinx.coroutines.CoroutineScope

@@ -7,12 +7,13 @@ import dev.lounres.halfhat.client.common.ui.components.game.timer.TimerPageCompo
 import dev.lounres.halfhat.client.common.ui.components.game.localGame.LocalGamePageComponent
 import dev.lounres.halfhat.client.common.ui.components.game.modeSelection.ModeSelectionPageComponent
 import dev.lounres.komponentual.navigation.ChildrenSlot
+import dev.lounres.kone.state.KoneAsynchronousState
 import dev.lounres.kone.state.KoneState
 
 
 public interface GamePageComponent : PageComponent {
     override val textName: String get() = "Game"
-    public val currentChild: KoneState<ChildrenSlot<*, Child>>
+    public val currentChild: KoneAsynchronousState<ChildrenSlot<*, Child>>
     
     public sealed interface Child {
         public class ModeSelection(public val component: ModeSelectionPageComponent) : Child

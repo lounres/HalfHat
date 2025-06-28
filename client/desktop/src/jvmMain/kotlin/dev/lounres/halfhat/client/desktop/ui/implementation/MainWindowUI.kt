@@ -21,7 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
+import androidx.compose.ui.window.rememberWindowState
 import dev.lounres.halfhat.Language
 import dev.lounres.halfhat.client.common.resources.Res
 import dev.lounres.halfhat.client.common.resources.changeLanguageButton_dark_png_24dp
@@ -57,11 +59,10 @@ import dev.lounres.halfhat.client.common.ui.implementation.settings.SettingsPage
 import dev.lounres.halfhat.client.common.ui.utils.WorkInProgress
 import dev.lounres.komponentual.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.komponentual.lifecycle.UIComponentLifecycleState
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleTransition
-import dev.lounres.komponentual.lifecycle.moveTo
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.state.subscribeAsState
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -407,40 +408,71 @@ fun LifecycleController(
     }
     
     DisposableEffect(lifecycle) {
-        lifecycle.move(UIComponentLifecycleTransition.Run)
+        CoroutineScope(Dispatchers.Default).launch {
+            lifecycle.moveTo(UIComponentLifecycleState.Running)
+        }
         onDispose {
-            lifecycle.move(UIComponentLifecycleTransition.Destroy)
+            CoroutineScope(Dispatchers.Default).launch {
+                lifecycle.moveTo(UIComponentLifecycleState.Destroyed)
+            }
         }
     }
 }
 
 @Composable
 fun MainWindowUI(
-    component: MainWindowComponent
+    component: MainWindowComponent?
 ) {
-    
-    Window(
-        title = "HalfHat — ${component.pageVariants.subscribeAsState().value.active.component.component.textName}",
-        icon = painterResource(Res.drawable.halfhat_logo),
-        state = component.windowState,
-        onCloseRequest = component.onWindowCloseRequest,
-    ) {
-        LifecycleController(
-            component.globalLifecycle,
-            component.windowState,
-            LocalWindowInfo.current,
-        )
-        
-        var showContent by remember { mutableStateOf(false) }
-        
-        if (showContent)
-            MainWindowContentUI(
-                component = component,
-                windowSizeClass = calculateWindowSizeClass()
+    if (component != null)
+        Window(
+            title = "HalfHat — ${component.pageVariants.subscribeAsState().value.active.component.component.textName}",
+            icon = painterResource(Res.drawable.halfhat_logo),
+            state = component.windowState,
+            onCloseRequest = component.onWindowCloseRequest,
+        ) {
+            LifecycleController(
+                component.globalLifecycle,
+                component.windowState,
+                LocalWindowInfo.current,
             )
-        
-        LaunchedEffect(Unit) {
-            showContent = true
+            
+            var showContent by remember { mutableStateOf(false) }
+            
+            if (showContent)
+                MainWindowContentUI(
+                    component = component,
+                    windowSizeClass = calculateWindowSizeClass()
+                )
+            
+            LaunchedEffect(Unit) {
+                showContent = true
+            }
         }
-    }
+    else
+        Window(
+            title = "HalfHat",
+            icon = painterResource(Res.drawable.halfhat_logo),
+            state = rememberWindowState(
+                position = WindowPosition.Aligned(Alignment.Center),
+            ),
+            onCloseRequest = {},
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        text = "Loading...",
+                        fontSize = 36.sp,
+                    )
+                    LoadingIndicator(
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+            }
+        }
 }

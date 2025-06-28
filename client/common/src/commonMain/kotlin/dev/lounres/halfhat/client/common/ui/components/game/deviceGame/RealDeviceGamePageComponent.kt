@@ -16,32 +16,48 @@ import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.collections.utils.any
 import dev.lounres.kone.collections.utils.map
-import dev.lounres.kone.state.KoneState
+import dev.lounres.kone.state.KoneAsynchronousState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 
 
 public class RealDeviceGamePageComponent(
+    override val childStack: KoneAsynchronousState<ChildrenStack<*, DeviceGamePageComponent.Child>>,
+) : DeviceGamePageComponent {
+    public sealed interface Configuration {
+        public data object RoomScreen : Configuration
+        public data object RoomSettings : Configuration
+        public data object GameScreen : Configuration
+    }
+}
+
+public suspend fun RealDeviceGamePageComponent(
     componentContext: UIComponentContext,
     onExitDeviceGame: () -> Unit,
-) : DeviceGamePageComponent {
+): RealDeviceGamePageComponent {
+    val playersList: MutableStateFlow<KoneList<Player>> = MutableStateFlow(KoneList.of(Player(""), Player(""))) // TODO: Hardcoded settings!!!
+    val settingsBuilderState: MutableStateFlow<GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>> = MutableStateFlow(componentContext.deviceGameDefaultSettings.value)
     
-    private val playersList: MutableStateFlow<KoneList<Player>> = MutableStateFlow(KoneList.of(Player(""), Player(""))) // TODO: Hardcoded settings!!!
-    private val settingsBuilderState: MutableStateFlow<GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>> = MutableStateFlow(componentContext.deviceGameDefaultSettings.value)
+    val navigation = MutableStackNavigation<RealDeviceGamePageComponent.Configuration>(CoroutineScope(Dispatchers.Default))
     
-    private val navigation = MutableStackNavigation<Configuration>()
-    
-    override val childStack: KoneState<ChildrenStack<Configuration, DeviceGamePageComponent.Child>> =
+    val childStack: KoneAsynchronousState<ChildrenStack<RealDeviceGamePageComponent.Configuration, DeviceGamePageComponent.Child>> =
         componentContext.uiChildrenDefaultStack(
             source = navigation,
-            initialStack = { KoneList.of(Configuration.RoomScreen) },
-        ) { configuration: Configuration, componentContext: UIComponentContext ->
+            initialStack = KoneList.of(RealDeviceGamePageComponent.Configuration.RoomScreen),
+        ) { configuration: RealDeviceGamePageComponent.Configuration, componentContext: UIComponentContext ->
             when (configuration) {
-                is Configuration.RoomScreen -> {
+                is RealDeviceGamePageComponent.Configuration.RoomScreen -> {
                     val showErrorForEmptyPlayerNames = MutableStateFlow(false)
                     DeviceGamePageComponent.Child.RoomScreen(
                         RealRoomScreenComponent(
                             onExitDeviceGame = onExitDeviceGame,
-                            onOpenGameSettings = { navigation.replaceCurrent(Configuration.RoomSettings) },
+                            onOpenGameSettings = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    navigation.replaceCurrent(RealDeviceGamePageComponent.Configuration.RoomSettings)
+                                }
+                            },
                             onStartGame = {
                                 var playersListIsValid = true
                                 
@@ -55,36 +71,46 @@ public class RealDeviceGamePageComponent(
                                     playersListIsValid = false
                                 }
                                 
-                                if (playersListIsValid) navigation.replaceCurrent(Configuration.GameScreen)
+                                if (playersListIsValid) CoroutineScope(Dispatchers.Default).launch {
+                                    navigation.replaceCurrent(
+                                        RealDeviceGamePageComponent.Configuration.GameScreen
+                                    )
+                                }
                             },
                             playersList = playersList,
                             showErrorForEmptyPlayerNames = showErrorForEmptyPlayerNames,
                         )
                     )
                 }
-                Configuration.RoomSettings ->
+                RealDeviceGamePageComponent.Configuration.RoomSettings ->
                     DeviceGamePageComponent.Child.RoomSettings(
                         RealRoomSettingsComponent(
                             initialSettingsBuilder = settingsBuilderState.value,
                             onUpdateSettingsBuilder = { settingsBuilderState.value = it },
-                            onExitSettings = { navigation.replaceCurrent(Configuration.RoomScreen) },
+                            onExitSettings = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    navigation.replaceCurrent(RealDeviceGamePageComponent.Configuration.RoomScreen)
+                                }
+                            },
                         )
                     )
-                is Configuration.GameScreen ->
+                is RealDeviceGamePageComponent.Configuration.GameScreen ->
                     DeviceGamePageComponent.Child.GameScreen(
                         RealGameScreenComponent(
                             componentContext = componentContext,
                             playersList = playersList.value.map { it.name },
                             settingsBuilder = settingsBuilderState.value,
-                            onExitGame = { navigation.replaceCurrent(Configuration.RoomScreen) },
+                            onExitGame = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    navigation.replaceCurrent(RealDeviceGamePageComponent.Configuration.RoomScreen)
+                                }
+                            },
                         )
                     )
             }
         }
     
-    public sealed interface Configuration {
-        public data object RoomScreen : Configuration
-        public data object RoomSettings : Configuration
-        public data object GameScreen : Configuration
-    }
+    return RealDeviceGamePageComponent(
+        childStack = childStack,
+    )
 }

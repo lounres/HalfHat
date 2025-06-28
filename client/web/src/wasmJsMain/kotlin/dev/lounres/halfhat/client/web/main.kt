@@ -11,7 +11,9 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -20,11 +22,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.ComposeViewport
 import dev.lounres.halfhat.client.common.resources.Res
 import dev.lounres.halfhat.client.common.resources.allDrawableResources
+import dev.lounres.halfhat.client.web.ui.components.MainWindowComponent
 import dev.lounres.halfhat.client.web.ui.components.RealMainWindowComponent
 import dev.lounres.halfhat.client.web.ui.implementation.MainWindowContentUI
 import dev.lounres.komponentual.lifecycle.UIComponentLifecycleState
 import dev.lounres.komponentual.lifecycle.UIComponentLifecycleTransition
-import dev.lounres.komponentual.lifecycle.moveTo
 import kotlinx.browser.document
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.configureWebResources
@@ -38,20 +40,21 @@ fun main() {
         resourcePathMapping { path -> "./$path" }
     }
     
-    val component = RealMainWindowComponent()
-    component.globalLifecycle.moveTo(UIComponentLifecycleState.Foreground)
     ComposeViewport(document.body!!) {
         val preloadedDrawables = Res.allDrawableResources.mapValues { (_, resource) -> preloadImageVector(resource) }
+        var component by remember { mutableStateOf<MainWindowComponent?>(null) }
         
-        val allPreloaded by remember { derivedStateOf { preloadedDrawables.all { it.value.value != null } } }
+        val allPreloaded by remember { derivedStateOf { preloadedDrawables.all { it.value.value != null } && component != null } }
         
         LaunchedEffect(allPreloaded) {
-            component.globalLifecycle.move(UIComponentLifecycleTransition.Run)
+            val theComponent = RealMainWindowComponent()
+            theComponent.globalLifecycle.moveTo(UIComponentLifecycleState.Running)
+            component = theComponent
         }
         
         if (allPreloaded) {
             MainWindowContentUI(
-                component = component,
+                component = component!!,
                 windowSizeClass = calculateWindowSizeClass()
             )
         } else {

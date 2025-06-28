@@ -22,7 +22,9 @@ import dev.lounres.komponentual.navigation.replaceCurrent
 import dev.lounres.komponentual.navigation.updateCurrent
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
+import dev.lounres.kone.state.KoneAsynchronousState
 import dev.lounres.kone.state.KoneState
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,216 +32,12 @@ import kotlinx.coroutines.launch
 
 
 public class RealGameScreenComponent(
-    componentContext: UIComponentContext,
-    gameStateFlow: StateFlow<ServerApi.OnlineGame.State?>,
     override val onExitOnlineGame: () -> Unit,
-    onApplySettings: (ClientApi.SettingsBuilder) -> Unit,
-    onStartGame: () -> Unit,
-    onFinishGame: () -> Unit,
-    onSpeakerReady: () -> Unit,
-    onListenerReady: () -> Unit,
-    onExplanationResult: (GameStateMachine.WordExplanation.State) -> Unit,
-    onUpdateExplanationResults: (KoneList<GameStateMachine.WordExplanation>) -> Unit,
-    onConfirmExplanationResults: () -> Unit,
+    override val childStack: KoneAsynchronousState<ChildrenStack<*, GameScreenComponent.Child>>,
 ) : GameScreenComponent {
     
     override val onCopyOnlineGameKey: () -> Unit = { TODO() }
     override val onCopyOnlineGameLink: () -> Unit = { TODO() }
-
-    private val navigation = MutableStackNavigation<Configuration>()
-
-    override val childStack: KoneState<ChildrenStack<Configuration, GameScreenComponent.Child>> =
-        componentContext.uiChildrenDefaultStack(
-            source = navigation,
-            initialStack = {
-                KoneList.of(
-                    when(val gameState = gameStateFlow.value) {
-                        null -> Configuration.Loading
-                        is ServerApi.OnlineGame.State.GameInitialisation -> Configuration.RoomScreen(MutableStateFlow(gameState))
-                        is ServerApi.OnlineGame.State.RoundWaiting -> Configuration.RoundWaiting(MutableStateFlow(gameState))
-                        is ServerApi.OnlineGame.State.RoundPreparation -> Configuration.RoundPreparation(MutableStateFlow(gameState))
-                        is ServerApi.OnlineGame.State.RoundExplanation -> Configuration.RoundExplanation(MutableStateFlow(gameState))
-                        is ServerApi.OnlineGame.State.RoundLastGuess -> Configuration.RoundLastGuess(MutableStateFlow(gameState))
-                        is ServerApi.OnlineGame.State.RoundEditing -> Configuration.RoundEditing(MutableStateFlow(gameState))
-                        is ServerApi.OnlineGame.State.GameResults -> Configuration.GameResults(MutableStateFlow(gameState))
-                    }
-                )
-            },
-        ) { configuration, _ ->
-            when(configuration) {
-                Configuration.Loading ->
-                    GameScreenComponent.Child.Loading(
-                        RealLoadingComponent(
-                        )
-                    )
-                is Configuration.RoomScreen ->
-                    GameScreenComponent.Child.RoomScreen(
-                        RealRoomScreenComponent(
-                            gameStateFlow = configuration.stateFlow,
-                            
-                            onOpenGameSettings = { navigation.replaceCurrent(Configuration.RoomSettings(configuration.stateFlow)) },
-                            onStartGame = onStartGame
-                        )
-                    )
-                is Configuration.RoomSettings ->
-                    GameScreenComponent.Child.RoomSettings(
-                        RealRoomSettingsComponent(
-                            onApplySettings = {
-                                onApplySettings(it)
-                                navigation.replaceCurrent(Configuration.RoomScreen(configuration.stateFlow))
-                            },
-                            onDiscardSettings = {
-                                navigation.replaceCurrent(Configuration.RoomScreen(configuration.stateFlow))
-                            },
-                            
-                            initialPreparationTimeSeconds = configuration.stateFlow.value.settingsBuilder.preparationTimeSeconds,
-                            initialExplanationTimeSeconds = configuration.stateFlow.value.settingsBuilder.explanationTimeSeconds,
-                            initialFinalGuessTimeSeconds = configuration.stateFlow.value.settingsBuilder.finalGuessTimeSeconds,
-                            initialStrictMode = configuration.stateFlow.value.settingsBuilder.strictMode,
-                            initialCachedEndConditionWordsNumber = configuration.stateFlow.value.settingsBuilder.cachedEndConditionWordsNumber,
-                            initialCachedEndConditionCyclesNumber = configuration.stateFlow.value.settingsBuilder.cachedEndConditionCyclesNumber,
-                            initialGameEndConditionType = configuration.stateFlow.value.settingsBuilder.gameEndConditionType,
-                        )
-                    )
-                is Configuration.RoundWaiting ->
-                    GameScreenComponent.Child.RoundWaiting(
-                        RealRoundWaitingComponent(
-                            onFinishGame = onFinishGame,
-                            
-                            gameState = configuration.stateFlow,
-                            
-                            onSpeakerReady = onSpeakerReady,
-                            onListenerReady = onListenerReady,
-                        )
-                    )
-                is Configuration.RoundPreparation ->
-                    GameScreenComponent.Child.RoundPreparation(
-                        RealRoundPreparationComponent(
-                            gameState = configuration.stateFlow,
-                        )
-                    )
-                is Configuration.RoundExplanation ->
-                    GameScreenComponent.Child.RoundExplanation(
-                        RealRoundExplanationComponent(
-                            gameState = configuration.stateFlow,
-                            
-                            onExplanationResult = onExplanationResult,
-                        )
-                    )
-                is Configuration.RoundLastGuess ->
-                    GameScreenComponent.Child.RoundLastGuess(
-                        RealRoundLastGuessComponent(
-                            gameState = configuration.stateFlow,
-                            
-                            onExplanationResult = onExplanationResult,
-                        )
-                    )
-                is Configuration.RoundEditing ->
-                    GameScreenComponent.Child.RoundEditing(
-                        RealRoundEditingComponent(
-                            gameState = configuration.stateFlow,
-                            
-                            onUpdateExplanationResults = onUpdateExplanationResults,
-                            
-                            onConfirm = onConfirmExplanationResults,
-                        )
-                    )
-                is Configuration.GameResults ->
-                    GameScreenComponent.Child.GameResults(
-                        RealGameResultsComponent(
-                            gameState = configuration.stateFlow,
-                        )
-                    )
-            }
-        }
-
-    init {
-        componentContext.coroutineScope(Dispatchers.Default).launch {
-            gameStateFlow.collect { newState ->
-                runOnUiThread {
-                    navigation.updateCurrent { currentConfiguration ->
-                        when (newState) {
-                            null -> Configuration.Loading
-                            is ServerApi.OnlineGame.State.GameInitialisation ->
-                                when (currentConfiguration) {
-                                    is Configuration.RoomScreen ->
-                                        currentConfiguration.apply {
-                                            stateFlow.value = newState
-                                        }
-                                    is Configuration.RoomSettings ->
-                                        currentConfiguration.apply {
-                                            stateFlow.value = newState
-                                        }
-                                    else -> Configuration.RoomScreen(
-                                        stateFlow = MutableStateFlow(newState),
-                                    )
-                                }
-                            is ServerApi.OnlineGame.State.RoundWaiting ->
-                                when (currentConfiguration) {
-                                    is Configuration.RoundWaiting ->
-                                        currentConfiguration.apply {
-                                            stateFlow.value = newState
-                                        }
-                                    else -> Configuration.RoundWaiting(
-                                        stateFlow = MutableStateFlow(newState),
-                                    )
-                                }
-                            is ServerApi.OnlineGame.State.RoundPreparation ->
-                                when (currentConfiguration) {
-                                    is Configuration.RoundPreparation ->
-                                        currentConfiguration.apply {
-                                            stateFlow.value = newState
-                                        }
-                                    else -> Configuration.RoundPreparation(
-                                        stateFlow = MutableStateFlow(newState),
-                                    )
-                                }
-                            is ServerApi.OnlineGame.State.RoundExplanation ->
-                                when (currentConfiguration) {
-                                    is Configuration.RoundExplanation ->
-                                        currentConfiguration.apply {
-                                            stateFlow.value = newState
-                                        }
-                                    else -> Configuration.RoundExplanation(
-                                        stateFlow = MutableStateFlow(newState),
-                                    )
-                                }
-                            is ServerApi.OnlineGame.State.RoundLastGuess ->
-                                when (currentConfiguration) {
-                                    is Configuration.RoundLastGuess ->
-                                        currentConfiguration.apply {
-                                            stateFlow.value = newState
-                                        }
-                                    else -> Configuration.RoundLastGuess(
-                                        stateFlow = MutableStateFlow(newState),
-                                    )
-                                }
-                            is ServerApi.OnlineGame.State.RoundEditing ->
-                                when (currentConfiguration) {
-                                    is Configuration.RoundEditing ->
-                                        currentConfiguration.apply {
-                                            stateFlow.value = newState
-                                        }
-                                    else -> Configuration.RoundEditing(
-                                        stateFlow = MutableStateFlow(newState),
-                                    )
-                                }
-                            is ServerApi.OnlineGame.State.GameResults ->
-                                when (currentConfiguration) {
-                                    is Configuration.GameResults ->
-                                        currentConfiguration.apply {
-                                            stateFlow.value = newState
-                                        }
-                                    else -> Configuration.GameResults(
-                                        stateFlow = MutableStateFlow(newState),
-                                    )
-                                }
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     public sealed interface Configuration {
         public data object Loading : Configuration
@@ -268,4 +66,232 @@ public class RealGameScreenComponent(
             val stateFlow: MutableStateFlow<ServerApi.OnlineGame.State.GameResults>,
         ) : Configuration
     }
+}
+
+public suspend fun RealGameScreenComponent(
+    componentContext: UIComponentContext,
+    gameStateFlow: StateFlow<ServerApi.OnlineGame.State?>,
+    onExitOnlineGame: () -> Unit,
+    onApplySettings: (ClientApi.SettingsBuilder) -> Unit,
+    onStartGame: () -> Unit,
+    onFinishGame: () -> Unit,
+    onSpeakerReady: () -> Unit,
+    onListenerReady: () -> Unit,
+    onExplanationResult: (GameStateMachine.WordExplanation.State) -> Unit,
+    onUpdateExplanationResults: (KoneList<GameStateMachine.WordExplanation>) -> Unit,
+    onConfirmExplanationResults: () -> Unit,
+): RealGameScreenComponent {
+    val navigation = MutableStackNavigation<RealGameScreenComponent.Configuration>(CoroutineScope(Dispatchers.Default))
+    
+    val childStack: KoneAsynchronousState<ChildrenStack<RealGameScreenComponent.Configuration, GameScreenComponent.Child>> =
+        componentContext.uiChildrenDefaultStack(
+            source = navigation,
+            initialStack = KoneList.of(
+                when(val gameState = gameStateFlow.value) {
+                    null -> RealGameScreenComponent.Configuration.Loading
+                    is ServerApi.OnlineGame.State.GameInitialisation -> RealGameScreenComponent.Configuration.RoomScreen(MutableStateFlow(gameState))
+                    is ServerApi.OnlineGame.State.RoundWaiting -> RealGameScreenComponent.Configuration.RoundWaiting(MutableStateFlow(gameState))
+                    is ServerApi.OnlineGame.State.RoundPreparation -> RealGameScreenComponent.Configuration.RoundPreparation(MutableStateFlow(gameState))
+                    is ServerApi.OnlineGame.State.RoundExplanation -> RealGameScreenComponent.Configuration.RoundExplanation(MutableStateFlow(gameState))
+                    is ServerApi.OnlineGame.State.RoundLastGuess -> RealGameScreenComponent.Configuration.RoundLastGuess(MutableStateFlow(gameState))
+                    is ServerApi.OnlineGame.State.RoundEditing -> RealGameScreenComponent.Configuration.RoundEditing(MutableStateFlow(gameState))
+                    is ServerApi.OnlineGame.State.GameResults -> RealGameScreenComponent.Configuration.GameResults(MutableStateFlow(gameState))
+                }
+            ),
+        ) { configuration, _ ->
+            when(configuration) {
+                RealGameScreenComponent.Configuration.Loading ->
+                    GameScreenComponent.Child.Loading(
+                        RealLoadingComponent(
+                        )
+                    )
+                is RealGameScreenComponent.Configuration.RoomScreen ->
+                    GameScreenComponent.Child.RoomScreen(
+                        RealRoomScreenComponent(
+                            gameStateFlow = configuration.stateFlow,
+                            
+                            onOpenGameSettings = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    navigation.replaceCurrent(
+                                        RealGameScreenComponent.Configuration.RoomSettings(
+                                            configuration.stateFlow
+                                        )
+                                    )
+                                }
+                            },
+                            onStartGame = onStartGame
+                        )
+                    )
+                is RealGameScreenComponent.Configuration.RoomSettings ->
+                    GameScreenComponent.Child.RoomSettings(
+                        RealRoomSettingsComponent(
+                            onApplySettings = {
+                                onApplySettings(it)
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    navigation.replaceCurrent(
+                                        RealGameScreenComponent.Configuration.RoomScreen(
+                                            configuration.stateFlow
+                                        )
+                                    )
+                                }
+                            },
+                            onDiscardSettings = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    navigation.replaceCurrent(
+                                        RealGameScreenComponent.Configuration.RoomScreen(
+                                            configuration.stateFlow
+                                        )
+                                    )
+                                }
+                            },
+                            
+                            initialPreparationTimeSeconds = configuration.stateFlow.value.settingsBuilder.preparationTimeSeconds,
+                            initialExplanationTimeSeconds = configuration.stateFlow.value.settingsBuilder.explanationTimeSeconds,
+                            initialFinalGuessTimeSeconds = configuration.stateFlow.value.settingsBuilder.finalGuessTimeSeconds,
+                            initialStrictMode = configuration.stateFlow.value.settingsBuilder.strictMode,
+                            initialCachedEndConditionWordsNumber = configuration.stateFlow.value.settingsBuilder.cachedEndConditionWordsNumber,
+                            initialCachedEndConditionCyclesNumber = configuration.stateFlow.value.settingsBuilder.cachedEndConditionCyclesNumber,
+                            initialGameEndConditionType = configuration.stateFlow.value.settingsBuilder.gameEndConditionType,
+                        )
+                    )
+                is RealGameScreenComponent.Configuration.RoundWaiting ->
+                    GameScreenComponent.Child.RoundWaiting(
+                        RealRoundWaitingComponent(
+                            onFinishGame = onFinishGame,
+                            
+                            gameState = configuration.stateFlow,
+                            
+                            onSpeakerReady = onSpeakerReady,
+                            onListenerReady = onListenerReady,
+                        )
+                    )
+                is RealGameScreenComponent.Configuration.RoundPreparation ->
+                    GameScreenComponent.Child.RoundPreparation(
+                        RealRoundPreparationComponent(
+                            gameState = configuration.stateFlow,
+                        )
+                    )
+                is RealGameScreenComponent.Configuration.RoundExplanation ->
+                    GameScreenComponent.Child.RoundExplanation(
+                        RealRoundExplanationComponent(
+                            gameState = configuration.stateFlow,
+                            
+                            onExplanationResult = onExplanationResult,
+                        )
+                    )
+                is RealGameScreenComponent.Configuration.RoundLastGuess ->
+                    GameScreenComponent.Child.RoundLastGuess(
+                        RealRoundLastGuessComponent(
+                            gameState = configuration.stateFlow,
+                            
+                            onExplanationResult = onExplanationResult,
+                        )
+                    )
+                is RealGameScreenComponent.Configuration.RoundEditing ->
+                    GameScreenComponent.Child.RoundEditing(
+                        RealRoundEditingComponent(
+                            gameState = configuration.stateFlow,
+                            
+                            onUpdateExplanationResults = onUpdateExplanationResults,
+                            
+                            onConfirm = onConfirmExplanationResults,
+                        )
+                    )
+                is RealGameScreenComponent.Configuration.GameResults ->
+                    GameScreenComponent.Child.GameResults(
+                        RealGameResultsComponent(
+                            gameState = configuration.stateFlow,
+                        )
+                    )
+            }
+        }
+    
+    componentContext.coroutineScope(Dispatchers.Default).launch {
+        gameStateFlow.collect { newState ->
+            navigation.updateCurrent { currentConfiguration ->
+                when (newState) {
+                    null -> RealGameScreenComponent.Configuration.Loading
+                    is ServerApi.OnlineGame.State.GameInitialisation ->
+                        when (currentConfiguration) {
+                            is RealGameScreenComponent.Configuration.RoomScreen ->
+                                currentConfiguration.apply {
+                                    stateFlow.value = newState
+                                }
+                            is RealGameScreenComponent.Configuration.RoomSettings ->
+                                currentConfiguration.apply {
+                                    stateFlow.value = newState
+                                }
+                            else -> RealGameScreenComponent.Configuration.RoomScreen(
+                                stateFlow = MutableStateFlow(newState),
+                            )
+                        }
+                    is ServerApi.OnlineGame.State.RoundWaiting ->
+                        when (currentConfiguration) {
+                            is RealGameScreenComponent.Configuration.RoundWaiting ->
+                                currentConfiguration.apply {
+                                    stateFlow.value = newState
+                                }
+                            else -> RealGameScreenComponent.Configuration.RoundWaiting(
+                                stateFlow = MutableStateFlow(newState),
+                            )
+                        }
+                    is ServerApi.OnlineGame.State.RoundPreparation ->
+                        when (currentConfiguration) {
+                            is RealGameScreenComponent.Configuration.RoundPreparation ->
+                                currentConfiguration.apply {
+                                    stateFlow.value = newState
+                                }
+                            else -> RealGameScreenComponent.Configuration.RoundPreparation(
+                                stateFlow = MutableStateFlow(newState),
+                            )
+                        }
+                    is ServerApi.OnlineGame.State.RoundExplanation ->
+                        when (currentConfiguration) {
+                            is RealGameScreenComponent.Configuration.RoundExplanation ->
+                                currentConfiguration.apply {
+                                    stateFlow.value = newState
+                                }
+                            else -> RealGameScreenComponent.Configuration.RoundExplanation(
+                                stateFlow = MutableStateFlow(newState),
+                            )
+                        }
+                    is ServerApi.OnlineGame.State.RoundLastGuess ->
+                        when (currentConfiguration) {
+                            is RealGameScreenComponent.Configuration.RoundLastGuess ->
+                                currentConfiguration.apply {
+                                    stateFlow.value = newState
+                                }
+                            else -> RealGameScreenComponent.Configuration.RoundLastGuess(
+                                stateFlow = MutableStateFlow(newState),
+                            )
+                        }
+                    is ServerApi.OnlineGame.State.RoundEditing ->
+                        when (currentConfiguration) {
+                            is RealGameScreenComponent.Configuration.RoundEditing ->
+                                currentConfiguration.apply {
+                                    stateFlow.value = newState
+                                }
+                            else -> RealGameScreenComponent.Configuration.RoundEditing(
+                                stateFlow = MutableStateFlow(newState),
+                            )
+                        }
+                    is ServerApi.OnlineGame.State.GameResults ->
+                        when (currentConfiguration) {
+                            is RealGameScreenComponent.Configuration.GameResults ->
+                                currentConfiguration.apply {
+                                    stateFlow.value = newState
+                                }
+                            else -> RealGameScreenComponent.Configuration.GameResults(
+                                stateFlow = MutableStateFlow(newState),
+                            )
+                        }
+                }
+            }
+        }
+    }
+    
+    return RealGameScreenComponent(
+        onExitOnlineGame = onExitOnlineGame,
+        childStack = childStack,
+    )
 }

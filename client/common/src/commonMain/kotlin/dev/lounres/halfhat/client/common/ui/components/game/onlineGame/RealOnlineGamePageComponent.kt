@@ -14,27 +14,42 @@ import dev.lounres.komponentual.navigation.MutableStackNavigation
 import dev.lounres.komponentual.navigation.replaceCurrent
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
+import dev.lounres.kone.state.KoneAsynchronousState
 import dev.lounres.kone.state.KoneState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 
 public class RealOnlineGamePageComponent(
-    componentContext: UIComponentContext,
     override val onExitOnlineGameMode: () -> Unit,
+    private val onlineGameComponent: OnlineGameComponent,
+    override val childStack: KoneAsynchronousState<ChildrenStack<*, OnlineGamePageComponent.Child>>,
 ) : OnlineGamePageComponent {
-    private val onlineGameComponent: OnlineGameComponent = RealOnlineGameComponent(componentContext.logicChildOnRunning())
-    
     override val connectionStatus: StateFlow<ConnectionStatus> get() = onlineGameComponent.connectionStatus
     
-    private val navigation = MutableStackNavigation<Configuration>()
+    public sealed interface Configuration {
+        public data object PreviewScreen : Configuration
+        public data object GameScreen : Configuration
+    }
+}
+
+public suspend fun RealOnlineGamePageComponent(
+    componentContext: UIComponentContext,
+    onExitOnlineGameMode: () -> Unit,
+): RealOnlineGamePageComponent {
+    val onlineGameComponent: OnlineGameComponent = RealOnlineGameComponent(componentContext.logicChildOnRunning())
     
-    override val childStack: KoneState<ChildrenStack<Configuration, OnlineGamePageComponent.Child>> =
+    val navigation = MutableStackNavigation<RealOnlineGamePageComponent.Configuration>(CoroutineScope(Dispatchers.Default))
+    
+    val childStack: KoneAsynchronousState<ChildrenStack<RealOnlineGamePageComponent.Configuration, OnlineGamePageComponent.Child>> =
         componentContext.uiChildrenDefaultStack(
             source = navigation,
-            initialStack = { KoneList.of(Configuration.PreviewScreen) },
-        ) { configuration: Configuration, componentContext: UIComponentContext ->
+            initialStack = KoneList.of(RealOnlineGamePageComponent.Configuration.PreviewScreen),
+        ) { configuration: RealOnlineGamePageComponent.Configuration, componentContext: UIComponentContext ->
             when (configuration) {
-                Configuration.PreviewScreen ->
+                RealOnlineGamePageComponent.Configuration.PreviewScreen ->
                     OnlineGamePageComponent.Child.PreviewScreen(
                         RealPreviewScreenComponent(
                             componentContext = componentContext,
@@ -50,18 +65,22 @@ public class RealOnlineGamePageComponent(
                                         playerName = playerName
                                     )
                                 )
-                                navigation.replaceCurrent(Configuration.GameScreen)
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    navigation.replaceCurrent(RealOnlineGamePageComponent.Configuration.GameScreen)
+                                }
                             }
                         )
                     )
-                Configuration.GameScreen ->
+                RealOnlineGamePageComponent.Configuration.GameScreen ->
                     OnlineGamePageComponent.Child.GameScreen(
                         RealGameScreenComponent(
                             componentContext = componentContext,
                             gameStateFlow = onlineGameComponent.gameStateFlow,
                             onExitOnlineGame = {
                                 onlineGameComponent.sendSignal(ClientApi.Signal.OnlineGame.LeaveRoom)
-                                navigation.replaceCurrent(Configuration.PreviewScreen)
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    navigation.replaceCurrent(RealOnlineGamePageComponent.Configuration.PreviewScreen)
+                                }
                             },
                             onApplySettings = {
                                 onlineGameComponent.sendSignal(ClientApi.Signal.OnlineGame.UpdateSettings(it))
@@ -96,8 +115,9 @@ public class RealOnlineGamePageComponent(
             }
         }
     
-    public sealed interface Configuration {
-        public data object PreviewScreen : Configuration
-        public data object GameScreen : Configuration
-    }
+    return RealOnlineGamePageComponent(
+        onExitOnlineGameMode = onExitOnlineGameMode,
+        onlineGameComponent = onlineGameComponent,
+        childStack = childStack,
+    )
 }

@@ -10,66 +10,18 @@ import dev.lounres.halfhat.client.common.ui.components.game.modeSelection.RealMo
 import dev.lounres.komponentual.navigation.ChildrenSlot
 import dev.lounres.komponentual.navigation.MutableSlotNavigation
 import dev.lounres.komponentual.navigation.set
+import dev.lounres.kone.state.KoneAsynchronousState
 import dev.lounres.kone.state.KoneState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 
 public class RealGamePageComponent(
-    componentContext: UIComponentContext,
-//    localDictionariesRegistry: LocalDictionariesRegistry,
-    volumeOn: StateFlow<Boolean>,
+    override val currentChild: KoneAsynchronousState<ChildrenSlot<*, GamePageComponent.Child>>,
 ): GamePageComponent {
-    private val slotNavigation = MutableSlotNavigation<Configuration>()
-    
-    override val currentChild: KoneState<ChildrenSlot<Configuration, GamePageComponent.Child>> =
-        componentContext.uiChildrenDefaultSlot(
-            source = slotNavigation,
-            initialConfiguration = { Configuration.ModeSelection },
-        ) { configuration, componentContext ->
-            when (configuration) {
-                Configuration.ModeSelection ->
-                    GamePageComponent.Child.ModeSelection(
-                        RealModeSelectionPageComponent(
-                            componentContext = componentContext,
-                            onOnlineGameSelect = { slotNavigation.set(Configuration.OnlineGame) },
-                            onLocalGameSelect = { slotNavigation.set(Configuration.LocalGame) },
-                            onDeviceGameSelect = { slotNavigation.set(Configuration.DeviceGame) },
-                            onGameTimerSelect = { slotNavigation.set(Configuration.GameTimer) },
-                        )
-                    )
-                Configuration.OnlineGame ->
-                    GamePageComponent.Child.OnlineGame(
-                        RealOnlineGamePageComponent(
-                            componentContext = componentContext,
-                            onExitOnlineGameMode = { slotNavigation.set(Configuration.ModeSelection) },
-                        )
-                    )
-                Configuration.LocalGame ->
-                    GamePageComponent.Child.LocalGame(
-                        RealLocalGamePageComponent(
-                            onExitLocalGame = { slotNavigation.set(Configuration.ModeSelection) }
-                        )
-                    )
-                Configuration.DeviceGame ->
-                    GamePageComponent.Child.DeviceGame(
-                        RealDeviceGamePageComponent(
-                            componentContext = componentContext,
-//                            localDictionariesRegistry = localDictionariesRegistry,
-                            onExitDeviceGame = { slotNavigation.set(Configuration.ModeSelection) },
-                        )
-                    )
-                Configuration.GameTimer ->
-                    GamePageComponent.Child.GameTimer(
-                        RealTimerPageComponent(
-                            componentContext = componentContext,
-                            onExitTimer = { slotNavigation.set(Configuration.ModeSelection) },
-                            volumeOn = volumeOn,
-                        )
-                    )
-            }
-        }
-    
     @Serializable
     public sealed interface Configuration {
         @Serializable
@@ -83,4 +35,96 @@ public class RealGamePageComponent(
         @Serializable
         public data object GameTimer: Configuration
     }
+}
+
+public suspend fun RealGamePageComponent(
+    componentContext: UIComponentContext,
+//    localDictionariesRegistry: LocalDictionariesRegistry,
+    volumeOn: StateFlow<Boolean>,
+): RealGamePageComponent {
+    
+    val slotNavigation = MutableSlotNavigation<RealGamePageComponent.Configuration>(CoroutineScope(Dispatchers.Default))
+    val currentChild: KoneAsynchronousState<ChildrenSlot<RealGamePageComponent.Configuration, GamePageComponent.Child>> =
+        componentContext.uiChildrenDefaultSlot(
+            source = slotNavigation,
+            initialConfiguration = RealGamePageComponent.Configuration.ModeSelection,
+        ) { configuration, componentContext ->
+            when (configuration) {
+                RealGamePageComponent.Configuration.ModeSelection ->
+                    GamePageComponent.Child.ModeSelection(
+                        RealModeSelectionPageComponent(
+                            componentContext = componentContext,
+                            onOnlineGameSelect = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    slotNavigation.set(RealGamePageComponent.Configuration.OnlineGame)
+                                }
+                            },
+                            onLocalGameSelect = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    slotNavigation.set(RealGamePageComponent.Configuration.LocalGame)
+                                }
+                            },
+                            onDeviceGameSelect = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    slotNavigation.set(RealGamePageComponent.Configuration.DeviceGame)
+                                }
+                            },
+                            onGameTimerSelect = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    slotNavigation.set(RealGamePageComponent.Configuration.GameTimer)
+                                }
+                            },
+                        )
+                    )
+                RealGamePageComponent.Configuration.OnlineGame ->
+                    GamePageComponent.Child.OnlineGame(
+                        RealOnlineGamePageComponent(
+                            componentContext = componentContext,
+                            onExitOnlineGameMode = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    slotNavigation.set(RealGamePageComponent.Configuration.ModeSelection)
+                                }
+                            },
+                        )
+                    )
+                RealGamePageComponent.Configuration.LocalGame ->
+                    GamePageComponent.Child.LocalGame(
+                        RealLocalGamePageComponent(
+                            onExitLocalGame = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    slotNavigation.set(RealGamePageComponent.Configuration.ModeSelection)
+                                }
+                            }
+                        )
+                    )
+                RealGamePageComponent.Configuration.DeviceGame ->
+                    GamePageComponent.Child.DeviceGame(
+                        RealDeviceGamePageComponent(
+                            componentContext = componentContext,
+//                            localDictionariesRegistry = localDictionariesRegistry,
+                            onExitDeviceGame = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    slotNavigation.set(RealGamePageComponent.Configuration.ModeSelection)
+                                }
+                            },
+                        )
+                    )
+                RealGamePageComponent.Configuration.GameTimer ->
+                    GamePageComponent.Child.GameTimer(
+                        RealTimerPageComponent(
+                            componentContext = componentContext,
+                            onExitTimer = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    slotNavigation.set(RealGamePageComponent.Configuration.ModeSelection)
+                                }
+                            },
+                            volumeOn = volumeOn,
+                        )
+                    )
+            }
+        }
+    
+    return RealGamePageComponent(
+        currentChild = currentChild,
+    )
 }

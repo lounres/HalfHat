@@ -1,11 +1,16 @@
 package dev.lounres.halfhat.client.desktop
 
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import dev.lounres.halfhat.client.common.logic.wordsProviders.DeviceGameWordsProviderRegistry
+import dev.lounres.halfhat.client.desktop.ui.components.MainWindowComponent
 import dev.lounres.halfhat.client.desktop.ui.components.RealMainWindowComponent
 import dev.lounres.halfhat.client.desktop.ui.implementation.MainWindowUI
 
@@ -14,8 +19,12 @@ fun main() {
     application(
         exitProcessOnExit = false,
     ) {
-        val component = remember {
-            RealMainWindowComponent(
+        var component by remember { mutableStateOf<MainWindowComponent?>(null) }
+        
+        MainWindowUI(component)
+        
+        LaunchedEffect(Unit) {
+            component = RealMainWindowComponent(
                 deviceGameWordsProviderRegistry = DeviceGameWordsProviderRegistry,
                 windowState = WindowState(
 //                    placement = WindowPlacement.Maximized,
@@ -25,8 +34,6 @@ fun main() {
                 onWindowCloseRequest = ::exitApplication,
             )
         }
-        
-        MainWindowUI(component)
     }
     
 //    application {

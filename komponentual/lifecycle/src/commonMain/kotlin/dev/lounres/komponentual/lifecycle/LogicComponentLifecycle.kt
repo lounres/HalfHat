@@ -31,10 +31,11 @@ public typealias DeferredLogicComponentLifecycle = DeferredLifecycle<LogicCompon
 
 public data object LogicComponentLifecycleKey : RegistryKey<LogicComponentLifecycle>
 
-public inline fun LogicComponentLifecycle.subscribe(
-    crossinline onRun: suspend () -> Unit = {},
-    crossinline onStop: suspend () -> Unit = {},
-    crossinline onDestroy: suspend () -> Unit = {},
+// FIXME
+public /*inline*/ fun LogicComponentLifecycle.subscribe(
+    /*crossinline*/ onRun: suspend () -> Unit = {},
+    /*crossinline*/ onStop: suspend () -> Unit = {},
+    /*crossinline*/ onDestroy: suspend () -> Unit = {},
 ): LogicComponentLifecycleSubscription = subscribe {
     when (it) {
         LogicComponentLifecycleTransition.Run -> onRun()

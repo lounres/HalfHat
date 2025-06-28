@@ -173,7 +173,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                     when (val wordsSource = settingsBuilder.wordsSource) {
                         GameStateMachine.WordsSource.Players -> TODO()
                         is GameStateMachine.WordsSource.Custom -> {
-                            val wordsProviderOrReason = transition.wordsProviderRegistry.getOrNull(wordsSource.providerId)
+                            val wordsProviderOrReason = transition.wordsProviderRegistry[wordsSource.providerId]
                             
                             when (wordsProviderOrReason) {
                                 is GameStateMachine.WordsProviderRegistry.ResultOrReason.Failure ->

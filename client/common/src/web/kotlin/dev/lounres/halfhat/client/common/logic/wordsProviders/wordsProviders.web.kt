@@ -22,7 +22,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlin.random.Random
 
@@ -49,22 +48,17 @@ public class LocalDeviceGameWordsProvider(
 
 public actual object DeviceGameWordsProviderRegistry : GameStateMachine.WordsProviderRegistry<DeviceGameWordsProviderID, NoDeviceGameWordsProviderReason> {
     private val localWordsProviders =
-            KoneMap.of(
-                "easy" mapsTo "files/wordsProviders/easy",
-                "medium" mapsTo "files/wordsProviders/medium",
-                "hard" mapsTo "files/wordsProviders/hard",
-                keyEquality = defaultEquality(),
-                keyHashing = defaultHashing(),
-            ).mapValues { entry ->
-                CoroutineScope(Dispatchers.IO).async(start = CoroutineStart.LAZY) {
-                    Res
-                        .readBytes(entry.value)
-                        .toString(Charsets.UTF_8)
-                        .lines()
-                        .toKoneList()
-                        .filterTo(KoneMutableSet.of()) { line -> line.isNotBlank() }
-                }
+        KoneMap.of(
+            "easy" mapsTo "files/wordsProviders/easy",
+            "medium" mapsTo "files/wordsProviders/medium",
+            "hard" mapsTo "files/wordsProviders/hard",
+            keyEquality = defaultEquality(),
+            keyHashing = defaultHashing(),
+        ).mapValues { entry ->
+            CoroutineScope(Dispatchers.Default).async(start = CoroutineStart.LAZY) {
+                KoneSet.of<String>()
             }
+        }
     
     actual override suspend operator fun get(providerId: DeviceGameWordsProviderID): GameStateMachine.WordsProviderRegistry.ResultOrReason<NoDeviceGameWordsProviderReason> =
         when (providerId) {

@@ -4,11 +4,11 @@ import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScree
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.roomScreen.RoomScreenComponent
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.roomSettings.RoomSettingsComponent
 import dev.lounres.komponentual.navigation.ChildrenStack
-import dev.lounres.kone.state.KoneState
+import dev.lounres.kone.state.KoneAsynchronousState
 
 
 public interface DeviceGamePageComponent {
-    public val childStack: KoneState<ChildrenStack<*, Child>>
+    public val childStack: KoneAsynchronousState<ChildrenStack<*, Child>>
 
     public sealed interface Child {
         public data class RoomScreen(val component: RoomScreenComponent) : Child
