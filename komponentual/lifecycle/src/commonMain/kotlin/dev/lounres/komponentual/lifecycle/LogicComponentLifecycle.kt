@@ -48,7 +48,7 @@ internal fun checkNextState(previousState: LogicComponentLifecycleState, nextSta
     when (previousState) {
         LogicComponentLifecycleState.Initialized ->
             when (nextState) {
-                LogicComponentLifecycleState.Initialized -> false
+                LogicComponentLifecycleState.Initialized -> true
                 LogicComponentLifecycleState.Running -> true
                 LogicComponentLifecycleState.Destroyed -> true
             }
@@ -56,18 +56,23 @@ internal fun checkNextState(previousState: LogicComponentLifecycleState, nextSta
         LogicComponentLifecycleState.Running ->
             when (nextState) {
                 LogicComponentLifecycleState.Initialized -> true
-                LogicComponentLifecycleState.Running -> false
+                LogicComponentLifecycleState.Running -> true
                 LogicComponentLifecycleState.Destroyed -> true
             }
         
-        LogicComponentLifecycleState.Destroyed -> false
+        LogicComponentLifecycleState.Destroyed ->
+            when (nextState) {
+                LogicComponentLifecycleState.Initialized -> false
+                LogicComponentLifecycleState.Running -> false
+                LogicComponentLifecycleState.Destroyed -> true
+            }
     }
 
 internal fun decomposeTransition(previousState: LogicComponentLifecycleState, nextState: LogicComponentLifecycleState): KoneList<LogicComponentLifecycleTransition> =
     when (previousState) {
         LogicComponentLifecycleState.Initialized ->
             when (nextState) {
-                LogicComponentLifecycleState.Initialized -> error("Unexpected logic component lifecycle transition")
+                LogicComponentLifecycleState.Initialized -> KoneList.of()
                 LogicComponentLifecycleState.Running -> KoneList.of(LogicComponentLifecycleTransition.Run)
                 LogicComponentLifecycleState.Destroyed -> KoneList.of(LogicComponentLifecycleTransition.Destroy)
             }
@@ -75,11 +80,16 @@ internal fun decomposeTransition(previousState: LogicComponentLifecycleState, ne
         LogicComponentLifecycleState.Running ->
             when (nextState) {
                 LogicComponentLifecycleState.Initialized -> KoneList.of(LogicComponentLifecycleTransition.Stop)
-                LogicComponentLifecycleState.Running -> error("Unexpected logic component lifecycle transition")
+                LogicComponentLifecycleState.Running -> KoneList.of()
                 LogicComponentLifecycleState.Destroyed -> KoneList.of(LogicComponentLifecycleTransition.Destroy)
             }
         
-        LogicComponentLifecycleState.Destroyed -> error("Unexpected logic component lifecycle transition")
+        LogicComponentLifecycleState.Destroyed ->
+            when (nextState) {
+                LogicComponentLifecycleState.Initialized -> error("Unexpected logic component lifecycle transition")
+                LogicComponentLifecycleState.Running -> error("Unexpected logic component lifecycle transition")
+                LogicComponentLifecycleState.Destroyed -> KoneList.of()
+            }
     }
 
 public fun MutableLogicComponentLifecycle(coroutineScope: CoroutineScope): MutableLogicComponentLifecycle =

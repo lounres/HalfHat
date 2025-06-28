@@ -96,7 +96,11 @@ private class MutableLifecycleImpl<State, Transition>(
                     callbacksLock.withLock {
                         callbacksState = nextState
                         callbacks.toList()
-                    }.map { coroutineScope.launch { it(transition) } }.joinAll()
+                    }.map {
+                        coroutineScope.launch {
+                            it(transition)
+                        }
+                    }.joinAll()
             },
         )
     

@@ -39,8 +39,6 @@ import kotlinx.coroutines.launch
 class RealMainWindowComponent(
     override val globalLifecycle: MutableUIComponentLifecycle,
     
-    deviceGameWordsProviderRegistry: DeviceGameWordsProviderRegistry,
-    
     override val windowState: WindowState = WindowState(),
     override val onWindowCloseRequest: () -> Unit = {},
     
@@ -163,8 +161,6 @@ suspend fun RealMainWindowComponent(
     
     return RealMainWindowComponent(
         globalLifecycle = globalLifecycle,
-        
-        deviceGameWordsProviderRegistry = deviceGameWordsProviderRegistry,
         
         windowState = windowState,
         onWindowCloseRequest = onWindowCloseRequest,

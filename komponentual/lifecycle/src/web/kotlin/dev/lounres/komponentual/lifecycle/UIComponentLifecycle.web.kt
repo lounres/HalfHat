@@ -41,10 +41,16 @@ internal actual fun checkNextState(
     previousState: UIComponentLifecycleState,
     nextState: UIComponentLifecycleState
 ): Boolean = when (previousState) {
-    UIComponentLifecycleState.Destroyed -> false
-    UIComponentLifecycleState.Initialized -> when (nextState) {
+    UIComponentLifecycleState.Destroyed -> when (nextState) {
         UIComponentLifecycleState.Destroyed -> true
         UIComponentLifecycleState.Initialized -> false
+        UIComponentLifecycleState.Running -> false
+        UIComponentLifecycleState.Background -> false
+        UIComponentLifecycleState.Foreground -> false
+    }
+    UIComponentLifecycleState.Initialized -> when (nextState) {
+        UIComponentLifecycleState.Destroyed -> true
+        UIComponentLifecycleState.Initialized -> true
         UIComponentLifecycleState.Running -> true
         UIComponentLifecycleState.Background -> true
         UIComponentLifecycleState.Foreground -> true
@@ -52,7 +58,7 @@ internal actual fun checkNextState(
     UIComponentLifecycleState.Running -> when (nextState) {
         UIComponentLifecycleState.Destroyed -> true
         UIComponentLifecycleState.Initialized -> false
-        UIComponentLifecycleState.Running -> false
+        UIComponentLifecycleState.Running -> true
         UIComponentLifecycleState.Background -> true
         UIComponentLifecycleState.Foreground -> true
     }
@@ -76,10 +82,16 @@ internal actual fun decomposeTransition(
     previousState: UIComponentLifecycleState,
     nextState: UIComponentLifecycleState
 ): KoneList<UIComponentLifecycleTransition> = when (previousState) {
-    UIComponentLifecycleState.Destroyed -> error("Unexpected UI component lifecycle transition")
+    UIComponentLifecycleState.Destroyed -> when (nextState) {
+        UIComponentLifecycleState.Destroyed -> KoneList.of()
+        UIComponentLifecycleState.Initialized -> error("Unexpected UI component lifecycle transition")
+        UIComponentLifecycleState.Running -> error("Unexpected UI component lifecycle transition")
+        UIComponentLifecycleState.Background -> error("Unexpected UI component lifecycle transition")
+        UIComponentLifecycleState.Foreground -> error("Unexpected UI component lifecycle transition")
+    }
     UIComponentLifecycleState.Initialized -> when (nextState) {
         UIComponentLifecycleState.Destroyed -> KoneList.of(UIComponentLifecycleTransition.Destroy)
-        UIComponentLifecycleState.Initialized -> error("Unexpected UI component lifecycle transition")
+        UIComponentLifecycleState.Initialized -> KoneList.of()
         UIComponentLifecycleState.Running -> KoneList.of(UIComponentLifecycleTransition.Run)
         UIComponentLifecycleState.Background -> KoneList.of(UIComponentLifecycleTransition.Run, UIComponentLifecycleTransition.Appear)
         UIComponentLifecycleState.Foreground -> KoneList.of(UIComponentLifecycleTransition.Run, UIComponentLifecycleTransition.Appear, UIComponentLifecycleTransition.Focus)
@@ -87,7 +99,7 @@ internal actual fun decomposeTransition(
     UIComponentLifecycleState.Running -> when (nextState) {
         UIComponentLifecycleState.Destroyed -> KoneList.of(UIComponentLifecycleTransition.Destroy)
         UIComponentLifecycleState.Initialized -> error("Unexpected UI component lifecycle transition")
-        UIComponentLifecycleState.Running -> error("Unexpected UI component lifecycle transition")
+        UIComponentLifecycleState.Running -> KoneList.of()
         UIComponentLifecycleState.Background -> KoneList.of(UIComponentLifecycleTransition.Appear)
         UIComponentLifecycleState.Foreground -> KoneList.of(UIComponentLifecycleTransition.Appear, UIComponentLifecycleTransition.Focus)
     }
@@ -95,7 +107,7 @@ internal actual fun decomposeTransition(
         UIComponentLifecycleState.Destroyed -> KoneList.of(UIComponentLifecycleTransition.Destroy)
         UIComponentLifecycleState.Initialized -> error("Unexpected UI component lifecycle transition")
         UIComponentLifecycleState.Running -> KoneList.of(UIComponentLifecycleTransition.Disappear)
-        UIComponentLifecycleState.Background -> error("Unexpected UI component lifecycle transition")
+        UIComponentLifecycleState.Background -> KoneList.of()
         UIComponentLifecycleState.Foreground -> KoneList.of(UIComponentLifecycleTransition.Focus)
     }
     UIComponentLifecycleState.Foreground -> when (nextState) {
@@ -103,6 +115,6 @@ internal actual fun decomposeTransition(
         UIComponentLifecycleState.Initialized -> error("Unexpected UI component lifecycle transition")
         UIComponentLifecycleState.Running -> KoneList.of(UIComponentLifecycleTransition.Defocus, UIComponentLifecycleTransition.Disappear)
         UIComponentLifecycleState.Background -> KoneList.of(UIComponentLifecycleTransition.Defocus)
-        UIComponentLifecycleState.Foreground -> error("Unexpected UI component lifecycle transition")
+        UIComponentLifecycleState.Foreground -> KoneList.of()
     }
 }

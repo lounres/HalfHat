@@ -3,7 +3,7 @@ package dev.lounres.halfhat.client.components.navigation
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.launch
-import dev.lounres.halfhat.client.components.uiChild
+import dev.lounres.halfhat.client.components.uiChildDeferring
 import dev.lounres.komponentual.lifecycle.*
 import dev.lounres.komponentual.navigation.ChildrenPossibility
 import dev.lounres.komponentual.navigation.InnerPossibilityNavigationState
@@ -39,7 +39,7 @@ public suspend fun <
         createChild = { configuration, nextState ->
             val controllingLifecycle = MutableUIComponentLifecycle(this.coroutineScope(Dispatchers.Default))
             updateLifecycle(configuration, controllingLifecycle, nextState)
-            val childContext = this.uiChild(controllingLifecycle)
+            val childContext = this.uiChildDeferring(controllingLifecycle)
             val child = childrenFactory(configuration, childContext)
             childContext.launch()
             Child(

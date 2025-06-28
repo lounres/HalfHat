@@ -41,12 +41,12 @@ internal suspend fun UIComponentContext.launch() {
 
 public fun UIComponentContext.coroutineScope(context: CoroutineContext): CoroutineScope = lifecycle.coroutineScope(context)
 
-@OptIn(DelicateLifecycleAPI::class)
-public fun UIComponentContext.uiChild(
+@DelicateLifecycleAPI
+public fun UIComponentContext.uiChildDeferring(
     controllingLifecycle: UIComponentLifecycle? = null,
 ): UIComponentContext =
     UIComponentContext {
-        val base = this@uiChild
+        val base = this@uiChildDeferring
         
         setFrom(base)
         
@@ -59,11 +59,22 @@ public fun UIComponentContext.uiChild(
     }
 
 @OptIn(DelicateLifecycleAPI::class)
-public fun UIComponentContext.logicChildOnRunning(
+public suspend fun <Result> UIComponentContext.buildUiChild(
+    controllingLifecycle: UIComponentLifecycle? = null,
+    provider: (UIComponentContext) -> Result,
+): Result {
+    val childContext = uiChildDeferring(controllingLifecycle)
+    val result = provider(childContext)
+    childContext.launch()
+    return result
+}
+
+@DelicateLifecycleAPI
+public fun UIComponentContext.logicChildDeferringOnRunning(
     controllingLifecycle: LogicComponentLifecycle? = null,
 ): LogicComponentContext =
     LogicComponentContext {
-        val base = this@logicChildOnRunning
+        val base = this@logicChildDeferringOnRunning
         
         setFrom(base)
         
@@ -74,3 +85,14 @@ public fun UIComponentContext.logicChildOnRunning(
                 base.lifecycle.logicChildDeferringOnRunning(CoroutineScope(Dispatchers.Default))
         LogicComponentLifecycleKey correspondsTo childLifecycle
     }
+
+@OptIn(DelicateLifecycleAPI::class)
+public suspend fun <Result> UIComponentContext.buildLogicChildOnRunning(
+    controllingLifecycle: LogicComponentLifecycle? = null,
+    provider: (LogicComponentContext) -> Result,
+): Result {
+    val childContext = logicChildDeferringOnRunning(controllingLifecycle)
+    val result = provider(childContext)
+    childContext.launch()
+    return result
+}

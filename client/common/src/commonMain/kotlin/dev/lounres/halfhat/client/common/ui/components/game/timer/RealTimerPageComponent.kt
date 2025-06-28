@@ -4,25 +4,19 @@ import dev.lounres.halfhat.client.common.logic.components.game.timer.RealTimerCo
 import dev.lounres.halfhat.client.common.logic.components.game.timer.TimerComponent
 import dev.lounres.halfhat.client.common.logic.components.game.timer.TimerState
 import dev.lounres.halfhat.client.components.UIComponentContext
-import dev.lounres.halfhat.client.components.logicChildOnRunning
+import dev.lounres.halfhat.client.components.buildLogicChildOnRunning
 import dev.lounres.kone.state.KoneMutableState
 import dev.lounres.kone.state.KoneState
 import kotlinx.coroutines.flow.StateFlow
 
 
 public class RealTimerPageComponent(
-    componentContext: UIComponentContext,
     override val onExitTimer: () -> Unit,
-    volumeOn: StateFlow<Boolean>,
     initialPreparationTimeSetting: UInt = 3u,
     initialExplanationTimeSetting: UInt = 40u,
     initialLastGuessTimeSetting: UInt = 3u,
+    private val timerComponent: TimerComponent
 ) : TimerPageComponent {
-    private val timerComponent: TimerComponent =
-        RealTimerComponent(
-            componentContext = componentContext.logicChildOnRunning(),
-            volumeOn = volumeOn,
-        )
     
     override val timerState: KoneState<TimerState> get() = timerComponent.timerState
     
@@ -40,4 +34,30 @@ public class RealTimerPageComponent(
     override val onResetTimer: () -> Unit = {
         timerComponent.resetTimer()
     }
+}
+
+public suspend fun RealTimerPageComponent(
+    componentContext: UIComponentContext,
+    onExitTimer: () -> Unit,
+    volumeOn: StateFlow<Boolean>,
+    initialPreparationTimeSetting: UInt = 3u,
+    initialExplanationTimeSetting: UInt = 40u,
+    initialLastGuessTimeSetting: UInt = 3u,
+): RealTimerPageComponent {
+    
+    val timerComponent: TimerComponent =
+        componentContext.buildLogicChildOnRunning {
+            RealTimerComponent(
+                componentContext = it,
+                volumeOn = volumeOn,
+            )
+        }
+    
+    return RealTimerPageComponent(
+        onExitTimer = onExitTimer,
+        initialPreparationTimeSetting = initialPreparationTimeSetting,
+        initialExplanationTimeSetting = initialExplanationTimeSetting,
+        initialLastGuessTimeSetting = initialLastGuessTimeSetting,
+        timerComponent = timerComponent
+    )
 }

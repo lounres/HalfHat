@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.WindowInfo
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -454,7 +455,10 @@ fun MainWindowUI(
             icon = painterResource(Res.drawable.halfhat_logo),
             state = rememberWindowState(
                 position = WindowPosition.Aligned(Alignment.Center),
+                size = DpSize(400.dp, 300.dp)
             ),
+            undecorated = true,
+            resizable = false,
             onCloseRequest = {},
         ) {
             Box(

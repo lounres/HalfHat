@@ -7,7 +7,8 @@ import dev.lounres.halfhat.client.common.logic.components.game.onlineGame.RealOn
 import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.gameScreen.RealGameScreenComponent
 import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.previewScreen.RealPreviewScreenComponent
 import dev.lounres.halfhat.client.components.UIComponentContext
-import dev.lounres.halfhat.client.components.logicChildOnRunning
+import dev.lounres.halfhat.client.components.buildLogicChildOnRunning
+import dev.lounres.halfhat.client.components.logicChildDeferringOnRunning
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStack
 import dev.lounres.komponentual.navigation.ChildrenStack
 import dev.lounres.komponentual.navigation.MutableStackNavigation
@@ -15,7 +16,6 @@ import dev.lounres.komponentual.navigation.replaceCurrent
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.state.KoneAsynchronousState
-import dev.lounres.kone.state.KoneState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
@@ -39,7 +39,10 @@ public suspend fun RealOnlineGamePageComponent(
     componentContext: UIComponentContext,
     onExitOnlineGameMode: () -> Unit,
 ): RealOnlineGamePageComponent {
-    val onlineGameComponent: OnlineGameComponent = RealOnlineGameComponent(componentContext.logicChildOnRunning())
+    val onlineGameComponent: OnlineGameComponent =
+        componentContext.buildLogicChildOnRunning {
+            RealOnlineGameComponent(it)
+        }
     
     val navigation = MutableStackNavigation<RealOnlineGamePageComponent.Configuration>(CoroutineScope(Dispatchers.Default))
     
