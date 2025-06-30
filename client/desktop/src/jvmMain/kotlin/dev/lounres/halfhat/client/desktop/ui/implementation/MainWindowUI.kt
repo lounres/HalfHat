@@ -437,6 +437,7 @@ fun MainWindowUI(
                 LocalWindowInfo.current,
             )
             
+            // FIXME: Remove when #CMP-8323 will be fixed
             var showContent by remember { mutableStateOf(false) }
             
             if (showContent)

@@ -66,6 +66,11 @@ kotlin {
                 implementation(projects.client.common)
             }
         }
+        web {
+            dependencies {
+                implementation(versions.kotlin.wrappers.browser)
+            }
+        }
         jsMain {
             dependencies {
                 implementation(kotlin("stdlib"))

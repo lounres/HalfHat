@@ -1,6 +1,7 @@
 package dev.lounres.halfhat.client.common.logic.components.game.timer
 
 import dev.lounres.halfhat.client.common.utils.DefaultSounds
+import dev.lounres.halfhat.client.common.utils.playSound
 import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.lifecycle
@@ -52,15 +53,15 @@ public class RealTimerComponent(
                             when(it) {
                                 is TimerState.Preparation ->
                                     if (oldTimerState !is TimerState.Preparation || (oldTimerState.millisecondsLeft / 1000u) != (it.millisecondsLeft / 1000u))
-                                        coroutineScope.launch { DefaultSounds.preparationCountdown.await().play() }
+                                        coroutineScope.launch { DefaultSounds.preparationCountdown.await().playSound() }
                                 is TimerState.Explanation ->
                                     if (oldTimerState is TimerState.Preparation)
-                                        coroutineScope.launch { DefaultSounds.explanationStart.await().play() }
+                                        coroutineScope.launch { DefaultSounds.explanationStart.await().playSound() }
                                 is TimerState.LastGuess ->
                                     if (oldTimerState is TimerState.Preparation || oldTimerState is TimerState.Explanation)
-                                        coroutineScope.launch { DefaultSounds.finalGuessStart.await().play() }
+                                        coroutineScope.launch { DefaultSounds.finalGuessStart.await().playSound() }
                                 TimerState.Finished ->
-                                    coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                                    coroutineScope.launch { DefaultSounds.finalGuessEnd.await().playSound() }
                             }
                     }
                 }.start()

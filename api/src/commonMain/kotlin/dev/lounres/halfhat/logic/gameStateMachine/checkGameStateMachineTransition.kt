@@ -204,7 +204,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                             }
                         }
                     }
-                    TODO()
                 }
                 
                 is GameStateMachine.State.RoundWaiting,

@@ -18,11 +18,15 @@ import dev.lounres.kone.collections.utils.take
 import dev.lounres.kone.relations.defaultEquality
 import dev.lounres.kone.relations.defaultHashing
 import dev.lounres.kone.scope
+import js.buffer.ArrayBufferLike
+import js.core.JsPrimitives.toJsByte
+import js.typedarrays.Int8Array
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.serialization.Serializable
+import web.encoding.TextDecoder
 import kotlin.random.Random
 
 
@@ -47,6 +51,8 @@ public class LocalDeviceGameWordsProvider(
 }
 
 public actual object DeviceGameWordsProviderRegistry : GameStateMachine.WordsProviderRegistry<DeviceGameWordsProviderID, NoDeviceGameWordsProviderReason> {
+    private val decoder = TextDecoder("utf-8")
+    
     private val localWordsProviders =
         KoneMap.of(
             "easy" mapsTo "files/wordsProviders/easy",
@@ -56,7 +62,12 @@ public actual object DeviceGameWordsProviderRegistry : GameStateMachine.WordsPro
             keyHashing = defaultHashing(),
         ).mapValues { entry ->
             CoroutineScope(Dispatchers.Default).async(start = CoroutineStart.LAZY) {
-                KoneSet.of<String>()
+                Res
+                    .readBytes(entry.value)
+                    .let { decoder.decode(Int8Array<ArrayBufferLike>(it.size).apply { it.forEachIndexed { index, b -> this[index] = b.toJsByte() } }) }
+                    .lines()
+                    .toKoneList()
+                    .filterTo(KoneMutableSet.of()) { line -> line.isNotBlank() }
             }
         }
     

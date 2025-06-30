@@ -1,6 +1,10 @@
 package dev.lounres.halfhat.client.web.ui.components
 
 import dev.lounres.halfhat.Language
+import dev.lounres.halfhat.client.common.logic.settings.DeviceGameDefaultSettingsKey
+import dev.lounres.halfhat.client.common.logic.wordsProviders.DeviceGameWordsProviderID
+import dev.lounres.halfhat.client.common.logic.wordsProviders.DeviceGameWordsProviderRegistry
+import dev.lounres.halfhat.client.common.logic.wordsProviders.DeviceGameWordsProviderRegistryKey
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariants
 import dev.lounres.halfhat.client.common.ui.components.about.RealAboutPageComponent
@@ -12,6 +16,7 @@ import dev.lounres.halfhat.client.common.ui.components.home.RealHomePageComponen
 import dev.lounres.halfhat.client.common.ui.components.news.RealNewsPageComponent
 import dev.lounres.halfhat.client.common.ui.components.rules.RealRulesPageComponent
 import dev.lounres.halfhat.client.common.ui.components.settings.RealSettingsPageComponent
+import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.komponentual.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.komponentual.lifecycle.UIComponentLifecycleKey
 import dev.lounres.komponentual.navigation.ChildrenVariants
@@ -25,7 +30,7 @@ import dev.lounres.kone.collections.set.KoneSet
 import dev.lounres.kone.collections.set.build
 import dev.lounres.kone.collections.utils.map
 import dev.lounres.kone.state.KoneAsynchronousState
-import dev.lounres.kone.state.KoneState
+import dev.lounres.kone.state.KoneMutableAsynchronousState
 import dev.lounres.kone.state.map
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -62,6 +67,19 @@ suspend fun RealMainWindowComponent(
     val globalLifecycle: MutableUIComponentLifecycle = MutableUIComponentLifecycle(CoroutineScope(Dispatchers.Default))
     val globalComponentContext = UIComponentContext {
         UIComponentLifecycleKey correspondsTo globalLifecycle
+        DeviceGameWordsProviderRegistryKey correspondsTo DeviceGameWordsProviderRegistry
+        DeviceGameDefaultSettingsKey correspondsTo KoneMutableAsynchronousState(
+            GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>(
+                preparationTimeSeconds = 3u,
+                explanationTimeSeconds = 40u,
+                finalGuessTimeSeconds = 3u,
+                strictMode = false,
+                cachedEndConditionWordsNumber = 100u,
+                cachedEndConditionCyclesNumber = 5u,
+                gameEndConditionType = GameStateMachine.GameEndCondition.Type.Words,
+                wordsSource = GameStateMachine.WordsSource.Custom(DeviceGameWordsProviderID.Local("medium"))
+            )
+        )
     }
     
     val volumeOn: MutableStateFlow<Boolean> = MutableStateFlow(initialVolumeOn)

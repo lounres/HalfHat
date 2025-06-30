@@ -49,22 +49,22 @@ public class LocalDeviceGameWordsProvider(
 
 public actual object DeviceGameWordsProviderRegistry : GameStateMachine.WordsProviderRegistry<DeviceGameWordsProviderID, NoDeviceGameWordsProviderReason> {
     private val localWordsProviders =
-            KoneMap.of(
-                "easy" mapsTo "files/wordsProviders/easy",
-                "medium" mapsTo "files/wordsProviders/medium",
-                "hard" mapsTo "files/wordsProviders/hard",
-                keyEquality = defaultEquality(),
-                keyHashing = defaultHashing(),
-            ).mapValues { entry ->
-                CoroutineScope(Dispatchers.IO).async(start = CoroutineStart.LAZY) {
-                    Res
-                        .readBytes(entry.value)
-                        .toString(Charsets.UTF_8)
-                        .lines()
-                        .toKoneList()
-                        .filterTo(KoneMutableSet.of()) { line -> line.isNotBlank() }
-                }
+        KoneMap.of(
+            "easy" mapsTo "files/wordsProviders/easy",
+            "medium" mapsTo "files/wordsProviders/medium",
+            "hard" mapsTo "files/wordsProviders/hard",
+            keyEquality = defaultEquality(),
+            keyHashing = defaultHashing(),
+        ).mapValues { entry ->
+            CoroutineScope(Dispatchers.Default).async(start = CoroutineStart.LAZY) {
+                Res
+                    .readBytes(entry.value)
+                    .toString(Charsets.UTF_8)
+                    .lines()
+                    .toKoneList()
+                    .filterTo(KoneMutableSet.of()) { line -> line.isNotBlank() }
             }
+        }
     
     actual override suspend operator fun get(providerId: DeviceGameWordsProviderID): GameStateMachine.WordsProviderRegistry.ResultOrReason<NoDeviceGameWordsProviderReason> =
         when (providerId) {

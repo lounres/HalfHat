@@ -69,6 +69,7 @@ kotlin {
         web {
             dependencies {
                 implementation(versions.ktor.client.js)
+                implementation(versions.kotlin.wrappers.browser)
             }
         }
     }
