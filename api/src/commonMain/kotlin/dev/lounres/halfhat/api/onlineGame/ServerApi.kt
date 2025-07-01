@@ -265,6 +265,7 @@ public object ServerApi {
             public data object NotHostChangingGameSettings : Error
             public data object CannotUpdateGameSettingsAfterInitialization : Error
             public data object NotEnoughPlayersForInitialization : Error
+            public data object CannotFindDictionaryByID : Error
             public data object CannotInitializationGameSettingsAfterInitialization : Error
             public data object CannotSetSpeakerReadinessNotDuringRoundWaiting : Error
             public data object CannotSetListenerReadinessNotDuringRoundWaiting : Error

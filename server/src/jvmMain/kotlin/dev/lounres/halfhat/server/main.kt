@@ -52,21 +52,18 @@ data class PlayerMetadata(
 
 typealias WordsProviderID = String
 
-sealed interface OnlineGameWordsProvider: Room.WordsProvider<WordsProviderID> {
-    interface ServerDictionary: OnlineGameWordsProvider {
-        val name: String
-    }
+sealed interface NoWordsProviderReason {
+    data object CannotFindDictionaryByID : NoWordsProviderReason
 }
 
-object OnlineGameWordsProviderRegistry : Room.WordProviderRegistry<WordsProviderID, OnlineGameWordsProvider> {
+object OnlineGameWordsProviderRegistry : Room.WordProviderRegistry<WordsProviderID, NoWordsProviderReason> {
     override fun contains(id: String): Boolean = id == "kek"
     
-    override fun get(id: String): OnlineGameWordsProvider = if (id == "kek") TemporaryDictionary else TODO("No meaningful exception is provided")
+    override suspend fun get(providerId: String): GameStateMachine.WordsProviderRegistry.ResultOrReason<NoWordsProviderReason> =
+        if (providerId == "kek") GameStateMachine.WordsProviderRegistry.ResultOrReason.Success(TemporaryDictionary)
+        else GameStateMachine.WordsProviderRegistry.ResultOrReason.Failure(NoWordsProviderReason.CannotFindDictionaryByID)
     
-    private object TemporaryDictionary: OnlineGameWordsProvider.ServerDictionary {
-        override val name: String = "kek"
-        override val id: String = "kek"
-        
+    private object TemporaryDictionary: GameStateMachine.WordsProvider {
         private val words = KoneSet.of("картина", "корзина", "картонка", "собачонка")
         
         override val size: UInt get() = words.size
@@ -75,7 +72,7 @@ object OnlineGameWordsProviderRegistry : Room.WordProviderRegistry<WordsProvider
     }
 }
 
-typealias ServerRoom = Room<RoomMetadata, String, PlayerMetadata, String, OnlineGameWordsProvider, Connection>
+typealias ServerRoom = Room<RoomMetadata, String, PlayerMetadata, WordsProviderID, NoWordsProviderReason, Connection>
 
 val rooms = ConcurrentHashMap<String, ServerRoom>()
 
@@ -100,11 +97,11 @@ fun getRoomByIdOrCreate(id: String): ServerRoom = rooms.computeIfAbsent(id) {
 
 class Connection(
     val socketSession: WebSocketServerSession,
-) : Room.Connection<RoomMetadata, PlayerMetadata, WordsProviderID> {
+) : Room.Connection<RoomMetadata, PlayerMetadata, WordsProviderID, NoWordsProviderReason> {
     val id: Uuid = Uuid.random()
     override fun toString(): String = "Connection#${id.toHexString()}"
     
-    var playerAttachment : Room.Player.Attachment<RoomMetadata, String, PlayerMetadata, String, OnlineGameWordsProvider, Connection>? = null
+    var playerAttachment : Room.Player.Attachment<RoomMetadata, String, PlayerMetadata, WordsProviderID, NoWordsProviderReason, Connection>? = null
     val playerAttachmentMutex = Mutex()
     
     override suspend fun sendNewState(state: Room.Outgoing.State<RoomMetadata, PlayerMetadata, WordsProviderID>) {
@@ -280,8 +277,9 @@ class Connection(
         )
     }
     
-    override suspend fun sendError(error: Room.Outgoing.Error) {
+    override suspend fun sendError(error: Room.Outgoing.Error<NoWordsProviderReason>) {
         val errorToSend = when (error) {
+            is Room.Outgoing.Error.NoWordsProvider<NoWordsProviderReason> -> ServerApi.OnlineGame.Error.CannotFindDictionaryByID
             Room.Outgoing.Error.AttachmentIsDenied -> ServerApi.OnlineGame.Error.AttachmentIsDenied
             Room.Outgoing.Error.AttachmentIsAlreadySevered -> ServerApi.OnlineGame.Error.AttachmentIsAlreadySevered
             Room.Outgoing.Error.NotHostChangingGameSettings -> ServerApi.OnlineGame.Error.NotHostChangingGameSettings
@@ -348,13 +346,18 @@ fun main() {
                             is ClientApi.Signal.FetchRoomInfo -> {
                                 val room = rooms[signal.roomId]
                                 
-                                sendSerialized<ServerApi.Signal>(
+                                val signal =
                                     ServerApi.Signal.RoomInfo(
                                         room?.description
                                             ?.let {
                                                 ServerApi.RoomDescription(
                                                     name = it.metadata.name,
-                                                    playersList = KoneList.empty(),
+                                                    playersList = it.playersList.map { description ->
+                                                        ServerApi.PlayerDescription(
+                                                            name = description.metadata.name,
+                                                            isOnline = description.isOnline,
+                                                        )
+                                                    },
                                                     state = when (it.stateType) {
                                                         Room.StateType.GameInitialisation -> ServerApi.RoomStateType.GameInitialisation
                                                         Room.StateType.RoundWaiting -> ServerApi.RoomStateType.RoundWaiting
@@ -372,7 +375,17 @@ fun main() {
                                                 state = ServerApi.RoomStateType.GameInitialisation
                                             )
                                     )
-                                )
+                                
+                                logger.debug(
+                                    items = {
+                                        mapOf(
+                                            "connection" to connection.toString(),
+                                            "signal" to signal.toString(),
+                                        )
+                                    }
+                                ) { "Sending signal" }
+                                
+                                sendSerialized<ServerApi.Signal>(signal)
                             }
                             is ClientApi.Signal.OnlineGame.JoinRoom -> connection.playerAttachmentMutex.withLock {
                                 if (connection.playerAttachment != null) {

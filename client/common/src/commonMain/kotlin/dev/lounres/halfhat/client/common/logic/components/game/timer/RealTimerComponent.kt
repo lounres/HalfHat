@@ -22,10 +22,6 @@ public class RealTimerComponent(
     private val componentContext: LogicComponentContext,
     public val volumeOn: StateFlow<Boolean>,
 ) : TimerComponent {
-    init {
-        componentContext.lifecycle.subscribe { println("RealTimerComponent transition: $it") }
-    }
-    
     private val coroutineScope: CoroutineScope = componentContext.coroutineScope(Dispatchers.Default)
     
     override val timerState: KoneMutableState<TimerState> = KoneMutableState(TimerState.Finished)

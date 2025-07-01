@@ -13,6 +13,7 @@ import dev.lounres.halfhat.logic.gameStateMachine.updateWordsExplanationResults
 import dev.lounres.halfhat.logic.gameStateMachine.wordExplanationState
 import dev.lounres.halfhat.logic.server.Room.GameStateMachineMetadataTransition.*
 import dev.lounres.kone.automata.CheckResult
+import dev.lounres.kone.automata.MovementMaybeAndComputationResult
 import dev.lounres.kone.automata.MovementMaybeResult
 import dev.lounres.kone.automata.MovementResult
 import dev.lounres.kone.automata.TransitionOrReason
@@ -31,6 +32,7 @@ import dev.lounres.kone.collections.utils.firstThatOrNull
 import dev.lounres.kone.collections.utils.forEach
 import dev.lounres.kone.collections.utils.forEachIndexed
 import dev.lounres.kone.collections.utils.map
+import dev.lounres.kone.scope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.Serializable
@@ -46,7 +48,7 @@ public class Room<
     ConnectionType: Room.Connection<RoomMetadata, PlayerMetadata, WordsProviderID, NoWordsProviderReason>,
 >(
     public val metadata: RoomMetadata,
-    public val wordsProviderRegistry: WordProviderRegistry<WordsProviderID>,
+    public val wordsProviderRegistry: WordProviderRegistry<WordsProviderID, NoWordsProviderReason>,
     initialSettingsBuilder: GameSettings.Builder<WordsProviderID>,
     private val initialMetadataFactory: (PlayerID) -> PlayerMetadata,
     private val checkConnectionAttachment: (metadata: PlayerMetadata, isOnline: Boolean, connection: ConnectionType) -> Boolean,
@@ -115,7 +117,7 @@ public class Room<
                         return@moveMaybe TransitionOrReason.Failure(null)
                     }
                     when (previousState) {
-                        is GameStateMachine.State.GameInitialisation<*, WordsProviderID, *> ->
+                        is GameStateMachine.State.GameInitialisation<*, WordsProviderID, *> -> scope {
                             TransitionOrReason.Success(
                                 GameStateMachine.Transition.UpdateGame.UpdateGameSettings(
                                     playersList = previousState.playersList,
@@ -129,19 +131,20 @@ public class Room<
                                         gameEndConditionType = settingsBuilder.gameEndConditionType,
                                         wordsSource = when (val wordsSource = settingsBuilder.wordsSource) {
                                             WordsSource.Players -> GameStateMachine.WordsSource.Players
-                                            is WordsSource.ServerDictionary<WordsProviderID> -> GameStateMachine.WordsSource.Custom(player.room.wordsProviderRegistry[wordsSource.id])
+                                            is WordsSource.ServerDictionary<WordsProviderID> -> GameStateMachine.WordsSource.Custom(wordsSource.id)
                                         },
                                     ),
                                 )
                             )
+                        }
                         is GameStateMachine.State.RoundWaiting<*, *, *>,
                         is GameStateMachine.State.RoundPreparation<*, *, *>,
                         is GameStateMachine.State.RoundExplanation<*, *, *>,
                         is GameStateMachine.State.RoundLastGuess<*, *, *>,
                         is GameStateMachine.State.RoundEditing<*, *, *>,
-                        is GameStateMachine.State.GameResults<*, *>, -> TransitionOrReason.Failure(null)
+                        is GameStateMachine.State.GameResults<*, *>,
+                            -> TransitionOrReason.Failure(null)
                     }
-                    TODO()
                 }
             }
             
@@ -156,12 +159,14 @@ public class Room<
                             wordsProviderRegistry = player.room.wordsProviderRegistry,
                         )
                     )
-                    TODO()
                 }
                 when (result) {
-                    is MovementMaybeResult.NoTransition -> TODO()
-                    is MovementMaybeResult.NoNextState<*, *, *> -> TODO()
-                    is MovementMaybeResult.Success<*, *> -> TODO()
+                    is MovementMaybeResult.NoTransition<*, *> -> {}
+                    is MovementMaybeResult.NoNextState<*, *, GameStateMachine.NoNextStateReason<Nothing?, NoWordsProviderReason>> -> {
+                        val error = Outgoing.Error.fromGameStateMachineNoNextStateReason(result.noNextStateReason)
+                        if (error != null) node.element.sendError(error)
+                    }
+                    is MovementMaybeResult.Success<*, *> -> {}
                 }
 //                if (result is MovementResult.NoNextState<*, *, GameStateMachine.NoNextStateReason<Nothing?>>) {
 //                    val error = Outgoing.Error.fromGameStateMachineNoNextStateReason(result.noNextStateReason)
@@ -252,9 +257,9 @@ public class Room<
         public suspend fun sendError(error: Outgoing.Error<NoWordsProviderReason>)
     }
     
-    public interface WordProviderRegistry<WordsProviderID> : GameStateMachine.WordsProviderRegistry<WordsProviderID, Nothing?> {
+    public interface WordProviderRegistry<WordsProviderID, NoWordsProviderReason> : GameStateMachine.WordsProviderRegistry<WordsProviderID, NoWordsProviderReason> {
         public operator fun contains(id: WordsProviderID): Boolean
-        override suspend operator fun get(providerId: WordsProviderID): GameStateMachine.WordsProviderRegistry.ResultOrReason<Nothing?>
+        override suspend operator fun get(providerId: WordsProviderID): GameStateMachine.WordsProviderRegistry.ResultOrReason<NoWordsProviderReason>
     }
     
     @Serializable
@@ -815,8 +820,8 @@ public class Room<
                 }
             )
     
-    public suspend fun attachConnectionToPlayer(connection: ConnectionType, playerID: PlayerID): Player.Attachment<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>? =
-        gameStateMachine.moveMaybeAndCompute { previousState ->
+    public suspend fun attachConnectionToPlayer(connection: ConnectionType, playerID: PlayerID): Player.Attachment<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>? {
+        val result = gameStateMachine.moveMaybeAndCompute { previousState ->
             when (previousState) {
                 is GameStateMachine.State.GameInitialisation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
                     val player = previousState.metadata.allPlayersList.firstThatOrNull { it.metadata.id == playerID }
@@ -865,7 +870,8 @@ public class Room<
                 is GameStateMachine.State.RoundExplanation<*, *, *>,
                 is GameStateMachine.State.RoundLastGuess<*, *, *>,
                 is GameStateMachine.State.RoundEditing<*, *, *>,
-                is GameStateMachine.State.GameResults<*, *>, -> {
+                is GameStateMachine.State.GameResults<*, *>,
+                    -> {
                     val player = previousState.playersList.firstThatOrNull { it.metadata.id == playerID }
                     if (player == null || !checkConnectionAttachment(player.metadata, player.isOnline, connection)) {
                         connection.sendError(Outgoing.Error.AttachmentIsDenied)
@@ -884,5 +890,12 @@ public class Room<
                     }
                 }
             }
-        }.computation
+        }
+        when (result) {
+            is MovementMaybeAndComputationResult.NoTransition<*, *, *> -> {}
+            is MovementMaybeAndComputationResult.NoNextState<*, *, *, *> -> {} // TODO: Log transition denial
+            is MovementMaybeAndComputationResult.Success -> {}
+        }
+        return result.computation
+    }
 }
