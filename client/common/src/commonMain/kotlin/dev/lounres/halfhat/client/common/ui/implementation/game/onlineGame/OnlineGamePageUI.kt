@@ -90,7 +90,7 @@ public fun ColumnScope.OnlineGamePageUI(
             }
             Spacer(modifier = Modifier.width(4.dp))
             OutlinedIconButton(
-                onClick = { TODO() },
+                onClick = { /*TODO()*/ },
                 border = BorderStroke(1.dp, color = Color.Gray),
             ) {
                 Icon(

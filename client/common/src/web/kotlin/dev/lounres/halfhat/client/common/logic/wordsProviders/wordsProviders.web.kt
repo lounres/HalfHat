@@ -3,9 +3,10 @@ package dev.lounres.halfhat.client.common.logic.wordsProviders
 import dev.lounres.halfhat.client.common.resources.Res
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.interop.toKoneList
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.collections.map.KoneMap
 import dev.lounres.kone.collections.map.getOrElse
-import dev.lounres.kone.collections.map.mapValues
 import dev.lounres.kone.collections.map.mapsTo
 import dev.lounres.kone.collections.map.of
 import dev.lounres.kone.collections.set.KoneMutableSet
@@ -21,10 +22,6 @@ import dev.lounres.kone.scope
 import js.buffer.ArrayBufferLike
 import js.core.JsPrimitives.toJsByte
 import js.typedarrays.Int8Array
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.serialization.Serializable
 import web.encoding.TextDecoder
 import kotlin.random.Random
@@ -36,8 +33,11 @@ public actual sealed interface NoDeviceGameWordsProviderReason {
 
 @Serializable
 public actual sealed interface DeviceGameWordsProviderID {
+    public actual val name: String
     @Serializable
-    public data class Local(val id: String) : DeviceGameWordsProviderID
+    public data class Local(val id: String) : DeviceGameWordsProviderID {
+        override val name: String get() = id
+    }
 }
 
 public class LocalDeviceGameWordsProvider(
@@ -60,21 +60,21 @@ public actual object DeviceGameWordsProviderRegistry : GameStateMachine.WordsPro
             "hard" mapsTo "files/wordsProviders/hard",
             keyEquality = defaultEquality(),
             keyHashing = defaultHashing(),
-        ).mapValues { entry ->
-            CoroutineScope(Dispatchers.Default).async(start = CoroutineStart.LAZY) {
-                Res
-                    .readBytes(entry.value)
-                    .let { decoder.decode(Int8Array<ArrayBufferLike>(it.size).apply { it.forEachIndexed { index, b -> this[index] = b.toJsByte() } }) }
-                    .lines()
-                    .toKoneList()
-                    .filterTo(KoneMutableSet.of()) { line -> line.isNotBlank() }
-            }
-        }
+        )
+    
+    private val localWordsProvidersIDs =
+        KoneList.of(
+            DeviceGameWordsProviderID.Local("easy"),
+            DeviceGameWordsProviderID.Local("medium"),
+            DeviceGameWordsProviderID.Local("hard"),
+        )
+    
+    public actual suspend fun list(): KoneList<DeviceGameWordsProviderID> = localWordsProvidersIDs
     
     actual override suspend operator fun get(providerId: DeviceGameWordsProviderID): GameStateMachine.WordsProviderRegistry.ResultOrReason<NoDeviceGameWordsProviderReason> =
         when (providerId) {
             is DeviceGameWordsProviderID.Local -> scope {
-                val deferredWordsSet = localWordsProviders.getOrElse(providerId.id) {
+                val wordsSetPath = localWordsProviders.getOrElse(providerId.id) {
                     return@scope GameStateMachine.WordsProviderRegistry.ResultOrReason.Failure(
                         NoDeviceGameWordsProviderReason.NoSuchWordProvider
                     )
@@ -82,7 +82,12 @@ public actual object DeviceGameWordsProviderRegistry : GameStateMachine.WordsPro
                 
                 GameStateMachine.WordsProviderRegistry.ResultOrReason.Success(
                     LocalDeviceGameWordsProvider(
-                        deferredWordsSet.await()
+                        Res
+                            .readBytes(wordsSetPath)
+                            .let { decoder.decode(Int8Array<ArrayBufferLike>(it.size).apply { it.forEachIndexed { index, b -> this[index] = b.toJsByte() } }) }
+                            .lines()
+                            .toKoneList()
+                            .filterTo(KoneMutableSet.of()) { line -> line.isNotBlank() }
                     )
                 )
             }

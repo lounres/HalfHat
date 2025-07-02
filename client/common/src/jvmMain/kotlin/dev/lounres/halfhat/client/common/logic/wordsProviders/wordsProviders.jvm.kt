@@ -3,6 +3,8 @@ package dev.lounres.halfhat.client.common.logic.wordsProviders
 import dev.lounres.halfhat.client.common.resources.Res
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.interop.toKoneList
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.collections.map.KoneMap
 import dev.lounres.kone.collections.map.getOrElse
 import dev.lounres.kone.collections.map.mapValues
@@ -33,8 +35,12 @@ public actual sealed interface NoDeviceGameWordsProviderReason {
 
 @Serializable
 public actual sealed interface DeviceGameWordsProviderID {
+    public actual val name: String
+    
     @Serializable
-    public data class Local(val id: String) : DeviceGameWordsProviderID
+    public data class Local(val id: String) : DeviceGameWordsProviderID {
+        override val name: String get() = id
+    }
 }
 
 public class LocalDeviceGameWordsProvider(
@@ -65,6 +71,15 @@ public actual object DeviceGameWordsProviderRegistry : GameStateMachine.WordsPro
                     .filterTo(KoneMutableSet.of()) { line -> line.isNotBlank() }
             }
         }
+    
+    private val localWordsProvidersIDs =
+        KoneList.of(
+            DeviceGameWordsProviderID.Local("easy"),
+            DeviceGameWordsProviderID.Local("medium"),
+            DeviceGameWordsProviderID.Local("hard"),
+        )
+    
+    public actual suspend fun list(): KoneList<DeviceGameWordsProviderID> = localWordsProvidersIDs
     
     actual override suspend operator fun get(providerId: DeviceGameWordsProviderID): GameStateMachine.WordsProviderRegistry.ResultOrReason<NoDeviceGameWordsProviderReason> =
         when (providerId) {

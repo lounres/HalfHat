@@ -16,6 +16,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +39,7 @@ import dev.lounres.halfhat.client.common.resources.discardDeviceGameSettingsButt
 import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.roomSettings.RoomSettingsComponent
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
+import dev.lounres.kone.collections.iterables.next
 import org.jetbrains.compose.resources.painterResource
 
 
@@ -143,11 +145,59 @@ public fun RoomSettingsUI(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            var menuExpanded by remember { mutableStateOf(false) }
+            var dictionaryMenuExpanded by remember { mutableStateOf(false) }
             ExposedDropdownMenuBox(
                 modifier = Modifier.fillMaxWidth(),
                 expanded = false,
-                onExpandedChange = { menuExpanded = it },
+                onExpandedChange = { dictionaryMenuExpanded = it },
+            ) {
+                TextField(
+                    modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                    value = when (val wordsSource = component.wordsSource.collectAsState().value) {
+                        GameStateMachine.WordsSource.Players -> "From each player"
+                        is GameStateMachine.WordsSource.Custom -> "Custom: ${wordsSource.providerId.name}" // TODO: Replace with meaningful string representation
+                    },
+                    onValueChange = {},
+                    readOnly = true,
+                    singleLine = true,
+                    label = {
+                        Text(text = "Words source")
+                    },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dictionaryMenuExpanded) },
+                    colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                )
+                ExposedDropdownMenu(
+                    expanded = dictionaryMenuExpanded,
+                    onDismissRequest = { dictionaryMenuExpanded = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(text = "From each player") },
+                        onClick = {
+                            component.wordsSource.value = GameStateMachine.WordsSource.Players
+                            dictionaryMenuExpanded = false
+                        },
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                    )
+                    HorizontalDivider()
+                    for (id in component.possibleWordsSources)
+                        DropdownMenuItem(
+                            text = { Text(text = id.name) },
+                            onClick = {
+                                component.wordsSource.value = GameStateMachine.WordsSource.Custom(id)
+                                dictionaryMenuExpanded = false
+                            },
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                        )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            var gameEndConditionMenuExpanded by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(
+                modifier = Modifier.fillMaxWidth(),
+                expanded = false,
+                onExpandedChange = { gameEndConditionMenuExpanded = it },
             ) {
                 TextField(
                     modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
@@ -161,18 +211,18 @@ public fun RoomSettingsUI(
                     label = {
                         Text(text = "Game end condition")
                     },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = menuExpanded) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = gameEndConditionMenuExpanded) },
                     colors = ExposedDropdownMenuDefaults.textFieldColors(),
                 )
                 ExposedDropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = { menuExpanded = false },
+                    expanded = gameEndConditionMenuExpanded,
+                    onDismissRequest = { gameEndConditionMenuExpanded = false },
                 ) {
                     DropdownMenuItem(
-                        text = { Text(text = "Words", style = MaterialTheme.typography.bodyLarge) },
+                        text = { Text(text = "Words") },
                         onClick = {
                             component.gameEndConditionType.value = GameStateMachine.GameEndCondition.Type.Words
-                            menuExpanded = false
+                            gameEndConditionMenuExpanded = false
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                     )
@@ -180,7 +230,7 @@ public fun RoomSettingsUI(
                         text = { Text(text = "Cycles") },
                         onClick = {
                             component.gameEndConditionType.value = GameStateMachine.GameEndCondition.Type.Cycles
-                            menuExpanded = false
+                            gameEndConditionMenuExpanded = false
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                     )

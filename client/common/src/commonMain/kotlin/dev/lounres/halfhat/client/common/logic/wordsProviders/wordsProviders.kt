@@ -3,6 +3,7 @@ package dev.lounres.halfhat.client.common.logic.wordsProviders
 import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
+import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.registry.RegistryKey
 import kotlinx.serialization.Serializable
 
@@ -10,9 +11,12 @@ import kotlinx.serialization.Serializable
 public expect sealed interface NoDeviceGameWordsProviderReason
 
 @Serializable
-public expect sealed interface DeviceGameWordsProviderID
+public expect sealed interface DeviceGameWordsProviderID {
+    public val name: String
+}
 
 public expect class DeviceGameWordsProviderRegistry : GameStateMachine.WordsProviderRegistry<DeviceGameWordsProviderID, NoDeviceGameWordsProviderReason> {
+    public suspend fun list(): KoneList<DeviceGameWordsProviderID>
     public override suspend operator fun get(providerId: DeviceGameWordsProviderID): GameStateMachine.WordsProviderRegistry.ResultOrReason<NoDeviceGameWordsProviderReason>
 }
 

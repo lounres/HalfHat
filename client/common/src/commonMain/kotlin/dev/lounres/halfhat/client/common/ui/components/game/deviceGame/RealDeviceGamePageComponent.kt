@@ -2,6 +2,7 @@ package dev.lounres.halfhat.client.common.ui.components.game.deviceGame
 
 import dev.lounres.halfhat.client.common.logic.settings.deviceGameDefaultSettings
 import dev.lounres.halfhat.client.common.logic.wordsProviders.DeviceGameWordsProviderID
+import dev.lounres.halfhat.client.common.logic.wordsProviders.deviceGameWordsProviderRegistry
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.roomScreen.Player
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.roomScreen.RealRoomScreenComponent
@@ -41,6 +42,8 @@ public suspend fun RealDeviceGamePageComponent(
     val settingsBuilderState: MutableStateFlow<GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>> = MutableStateFlow(componentContext.deviceGameDefaultSettings.value)
     
     val navigation = MutableStackNavigation<RealDeviceGamePageComponent.Configuration>(CoroutineScope(Dispatchers.Default))
+    
+    val possibleWordsSources = componentContext.deviceGameWordsProviderRegistry.list()
     
     val childStack: KoneAsynchronousState<ChildrenStack<RealDeviceGamePageComponent.Configuration, DeviceGamePageComponent.Child>> =
         componentContext.uiChildrenDefaultStack(
@@ -86,6 +89,7 @@ public suspend fun RealDeviceGamePageComponent(
                     DeviceGamePageComponent.Child.RoomSettings(
                         RealRoomSettingsComponent(
                             initialSettingsBuilder = settingsBuilderState.value,
+                            possibleWordsSources = possibleWordsSources,
                             onUpdateSettingsBuilder = { settingsBuilderState.value = it },
                             onExitSettings = {
                                 CoroutineScope(Dispatchers.Default).launch {

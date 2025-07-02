@@ -1,6 +1,8 @@
 package dev.lounres.halfhat.client.common.ui.components.game.deviceGame.roomSettings
 
+import dev.lounres.halfhat.client.common.logic.wordsProviders.DeviceGameWordsProviderID
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
+import dev.lounres.kone.collections.list.KoneList
 import kotlinx.coroutines.flow.MutableStateFlow
 
 
@@ -12,8 +14,9 @@ public interface RoomSettingsComponent {
     public val explanationTimeSeconds: MutableStateFlow<UInt>
     public val finalGuessTimeSeconds: MutableStateFlow<UInt>
     public val strictMode: MutableStateFlow<Boolean>
+    public val possibleWordsSources: KoneList<DeviceGameWordsProviderID>
+    public val wordsSource: MutableStateFlow<GameStateMachine.WordsSource<DeviceGameWordsProviderID>>
     public val cachedEndConditionWordsNumber: MutableStateFlow<UInt>
     public val cachedEndConditionCyclesNumber: MutableStateFlow<UInt>
     public val gameEndConditionType: MutableStateFlow<GameStateMachine.GameEndCondition.Type>
-//    val wordsSource // TODO: Implement different words sources
 }
