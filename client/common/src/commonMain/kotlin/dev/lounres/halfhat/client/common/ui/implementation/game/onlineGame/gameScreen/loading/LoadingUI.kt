@@ -1,7 +1,7 @@
 package dev.lounres.halfhat.client.common.ui.implementation.game.onlineGame.gameScreen.loading
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -39,7 +39,7 @@ public fun ColumnScope.LoadingUI(
                 fontSize = 16.sp
             )
             Spacer(modifier = Modifier.height(4.dp))
-            CircularProgressIndicator()
+            LoadingIndicator()
         }
     }
 }

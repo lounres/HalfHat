@@ -22,7 +22,7 @@ public class RealRoomSettingsComponent(
                 cachedEndConditionWordsNumber = cachedEndConditionWordsNumber.value,
                 cachedEndConditionCyclesNumber = cachedEndConditionCyclesNumber.value,
                 gameEndConditionType = gameEndConditionType.value,
-                wordsSource = initialSettingsBuilder.wordsSource,
+                wordsSource = wordsSource.value,
             )
         )
         onExitSettings()

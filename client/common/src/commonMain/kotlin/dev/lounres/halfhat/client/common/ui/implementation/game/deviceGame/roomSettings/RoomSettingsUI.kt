@@ -19,7 +19,6 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -155,7 +154,7 @@ public fun RoomSettingsUI(
                     modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                     value = when (val wordsSource = component.wordsSource.collectAsState().value) {
                         GameStateMachine.WordsSource.Players -> "From each player"
-                        is GameStateMachine.WordsSource.Custom -> "Custom: ${wordsSource.providerId.name}" // TODO: Replace with meaningful string representation
+                        is GameStateMachine.WordsSource.Custom -> "Custom: ${wordsSource.providerId.name}"
                     },
                     onValueChange = {},
                     readOnly = true,

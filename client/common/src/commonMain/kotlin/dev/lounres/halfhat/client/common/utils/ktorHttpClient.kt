@@ -11,7 +11,7 @@ import kotlin.time.Duration.Companion.milliseconds
 public expect val defaultHttpClientEngine: HttpClientEngineFactory<HttpClientEngineConfig>
 
 public val defaultHttpClient: HttpClient by lazy {
-    HttpClient(defaultHttpClientEngine) { // TODO: Move it somewhere else
+    HttpClient(defaultHttpClientEngine) {
         WebSockets {
             pingInterval = 1000.milliseconds
             contentConverter = KotlinxWebsocketSerializationConverter(Json)
