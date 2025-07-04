@@ -1,7 +1,7 @@
 package dev.lounres.halfhat.client.components.navigation
 
 import dev.lounres.halfhat.client.components.UIComponentContext
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleState
+import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import dev.lounres.komponentual.navigation.ChildrenSlot
 import dev.lounres.komponentual.navigation.SlotNavigation
 import dev.lounres.kone.relations.Equality

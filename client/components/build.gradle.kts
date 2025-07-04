@@ -12,9 +12,9 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(projects.kone.state)
-                api(projects.komponentual.lifecycle)
-                api(projects.komponentual.navigation)
+                api(versions.kone.state)
+                api(versions.komponentual.lifecycle)
+                api(versions.komponentual.navigation)
                 api(versions.kone.typeSafeRegistry)
                 api(versions.kone.collections)
                 api(versions.kotlinx.coroutines.core)

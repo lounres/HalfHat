@@ -17,8 +17,8 @@ import dev.lounres.halfhat.client.common.ui.components.news.RealNewsPageComponen
 import dev.lounres.halfhat.client.common.ui.components.rules.RealRulesPageComponent
 import dev.lounres.halfhat.client.common.ui.components.settings.RealSettingsPageComponent
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.komponentual.lifecycle.MutableUIComponentLifecycle
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleKey
+import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
+import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleKey
 import dev.lounres.komponentual.navigation.ChildrenVariants
 import dev.lounres.komponentual.navigation.MutableVariantsNavigation
 import dev.lounres.komponentual.navigation.set

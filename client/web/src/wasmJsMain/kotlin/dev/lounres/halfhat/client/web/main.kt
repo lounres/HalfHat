@@ -5,11 +5,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -27,22 +25,11 @@ import dev.lounres.halfhat.client.common.resources.allDrawableResources
 import dev.lounres.halfhat.client.web.ui.components.MainWindowComponent
 import dev.lounres.halfhat.client.web.ui.components.RealMainWindowComponent
 import dev.lounres.halfhat.client.web.ui.implementation.MainWindowContentUI
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleState
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleTransition
-import js.buffer.ArrayBuffer
-import js.buffer.ArrayBufferLike
-import js.core.JsPrimitives.toJsByte
-import js.typedarrays.Int8Array
-import korlibs.memory.toNBufferUInt8
+import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import kotlinx.browser.document
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.configureWebResources
 import org.jetbrains.compose.resources.preloadImageVector
-import org.khronos.webgl.toInt8Array
-import web.audio.AudioContext
 
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalResourceApi::class)

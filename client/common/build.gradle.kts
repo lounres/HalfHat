@@ -22,8 +22,8 @@ kotlin {
                 
                 // Components
                 api(projects.client.components)
-                api(projects.kone.stateAndCompose)
-                implementation(projects.kone.kotlinConcurrentAtomics)
+                api(versions.kone.util.stateForCompose)
+                implementation(versions.kone.util.atomics)
 
                 // Logging
 //                api(logKube.core)

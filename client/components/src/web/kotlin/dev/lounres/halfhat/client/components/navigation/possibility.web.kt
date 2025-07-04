@@ -1,7 +1,7 @@
 package dev.lounres.halfhat.client.components.navigation
 
 import dev.lounres.halfhat.client.components.UIComponentContext
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleState
+import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import dev.lounres.komponentual.navigation.ChildrenPossibility
 import dev.lounres.komponentual.navigation.PossibilityNavigation
 import dev.lounres.kone.maybe.Maybe

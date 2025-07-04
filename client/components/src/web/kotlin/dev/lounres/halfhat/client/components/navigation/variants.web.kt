@@ -1,7 +1,7 @@
 package dev.lounres.halfhat.client.components.navigation
 
 import dev.lounres.halfhat.client.components.UIComponentContext
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleState
+import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import dev.lounres.komponentual.navigation.ChildrenVariants
 import dev.lounres.komponentual.navigation.VariantsNavigation
 import dev.lounres.kone.collections.set.KoneSet
@@ -9,7 +9,6 @@ import dev.lounres.kone.relations.Equality
 import dev.lounres.kone.relations.Hashing
 import dev.lounres.kone.relations.Order
 import dev.lounres.kone.state.KoneAsynchronousState
-import dev.lounres.kone.state.KoneState
 
 
 public actual suspend fun <Configuration, Component> UIComponentContext.uiChildrenDefaultVariants(

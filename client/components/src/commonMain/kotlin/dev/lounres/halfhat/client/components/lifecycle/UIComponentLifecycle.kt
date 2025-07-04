@@ -1,14 +1,15 @@
-package dev.lounres.komponentual.lifecycle
+package dev.lounres.halfhat.client.components.lifecycle
 
+import dev.lounres.komponentual.lifecycle.DeferredLifecycle
 import dev.lounres.komponentual.lifecycle.DelicateLifecycleAPI
+import dev.lounres.komponentual.lifecycle.Lifecycle
+import dev.lounres.komponentual.lifecycle.MutableLifecycle
+import dev.lounres.komponentual.lifecycle.childDeferring
+import dev.lounres.komponentual.lifecycle.mergeDeferring
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.registry.RegistryKey
-import kotlinx.atomicfu.locks.ReentrantLock
-import kotlinx.atomicfu.locks.withLock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlin.coroutines.CoroutineContext
 
 

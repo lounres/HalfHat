@@ -5,8 +5,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeViewport
 import dev.lounres.halfhat.client.web.ui.components.RealMainWindowComponent
 import dev.lounres.halfhat.client.web.ui.implementation.MainWindowContentUI
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleState
-import dev.lounres.komponentual.lifecycle.moveTo
+import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import kotlinx.browser.document
 
 

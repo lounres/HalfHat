@@ -15,7 +15,7 @@ kotlin {
             dependencies {
                 // Kone
                 api(versions.kone.collections)
-                api(projects.kone.automata)
+                api(versions.kone.automata)
                 implementation(versions.kone.util.misc)
                 
                 // Coroutines

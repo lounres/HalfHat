@@ -9,13 +9,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.platform.WindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,14 +49,9 @@ import dev.lounres.halfhat.client.common.ui.implementation.settings.SettingsPage
 import dev.lounres.halfhat.client.common.ui.implementation.settings.SettingsPageIcon
 import dev.lounres.halfhat.client.common.ui.utils.WorkInProgress
 import dev.lounres.halfhat.client.web.ui.components.MainWindowComponent
-import dev.lounres.komponentual.lifecycle.MutableUIComponentLifecycle
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleState
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleTransition
-import dev.lounres.komponentual.lifecycle.moveTo
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.state.subscribeAsState
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 

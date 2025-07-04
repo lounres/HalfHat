@@ -44,17 +44,6 @@ plugins {
 
 stal {
     structure {
-        "kone" {
-            "atomicFUAtomics"("library", "desktop", "web", /*"android"*/)
-            "kotlinConcurrentAtomics"("library", "desktop", "web", /*"android"*/)
-            "automata"("library", "desktop", "web", /*"android"*/)
-            "state"("library", "desktop", "web", /*"android"*/)
-            "stateAndCompose"("library", "desktop", "web", /*"android"*/)
-        }
-        "komponentual" {
-            "lifecycle"("library", "desktop", "web", /*"android"*/)
-            "navigation"("library", "desktop", "web", /*"android"*/)
-        }
         "api"("library", "server", "desktop", "web", "android")
         "server"("server")
         "client" {

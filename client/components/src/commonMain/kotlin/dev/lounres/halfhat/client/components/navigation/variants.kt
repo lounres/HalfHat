@@ -5,8 +5,8 @@ import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.launch
 import dev.lounres.halfhat.client.components.uiChildDeferring
 import dev.lounres.komponentual.lifecycle.DelicateLifecycleAPI
-import dev.lounres.komponentual.lifecycle.MutableUIComponentLifecycle
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleState
+import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
+import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import dev.lounres.komponentual.navigation.ChildrenVariants
 import dev.lounres.komponentual.navigation.InnerVariantsNavigationState
 import dev.lounres.komponentual.navigation.VariantsNavigation

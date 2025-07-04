@@ -5,10 +5,10 @@ import dev.lounres.halfhat.client.common.utils.playSound
 import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.lifecycle
-import dev.lounres.komponentual.lifecycle.LogicComponentLifecycleState
+import dev.lounres.halfhat.client.components.lifecycle.LogicComponentLifecycleState
 import dev.lounres.kone.state.KoneMutableState
-import dev.lounres.utils.kotlinConcurrentAtomics.updateAndGet
-import dev.lounres.utils.kotlinConcurrentAtomics.value
+import dev.lounres.util.atomic.updateAndGet
+import dev.lounres.util.atomic.value
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

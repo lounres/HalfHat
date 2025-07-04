@@ -1,17 +1,17 @@
 package dev.lounres.halfhat.client.components
 
-import dev.lounres.komponentual.lifecycle.DeferredUIComponentLifecycle
+import dev.lounres.halfhat.client.components.lifecycle.DeferredUIComponentLifecycle
 import dev.lounres.komponentual.lifecycle.DelicateLifecycleAPI
 import dev.lounres.komponentual.lifecycle.Lifecycle
-import dev.lounres.komponentual.lifecycle.LogicComponentLifecycle
-import dev.lounres.komponentual.lifecycle.LogicComponentLifecycleKey
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycle
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleKey
-import dev.lounres.komponentual.lifecycle.coroutineScope
-import dev.lounres.komponentual.lifecycle.childDeferring
-import dev.lounres.komponentual.lifecycle.logicChildDeferringOnRunning
-import dev.lounres.komponentual.lifecycle.mergeLogicAndUILifecyclesDeferringOnRunning
-import dev.lounres.komponentual.lifecycle.mergeUIComponentLifecyclesDeferring
+import dev.lounres.halfhat.client.components.lifecycle.LogicComponentLifecycle
+import dev.lounres.halfhat.client.components.lifecycle.LogicComponentLifecycleKey
+import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycle
+import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleKey
+import dev.lounres.halfhat.client.components.lifecycle.coroutineScope
+import dev.lounres.halfhat.client.components.lifecycle.childDeferring
+import dev.lounres.halfhat.client.components.lifecycle.logicChildDeferringOnRunning
+import dev.lounres.halfhat.client.components.lifecycle.mergeLogicAndUILifecyclesDeferringOnRunning
+import dev.lounres.halfhat.client.components.lifecycle.mergeUIComponentLifecyclesDeferring
 import dev.lounres.kone.registry.Registry
 import dev.lounres.kone.registry.RegistryBuilder
 import kotlinx.coroutines.CoroutineScope

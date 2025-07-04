@@ -3,6 +3,8 @@ package dev.lounres.halfhat.client.components.navigation
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.launch
+import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
+import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import dev.lounres.halfhat.client.components.uiChildDeferring
 import dev.lounres.komponentual.lifecycle.*
 import dev.lounres.komponentual.navigation.ChildrenSlot

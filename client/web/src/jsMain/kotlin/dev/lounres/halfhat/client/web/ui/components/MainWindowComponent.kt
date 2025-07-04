@@ -12,7 +12,7 @@ import dev.lounres.halfhat.client.common.ui.components.news.NewsPageComponent
 import dev.lounres.halfhat.client.common.ui.components.rules.RulesPageComponent
 import dev.lounres.halfhat.client.common.ui.components.settings.SettingsPageComponent
 import dev.lounres.kone.collections.list.KoneList
-import dev.lounres.komponentual.lifecycle.MutableUIComponentLifecycle
+import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.komponentual.navigation.ChildrenVariants
 import dev.lounres.kone.state.KoneState
 import kotlinx.coroutines.flow.MutableStateFlow

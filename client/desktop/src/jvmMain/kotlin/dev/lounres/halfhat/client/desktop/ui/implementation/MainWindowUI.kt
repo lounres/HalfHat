@@ -58,8 +58,8 @@ import dev.lounres.halfhat.client.common.ui.implementation.rules.RulesPageIcon
 import dev.lounres.halfhat.client.common.ui.implementation.settings.SettingsPageBadge
 import dev.lounres.halfhat.client.common.ui.implementation.settings.SettingsPageIcon
 import dev.lounres.halfhat.client.common.ui.utils.WorkInProgress
-import dev.lounres.komponentual.lifecycle.MutableUIComponentLifecycle
-import dev.lounres.komponentual.lifecycle.UIComponentLifecycleState
+import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
+import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.state.subscribeAsState
 import kotlinx.coroutines.CoroutineScope

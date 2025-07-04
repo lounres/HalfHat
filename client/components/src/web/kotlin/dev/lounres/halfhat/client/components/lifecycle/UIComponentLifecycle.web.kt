@@ -1,4 +1,4 @@
-package dev.lounres.komponentual.lifecycle
+package dev.lounres.halfhat.client.components.lifecycle
 
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of

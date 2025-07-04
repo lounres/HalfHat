@@ -1,15 +1,13 @@
 package dev.lounres.halfhat.client.components
 
-import dev.lounres.komponentual.lifecycle.DeferredLogicComponentLifecycle
+import dev.lounres.halfhat.client.components.lifecycle.DeferredLogicComponentLifecycle
 import dev.lounres.komponentual.lifecycle.DelicateLifecycleAPI
-import dev.lounres.komponentual.lifecycle.LogicComponentLifecycle
-import dev.lounres.komponentual.lifecycle.LogicComponentLifecycleKey
-import dev.lounres.komponentual.lifecycle.coroutineScope
-import dev.lounres.komponentual.lifecycle.subscribe
+import dev.lounres.halfhat.client.components.lifecycle.LogicComponentLifecycle
+import dev.lounres.halfhat.client.components.lifecycle.LogicComponentLifecycleKey
+import dev.lounres.halfhat.client.components.lifecycle.coroutineScope
 import dev.lounres.kone.registry.Registry
 import dev.lounres.kone.registry.RegistryBuilder
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.coroutines.CoroutineContext
