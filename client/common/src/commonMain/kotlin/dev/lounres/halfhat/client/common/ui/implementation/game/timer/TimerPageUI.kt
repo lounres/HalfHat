@@ -72,7 +72,7 @@ public fun TimerPageUI(
                                 value = preparationTime.toString(),
                                 onValueChange = {
                                     component.preparationTimeSetting.value =
-                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt().let { min(it, 999u) }
                                 },
                                 label = { Text(text = "Countdown duration") },
                                 suffix = { Text(text = " seconds") },
@@ -95,7 +95,7 @@ public fun TimerPageUI(
                                 value = explanationTime.toString(),
                                 onValueChange = {
                                     component.explanationTimeSetting.value =
-                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt().let { min(it, 999u) }
                                 },
                                 label = { Text(text = "Explanation duration") },
                                 suffix = { Text(text = " seconds") },
@@ -118,7 +118,7 @@ public fun TimerPageUI(
                                 value = lastGuessTime.toString(),
                                 onValueChange = {
                                     component.lastGuessTimeSetting.value =
-                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt().let { min(it, 999u) }
                                 },
                                 label = { Text(text = "Last guess duration") },
                                 suffix = { Text(text = " seconds") },
