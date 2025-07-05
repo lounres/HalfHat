@@ -58,6 +58,7 @@ import dev.lounres.halfhat.client.common.ui.implementation.rules.RulesPageIcon
 import dev.lounres.halfhat.client.common.ui.implementation.settings.SettingsPageBadge
 import dev.lounres.halfhat.client.common.ui.implementation.settings.SettingsPageIcon
 import dev.lounres.halfhat.client.common.ui.utils.WorkInProgress
+import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier
 import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import dev.lounres.kone.collections.iterables.next
@@ -199,7 +200,7 @@ fun MainWindowDrawerContentUI(
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.openMenuButton_dark),
-                        modifier = Modifier.size(24.dp),
+                        modifier = commonIconModifier,
                         contentDescription = "Open menu"
                     )
                 }

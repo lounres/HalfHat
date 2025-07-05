@@ -25,6 +25,7 @@ kotlin {
                     static = (static ?: mutableListOf()).apply {
                         // Serve sources to debug inside browser
                         add(rootDir.path + "/api")
+                        add(rootDir.path + "/client/components")
                         add(rootDir.path + "/client/common")
                         add(rootDir.path + "/client/web/")
                     }
@@ -51,6 +52,7 @@ kotlin {
                     static = (static ?: mutableListOf()).apply {
                         // Serve sources to debug inside browser
                         add(rootDir.path + "/api")
+                        add(rootDir.path + "/client/components")
                         add(rootDir.path + "/client/common")
                         add(rootDir.path + "/client/web/")
                     }

@@ -9,24 +9,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.platform.WindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import dev.lounres.halfhat.Language
-import dev.lounres.halfhat.client.common.resources.Res
-import dev.lounres.halfhat.client.common.resources.changeLanguageButton_dark_png_24dp
-import dev.lounres.halfhat.client.common.resources.closeMenuButton_dark_png_24dp
-import dev.lounres.halfhat.client.common.resources.openMenuButton_dark
-import dev.lounres.halfhat.client.common.resources.volumeOffButton_dark_png_24dp
-import dev.lounres.halfhat.client.common.resources.volumeOnButton_dark_png_24dp
+import dev.lounres.halfhat.client.common.resources.*
 import dev.lounres.halfhat.client.common.ui.implementation.about.AboutPageBadge
 import dev.lounres.halfhat.client.common.ui.implementation.about.AboutPageIcon
 import dev.lounres.halfhat.client.common.ui.implementation.about.AboutPageUI
@@ -55,9 +47,9 @@ import dev.lounres.halfhat.client.web.ui.components.MainWindowComponent
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.state.subscribeAsState
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.vectorResource
 
 
 val permanentDrawerAfterWindowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Medium
@@ -183,17 +175,18 @@ fun MainWindowDrawerContentUI(
         val openedPage = pageVariants.active.component
         CenterAlignedTopAppBar(
             navigationIcon = {
-                if (windowSizeClass.widthSizeClass <= permanentDrawerAfterWindowWidthSizeClass)IconButton(
-                    onClick = {
-                        windowCoroutineScope.launch { drawerState.open() }
+                if (windowSizeClass.widthSizeClass <= permanentDrawerAfterWindowWidthSizeClass)
+                    IconButton(
+                        onClick = {
+                            windowCoroutineScope.launch { drawerState.open() }
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.openMenuButton_dark_png_24dp),
+                            modifier = Modifier.size(24.dp),
+                            contentDescription = "Open menu"
+                        )
                     }
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.openMenuButton_dark),
-                        modifier = Modifier.size(24.dp),
-                        contentDescription = "Open menu"
-                    )
-                }
             },
             title = {
                 Text(text = openedPage.component.textName)
