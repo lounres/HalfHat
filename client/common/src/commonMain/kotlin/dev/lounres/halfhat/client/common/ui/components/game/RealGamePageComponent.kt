@@ -119,6 +119,10 @@ public suspend fun RealGamePageComponent(
                                 }
                             },
                             volumeOn = volumeOn,
+                            // TODO: Hardcoded constants!!!
+                            initialPreparationTimeSetting = 3u,
+                            initialExplanationTimeSetting = 40u,
+                            initialLastGuessTimeSetting = 3u
                         )
                     )
             }

@@ -40,9 +40,9 @@ public suspend fun RealTimerPageComponent(
     componentContext: UIComponentContext,
     onExitTimer: () -> Unit,
     volumeOn: StateFlow<Boolean>,
-    initialPreparationTimeSetting: UInt = 3u,
-    initialExplanationTimeSetting: UInt = 40u,
-    initialLastGuessTimeSetting: UInt = 3u,
+    initialPreparationTimeSetting: UInt,
+    initialExplanationTimeSetting: UInt,
+    initialLastGuessTimeSetting: UInt,
 ): RealTimerPageComponent {
     
     val timerComponent: TimerComponent =

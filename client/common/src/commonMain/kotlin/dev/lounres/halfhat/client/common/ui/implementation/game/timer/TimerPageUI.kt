@@ -61,38 +61,74 @@ public fun TimerPageUI(
                         val explanationTime by component.explanationTimeSetting.subscribeAsState()
                         val lastGuessTime by component.lastGuessTimeSetting.subscribeAsState()
                         
-                        OutlinedTextField(
-                            modifier = Modifier.fillMaxWidth(),
-                            value = preparationTime.toString(),
-                            onValueChange = {
-                                component.preparationTimeSetting.value = it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
-                            },
-                            label = { Text(text = "Countdown duration") },
-                            suffix = { Text(text = " seconds") },
-                            singleLine = true,
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            OutlinedTextField(
+                                modifier = Modifier.fillMaxWidth(),
+                                value = preparationTime.toString(),
+                                onValueChange = {
+                                    component.preparationTimeSetting.value =
+                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                                },
+                                label = { Text(text = "Countdown duration") },
+                                suffix = { Text(text = " seconds") },
+                                singleLine = true,
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Set 0 to disable the stage.",
+                            )
+                        }
                         Spacer(modifier = Modifier.height(24.dp))
-                        OutlinedTextField(
-                            modifier = Modifier.fillMaxWidth(),
-                            value = explanationTime.toString(),
-                            onValueChange = {
-                                component.explanationTimeSetting.value = it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
-                            },
-                            label = { Text(text = "Explanation duration") },
-                            suffix = { Text(text = " seconds") },
-                            singleLine = true,
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            OutlinedTextField(
+                                modifier = Modifier.fillMaxWidth(),
+                                value = explanationTime.toString(),
+                                onValueChange = {
+                                    component.explanationTimeSetting.value =
+                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                                },
+                                label = { Text(text = "Explanation duration") },
+                                suffix = { Text(text = " seconds") },
+                                singleLine = true,
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Set 0 to disable the stage.",
+                            )
+                        }
                         Spacer(modifier = Modifier.height(24.dp))
-                        OutlinedTextField(
-                            modifier = Modifier.fillMaxWidth(),
-                            value = lastGuessTime.toString(),
-                            onValueChange = {
-                                component.lastGuessTimeSetting.value = it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
-                            },
-                            label = { Text(text = "Last guess duration") },
-                            suffix = { Text(text = " seconds") },
-                            singleLine = true,
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            OutlinedTextField(
+                                modifier = Modifier.fillMaxWidth(),
+                                value = lastGuessTime.toString(),
+                                onValueChange = {
+                                    component.lastGuessTimeSetting.value =
+                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                                },
+                                label = { Text(text = "Last guess duration") },
+                                suffix = { Text(text = " seconds") },
+                                singleLine = true,
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Set 0 to disable the stage.",
+                            )
+                        }
                     }
                     
                     is TimerState.Preparation ->

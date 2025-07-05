@@ -41,20 +41,20 @@ public class RealTimerComponent(
                         preparationTime = preparationTimeSetting,
                         explanationTime = explanationTimeSetting,
                         lastGuessTime = lastGuessTimeSetting,
-                    ) {
+                    ) { newTimerState ->
                         val oldTimerState = timerState.value
-                        timerState.value = it
+                        timerState.value = newTimerState
                         
                         if (volumeOn.value)
-                            when(it) {
+                            when(newTimerState) {
                                 is TimerState.Preparation ->
-                                    if (oldTimerState !is TimerState.Preparation || (oldTimerState.millisecondsLeft / 1000u) != (it.millisecondsLeft / 1000u))
+                                    if (oldTimerState !is TimerState.Preparation || (oldTimerState.millisecondsLeft / 1000u) != (newTimerState.millisecondsLeft / 1000u))
                                         coroutineScope.launch { DefaultSounds.preparationCountdown.await().playSound() }
                                 is TimerState.Explanation ->
-                                    if (oldTimerState is TimerState.Preparation)
+                                    if (oldTimerState !is TimerState.Explanation)
                                         coroutineScope.launch { DefaultSounds.explanationStart.await().playSound() }
                                 is TimerState.LastGuess ->
-                                    if (oldTimerState is TimerState.Preparation || oldTimerState is TimerState.Explanation)
+                                    if (oldTimerState !is TimerState.LastGuess)
                                         coroutineScope.launch { DefaultSounds.finalGuessStart.await().playSound() }
                                 TimerState.Finished ->
                                     coroutineScope.launch { DefaultSounds.finalGuessEnd.await().playSound() }

@@ -19,12 +19,12 @@ public fun TimerState.Preparation.represent(): String = (millisecondsLeft / 1000
 public fun TimerState.Explanation.represent(): String {
     val secondsLeft = (millisecondsLeft / 1000u + 1u) % 60u
     val minutesLeft = millisecondsLeft / 60_000u
-    return "$minutesLeft:${secondsLeft.toString().padStart(2, '0')}"
+    return "${minutesLeft.toString().padStart(2, '0')}:${secondsLeft.toString().padStart(2, '0')}"
 }
 public fun TimerState.LastGuess.represent(): String {
-    val cantisecondsLeft = (millisecondsLeft / 100u + 1u) % 10u
+    val decisecondsLeft = (millisecondsLeft / 100u + 1u) % 10u
     val secondsLeft = millisecondsLeft / 1000u
-    return "$secondsLeft.${cantisecondsLeft.toString().padStart(1, '0')}"
+    return "$secondsLeft.${decisecondsLeft.toString().padStart(1, '0')}"
 }
 
 public fun CoroutineScope.timerJob(
@@ -33,7 +33,7 @@ public fun CoroutineScope.timerJob(
     lastGuessTime: UInt,
     onStateUpdate: suspend (state: TimerState) -> Unit,
 ): Job {
-    val preparationTimeMilliseconds = preparationTime * 1000u - 1u
+    val preparationTimeMilliseconds = max(1u, preparationTime * 1000u) - 1u
     val explanationTimeMilliseconds = explanationTime * 1000u
     val lastGuessTimeMilliseconds = lastGuessTime * 1000u
 
