@@ -15,16 +15,18 @@ public sealed interface TimerState {
     public data class LastGuess(val millisecondsLeft: UInt): TimerState
 }
 
-public fun TimerState.Preparation.represent(): String = (millisecondsLeft / 1000u + 1u).toString()
+public fun TimerState.Preparation.represent(): String = millisecondsLeft.let { if (it % 1000u != 0u) it / 1000u + 1u else it / 1000u }.toString()
 public fun TimerState.Explanation.represent(): String {
-    val secondsLeft = (millisecondsLeft / 1000u + 1u) % 60u
-    val minutesLeft = millisecondsLeft / 60_000u
-    return "${minutesLeft.toString().padStart(2, '0')}:${secondsLeft.toString().padStart(2, '0')}"
+    val secondsLeft = millisecondsLeft.let { if (it % 1000u != 0u) it / 1000u + 1u else it / 1000u }
+    val secondsToShow = secondsLeft % 60u
+    val minutesToShow = secondsLeft / 60u
+    return "${minutesToShow.toString().padStart(2, '0')}:${secondsToShow.toString().padStart(2, '0')}"
 }
 public fun TimerState.LastGuess.represent(): String {
-    val decisecondsLeft = (millisecondsLeft / 100u + 1u) % 10u
-    val secondsLeft = millisecondsLeft / 1000u
-    return "$secondsLeft.${decisecondsLeft.toString().padStart(1, '0')}"
+    val decisecondsLeft = millisecondsLeft.let { if (it % 100u != 0u) it / 100u + 1u else it / 100u }
+    val decisecondsToShow = decisecondsLeft % 10u
+    val secondsToShow = decisecondsLeft / 10u
+    return "$secondsToShow.$decisecondsToShow"
 }
 
 public fun CoroutineScope.timerJob(
@@ -33,7 +35,7 @@ public fun CoroutineScope.timerJob(
     lastGuessTime: UInt,
     onStateUpdate: suspend (state: TimerState) -> Unit,
 ): Job {
-    val preparationTimeMilliseconds = max(1u, preparationTime * 1000u) - 1u
+    val preparationTimeMilliseconds = preparationTime * 1000u
     val explanationTimeMilliseconds = explanationTime * 1000u
     val lastGuessTimeMilliseconds = lastGuessTime * 1000u
 

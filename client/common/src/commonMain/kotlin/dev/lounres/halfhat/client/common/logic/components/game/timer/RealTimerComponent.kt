@@ -34,34 +34,32 @@ public class RealTimerComponent(
         lastGuessTimeSetting: UInt,
     ) {
         if (componentContext.lifecycle.state == LogicComponentLifecycleState.Running)
-//            coroutineScope.launch {
-                timerJob.updateAndGet {
-                    it.cancel()
-                    coroutineScope.timerJob(
-                        preparationTime = preparationTimeSetting,
-                        explanationTime = explanationTimeSetting,
-                        lastGuessTime = lastGuessTimeSetting,
-                    ) { newTimerState ->
-                        val oldTimerState = timerState.value
-                        timerState.value = newTimerState
-                        
-                        if (volumeOn.value)
-                            when(newTimerState) {
-                                is TimerState.Preparation ->
-                                    if (oldTimerState !is TimerState.Preparation || (oldTimerState.millisecondsLeft / 1000u) != (newTimerState.millisecondsLeft / 1000u))
-                                        coroutineScope.launch { DefaultSounds.preparationCountdown.await().playSound() }
-                                is TimerState.Explanation ->
-                                    if (oldTimerState !is TimerState.Explanation)
-                                        coroutineScope.launch { DefaultSounds.explanationStart.await().playSound() }
-                                is TimerState.LastGuess ->
-                                    if (oldTimerState !is TimerState.LastGuess)
-                                        coroutineScope.launch { DefaultSounds.finalGuessStart.await().playSound() }
-                                TimerState.Finished ->
-                                    coroutineScope.launch { DefaultSounds.finalGuessEnd.await().playSound() }
-                            }
-                    }
-                }.start()
-//            }
+            timerJob.updateAndGet {
+                it.cancel()
+                coroutineScope.timerJob(
+                    preparationTime = preparationTimeSetting,
+                    explanationTime = explanationTimeSetting,
+                    lastGuessTime = lastGuessTimeSetting,
+                ) { newTimerState ->
+                    val oldTimerState = timerState.value
+                    timerState.value = newTimerState
+                    
+                    if (volumeOn.value)
+                        when(newTimerState) {
+                            is TimerState.Preparation ->
+                                if (oldTimerState !is TimerState.Preparation || oldTimerState.millisecondsLeft.let { if (it % 1000u != 0u) it / 1000u + 1u else it / 1000u } != newTimerState.millisecondsLeft.let { if (it % 1000u != 0u) it / 1000u + 1u else it / 1000u })
+                                    coroutineScope.launch { DefaultSounds.preparationCountdown.await().playSound() }
+                            is TimerState.Explanation ->
+                                if (oldTimerState !is TimerState.Explanation)
+                                    coroutineScope.launch { DefaultSounds.explanationStart.await().playSound() }
+                            is TimerState.LastGuess ->
+                                if (oldTimerState !is TimerState.LastGuess)
+                                    coroutineScope.launch { DefaultSounds.finalGuessStart.await().playSound() }
+                            TimerState.Finished ->
+                                coroutineScope.launch { DefaultSounds.finalGuessEnd.await().playSound() }
+                        }
+                }
+            }.start()
     }
     override fun resetTimer() {
         coroutineScope.launch {
