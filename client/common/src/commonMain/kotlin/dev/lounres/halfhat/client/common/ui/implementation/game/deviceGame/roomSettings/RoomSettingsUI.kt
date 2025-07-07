@@ -85,7 +85,7 @@ public fun RoomSettingsUI(
                 },
                 label = {
                     Text(
-                        text = "Readiness time",
+                        text = "Countdown duration",
                     )
                 },
                 singleLine = true,
@@ -102,7 +102,7 @@ public fun RoomSettingsUI(
                 },
                 label = {
                     Text(
-                        text = "Readiness time",
+                        text = "Explanation duration",
                     )
                 },
                 singleLine = true,
@@ -119,7 +119,7 @@ public fun RoomSettingsUI(
                 },
                 label = {
                     Text(
-                        text = "Readiness time",
+                        text = "Last guess duration",
                     )
                 },
                 singleLine = true,
