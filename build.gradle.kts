@@ -21,6 +21,12 @@ plugins {
     alias(libs.plugins.compose.multiplatform.hotReload) apply false
 }
 
+buildscript {
+    dependencies {
+        classpath("com.hierynomus:sshj:0.40.0")
+    }
+}
+
 val Project.versions: LibrariesForVersions get() = rootProject.extensions.getByName<LibrariesForVersions>("versions")
 val Project.projects: RootProjectAccessor get() = rootProject.extensions.getByName<RootProjectAccessor>("projects")
 fun PluginAware.apply(pluginDependency: PluginDependency) = apply(plugin = pluginDependency.pluginId)
