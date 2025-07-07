@@ -99,7 +99,7 @@ compose {
 
 tasks.register("publishToProduction") {
     group = "publishing"
-    description = "Publish the web application to prodduction server"
+    description = "Publish the web application to production server"
 
     val wasmJsBrowserDistribution by tasks
 
