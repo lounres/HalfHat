@@ -12,12 +12,12 @@ public class RealRoomSettingsComponent(
     onUpdateSettingsBuilder: (GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>) -> Unit,
     onExitSettings: () -> Unit,
 ) : RoomSettingsComponent {
-    override val onApplySettings: () -> Unit = {
+    override val onApplySettings: () -> Unit = onApplySettings@{
         onUpdateSettingsBuilder(
             GameStateMachine.GameSettings.Builder(
-                preparationTimeSeconds = preparationTimeSeconds.value,
-                explanationTimeSeconds = explanationTimeSeconds.value,
-                finalGuessTimeSeconds = finalGuessTimeSeconds.value,
+                preparationTimeSeconds = preparationTimeSeconds.value.let { if (it.isBlank()) return@onApplySettings else it.toUInt() },
+                explanationTimeSeconds = explanationTimeSeconds.value.let { if (it.isBlank()) return@onApplySettings else it.toUInt() },
+                finalGuessTimeSeconds = finalGuessTimeSeconds.value.let { if (it.isBlank()) return@onApplySettings else it.toUInt() },
                 strictMode = strictMode.value,
                 cachedEndConditionWordsNumber = cachedEndConditionWordsNumber.value,
                 cachedEndConditionCyclesNumber = cachedEndConditionCyclesNumber.value,
@@ -29,9 +29,9 @@ public class RealRoomSettingsComponent(
     }
     override val onDiscardSettings: () -> Unit = onExitSettings
     
-    override val preparationTimeSeconds: MutableStateFlow<UInt> = MutableStateFlow(initialSettingsBuilder.preparationTimeSeconds)
-    override val explanationTimeSeconds: MutableStateFlow<UInt> = MutableStateFlow(initialSettingsBuilder.explanationTimeSeconds)
-    override val finalGuessTimeSeconds: MutableStateFlow<UInt> = MutableStateFlow(initialSettingsBuilder.finalGuessTimeSeconds)
+    override val preparationTimeSeconds: MutableStateFlow<String> = MutableStateFlow(initialSettingsBuilder.preparationTimeSeconds.toString())
+    override val explanationTimeSeconds: MutableStateFlow<String> = MutableStateFlow(initialSettingsBuilder.explanationTimeSeconds.toString())
+    override val finalGuessTimeSeconds: MutableStateFlow<String> = MutableStateFlow(initialSettingsBuilder.finalGuessTimeSeconds.toString())
     override val strictMode: MutableStateFlow<Boolean> = MutableStateFlow(initialSettingsBuilder.strictMode)
     override val wordsSource: MutableStateFlow<GameStateMachine.WordsSource<DeviceGameWordsProviderID>> = MutableStateFlow(initialSettingsBuilder.wordsSource) // TODO: Add check that if the words source is custom, then it lies in the [possibleWordsSources]
     override val cachedEndConditionWordsNumber: MutableStateFlow<UInt> = MutableStateFlow(initialSettingsBuilder.cachedEndConditionWordsNumber)

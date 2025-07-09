@@ -44,7 +44,7 @@ public fun RoomScreenUI(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val playersList = component.playersList.collectAsState().value
-        val showErrorForEmptyPlayerNames = component.showErrorForEmptyPlayerNames.collectAsState().value
+        val showErrorForPlayers = component.showErrorForPlayers.collectAsState().value
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -55,7 +55,7 @@ public fun RoomScreenUI(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
             for ((index, player) in playersList.withIndex()) {
-                key(player) {
+                key(player.id) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -65,16 +65,17 @@ public fun RoomScreenUI(
                             contentDescription = null,
                         )
                         Spacer(modifier = Modifier.width(16.dp))
-                        TextField(
+                        OutlinedTextField(
                             modifier = Modifier.weight(1f),
                             label = { Text(text = "Name") },
                             value = player.name,
                             onValueChange = { component.onChangePLayersName(index, it) },
-                            isError = showErrorForEmptyPlayerNames && player.name.isBlank(),
+                            isError = player in showErrorForPlayers,
                         )
                         Spacer(modifier = Modifier.width(16.dp))
                         IconButton(
-                            onClick = { component.onRemovePLayer(index) }
+                            enabled = playersList.size > 2u,
+                            onClick = { component.onRemovePLayer(index) },
                         ) {
                             Icon(
                                 painter = painterResource(Res.drawable.removePlayerButton_dark_png_24dp),

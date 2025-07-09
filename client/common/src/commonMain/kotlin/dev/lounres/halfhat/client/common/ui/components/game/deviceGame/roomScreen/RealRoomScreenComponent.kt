@@ -3,6 +3,8 @@ package dev.lounres.halfhat.client.common.ui.components.game.deviceGame.roomScre
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.build
 import dev.lounres.kone.collections.list.toKoneMutableList
+import dev.lounres.kone.collections.set.KoneSet
+import dev.lounres.kone.collections.set.empty
 import dev.lounres.kone.collections.utils.shuffled
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -14,18 +16,26 @@ public class RealRoomScreenComponent(
     override val onOpenGameSettings: () -> Unit,
     override val onStartGame: () -> Unit,
     override val playersList: MutableStateFlow<KoneList<Player>>,
-    override val showErrorForEmptyPlayerNames: MutableStateFlow<Boolean>
+    override val showErrorForPlayers: MutableStateFlow<KoneSet<Player>>
 ) : RoomScreenComponent {
     override val onChangePLayersName: (UInt, String) -> Unit = { index, newName ->
-        showErrorForEmptyPlayerNames.value = false
-        playersList.update { it.toKoneMutableList().apply { this[index].name = newName } }
+        showErrorForPlayers.value = KoneSet.empty()
+        playersList.update {
+            it.toKoneMutableList().apply {
+                val oldPlayer = this[index]
+                this[index] = Player(name = newName, id = oldPlayer.id)
+            }
+        }
     }
     override val onRemovePLayer: (UInt) -> Unit = { playerIndex ->
-        showErrorForEmptyPlayerNames.value = false
-        playersList.update { it.toKoneMutableList().apply { this.removeAt(playerIndex) }}
+        showErrorForPlayers.value = KoneSet.empty()
+        playersList.update {
+            check(it.size > 2u) { "Cannot remove player when there are no more than two of them" }
+            it.toKoneMutableList().apply { this.removeAt(playerIndex) }
+        }
     }
     override val onAddPLayer: () -> Unit = {
-        showErrorForEmptyPlayerNames.value = false
+        showErrorForPlayers.value = KoneSet.empty()
         playersList.update {
             KoneList.build(it.size + 1u) {
                 +it
@@ -34,7 +44,7 @@ public class RealRoomScreenComponent(
         }
     }
     override val onShufflePlayersList: () -> Unit = {
-        showErrorForEmptyPlayerNames.value = false
+        showErrorForPlayers.value = KoneSet.empty()
         playersList.update { it.shuffled(Random) } // TODO: Hardcoded random
     }
 }

@@ -69,14 +69,15 @@ public fun TimerPageUI(
                         ) {
                             OutlinedTextField(
                                 modifier = Modifier.fillMaxWidth(),
-                                value = preparationTime.toString(),
+                                value = preparationTime,
                                 onValueChange = {
                                     component.preparationTimeSetting.value =
-                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt().let { min(it, 999u) }
+                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.let { if (it.isEmpty()) "" else min(it.toUInt(), 999u).toString() }
                                 },
                                 label = { Text(text = "Countdown duration") },
                                 suffix = { Text(text = " seconds") },
                                 singleLine = true,
+                                isError = preparationTime.isBlank(),
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
@@ -92,14 +93,15 @@ public fun TimerPageUI(
                         ) {
                             OutlinedTextField(
                                 modifier = Modifier.fillMaxWidth(),
-                                value = explanationTime.toString(),
+                                value = explanationTime,
                                 onValueChange = {
                                     component.explanationTimeSetting.value =
-                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt().let { min(it, 999u) }
+                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.let { if (it.isEmpty()) "" else min(it.toUInt(), 999u).toString() }
                                 },
                                 label = { Text(text = "Explanation duration") },
                                 suffix = { Text(text = " seconds") },
                                 singleLine = true,
+                                isError = explanationTime.isBlank(),
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
@@ -115,14 +117,15 @@ public fun TimerPageUI(
                         ) {
                             OutlinedTextField(
                                 modifier = Modifier.fillMaxWidth(),
-                                value = lastGuessTime.toString(),
+                                value = lastGuessTime,
                                 onValueChange = {
                                     component.lastGuessTimeSetting.value =
-                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt().let { min(it, 999u) }
+                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.let { if (it.isEmpty()) "" else min(it.toUInt(), 999u).toString() }
                                 },
                                 label = { Text(text = "Last guess duration") },
                                 suffix = { Text(text = " seconds") },
                                 singleLine = true,
+                                isError = lastGuessTime.isBlank(),
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(

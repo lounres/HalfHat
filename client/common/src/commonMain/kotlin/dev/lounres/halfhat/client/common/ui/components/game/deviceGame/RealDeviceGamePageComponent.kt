@@ -15,8 +15,13 @@ import dev.lounres.komponentual.navigation.MutableStackNavigation
 import dev.lounres.komponentual.navigation.replaceCurrent
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
-import dev.lounres.kone.collections.utils.any
-import dev.lounres.kone.collections.utils.map
+import dev.lounres.kone.collections.set.KoneMutableSet
+import dev.lounres.kone.collections.set.KoneSet
+import dev.lounres.kone.collections.set.empty
+import dev.lounres.kone.collections.set.of
+import dev.lounres.kone.collections.utils.*
+import dev.lounres.kone.relations.Equality
+import dev.lounres.kone.relations.Hashing
 import dev.lounres.kone.state.KoneAsynchronousState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -52,7 +57,7 @@ public suspend fun RealDeviceGamePageComponent(
         ) { configuration: RealDeviceGamePageComponent.Configuration, componentContext: UIComponentContext ->
             when (configuration) {
                 is RealDeviceGamePageComponent.Configuration.RoomScreen -> {
-                    val showErrorForEmptyPlayerNames = MutableStateFlow(false)
+                    val showErrorForPlayers = MutableStateFlow(KoneSet.empty<Player>())
                     DeviceGamePageComponent.Child.RoomScreen(
                         RealRoomScreenComponent(
                             onExitDeviceGame = onExitDeviceGame,
@@ -61,27 +66,36 @@ public suspend fun RealDeviceGamePageComponent(
                                     navigation.replaceCurrent(RealDeviceGamePageComponent.Configuration.RoomSettings)
                                 }
                             },
-                            onStartGame = {
-                                var playersListIsValid = true
-                                
+                            onStartGame = onStartGame@{
                                 if (playersList.value.any { it.name.isBlank() }) {
-                                    showErrorForEmptyPlayerNames.value = true
-                                    playersListIsValid = false
+                                    showErrorForPlayers.value = playersList.value
+                                        .groupBy { it.name }
+                                        .nodesView
+                                        .filter { it.value.size > 1u || it.key.isEmpty() }
+                                        .flatMap { it.value }
+                                        .mapTo(
+                                            KoneMutableSet.of(
+                                                elementEquality = Equality { left, right -> left.id == right.id },
+                                                elementHashing = Hashing { it.id.hashCode() },
+                                            )
+                                        ) {
+                                            it
+                                        }
+                                    return@onStartGame
                                 }
                                 
                                 if (playersList.value.size < 2u) {
-                                    // TODO: Добавить другую индикацию малого числа участников
-                                    playersListIsValid = false
+                                    error { "Cannot remove player when there are no more than two of them" }
                                 }
                                 
-                                if (playersListIsValid) CoroutineScope(Dispatchers.Default).launch {
+                                CoroutineScope(Dispatchers.Default).launch {
                                     navigation.replaceCurrent(
                                         RealDeviceGamePageComponent.Configuration.GameScreen
                                     )
                                 }
                             },
                             playersList = playersList,
-                            showErrorForEmptyPlayerNames = showErrorForEmptyPlayerNames,
+                            showErrorForPlayers = showErrorForPlayers,
                         )
                     )
                 }

@@ -19,6 +19,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -39,7 +40,9 @@ import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.roomSettings.RoomSettingsComponent
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.iterables.next
+import dev.lounres.kone.state.subscribeAsState
 import org.jetbrains.compose.resources.painterResource
+import kotlin.math.min
 
 
 @Composable
@@ -76,12 +79,16 @@ public fun RoomSettingsUI(
         Column(
             modifier = Modifier.fillMaxHeight().widthIn(max = 480.dp).align(Alignment.Center).padding(8.dp)
         ) {
-            TextField(
+            val preparationTime = component.preparationTimeSeconds.collectAsState().value
+            val explanationTime = component.explanationTimeSeconds.collectAsState().value
+            val lastGuessTime = component.finalGuessTimeSeconds.collectAsState().value
+            
+            OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
-                value = component.preparationTimeSeconds.collectAsState().value.toString(),
+                value = preparationTime,
                 onValueChange = {
                     component.preparationTimeSeconds.value =
-                        (it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }).toUInt()
+                        it.filter { it.isDigit() }.dropWhile { it == '0' }.let { if (it.isEmpty()) "" else min(it.toUInt(), 999u).toString() }
                 },
                 label = {
                     Text(
@@ -89,16 +96,17 @@ public fun RoomSettingsUI(
                     )
                 },
                 singleLine = true,
+                isError = preparationTime.isBlank(),
             )
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            TextField(
+            OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
-                value = component.explanationTimeSeconds.collectAsState().value.toString(),
+                value = explanationTime,
                 onValueChange = {
                     component.explanationTimeSeconds.value =
-                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                        it.filter { it.isDigit() }.dropWhile { it == '0' }.let { if (it.isEmpty()) "" else min(it.toUInt(), 999u).toString() }
                 },
                 label = {
                     Text(
@@ -106,16 +114,17 @@ public fun RoomSettingsUI(
                     )
                 },
                 singleLine = true,
+                isError = explanationTime.isBlank(),
             )
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            TextField(
+            OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
-                value = component.finalGuessTimeSeconds.collectAsState().value.toString(),
+                value = lastGuessTime,
                 onValueChange = {
                     component.finalGuessTimeSeconds.value =
-                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                        it.filter { it.isDigit() }.dropWhile { it == '0' }.let { if (it.isEmpty()) "" else min(it.toUInt(), 999u).toString() }
                 },
                 label = {
                     Text(
@@ -123,6 +132,7 @@ public fun RoomSettingsUI(
                     )
                 },
                 singleLine = true,
+                isError = lastGuessTime.isBlank(),
             )
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -150,10 +160,10 @@ public fun RoomSettingsUI(
                 expanded = false,
                 onExpandedChange = { dictionaryMenuExpanded = it },
             ) {
-                TextField(
+                OutlinedTextField(
                     modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                     value = when (val wordsSource = component.wordsSource.collectAsState().value) {
-                        GameStateMachine.WordsSource.Players -> "From each player"
+                        GameStateMachine.WordsSource.Players -> error("For some reason from-each-player dictionary is chosen")
                         is GameStateMachine.WordsSource.Custom -> "Custom: ${wordsSource.providerId.name}"
                     },
                     onValueChange = {},
@@ -169,15 +179,15 @@ public fun RoomSettingsUI(
                     expanded = dictionaryMenuExpanded,
                     onDismissRequest = { dictionaryMenuExpanded = false },
                 ) {
-                    DropdownMenuItem(
-                        text = { Text(text = "From each player") },
-                        onClick = {
-                            component.wordsSource.value = GameStateMachine.WordsSource.Players
-                            dictionaryMenuExpanded = false
-                        },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                    )
-                    HorizontalDivider()
+//                    DropdownMenuItem(
+//                        text = { Text(text = "From each player") },
+//                        onClick = {
+//                            component.wordsSource.value = GameStateMachine.WordsSource.Players
+//                            dictionaryMenuExpanded = false
+//                        },
+//                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+//                    )
+//                    HorizontalDivider()
                     for (id in component.possibleWordsSources)
                         DropdownMenuItem(
                             text = { Text(text = id.name) },
@@ -198,7 +208,7 @@ public fun RoomSettingsUI(
                 expanded = false,
                 onExpandedChange = { gameEndConditionMenuExpanded = it },
             ) {
-                TextField(
+                OutlinedTextField(
                     modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                     value = when (component.gameEndConditionType.collectAsState().value) {
                         GameStateMachine.GameEndCondition.Type.Words -> "Words"
@@ -240,7 +250,7 @@ public fun RoomSettingsUI(
             
             when (component.gameEndConditionType.collectAsState().value) {
                 GameStateMachine.GameEndCondition.Type.Words -> {
-                    TextField(
+                    OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
                         value = component.cachedEndConditionWordsNumber.collectAsState().value.toString(),
                         onValueChange = {
@@ -257,7 +267,7 @@ public fun RoomSettingsUI(
                 }
                 
                 GameStateMachine.GameEndCondition.Type.Cycles -> {
-                    TextField(
+                    OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
                         value = component.cachedEndConditionCyclesNumber.collectAsState().value.toString(),
                         onValueChange = {

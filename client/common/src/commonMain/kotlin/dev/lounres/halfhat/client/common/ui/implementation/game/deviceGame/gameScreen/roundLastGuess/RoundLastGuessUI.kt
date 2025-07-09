@@ -39,9 +39,12 @@ public fun RoundLastGuessUI(
         speaker = component.speaker.collectAsState().value,
         listener = component.listener.collectAsState().value,
         timer = {
+            val decisecondsLeft = component.millisecondsLeft.collectAsState().value.let { if (it % 100u != 0u) it / 100u + 1u else it / 100u }
+            val decisecondsToShow = decisecondsLeft % 10u
+            val secondsToShow = decisecondsLeft / 10u
             Text(
-                text = (component.millisecondsLeft.collectAsState().value / 100u + 1u).let { "${it / 10u}.${it % 10u}" },
-                fontSize = 64.sp,
+                text = "$secondsToShow.$decisecondsToShow",
+                fontSize = 128.sp,
                 color = Color.Red
             )
         },

@@ -71,11 +71,11 @@ suspend fun RealMainWindowComponent(
         DeviceGameDefaultSettingsKey correspondsTo KoneMutableAsynchronousState(
             GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>(
                 preparationTimeSeconds = 3u,
-                explanationTimeSeconds = 40u,
+                explanationTimeSeconds = 20u,
                 finalGuessTimeSeconds = 3u,
                 strictMode = false,
                 cachedEndConditionWordsNumber = 100u,
-                cachedEndConditionCyclesNumber = 5u,
+                cachedEndConditionCyclesNumber = 10u,
                 gameEndConditionType = GameStateMachine.GameEndCondition.Type.Words,
                 wordsSource = GameStateMachine.WordsSource.Custom(DeviceGameWordsProviderID.Local("medium"))
             )

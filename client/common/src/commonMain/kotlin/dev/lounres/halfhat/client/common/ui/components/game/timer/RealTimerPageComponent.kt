@@ -12,23 +12,23 @@ import kotlinx.coroutines.flow.StateFlow
 
 public class RealTimerPageComponent(
     override val onExitTimer: () -> Unit,
-    initialPreparationTimeSetting: UInt = 3u,
-    initialExplanationTimeSetting: UInt = 40u,
-    initialLastGuessTimeSetting: UInt = 3u,
+    initialPreparationTimeSetting: UInt,
+    initialExplanationTimeSetting: UInt,
+    initialLastGuessTimeSetting: UInt,
     private val timerComponent: TimerComponent
 ) : TimerPageComponent {
     
     override val timerState: KoneState<TimerState> get() = timerComponent.timerState
     
-    override val preparationTimeSetting: KoneMutableState<UInt> = KoneMutableState(initialPreparationTimeSetting)
-    override val explanationTimeSetting: KoneMutableState<UInt> = KoneMutableState(initialExplanationTimeSetting)
-    override val lastGuessTimeSetting: KoneMutableState<UInt> = KoneMutableState(initialLastGuessTimeSetting)
+    override val preparationTimeSetting: KoneMutableState<String> = KoneMutableState(initialPreparationTimeSetting.toString())
+    override val explanationTimeSetting: KoneMutableState<String> = KoneMutableState(initialExplanationTimeSetting.toString())
+    override val lastGuessTimeSetting: KoneMutableState<String> = KoneMutableState(initialLastGuessTimeSetting.toString())
     
-    override val onStartTimer: () -> Unit = {
+    override val onStartTimer: () -> Unit = onStartTimer@{
         timerComponent.startTimer(
-            preparationTimeSetting = preparationTimeSetting.value,
-            explanationTimeSetting = explanationTimeSetting.value,
-            lastGuessTimeSetting = lastGuessTimeSetting.value,
+            preparationTimeSetting = preparationTimeSetting.value.let { if (it.isBlank()) return@onStartTimer else it.toUInt() },
+            explanationTimeSetting = explanationTimeSetting.value.let { if (it.isBlank()) return@onStartTimer else it.toUInt() },
+            lastGuessTimeSetting = lastGuessTimeSetting.value.let { if (it.isBlank()) return@onStartTimer else it.toUInt() },
         )
     }
     override val onResetTimer: () -> Unit = {

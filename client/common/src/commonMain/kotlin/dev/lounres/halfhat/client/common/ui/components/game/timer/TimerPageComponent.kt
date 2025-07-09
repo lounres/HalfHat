@@ -10,9 +10,9 @@ public interface TimerPageComponent {
     
     public val timerState: KoneState<TimerState>
     
-    public val preparationTimeSetting: KoneMutableState<UInt>
-    public val explanationTimeSetting: KoneMutableState<UInt>
-    public val lastGuessTimeSetting: KoneMutableState<UInt>
+    public val preparationTimeSetting: KoneMutableState<String>
+    public val explanationTimeSetting: KoneMutableState<String>
+    public val lastGuessTimeSetting: KoneMutableState<String>
     
     public val onStartTimer: () -> Unit
     public val onResetTimer: () -> Unit

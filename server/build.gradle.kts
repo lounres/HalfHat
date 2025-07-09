@@ -21,7 +21,7 @@ kotlin {
                 implementation(projects.api)
 
                 // Logging
-                implementation(logKube.core)
+                implementation(versions.logKube.core)
 
                 // Ktor
                 implementation(versions.ktor.server.core)

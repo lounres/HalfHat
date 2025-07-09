@@ -91,7 +91,7 @@ public fun RoundPreparationUI(
             ) {
                 val millisecondsLeft = component.millisecondsLeft.collectAsState().value
                 Text(
-                    text = (millisecondsLeft / 1_000u + 1u).toString(),
+                    text = millisecondsLeft.let { if (it % 1000u != 0u) it / 1000u + 1u else it / 1000u }.toString(),
                     fontSize = 256.sp,
                     color = Color.hsv(
                         hue = min(millisecondsLeft, 3_000u).toInt() * 0.04f,

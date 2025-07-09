@@ -8,7 +8,6 @@ file("gradle.properties").inputStream().use {
 }
 
 val versions: String by projectProperties
-val logKubeVersion: String by projectProperties
 
 @Suppress("UnstableApiUsage")
 dependencyResolutionManagement {
@@ -23,7 +22,6 @@ dependencyResolutionManagement {
     
     versionCatalogs {
         create("versions").from("dev.lounres:versions:$versions")
-        create("logKube").from("dev.lounres:logKube.versionCatalog:$logKubeVersion")
     }
 }
 

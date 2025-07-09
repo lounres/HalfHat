@@ -38,9 +38,12 @@ public fun RoundExplanationUI(
         speaker = component.speaker.collectAsState().value,
         listener = component.listener.collectAsState().value,
         timer = {
+            val secondsLeft = component.millisecondsLeft.collectAsState().value.let { if (it % 1000u != 0u) it / 1000u + 1u else it / 1000u }
+            val secondsToShow = secondsLeft % 60u
+            val minutesToShow = secondsLeft / 60u
             Text(
-                text = (component.millisecondsLeft.collectAsState().value / 1_000u + 1u).let { "${it / 60u}:${it % 60u}" },
-                fontSize = 32.sp,
+                text = "${minutesToShow.toString().padStart(2, '0')}:${secondsToShow.toString().padStart(2, '0')}",
+                fontSize = 128.sp,
             )
         },
         word = component.word.collectAsState().value,

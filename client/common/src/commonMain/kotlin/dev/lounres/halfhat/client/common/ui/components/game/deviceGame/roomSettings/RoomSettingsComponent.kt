@@ -10,9 +10,9 @@ public interface RoomSettingsComponent {
     public val onApplySettings: () -> Unit
     public val onDiscardSettings: () -> Unit
     
-    public val preparationTimeSeconds: MutableStateFlow<UInt>
-    public val explanationTimeSeconds: MutableStateFlow<UInt>
-    public val finalGuessTimeSeconds: MutableStateFlow<UInt>
+    public val preparationTimeSeconds: MutableStateFlow<String>
+    public val explanationTimeSeconds: MutableStateFlow<String>
+    public val finalGuessTimeSeconds: MutableStateFlow<String>
     public val strictMode: MutableStateFlow<Boolean>
     public val possibleWordsSources: KoneList<DeviceGameWordsProviderID>
     public val wordsSource: MutableStateFlow<GameStateMachine.WordsSource<DeviceGameWordsProviderID>>
