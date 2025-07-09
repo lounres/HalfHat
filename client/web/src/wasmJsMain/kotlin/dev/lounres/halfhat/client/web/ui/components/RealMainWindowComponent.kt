@@ -71,7 +71,7 @@ suspend fun RealMainWindowComponent(
         DeviceGameDefaultSettingsKey correspondsTo KoneMutableAsynchronousState(
             GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>(
                 preparationTimeSeconds = 3u,
-                explanationTimeSeconds = 40u,
+                explanationTimeSeconds = 20u,
                 finalGuessTimeSeconds = 3u,
                 strictMode = false,
                 cachedEndConditionWordsNumber = 100u,

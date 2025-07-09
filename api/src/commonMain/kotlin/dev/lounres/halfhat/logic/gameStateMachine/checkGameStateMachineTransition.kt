@@ -797,7 +797,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                     val nextSpeakerIndex = (previousState.speakerIndex + 1u) % previousState.playersList.size
                     var nextListenerIndex = (previousState.listenerIndex + 1u) % previousState.playersList.size
                     if (nextSpeakerIndex == 0u) {
-                        nextListenerIndex++
+                        nextListenerIndex = (nextListenerIndex + 1u) % previousState.playersList.size
                         if (nextListenerIndex == 0u) {
                             nextListenerIndex = 1u
                             nextCycleNumber++

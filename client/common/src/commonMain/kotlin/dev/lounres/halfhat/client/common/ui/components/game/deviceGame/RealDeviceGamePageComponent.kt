@@ -13,6 +13,7 @@ import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.komponentual.navigation.ChildrenStack
 import dev.lounres.komponentual.navigation.MutableStackNavigation
 import dev.lounres.komponentual.navigation.replaceCurrent
+import dev.lounres.kone.collections.iterables.isNotEmpty
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.collections.set.KoneMutableSet
@@ -67,20 +68,22 @@ public suspend fun RealDeviceGamePageComponent(
                                 }
                             },
                             onStartGame = onStartGame@{
-                                if (playersList.value.any { it.name.isBlank() }) {
-                                    showErrorForPlayers.value = playersList.value
-                                        .groupBy { it.name }
-                                        .nodesView
-                                        .filter { it.value.size > 1u || it.key.isEmpty() }
-                                        .flatMap { it.value }
-                                        .mapTo(
-                                            KoneMutableSet.of(
-                                                elementEquality = Equality { left, right -> left.id == right.id },
-                                                elementHashing = Hashing { it.id.hashCode() },
-                                            )
-                                        ) {
-                                            it
-                                        }
+                                val errorPlayers = playersList.value
+                                    .groupBy { it.name }
+                                    .nodesView
+                                    .filter { it.value.size > 1u || it.key.isEmpty() }
+                                    .flatMap { it.value }
+                                    .mapTo(
+                                        KoneMutableSet.of(
+                                            elementEquality = Equality { left, right -> left.id == right.id },
+                                            elementHashing = Hashing { it.id.hashCode() },
+                                        )
+                                    ) {
+                                        it
+                                    }
+                                
+                                if (errorPlayers.isNotEmpty()) {
+                                    showErrorForPlayers.value = errorPlayers
                                     return@onStartGame
                                 }
                                 
