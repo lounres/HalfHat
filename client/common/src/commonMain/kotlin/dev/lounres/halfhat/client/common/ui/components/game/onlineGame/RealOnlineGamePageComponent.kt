@@ -8,7 +8,6 @@ import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.gameScree
 import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.previewScreen.RealPreviewScreenComponent
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.buildLogicChildOnRunning
-import dev.lounres.halfhat.client.components.logicChildDeferringOnRunning
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStack
 import dev.lounres.komponentual.navigation.ChildrenStack
 import dev.lounres.komponentual.navigation.MutableStackNavigation

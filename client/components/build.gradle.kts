@@ -12,11 +12,18 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                api(versions.kone.collections)
                 api(versions.kone.state)
+                api(versions.kone.typeSafeRegistry)
+                
+                // Component blocks
                 api(versions.komponentual.lifecycle)
                 api(versions.komponentual.navigation)
-                api(versions.kone.typeSafeRegistry)
-                api(versions.kone.collections)
+                
+                // Logging
+                api(versions.logKube.core)
+                
+                // Coroutines
                 api(versions.kotlinx.coroutines.core)
             }
         }

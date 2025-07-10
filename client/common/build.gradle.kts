@@ -25,9 +25,6 @@ kotlin {
                 api(versions.kone.util.stateForCompose)
                 implementation(versions.kone.util.atomics)
 
-                // Logging
-//                api(logKube.core)
-
                 // Compose
                 api(compose.runtime)
                 api(compose.ui)

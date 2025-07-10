@@ -4,8 +4,8 @@ import dev.lounres.halfhat.client.common.utils.DefaultSounds
 import dev.lounres.halfhat.client.common.utils.playSound
 import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
-import dev.lounres.halfhat.client.components.lifecycle
 import dev.lounres.halfhat.client.components.lifecycle.LogicComponentLifecycleState
+import dev.lounres.halfhat.client.components.lifecycle.lifecycle
 import dev.lounres.kone.state.KoneMutableState
 import dev.lounres.util.atomic.updateAndGet
 import dev.lounres.util.atomic.value
