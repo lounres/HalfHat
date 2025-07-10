@@ -34,7 +34,6 @@ public fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMeta
         automaton = AsynchronousAutomaton(
             mutex = mutex,
             initialState = initialState,
-            onTransition = { previousState, transition, nextState -> AsynchronousGameStateMachine(this).onTransition(previousState, transition, nextState) },
             checkTransition = { previousState, transition ->
                 checkGameStateMachineTransition(
                     coroutineScope = coroutineScope,
@@ -45,7 +44,8 @@ public fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMeta
                     previousState = previousState,
                     transition = transition,
                 )
-            }
+            },
+            onTransition = { previousState, transition, nextState -> AsynchronousGameStateMachine(this).onTransition(previousState, transition, nextState) },
         )
     )
 

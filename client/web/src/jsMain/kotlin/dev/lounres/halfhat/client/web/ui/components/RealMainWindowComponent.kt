@@ -18,6 +18,7 @@ import dev.lounres.halfhat.client.common.ui.components.rules.RealRulesPageCompon
 import dev.lounres.halfhat.client.common.ui.components.settings.RealSettingsPageComponent
 import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleKey
+import dev.lounres.halfhat.client.components.logger.LoggerKey
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.komponentual.navigation.ChildrenVariants
 import dev.lounres.komponentual.navigation.MutableVariantsNavigation
@@ -32,6 +33,9 @@ import dev.lounres.kone.collections.utils.map
 import dev.lounres.kone.state.KoneAsynchronousState
 import dev.lounres.kone.state.KoneMutableAsynchronousState
 import dev.lounres.kone.state.map
+import dev.lounres.logKube.core.DefaultCurrentPlatformLogWriter
+import dev.lounres.logKube.core.LogAcceptor
+import dev.lounres.logKube.core.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,6 +71,10 @@ suspend fun RealMainWindowComponent(
     val globalLifecycle: MutableUIComponentLifecycle = MutableUIComponentLifecycle(CoroutineScope(Dispatchers.Default))
     val globalComponentContext = UIComponentContext {
         UIComponentLifecycleKey correspondsTo globalLifecycle
+        LoggerKey correspondsTo Logger(
+            name = "Web HalfHat application logger",
+            LogAcceptor(DefaultCurrentPlatformLogWriter) { false },
+        )
         DeviceGameWordsProviderRegistryKey correspondsTo DeviceGameWordsProviderRegistry
         DeviceGameDefaultSettingsKey correspondsTo KoneMutableAsynchronousState(
             GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>(

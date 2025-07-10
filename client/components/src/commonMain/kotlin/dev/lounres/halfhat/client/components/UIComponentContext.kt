@@ -13,8 +13,10 @@ import dev.lounres.halfhat.client.components.lifecycle.lifecycle
 import dev.lounres.halfhat.client.components.lifecycle.logicChildDeferringOnRunning
 import dev.lounres.halfhat.client.components.lifecycle.mergeLogicAndUILifecyclesDeferringOnRunning
 import dev.lounres.halfhat.client.components.lifecycle.mergeUIComponentLifecyclesDeferring
+import dev.lounres.halfhat.client.components.logger.logger
 import dev.lounres.kone.registry.Registry
 import dev.lounres.kone.registry.RegistryBuilder
+import dev.lounres.logKube.core.debug
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlin.contracts.InvocationKind
@@ -51,6 +53,17 @@ internal fun UIComponentContext.uiChildDeferring(
             else
                 base.lifecycle.childDeferring(CoroutineScope(Dispatchers.Default))
         UIComponentLifecycleKey correspondsTo childLifecycle
+        childLifecycle.subscribe {
+            logger.debug(
+                source = "dev.lounres.halfhat.client.components.uiChildDeferring",
+                items = {
+                    mapOf(
+                        "lifecycle" to childLifecycle.toString(),
+                        "transition" to it.toString(),
+                    )
+                }
+            ) { "Lifecycle transition in progress" }
+        }
     }
 
 @OptIn(DelicateLifecycleAPI::class)
@@ -80,6 +93,17 @@ internal fun UIComponentContext.logicChildDeferringOnRunning(
             else
                 base.lifecycle.logicChildDeferringOnRunning(CoroutineScope(Dispatchers.Default))
         LogicComponentLifecycleKey correspondsTo childLifecycle
+        childLifecycle.subscribe {
+            logger.debug(
+                source = "dev.lounres.halfhat.client.components.logicChildDeferringOnRunning",
+                items = {
+                    mapOf(
+                        "lifecycle" to childLifecycle.toString(),
+                        "transition" to it.toString(),
+                    )
+                }
+            ) { "Lifecycle transition in progress" }
+        }
     }
 
 @OptIn(DelicateLifecycleAPI::class)
