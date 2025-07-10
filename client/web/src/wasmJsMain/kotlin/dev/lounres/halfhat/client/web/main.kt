@@ -45,10 +45,10 @@ fun main() {
 
         val allPreloaded by remember { derivedStateOf { preloadedDrawables.all { it.value.value != null } && component != null } }
 
-        LaunchedEffect(allPreloaded) {
-            val theComponent = RealMainWindowComponent()
-            theComponent.globalLifecycle.moveTo(UIComponentLifecycleState.Running)
-            component = theComponent
+        LaunchedEffect(Unit) {
+            component = RealMainWindowComponent().also {
+                it.globalLifecycle.moveTo(UIComponentLifecycleState.Running)
+            }
         }
 
         if (allPreloaded) {

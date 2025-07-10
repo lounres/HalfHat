@@ -15,6 +15,7 @@ import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScree
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.roundPreparation.RealRoundPreparationComponent
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.roundWaiting.RealRoundWaitingComponent
 import dev.lounres.halfhat.client.common.utils.playSound
+import dev.lounres.halfhat.client.components.logger.logger
 import dev.lounres.halfhat.logic.gameStateMachine.*
 import dev.lounres.komponentual.navigation.ChildrenSlot
 import dev.lounres.komponentual.navigation.MutableSlotNavigation
@@ -22,6 +23,7 @@ import dev.lounres.kone.automata.CheckResult
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.toKoneMutableList
 import dev.lounres.kone.state.KoneAsynchronousState
+import dev.lounres.logKube.core.debug
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -71,6 +73,7 @@ public suspend fun RealGameScreenComponent(
     settingsBuilder: GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>,
     onExitGame: () -> Unit,
 ): RealGameScreenComponent {
+    val logger = componentContext.logger
     val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
     val navigation = MutableSlotNavigation<RealGameScreenComponent.Configuration>(CoroutineScope(Dispatchers.Default))
     
@@ -81,7 +84,17 @@ public suspend fun RealGameScreenComponent(
         coroutineScope = coroutineScope,
         random = Random, // TODO: Move the variable upward
         checkMetadataUpdate = { _, _ -> CheckResult.Failure(null) }
-    ) { previousState, _, newState ->
+    ) { previousState, transition, newState ->
+        logger.debug(
+            source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+            items = {
+                mapOf(
+                    "previousState" to previousState.toString(),
+                    "transition" to transition.toString(),
+                    "newState" to newState.toString(),
+                )
+            }
+        ) { "Game state machine transition started" }
         when (newState) {
             is GameStateMachine.State.GameInitialisation ->
                 when (previousState) {
@@ -300,7 +313,16 @@ public suspend fun RealGameScreenComponent(
                         )
             }
         }
-        
+        logger.debug(
+            source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+            items = {
+                mapOf(
+                    "previousState" to previousState.toString(),
+                    "transition" to transition.toString(),
+                    "newState" to newState.toString(),
+                )
+            }
+        ) { "Game state machine transition ended" }
     }
     
     // TODO: Make the state machine initialized
@@ -311,6 +333,7 @@ public suspend fun RealGameScreenComponent(
     
     val childSlot: KoneAsynchronousState<ChildrenSlot<RealGameScreenComponent.Configuration, GameScreenComponent.Child>> =
         componentContext.uiChildrenDefaultSlot(
+            loggerSource = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
             source = navigation,
             initialConfiguration = when(val state = gameStateMachine.state) {
                 is GameStateMachine.State.GameInitialisation<*, *, *> ->
@@ -362,12 +385,40 @@ public suspend fun RealGameScreenComponent(
                         RealRoundWaitingComponent(
                             onExitGame = onExitGame,
                             onFinishGame = {
-                                CoroutineScope(Dispatchers.Default).launch { gameStateMachine.finishGame() }
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                    ) { "Finishing game" }
+                                    val result = gameStateMachine.finishGame()
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                        items = {
+                                            mapOf(
+                                                "result" to result.toString(),
+                                            )
+                                        },
+                                    ) {
+                                        "Finished game"
+                                    }
+                                }
                             },
                             speaker = configuration.speaker,
                             listener = configuration.listener,
                             onStartRound = {
-                                CoroutineScope(Dispatchers.Default).launch { gameStateMachine.speakerAndListenerReady() }
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                    ) { "Making speaker and listener ready" }
+                                    val result = gameStateMachine.speakerAndListenerReady()
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                        items = {
+                                            mapOf(
+                                                "result" to result.toString(),
+                                            )
+                                        },
+                                    ) { "Made speaker and listener ready" }
+                                }
                             }
                         )
                     )
@@ -390,17 +441,50 @@ public suspend fun RealGameScreenComponent(
                             word = configuration.word,
                             onGuessed = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.Explained)
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                    ) { "Setting word explanation state to 'explained'" }
+                                    val result = gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.Explained)
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                        items = {
+                                            mapOf(
+                                                "result" to result.toString(),
+                                            )
+                                        },
+                                    ) { "Set word explanation state to 'explained'" }
                                 }
                             },
                             onNotGuessed = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.NotExplained)
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                    ) { "Setting word explanation state to 'not explained'" }
+                                    val result = gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.NotExplained)
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                        items = {
+                                            mapOf(
+                                                "result" to result.toString(),
+                                            )
+                                        },
+                                    ) { "Set word explanation state to 'not explained'" }
                                 }
                             },
                             onMistake = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.Mistake)
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                    ) { "Setting word explanation state to 'mistake'" }
+                                    val result = gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.Mistake)
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                        items = {
+                                            mapOf(
+                                                "result" to result.toString(),
+                                            )
+                                        },
+                                    ) { "Set word explanation state to 'mistake'" }
                                 }
                             },
                         )
@@ -415,17 +499,50 @@ public suspend fun RealGameScreenComponent(
                             word = configuration.word,
                             onGuessed = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.Explained)
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                    ) { "Setting word explanation state to 'explained'" }
+                                    val result = gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.Explained)
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                        items = {
+                                            mapOf(
+                                                "result" to result.toString(),
+                                            )
+                                        },
+                                    ) { "Set word explanation state to 'explained'" }
                                 }
                             },
                             onNotGuessed = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.NotExplained)
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                    ) { "Setting word explanation state to 'not explained'" }
+                                    val result = gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.NotExplained)
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                        items = {
+                                            mapOf(
+                                                "result" to result.toString(),
+                                            )
+                                        },
+                                    ) { "Set word explanation state to 'not explained'" }
                                 }
                             },
                             onMistake = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.Mistake)
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                    ) { "Setting word explanation state to 'mistake'" }
+                                    val result = gameStateMachine.wordExplanationState(GameStateMachine.WordExplanation.State.Mistake)
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                        items = {
+                                            mapOf(
+                                                "result" to result.toString(),
+                                            )
+                                        },
+                                    ) { "Set word explanation state to 'mistake'" }
                                 }
                             },
                         )
@@ -437,7 +554,10 @@ public suspend fun RealGameScreenComponent(
                             wordsToEdit = configuration.wordsToEdit,
                             onGuessed = { index ->
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    gameStateMachine.updateWordsExplanationResults(
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                    ) { "Updating word explanation results" }
+                                    val result = gameStateMachine.updateWordsExplanationResults(
                                         configuration.wordsToEdit.value.toKoneMutableList().apply {
                                             this[index] = GameStateMachine.WordExplanation(
                                                 this[index].word,
@@ -445,11 +565,22 @@ public suspend fun RealGameScreenComponent(
                                             )
                                         }
                                     )
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                        items = {
+                                            mapOf(
+                                                "result" to result.toString(),
+                                            )
+                                        },
+                                    ) { "Updated word explanation results" }
                                 }
                             },
                             onNotGuessed = { index ->
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    gameStateMachine.updateWordsExplanationResults(
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                    ) { "Updating word explanation results" }
+                                    val result = gameStateMachine.updateWordsExplanationResults(
                                         configuration.wordsToEdit.value.toKoneMutableList().apply {
                                             this[index] = GameStateMachine.WordExplanation(
                                                 this[index].word,
@@ -457,11 +588,22 @@ public suspend fun RealGameScreenComponent(
                                             )
                                         }
                                     )
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                        items = {
+                                            mapOf(
+                                                "result" to result.toString(),
+                                            )
+                                        },
+                                    ) { "Updated word explanation results" }
                                 }
                             },
                             onMistake = { index ->
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    gameStateMachine.updateWordsExplanationResults(
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                    ) { "Updating word explanation results" }
+                                    val result = gameStateMachine.updateWordsExplanationResults(
                                         configuration.wordsToEdit.value.toKoneMutableList().apply {
                                             this[index] = GameStateMachine.WordExplanation(
                                                 this[index].word,
@@ -469,11 +611,30 @@ public suspend fun RealGameScreenComponent(
                                             )
                                         }
                                     )
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                        items = {
+                                            mapOf(
+                                                "result" to result.toString(),
+                                            )
+                                        },
+                                    ) { "Updated word explanation results" }
                                 }
                             },
                             onConfirm = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    gameStateMachine.confirmWordsExplanationResults()
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                    ) { "Confirming word explanation results" }
+                                    val result = gameStateMachine.confirmWordsExplanationResults()
+                                    logger.debug(
+                                        source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
+                                        items = {
+                                            mapOf(
+                                                "result" to result.toString(),
+                                            )
+                                        },
+                                    ) { "Confirmed word explanation results" }
                                 }
                             }
                         )

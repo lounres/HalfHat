@@ -119,7 +119,6 @@ tasks.register("publishToProduction") {
             ssh.use {
                 val session = ssh.startSession()
                 val command = session.exec("rm -rf $destinationSite/*")
-                println(command.inputStream.bufferedReader().use { it.readText() })
                 command.join()
                 val scpFileTransfer = ssh.newSCPFileTransfer()
                 val sources = wasmJsBrowserDistribution.outputs.files
