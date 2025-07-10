@@ -1,5 +1,6 @@
 package dev.lounres.halfhat.client.components.lifecycle
 
+import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.komponentual.lifecycle.DeferredLifecycle
 import dev.lounres.komponentual.lifecycle.DelicateLifecycleAPI
 import dev.lounres.komponentual.lifecycle.Lifecycle
@@ -9,6 +10,7 @@ import dev.lounres.komponentual.lifecycle.mergeDeferring
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.registry.RegistryKey
+import dev.lounres.kone.registry.getOrElse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlin.coroutines.CoroutineContext
@@ -33,9 +35,7 @@ public typealias LogicComponentLifecycle = Lifecycle<LogicComponentLifecycleStat
 public typealias MutableLogicComponentLifecycle = MutableLifecycle<LogicComponentLifecycleState, LogicComponentLifecycleTransition>
 
 @DelicateLifecycleAPI
-public typealias DeferredLogicComponentLifecycle = DeferredLifecycle<LogicComponentLifecycleState, LogicComponentLifecycleTransition>
-
-public data object LogicComponentLifecycleKey : RegistryKey<LogicComponentLifecycle>
+internal typealias DeferredLogicComponentLifecycle = DeferredLifecycle<LogicComponentLifecycleState, LogicComponentLifecycleTransition>
 
 // FIXME
 public /*inline*/ fun LogicComponentLifecycle.subscribe(
@@ -102,7 +102,7 @@ public fun MutableLogicComponentLifecycle(coroutineScope: CoroutineScope): Mutab
     MutableLifecycle(coroutineScope, LogicComponentLifecycleState.Initialized, ::checkNextState, ::decomposeTransition)
 
 @DelicateLifecycleAPI
-public fun LogicComponentLifecycle.childDeferring(coroutineScope: CoroutineScope): DeferredLogicComponentLifecycle =
+internal fun LogicComponentLifecycle.childDeferring(coroutineScope: CoroutineScope): DeferredLogicComponentLifecycle =
     childDeferring(
         coroutineScope = coroutineScope,
         initialState = LogicComponentLifecycleState.Initialized,
@@ -114,7 +114,7 @@ public fun LogicComponentLifecycle.childDeferring(coroutineScope: CoroutineScope
     )
 
 @DelicateLifecycleAPI
-public fun Lifecycle.Companion.mergeLogicComponentLifecyclesDeferring(
+internal fun Lifecycle.Companion.mergeLogicComponentLifecyclesDeferring(
     lifecycle1: LogicComponentLifecycle,
     lifecycle2: LogicComponentLifecycle,
     coroutineScope: CoroutineScope,
@@ -133,8 +133,22 @@ public fun Lifecycle.Companion.mergeLogicComponentLifecyclesDeferring(
     )
 
 public fun CoroutineScope.attachTo(lifecycle: LogicComponentLifecycle) {
-    lifecycle.subscribe(onStop = { this.cancel() }, onDestroy = { this.cancel() })
+    val subscription = lifecycle.subscribe(onStop = { this.cancel() }, onDestroy = { this.cancel() })
+    if (subscription.initialState == LogicComponentLifecycleState.Destroyed) cancel()
 }
 
 public fun LogicComponentLifecycle.coroutineScope(context: CoroutineContext): CoroutineScope =
     CoroutineScope(context).apply { attachTo(this@coroutineScope) }
+
+public data object LogicComponentLifecycleKey : RegistryKey<LogicComponentLifecycle>
+
+public val LogicComponentContext.lifecycle: LogicComponentLifecycle
+    get() = this.getOrElse(LogicComponentLifecycleKey) { error("No logic component lifecycle registered") }
+
+@DelicateLifecycleAPI
+@PublishedApi
+internal suspend fun LogicComponentContext.launch() {
+    val lifecycle = lifecycle
+    if (lifecycle is DeferredLogicComponentLifecycle) lifecycle.launch()
+    else error("Cannot launch non-deferred lifecycle")
+}

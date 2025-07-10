@@ -1,5 +1,6 @@
 package dev.lounres.halfhat.client.components.lifecycle
 
+import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.komponentual.lifecycle.DeferredLifecycle
 import dev.lounres.komponentual.lifecycle.DelicateLifecycleAPI
 import dev.lounres.komponentual.lifecycle.Lifecycle
@@ -8,6 +9,7 @@ import dev.lounres.komponentual.lifecycle.childDeferring
 import dev.lounres.komponentual.lifecycle.mergeDeferring
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.registry.RegistryKey
+import dev.lounres.kone.registry.getOrElse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlin.coroutines.CoroutineContext
@@ -26,15 +28,13 @@ public typealias UIComponentLifecycleCallback = suspend (UIComponentLifecycleTra
 
 public typealias UIComponentLifecycle = Lifecycle<UIComponentLifecycleState, UIComponentLifecycleTransition>
 
-public data object UIComponentLifecycleKey : RegistryKey<UIComponentLifecycle>
-
 public val UIComponentLifecycle.isRun: Boolean get() = state != UIComponentLifecycleState.Initialized
 public val UIComponentLifecycle.isDestroyed: Boolean get() = state == UIComponentLifecycleState.Destroyed
 
 public typealias MutableUIComponentLifecycle = MutableLifecycle<UIComponentLifecycleState, UIComponentLifecycleTransition>
 
 @DelicateLifecycleAPI
-public typealias DeferredUIComponentLifecycle = DeferredLifecycle<UIComponentLifecycleState, UIComponentLifecycleTransition>
+internal typealias DeferredUIComponentLifecycle = DeferredLifecycle<UIComponentLifecycleState, UIComponentLifecycleTransition>
 
 internal expect fun checkNextState(previousState: UIComponentLifecycleState, nextState: UIComponentLifecycleState): Boolean
 
@@ -49,7 +49,7 @@ public fun MutableUIComponentLifecycle(coroutineScope: CoroutineScope): MutableU
     )
 
 @DelicateLifecycleAPI
-public fun UIComponentLifecycle.childDeferring(coroutineScope: CoroutineScope): DeferredUIComponentLifecycle =
+internal fun UIComponentLifecycle.childDeferring(coroutineScope: CoroutineScope): DeferredUIComponentLifecycle =
     childDeferring(
         coroutineScope = coroutineScope,
         initialState = UIComponentLifecycleState.Initialized,
@@ -61,7 +61,7 @@ public fun UIComponentLifecycle.childDeferring(coroutineScope: CoroutineScope): 
     )
 
 @DelicateLifecycleAPI
-public fun Lifecycle.Companion.mergeUIComponentLifecyclesDeferring(
+internal fun Lifecycle.Companion.mergeUIComponentLifecyclesDeferring(
     lifecycle1: UIComponentLifecycle,
     lifecycle2: UIComponentLifecycle,
     coroutineScope: CoroutineScope,
@@ -80,8 +80,22 @@ public fun Lifecycle.Companion.mergeUIComponentLifecyclesDeferring(
     )
 
 public fun CoroutineScope.attachTo(lifecycle: UIComponentLifecycle) {
-    lifecycle.subscribe { if (it == UIComponentLifecycleTransition.Destroy) cancel() }
+    val subscription = lifecycle.subscribe { if (it == UIComponentLifecycleTransition.Destroy) cancel() }
+    if (subscription.initialState == UIComponentLifecycleState.Destroyed) cancel()
 }
 
 public fun UIComponentLifecycle.coroutineScope(context: CoroutineContext): CoroutineScope =
     CoroutineScope(context).apply { attachTo(this@coroutineScope) }
+
+public data object UIComponentLifecycleKey : RegistryKey<UIComponentLifecycle>
+
+public val UIComponentContext.lifecycle: UIComponentLifecycle
+    get() = this.getOrElse(UIComponentLifecycleKey) { error("No UI component lifecycle registered") }
+
+@DelicateLifecycleAPI
+@PublishedApi
+internal suspend fun UIComponentContext.launch() {
+    val lifecycle = lifecycle
+    if (lifecycle is DeferredUIComponentLifecycle) lifecycle.launch()
+    else error("Cannot launch non-deferred lifecycle")
+}

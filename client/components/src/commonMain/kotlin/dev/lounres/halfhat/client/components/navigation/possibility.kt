@@ -1,12 +1,10 @@
 package dev.lounres.halfhat.client.components.navigation
 
 import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.buildUiChild
 import dev.lounres.halfhat.client.components.coroutineScope
-import dev.lounres.halfhat.client.components.launch
 import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
-import dev.lounres.halfhat.client.components.uiChildDeferring
-import dev.lounres.komponentual.lifecycle.*
 import dev.lounres.komponentual.navigation.ChildrenPossibility
 import dev.lounres.komponentual.navigation.InnerPossibilityNavigationState
 import dev.lounres.komponentual.navigation.PossibilityNavigation
@@ -19,7 +17,6 @@ import dev.lounres.kone.state.KoneAsynchronousState
 import kotlinx.coroutines.Dispatchers
 
 
-@OptIn(DelicateLifecycleAPI::class)
 public suspend fun <
     Configuration,
     Component,
@@ -41,9 +38,9 @@ public suspend fun <
         createChild = { configuration, nextState ->
             val controllingLifecycle = MutableUIComponentLifecycle(this.coroutineScope(Dispatchers.Default))
             updateLifecycle(configuration, controllingLifecycle, nextState)
-            val childContext = this.uiChildDeferring(controllingLifecycle)
-            val child = childrenFactory(configuration, childContext)
-            childContext.launch()
+            val child = this.buildUiChild(controllingLifecycle) {
+                childrenFactory(configuration, it)
+            }
             Child(
                 component = child,
                 controllingLifecycle = controllingLifecycle,

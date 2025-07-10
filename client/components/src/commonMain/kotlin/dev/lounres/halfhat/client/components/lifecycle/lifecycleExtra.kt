@@ -8,7 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 
 
 @DelicateLifecycleAPI
-public fun UIComponentLifecycle.logicChildDeferringOnRunning(coroutineScope: CoroutineScope): LogicComponentLifecycle =
+internal fun UIComponentLifecycle.logicChildDeferringOnRunning(coroutineScope: CoroutineScope): LogicComponentLifecycle =
     childDeferring(
         coroutineScope = coroutineScope,
         initialState = LogicComponentLifecycleState.Initialized,
@@ -39,7 +39,7 @@ internal fun minOf(logic: LogicComponentLifecycleState, ui: UIComponentLifecycle
     }
 
 @DelicateLifecycleAPI
-public fun Lifecycle.Companion.mergeLogicAndUILifecyclesDeferringOnRunning(
+internal fun Lifecycle.Companion.mergeLogicAndUILifecyclesDeferringOnRunning(
     lifecycle1: LogicComponentLifecycle,
     lifecycle2: UIComponentLifecycle,
     coroutineScope: CoroutineScope

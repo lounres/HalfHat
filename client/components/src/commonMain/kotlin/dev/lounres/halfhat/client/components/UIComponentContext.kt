@@ -1,6 +1,5 @@
 package dev.lounres.halfhat.client.components
 
-import dev.lounres.halfhat.client.components.lifecycle.DeferredUIComponentLifecycle
 import dev.lounres.komponentual.lifecycle.DelicateLifecycleAPI
 import dev.lounres.komponentual.lifecycle.Lifecycle
 import dev.lounres.halfhat.client.components.lifecycle.LogicComponentLifecycle
@@ -9,6 +8,8 @@ import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycle
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleKey
 import dev.lounres.halfhat.client.components.lifecycle.coroutineScope
 import dev.lounres.halfhat.client.components.lifecycle.childDeferring
+import dev.lounres.halfhat.client.components.lifecycle.launch
+import dev.lounres.halfhat.client.components.lifecycle.lifecycle
 import dev.lounres.halfhat.client.components.lifecycle.logicChildDeferringOnRunning
 import dev.lounres.halfhat.client.components.lifecycle.mergeLogicAndUILifecyclesDeferringOnRunning
 import dev.lounres.halfhat.client.components.lifecycle.mergeUIComponentLifecyclesDeferring
@@ -32,17 +33,11 @@ public inline fun UIComponentContext(builder: RegistryBuilder.() -> Unit): UICom
     return UIComponentContext(Registry(builder))
 }
 
-public val UIComponentContext.lifecycle: UIComponentLifecycle get() = this[UIComponentLifecycleKey]
-
-@DelicateLifecycleAPI
-internal suspend fun UIComponentContext.launch() {
-    (lifecycle as DeferredUIComponentLifecycle).launch()
-}
-
 public fun UIComponentContext.coroutineScope(context: CoroutineContext): CoroutineScope = lifecycle.coroutineScope(context)
 
 @DelicateLifecycleAPI
-public fun UIComponentContext.uiChildDeferring(
+@PublishedApi
+internal fun UIComponentContext.uiChildDeferring(
     controllingLifecycle: UIComponentLifecycle? = null,
 ): UIComponentContext =
     UIComponentContext {
@@ -59,7 +54,7 @@ public fun UIComponentContext.uiChildDeferring(
     }
 
 @OptIn(DelicateLifecycleAPI::class)
-public suspend fun <Result> UIComponentContext.buildUiChild(
+public suspend inline fun <Result> UIComponentContext.buildUiChild(
     controllingLifecycle: UIComponentLifecycle? = null,
     provider: (UIComponentContext) -> Result,
 ): Result {
@@ -70,7 +65,8 @@ public suspend fun <Result> UIComponentContext.buildUiChild(
 }
 
 @DelicateLifecycleAPI
-public fun UIComponentContext.logicChildDeferringOnRunning(
+@PublishedApi
+internal fun UIComponentContext.logicChildDeferringOnRunning(
     controllingLifecycle: LogicComponentLifecycle? = null,
 ): LogicComponentContext =
     LogicComponentContext {
@@ -87,7 +83,7 @@ public fun UIComponentContext.logicChildDeferringOnRunning(
     }
 
 @OptIn(DelicateLifecycleAPI::class)
-public suspend fun <Result> UIComponentContext.buildLogicChildOnRunning(
+public suspend inline fun <Result> UIComponentContext.buildLogicChildOnRunning(
     controllingLifecycle: LogicComponentLifecycle? = null,
     provider: (LogicComponentContext) -> Result,
 ): Result {
