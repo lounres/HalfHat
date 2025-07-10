@@ -310,7 +310,7 @@ public suspend fun RealGameScreenComponent(
     )
     
     val childSlot: KoneAsynchronousState<ChildrenSlot<RealGameScreenComponent.Configuration, GameScreenComponent.Child>> =
-        componentContext.uiChildrenDefaultSlot<RealGameScreenComponent.Configuration, _>(
+        componentContext.uiChildrenDefaultSlot(
             source = navigation,
             initialConfiguration = when(val state = gameStateMachine.state) {
                 is GameStateMachine.State.GameInitialisation<*, *, *> ->

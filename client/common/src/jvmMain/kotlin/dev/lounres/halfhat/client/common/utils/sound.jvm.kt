@@ -5,5 +5,5 @@ import korlibs.audio.sound.toSound
 
 
 public actual suspend fun ByteArray.playSound() {
-    WAV.decode(this)!!.toSound().play()
+//    WAV.decode(this)!!.toSound().play()
 }
