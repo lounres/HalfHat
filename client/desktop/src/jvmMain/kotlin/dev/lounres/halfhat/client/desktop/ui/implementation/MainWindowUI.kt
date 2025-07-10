@@ -447,7 +447,7 @@ fun MainWindowUI(
                     windowSizeClass = calculateWindowSizeClass()
                 )
             
-            LaunchedEffect(Unit) {
+            SideEffect {
                 showContent = true
             }
         }
