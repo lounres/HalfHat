@@ -43,7 +43,7 @@ public suspend fun RealOnlineGamePageComponent(
             RealOnlineGameComponent(it)
         }
     
-    val navigation = MutableStackNavigation<RealOnlineGamePageComponent.Configuration>(CoroutineScope(Dispatchers.Default))
+    val navigation = MutableStackNavigation<RealOnlineGamePageComponent.Configuration>()
     
     val childStack: KoneAsynchronousState<ChildrenStack<RealOnlineGamePageComponent.Configuration, OnlineGamePageComponent.Child>> =
         componentContext.uiChildrenDefaultStack(

@@ -24,7 +24,6 @@ import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.toKoneMutableList
 import dev.lounres.kone.state.KoneAsynchronousState
 import dev.lounres.logKube.core.debug
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -75,7 +74,7 @@ public suspend fun RealGameScreenComponent(
 ): RealGameScreenComponent {
     val logger = componentContext.logger
     val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
-    val navigation = MutableSlotNavigation<RealGameScreenComponent.Configuration>(CoroutineScope(Dispatchers.Default))
+    val navigation = MutableSlotNavigation<RealGameScreenComponent.Configuration>()
     
     val gameStateMachine = AsynchronousGameStateMachine.Initialization<String, DeviceGameWordsProviderID, NoDeviceGameWordsProviderReason, Nothing?, Nothing?, Nothing?>(
         metadata = null,
@@ -385,7 +384,7 @@ public suspend fun RealGameScreenComponent(
                         RealRoundWaitingComponent(
                             onExitGame = onExitGame,
                             onFinishGame = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     logger.debug(
                                         source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
                                     ) { "Finishing game" }
@@ -405,7 +404,7 @@ public suspend fun RealGameScreenComponent(
                             speaker = configuration.speaker,
                             listener = configuration.listener,
                             onStartRound = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     logger.debug(
                                         source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
                                     ) { "Making speaker and listener ready" }
@@ -440,7 +439,7 @@ public suspend fun RealGameScreenComponent(
                             millisecondsLeft = configuration.millisecondsLeft,
                             word = configuration.word,
                             onGuessed = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     logger.debug(
                                         source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
                                     ) { "Setting word explanation state to 'explained'" }
@@ -456,7 +455,7 @@ public suspend fun RealGameScreenComponent(
                                 }
                             },
                             onNotGuessed = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     logger.debug(
                                         source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
                                     ) { "Setting word explanation state to 'not explained'" }
@@ -472,7 +471,7 @@ public suspend fun RealGameScreenComponent(
                                 }
                             },
                             onMistake = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     logger.debug(
                                         source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
                                     ) { "Setting word explanation state to 'mistake'" }
@@ -498,7 +497,7 @@ public suspend fun RealGameScreenComponent(
                             millisecondsLeft = configuration.millisecondsLeft,
                             word = configuration.word,
                             onGuessed = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     logger.debug(
                                         source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
                                     ) { "Setting word explanation state to 'explained'" }
@@ -514,7 +513,7 @@ public suspend fun RealGameScreenComponent(
                                 }
                             },
                             onNotGuessed = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     logger.debug(
                                         source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
                                     ) { "Setting word explanation state to 'not explained'" }
@@ -530,7 +529,7 @@ public suspend fun RealGameScreenComponent(
                                 }
                             },
                             onMistake = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     logger.debug(
                                         source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
                                     ) { "Setting word explanation state to 'mistake'" }
@@ -553,7 +552,7 @@ public suspend fun RealGameScreenComponent(
                             onExitGame = onExitGame,
                             wordsToEdit = configuration.wordsToEdit,
                             onGuessed = { index ->
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     logger.debug(
                                         source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
                                     ) { "Updating word explanation results" }
@@ -576,7 +575,7 @@ public suspend fun RealGameScreenComponent(
                                 }
                             },
                             onNotGuessed = { index ->
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     logger.debug(
                                         source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
                                     ) { "Updating word explanation results" }
@@ -599,7 +598,7 @@ public suspend fun RealGameScreenComponent(
                                 }
                             },
                             onMistake = { index ->
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     logger.debug(
                                         source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
                                     ) { "Updating word explanation results" }
@@ -622,7 +621,7 @@ public suspend fun RealGameScreenComponent(
                                 }
                             },
                             onConfirm = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     logger.debug(
                                         source = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
                                     ) { "Confirming word explanation results" }

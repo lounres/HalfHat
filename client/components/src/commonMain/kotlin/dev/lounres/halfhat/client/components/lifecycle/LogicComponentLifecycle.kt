@@ -98,13 +98,12 @@ internal fun decomposeTransition(previousState: LogicComponentLifecycleState, ne
             }
     }
 
-public fun MutableLogicComponentLifecycle(coroutineScope: CoroutineScope): MutableLogicComponentLifecycle =
-    MutableLifecycle(coroutineScope, LogicComponentLifecycleState.Initialized, ::checkNextState, ::decomposeTransition)
+public fun MutableLogicComponentLifecycle(): MutableLogicComponentLifecycle =
+    MutableLifecycle(LogicComponentLifecycleState.Initialized, ::checkNextState, ::decomposeTransition)
 
 @DelicateLifecycleAPI
-internal fun LogicComponentLifecycle.childDeferring(coroutineScope: CoroutineScope): DeferredLogicComponentLifecycle =
+internal fun LogicComponentLifecycle.childDeferring(): DeferredLogicComponentLifecycle =
     childDeferring(
-        coroutineScope = coroutineScope,
         initialState = LogicComponentLifecycleState.Initialized,
         mapState = { it },
         mapTransition = { _, transition -> transition.target },
@@ -117,12 +116,10 @@ internal fun LogicComponentLifecycle.childDeferring(coroutineScope: CoroutineSco
 internal fun Lifecycle.Companion.mergeLogicComponentLifecyclesDeferring(
     lifecycle1: LogicComponentLifecycle,
     lifecycle2: LogicComponentLifecycle,
-    coroutineScope: CoroutineScope,
 ): DeferredLogicComponentLifecycle =
     mergeDeferring(
         lifecycle1 = lifecycle1,
         lifecycle2 = lifecycle2,
-        coroutineScope = coroutineScope,
         initialState = Pair(LogicComponentLifecycleState.Initialized, LogicComponentLifecycleState.Initialized),
         mergeStates = { state1, state2 -> Pair(state1, state2) },
         mapTransition1 = { state, transition1 -> Pair(transition1.target, state.second) },

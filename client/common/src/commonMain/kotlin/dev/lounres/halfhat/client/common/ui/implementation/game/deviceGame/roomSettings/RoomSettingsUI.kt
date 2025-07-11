@@ -86,9 +86,9 @@ public fun RoomSettingsUI(
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = preparationTime,
-                onValueChange = {
+                onValueChange = { input ->
                     component.preparationTimeSeconds.value =
-                        it.filter { it.isDigit() }.dropWhile { it == '0' }.let { if (it.isEmpty()) "" else min(it.toUInt(), 999u).toString() }
+                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 999u).toString() }
                 },
                 label = {
                     Text(
@@ -104,9 +104,9 @@ public fun RoomSettingsUI(
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = explanationTime,
-                onValueChange = {
+                onValueChange = { input ->
                     component.explanationTimeSeconds.value =
-                        it.filter { it.isDigit() }.dropWhile { it == '0' }.let { if (it.isEmpty()) "" else min(it.toUInt(), 999u).toString() }
+                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 999u).toString() }
                 },
                 label = {
                     Text(
@@ -122,9 +122,9 @@ public fun RoomSettingsUI(
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = lastGuessTime,
-                onValueChange = {
+                onValueChange = { input ->
                     component.finalGuessTimeSeconds.value =
-                        it.filter { it.isDigit() }.dropWhile { it == '0' }.let { if (it.isEmpty()) "" else min(it.toUInt(), 999u).toString() }
+                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 999u).toString() }
                 },
                 label = {
                     Text(
@@ -252,10 +252,10 @@ public fun RoomSettingsUI(
                 GameStateMachine.GameEndCondition.Type.Words -> {
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        value = component.cachedEndConditionWordsNumber.collectAsState().value.toString(),
-                        onValueChange = {
+                        value = component.cachedEndConditionWordsNumber.collectAsState().value,
+                        onValueChange = { input ->
                             component.cachedEndConditionWordsNumber.value =
-                                it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                                input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 999u).toString() }
                         },
                         label = {
                             Text(
@@ -269,10 +269,10 @@ public fun RoomSettingsUI(
                 GameStateMachine.GameEndCondition.Type.Cycles -> {
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        value = component.cachedEndConditionCyclesNumber.collectAsState().value.toString(),
-                        onValueChange = {
+                        value = component.cachedEndConditionCyclesNumber.collectAsState().value,
+                        onValueChange = { input ->
                             component.cachedEndConditionWordsNumber.value =
-                                it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                                input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 999u).toString() }
                         },
                         label = {
                             Text(

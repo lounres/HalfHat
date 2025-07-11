@@ -60,7 +60,7 @@ public suspend fun RealModeSelectionPageComponent(
     onGameTimerSelect: () -> Unit,
 ): RealModeSelectionPageComponent {
     
-    val infoPopupNavigation = MutablePossibilityNavigation<ModeSelectionPageComponent.InfoPopup>(CoroutineScope(Dispatchers.Default))
+    val infoPopupNavigation = MutablePossibilityNavigation<ModeSelectionPageComponent.InfoPopup>()
     
     val infoPopup: KoneAsynchronousState<ChildrenPossibility<ModeSelectionPageComponent.InfoPopup, ModeSelectionPageComponent.InfoPopup>> =
         componentContext.uiChildrenDefaultPossibility(

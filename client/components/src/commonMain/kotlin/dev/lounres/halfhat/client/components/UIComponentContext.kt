@@ -49,9 +49,9 @@ internal fun UIComponentContext.uiChildDeferring(
         
         val childLifecycle =
             if (controllingLifecycle != null)
-                Lifecycle.mergeUIComponentLifecyclesDeferring(base.lifecycle, controllingLifecycle, CoroutineScope(Dispatchers.Default))
+                Lifecycle.mergeUIComponentLifecyclesDeferring(base.lifecycle, controllingLifecycle)
             else
-                base.lifecycle.childDeferring(CoroutineScope(Dispatchers.Default))
+                base.lifecycle.childDeferring()
         UIComponentLifecycleKey correspondsTo childLifecycle
         childLifecycle.subscribe {
             logger.debug(
@@ -89,9 +89,9 @@ internal fun UIComponentContext.logicChildDeferringOnRunning(
         
         val childLifecycle =
             if (controllingLifecycle != null)
-                Lifecycle.mergeLogicAndUILifecyclesDeferringOnRunning(controllingLifecycle, base.lifecycle, CoroutineScope(Dispatchers.Default))
+                Lifecycle.mergeLogicAndUILifecyclesDeferringOnRunning(controllingLifecycle, base.lifecycle)
             else
-                base.lifecycle.logicChildDeferringOnRunning(CoroutineScope(Dispatchers.Default))
+                base.lifecycle.logicChildDeferringOnRunning()
         LogicComponentLifecycleKey correspondsTo childLifecycle
         childLifecycle.subscribe {
             logger.debug(

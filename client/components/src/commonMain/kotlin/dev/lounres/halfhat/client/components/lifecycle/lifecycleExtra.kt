@@ -4,13 +4,11 @@ import dev.lounres.komponentual.lifecycle.DelicateLifecycleAPI
 import dev.lounres.komponentual.lifecycle.Lifecycle
 import dev.lounres.komponentual.lifecycle.childDeferring
 import dev.lounres.komponentual.lifecycle.mergeDeferring
-import kotlinx.coroutines.CoroutineScope
 
 
 @DelicateLifecycleAPI
-internal fun UIComponentLifecycle.logicChildDeferringOnRunning(coroutineScope: CoroutineScope): LogicComponentLifecycle =
+internal fun UIComponentLifecycle.logicChildDeferringOnRunning(): LogicComponentLifecycle =
     childDeferring(
-        coroutineScope = coroutineScope,
         initialState = LogicComponentLifecycleState.Initialized,
         mapState = {
             when (it) {
@@ -42,12 +40,10 @@ internal fun minOf(logic: LogicComponentLifecycleState, ui: UIComponentLifecycle
 internal fun Lifecycle.Companion.mergeLogicAndUILifecyclesDeferringOnRunning(
     lifecycle1: LogicComponentLifecycle,
     lifecycle2: UIComponentLifecycle,
-    coroutineScope: CoroutineScope
 ): LogicComponentLifecycle =
     mergeDeferring(
         lifecycle1 = lifecycle1,
         lifecycle2 = lifecycle2,
-        coroutineScope = coroutineScope,
         initialState = Pair(LogicComponentLifecycleState.Initialized, UIComponentLifecycleState.Initialized),
         mergeStates = { state1, state2 -> Pair(state1, state2) },
         mapTransition1 = { state, transition1 -> Pair(transition1.target, state.second) },

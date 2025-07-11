@@ -81,7 +81,7 @@ public suspend fun RealGameScreenComponent(
     onUpdateExplanationResults: (KoneList<GameStateMachine.WordExplanation>) -> Unit,
     onConfirmExplanationResults: () -> Unit,
 ): RealGameScreenComponent {
-    val navigation = MutableStackNavigation<RealGameScreenComponent.Configuration>(CoroutineScope(Dispatchers.Default))
+    val navigation = MutableStackNavigation<RealGameScreenComponent.Configuration>()
     
     val childStack: KoneAsynchronousState<ChildrenStack<RealGameScreenComponent.Configuration, GameScreenComponent.Child>> =
         componentContext.uiChildrenDefaultStack(

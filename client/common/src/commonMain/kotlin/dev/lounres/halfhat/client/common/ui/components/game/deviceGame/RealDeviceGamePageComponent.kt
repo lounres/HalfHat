@@ -47,7 +47,7 @@ public suspend fun RealDeviceGamePageComponent(
     val playersList: MutableStateFlow<KoneList<Player>> = MutableStateFlow(KoneList.of(Player(""), Player(""))) // TODO: Hardcoded settings!!!
     val settingsBuilderState: MutableStateFlow<GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>> = MutableStateFlow(componentContext.deviceGameDefaultSettings.value)
     
-    val navigation = MutableStackNavigation<RealDeviceGamePageComponent.Configuration>(CoroutineScope(Dispatchers.Default))
+    val navigation = MutableStackNavigation<RealDeviceGamePageComponent.Configuration>()
     
     val possibleWordsSources = componentContext.deviceGameWordsProviderRegistry.list()
     

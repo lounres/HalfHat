@@ -70,9 +70,9 @@ public fun TimerPageUI(
                             OutlinedTextField(
                                 modifier = Modifier.fillMaxWidth(),
                                 value = preparationTime,
-                                onValueChange = {
+                                onValueChange = { input ->
                                     component.preparationTimeSetting.value =
-                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.let { if (it.isEmpty()) "" else min(it.toUInt(), 999u).toString() }
+                                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 999u).toString() }
                                 },
                                 label = { Text(text = "Countdown duration") },
                                 suffix = { Text(text = " seconds") },
@@ -94,9 +94,9 @@ public fun TimerPageUI(
                             OutlinedTextField(
                                 modifier = Modifier.fillMaxWidth(),
                                 value = explanationTime,
-                                onValueChange = {
+                                onValueChange = { input ->
                                     component.explanationTimeSetting.value =
-                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.let { if (it.isEmpty()) "" else min(it.toUInt(), 999u).toString() }
+                                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 999u).toString() }
                                 },
                                 label = { Text(text = "Explanation duration") },
                                 suffix = { Text(text = " seconds") },
@@ -118,9 +118,9 @@ public fun TimerPageUI(
                             OutlinedTextField(
                                 modifier = Modifier.fillMaxWidth(),
                                 value = lastGuessTime,
-                                onValueChange = {
+                                onValueChange = { input ->
                                     component.lastGuessTimeSetting.value =
-                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.let { if (it.isEmpty()) "" else min(it.toUInt(), 999u).toString() }
+                                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 999u).toString() }
                                 },
                                 label = { Text(text = "Last guess duration") },
                                 suffix = { Text(text = " seconds") },

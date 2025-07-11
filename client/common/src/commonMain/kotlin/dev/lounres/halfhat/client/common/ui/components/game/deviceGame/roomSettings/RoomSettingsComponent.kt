@@ -16,7 +16,7 @@ public interface RoomSettingsComponent {
     public val strictMode: MutableStateFlow<Boolean>
     public val possibleWordsSources: KoneList<DeviceGameWordsProviderID>
     public val wordsSource: MutableStateFlow<GameStateMachine.WordsSource<DeviceGameWordsProviderID>>
-    public val cachedEndConditionWordsNumber: MutableStateFlow<UInt>
-    public val cachedEndConditionCyclesNumber: MutableStateFlow<UInt>
+    public val cachedEndConditionWordsNumber: MutableStateFlow<String>
+    public val cachedEndConditionCyclesNumber: MutableStateFlow<String>
     public val gameEndConditionType: MutableStateFlow<GameStateMachine.GameEndCondition.Type>
 }

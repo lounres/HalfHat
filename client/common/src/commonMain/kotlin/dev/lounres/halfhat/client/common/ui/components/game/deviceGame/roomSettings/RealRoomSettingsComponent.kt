@@ -19,8 +19,8 @@ public class RealRoomSettingsComponent(
                 explanationTimeSeconds = explanationTimeSeconds.value.let { if (it.isBlank()) return@onApplySettings else it.toUInt() },
                 finalGuessTimeSeconds = finalGuessTimeSeconds.value.let { if (it.isBlank()) return@onApplySettings else it.toUInt() },
                 strictMode = strictMode.value,
-                cachedEndConditionWordsNumber = cachedEndConditionWordsNumber.value,
-                cachedEndConditionCyclesNumber = cachedEndConditionCyclesNumber.value,
+                cachedEndConditionWordsNumber = cachedEndConditionWordsNumber.value.let { if (it.isBlank()) return@onApplySettings else it.toUInt() },
+                cachedEndConditionCyclesNumber = cachedEndConditionCyclesNumber.value.let { if (it.isBlank()) return@onApplySettings else it.toUInt() },
                 gameEndConditionType = gameEndConditionType.value,
                 wordsSource = wordsSource.value,
             )
@@ -34,7 +34,7 @@ public class RealRoomSettingsComponent(
     override val finalGuessTimeSeconds: MutableStateFlow<String> = MutableStateFlow(initialSettingsBuilder.finalGuessTimeSeconds.toString())
     override val strictMode: MutableStateFlow<Boolean> = MutableStateFlow(initialSettingsBuilder.strictMode)
     override val wordsSource: MutableStateFlow<GameStateMachine.WordsSource<DeviceGameWordsProviderID>> = MutableStateFlow(initialSettingsBuilder.wordsSource) // TODO: Add check that if the words source is custom, then it lies in the [possibleWordsSources]
-    override val cachedEndConditionWordsNumber: MutableStateFlow<UInt> = MutableStateFlow(initialSettingsBuilder.cachedEndConditionWordsNumber)
-    override val cachedEndConditionCyclesNumber: MutableStateFlow<UInt> = MutableStateFlow(initialSettingsBuilder.cachedEndConditionCyclesNumber)
+    override val cachedEndConditionWordsNumber: MutableStateFlow<String> = MutableStateFlow(initialSettingsBuilder.cachedEndConditionWordsNumber.toString())
+    override val cachedEndConditionCyclesNumber: MutableStateFlow<String> = MutableStateFlow(initialSettingsBuilder.cachedEndConditionCyclesNumber.toString())
     override val gameEndConditionType: MutableStateFlow<GameStateMachine.GameEndCondition.Type> = MutableStateFlow(initialSettingsBuilder.gameEndConditionType)
 }

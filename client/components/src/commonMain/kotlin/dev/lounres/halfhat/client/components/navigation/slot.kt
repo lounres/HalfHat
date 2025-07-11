@@ -2,7 +2,6 @@ package dev.lounres.halfhat.client.components.navigation
 
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.buildUiChild
-import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import dev.lounres.halfhat.client.components.logger.logger
@@ -14,7 +13,6 @@ import dev.lounres.kone.contexts.invoke
 import dev.lounres.kone.relations.*
 import dev.lounres.kone.state.KoneAsynchronousState
 import dev.lounres.logKube.core.debug
-import kotlinx.coroutines.Dispatchers
 
 
 public suspend fun <
@@ -37,7 +35,7 @@ public suspend fun <
         source = source,
         initialConfiguration = initialConfiguration,
         createChild = { configuration, nextState ->
-            val controllingLifecycle = MutableUIComponentLifecycle(this.coroutineScope(Dispatchers.Default))
+            val controllingLifecycle = MutableUIComponentLifecycle()
             logger.debug(
                 source = loggerSource,
                 items = {

@@ -47,7 +47,7 @@ fun main() {
         
         LaunchedEffect(Unit) {
             component = RealMainWindowComponent().also {
-                it.globalLifecycle.moveTo(UIComponentLifecycleState.Running)
+                it.globalLifecycle.moveTo(UIComponentLifecycleState.Foreground)
             }
         }
         

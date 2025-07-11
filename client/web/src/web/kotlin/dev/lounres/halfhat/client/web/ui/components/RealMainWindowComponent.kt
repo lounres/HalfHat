@@ -68,7 +68,7 @@ suspend fun RealMainWindowComponent(
     
     initialSelectedPage: MainWindowComponent.Child.Kind = MainWindowComponent.Child.Kind.Primary.Game /* TODO: Page.Primary.Home */,
 ): RealMainWindowComponent {
-    val globalLifecycle: MutableUIComponentLifecycle = MutableUIComponentLifecycle(CoroutineScope(Dispatchers.Default))
+    val globalLifecycle: MutableUIComponentLifecycle = MutableUIComponentLifecycle()
     val globalComponentContext = UIComponentContext {
         UIComponentLifecycleKey correspondsTo globalLifecycle
         LoggerKey correspondsTo Logger(
@@ -93,7 +93,7 @@ suspend fun RealMainWindowComponent(
     val volumeOn: MutableStateFlow<Boolean> = MutableStateFlow(initialVolumeOn)
     val language: MutableStateFlow<Language> = MutableStateFlow(initialLanguage)
     
-    val pageVariantsNavigation = MutableVariantsNavigation<MainWindowComponent.Child.Kind>(CoroutineScope(Dispatchers.Default))
+    val pageVariantsNavigation = MutableVariantsNavigation<MainWindowComponent.Child.Kind>()
     
     val pageVariants: KoneAsynchronousState<ChildrenVariants<MainWindowComponent.Child.Kind, MainWindowComponent.Child>> =
         globalComponentContext.uiChildrenDefaultVariants(
@@ -130,8 +130,8 @@ suspend fun RealMainWindowComponent(
                         RealFAQPageComponent(
                             onFeedbackLinkClick = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                pageVariantsNavigation.set(MainWindowComponent.Child.Kind.Secondary.FAQ)
-                                    }
+                                    pageVariantsNavigation.set(MainWindowComponent.Child.Kind.Secondary.FAQ)
+                                }
                             }
                         )
                     )

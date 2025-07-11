@@ -40,18 +40,16 @@ internal expect fun checkNextState(previousState: UIComponentLifecycleState, nex
 
 internal expect fun decomposeTransition(previousState: UIComponentLifecycleState, nextState: UIComponentLifecycleState): KoneList<UIComponentLifecycleTransition>
 
-public fun MutableUIComponentLifecycle(coroutineScope: CoroutineScope): MutableUIComponentLifecycle =
+public fun MutableUIComponentLifecycle(): MutableUIComponentLifecycle =
     MutableLifecycle(
-        coroutineScope = coroutineScope,
         initialState = UIComponentLifecycleState.Initialized,
         checkNextState = ::checkNextState,
         decomposeTransition = ::decomposeTransition,
     )
 
 @DelicateLifecycleAPI
-internal fun UIComponentLifecycle.childDeferring(coroutineScope: CoroutineScope): DeferredUIComponentLifecycle =
+internal fun UIComponentLifecycle.childDeferring(): DeferredUIComponentLifecycle =
     childDeferring(
-        coroutineScope = coroutineScope,
         initialState = UIComponentLifecycleState.Initialized,
         mapState = { it },
         mapTransition = { _, transition -> transition.target },
@@ -64,12 +62,10 @@ internal fun UIComponentLifecycle.childDeferring(coroutineScope: CoroutineScope)
 internal fun Lifecycle.Companion.mergeUIComponentLifecyclesDeferring(
     lifecycle1: UIComponentLifecycle,
     lifecycle2: UIComponentLifecycle,
-    coroutineScope: CoroutineScope,
 ): DeferredUIComponentLifecycle =
     mergeDeferring(
         lifecycle1 = lifecycle1,
         lifecycle2 = lifecycle2,
-        coroutineScope = coroutineScope,
         initialState = Pair(UIComponentLifecycleState.Initialized, UIComponentLifecycleState.Initialized),
         mergeStates = { state1, state2 -> Pair(state1, state2) },
         mapTransition1 = { state, transition1 -> Pair(transition1.target, state.second) },

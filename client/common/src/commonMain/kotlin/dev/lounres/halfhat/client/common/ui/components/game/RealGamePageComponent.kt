@@ -42,7 +42,7 @@ public suspend fun RealGamePageComponent(
     volumeOn: StateFlow<Boolean>,
 ): RealGamePageComponent {
     
-    val slotNavigation = MutableSlotNavigation<RealGamePageComponent.Configuration>(CoroutineScope(Dispatchers.Default))
+    val slotNavigation = MutableSlotNavigation<RealGamePageComponent.Configuration>()
     val currentChild: KoneAsynchronousState<ChildrenSlot<RealGamePageComponent.Configuration, GamePageComponent.Child>> =
         componentContext.uiChildrenDefaultSlot(
             source = slotNavigation,

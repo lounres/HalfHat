@@ -438,7 +438,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         }
                         
                         else -> {
-                            previousState.timer.cancel()
                             if (previousState.settings.strictMode)
                                 CheckResult.Success(
                                     GameStateMachine.State.RoundEditing(
@@ -536,7 +535,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                             )
                         
                         else -> {
-                            previousState.timer.cancel()
                             if (previousState.settings.strictMode)
                                 CheckResult.Success(
                                     GameStateMachine.State.RoundEditing(
@@ -617,7 +615,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                             )
                         
                         else -> {
-                            previousState.timer.cancel()
                             if (previousState.settings.strictMode)
                                 CheckResult.Success(
                                     GameStateMachine.State.RoundEditing(
@@ -699,7 +696,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                             )
                         )
                     } else {
-                        previousState.timer.cancel()
                         CheckResult.Success(
                             GameStateMachine.State.RoundEditing(
                                 metadata = metadataTransformer(previousState, transition),
