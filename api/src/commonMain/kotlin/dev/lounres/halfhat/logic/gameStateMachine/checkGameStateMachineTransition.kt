@@ -20,6 +20,8 @@ import dev.lounres.kone.collections.utils.random
 import dev.lounres.kone.collections.utils.sortByDescending
 import dev.lounres.kone.scope
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlin.math.min
 import kotlin.random.Random
@@ -82,7 +84,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         explanationScores = previousState.explanationScores,
                         guessingScores = previousState.guessingScores,
                         currentExplanationResults = previousState.currentExplanationResults,
-                        timer = previousState.timer,
                     )
                 is GameStateMachine.State.RoundExplanation ->
                     GameStateMachine.State.RoundExplanation(
@@ -100,7 +101,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         explanationScores = previousState.explanationScores,
                         guessingScores = previousState.guessingScores,
                         currentExplanationResults = previousState.currentExplanationResults,
-                        timer = previousState.timer,
                     )
                 is GameStateMachine.State.RoundLastGuess ->
                     GameStateMachine.State.RoundLastGuess(
@@ -118,7 +118,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         explanationScores = previousState.explanationScores,
                         guessingScores = previousState.guessingScores,
                         currentExplanationResults = previousState.currentExplanationResults,
-                        timer = previousState.timer,
                     )
                 is GameStateMachine.State.RoundEditing ->
                     GameStateMachine.State.RoundEditing(
@@ -217,7 +216,17 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
         is GameStateMachine.Transition.UpdateGame.SpeakerReady ->
             when (previousState) {
                 is GameStateMachine.State.RoundWaiting ->
-                    if (previousState.listenerReady)
+                    if (previousState.listenerReady) {
+                        coroutineScope.launch {
+                            while (true) {
+                                moveState(
+                                    GameStateMachine.Transition.UpdateGame.UpdateRoundInfo(
+                                        timer = currentCoroutineContext().job,
+                                        roundNumber = previousState.roundNumber
+                                    )
+                                )
+                            }
+                        }
                         CheckResult.Success(
                             GameStateMachine.State.RoundPreparation(
                                 metadata = metadataTransformer(previousState, transition),
@@ -233,13 +242,9 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                 explanationScores = previousState.explanationScores,
                                 guessingScores = previousState.guessingScores,
                                 currentExplanationResults = KoneList.empty(),
-                                timer = coroutineScope.launch {
-                                    while (true) {
-                                        moveState(GameStateMachine.Transition.UpdateGame.UpdateRoundInfo(roundNumber = previousState.roundNumber))
-                                    }
-                                }
                             )
                         )
+                    }
                     else
                         CheckResult.Success(
                             GameStateMachine.State.RoundWaiting(
@@ -269,7 +274,17 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
         is GameStateMachine.Transition.UpdateGame.ListenerReady ->
             when (previousState) {
                 is GameStateMachine.State.RoundWaiting ->
-                    if (previousState.speakerReady)
+                    if (previousState.speakerReady) {
+                        coroutineScope.launch {
+                            while (true) {
+                                moveState(
+                                    GameStateMachine.Transition.UpdateGame.UpdateRoundInfo(
+                                        timer = currentCoroutineContext().job,
+                                        roundNumber = previousState.roundNumber
+                                    )
+                                )
+                            }
+                        }
                         CheckResult.Success(
                             GameStateMachine.State.RoundPreparation(
                                 metadata = metadataTransformer(previousState, transition),
@@ -285,13 +300,9 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                 explanationScores = previousState.explanationScores,
                                 guessingScores = previousState.guessingScores,
                                 currentExplanationResults = KoneList.empty(),
-                                timer = coroutineScope.launch {
-                                    while (true) {
-                                        moveState(GameStateMachine.Transition.UpdateGame.UpdateRoundInfo(roundNumber = previousState.roundNumber))
-                                    }
-                                }
                             )
                         )
+                    }
                     else
                         CheckResult.Success(
                             GameStateMachine.State.RoundWaiting(
@@ -320,7 +331,17 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
             }
         is GameStateMachine.Transition.UpdateGame.SpeakerAndListenerReady ->
             when (previousState) {
-                is GameStateMachine.State.RoundWaiting ->
+                is GameStateMachine.State.RoundWaiting -> {
+                    coroutineScope.launch {
+                        while (true) {
+                            moveState(
+                                GameStateMachine.Transition.UpdateGame.UpdateRoundInfo(
+                                    timer = currentCoroutineContext().job,
+                                    roundNumber = previousState.roundNumber
+                                )
+                            )
+                        }
+                    }
                     CheckResult.Success(
                         GameStateMachine.State.RoundPreparation(
                             metadata = metadataTransformer(previousState, transition),
@@ -336,13 +357,9 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                             explanationScores = previousState.explanationScores,
                             guessingScores = previousState.guessingScores,
                             currentExplanationResults = KoneList.empty(),
-                            timer = coroutineScope.launch {
-                                while (true) {
-                                    moveState(GameStateMachine.Transition.UpdateGame.UpdateRoundInfo(roundNumber = previousState.roundNumber))
-                                }
-                            }
                         )
                     )
+                }
                 
                 is GameStateMachine.State.GameInitialisation,
                 is GameStateMachine.State.RoundPreparation,
@@ -364,7 +381,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                     val finalGuessTimeSeconds = previousState.settings.finalGuessTimeSeconds
                     when {
                         previousState.roundNumber != transition.roundNumber -> {
-                            previousState.timer.cancel()
+                            transition.timer.cancel()
                             CheckResult.Failure(GameStateMachine.NoNextStateReason.CannotUpdateRoundInfoNotDuringTheRound)
                         }
                         spentTimeMilliseconds < preparationTimeSeconds * 1000u ->
@@ -383,7 +400,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                     explanationScores = previousState.explanationScores,
                                     guessingScores = previousState.guessingScores,
                                     currentExplanationResults = previousState.currentExplanationResults,
-                                    timer = previousState.timer,
                                 )
                             )
                         
@@ -407,7 +423,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                     explanationScores = previousState.explanationScores,
                                     guessingScores = previousState.guessingScores,
                                     currentExplanationResults = previousState.currentExplanationResults,
-                                    timer = previousState.timer,
                                 )
                             )
                         }
@@ -432,12 +447,13 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                     explanationScores = previousState.explanationScores,
                                     guessingScores = previousState.guessingScores,
                                     currentExplanationResults = previousState.currentExplanationResults,
-                                    timer = previousState.timer,
                                 )
                             )
                         }
                         
                         else -> {
+                            transition.timer.cancel()
+                            
                             if (previousState.settings.strictMode)
                                 CheckResult.Success(
                                     GameStateMachine.State.RoundEditing(
@@ -474,7 +490,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                         explanationScores = previousState.explanationScores,
                                         guessingScores = previousState.guessingScores,
                                         currentExplanationResults = previousState.currentExplanationResults,
-                                        timer = previousState.timer,
                                     )
                                 )
                             }
@@ -489,7 +504,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                     val finalGuessTimeSeconds = previousState.settings.finalGuessTimeSeconds
                     when {
                         previousState.roundNumber != transition.roundNumber -> {
-                            previousState.timer.cancel()
+                            transition.timer.cancel()
                             CheckResult.Failure(GameStateMachine.NoNextStateReason.CannotUpdateRoundInfoNotDuringTheRound)
                         }
                         spentTimeMilliseconds < (preparationTimeSeconds + explanationTimeSeconds) * 1000u ->
@@ -509,7 +524,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                     explanationScores = previousState.explanationScores,
                                     guessingScores = previousState.guessingScores,
                                     currentExplanationResults = previousState.currentExplanationResults,
-                                    timer = previousState.timer,
                                 )
                             )
                         
@@ -530,7 +544,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                     explanationScores = previousState.explanationScores,
                                     guessingScores = previousState.guessingScores,
                                     currentExplanationResults = previousState.currentExplanationResults,
-                                    timer = previousState.timer,
                                 )
                             )
                         
@@ -576,7 +589,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                         explanationScores = previousState.explanationScores,
                                         guessingScores = previousState.guessingScores,
                                         currentExplanationResults = previousState.currentExplanationResults,
-                                        timer = previousState.timer,
                                     )
                                 )
                         }
@@ -590,7 +602,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                     val finalGuessTimeSeconds = previousState.settings.finalGuessTimeSeconds
                     when {
                         previousState.roundNumber != transition.roundNumber -> {
-                            previousState.timer.cancel()
+                            transition.timer.cancel()
                             CheckResult.Failure(GameStateMachine.NoNextStateReason.CannotUpdateRoundInfoNotDuringTheRound)
                         }
                         spentTimeMilliseconds < (preparationTimeSeconds + explanationTimeSeconds + finalGuessTimeSeconds) * 1000u ->
@@ -610,7 +622,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                     explanationScores = previousState.explanationScores,
                                     guessingScores = previousState.guessingScores,
                                     currentExplanationResults = previousState.currentExplanationResults,
-                                    timer = previousState.timer,
                                 )
                             )
                         
@@ -656,7 +667,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                         explanationScores = previousState.explanationScores,
                                         guessingScores = previousState.guessingScores,
                                         currentExplanationResults = previousState.currentExplanationResults,
-                                        timer = previousState.timer,
                                     )
                                 )
                         }
@@ -692,7 +702,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                         else -> GameStateMachine.WordExplanation(previousState.currentWord, transition.wordState)
                                     }
                                 },
-                                timer = previousState.timer,
                             )
                         )
                     } else {
@@ -721,7 +730,6 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         )
                     }
                 is GameStateMachine.State.RoundLastGuess -> {
-                    previousState.timer.cancel()
                     CheckResult.Success(
                         GameStateMachine.State.RoundEditing(
                             metadata = metadataTransformer(previousState, transition),

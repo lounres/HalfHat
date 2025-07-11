@@ -139,7 +139,6 @@ public object GameStateMachine {
             val explanationScores: KoneList<UInt>,
             val guessingScores: KoneList<UInt>,
             val currentExplanationResults: KoneList<WordExplanation>,
-            val timer: Job,
         ) : State<P, WPID, Metadata>
         
         public data class RoundExplanation<out P, out WPID, out Metadata>(
@@ -157,7 +156,6 @@ public object GameStateMachine {
             val explanationScores: KoneList<UInt>,
             val guessingScores: KoneList<UInt>,
             val currentExplanationResults: KoneList<WordExplanation>,
-            val timer: Job,
         ) : State<P, WPID, Metadata>
         
         public data class RoundLastGuess<out P, out WPID, out Metadata>(
@@ -175,7 +173,6 @@ public object GameStateMachine {
             val explanationScores: KoneList<UInt>,
             val guessingScores: KoneList<UInt>,
             val currentExplanationResults: KoneList<WordExplanation>,
-            val timer: Job,
         ) : State<P, WPID, Metadata>
         
         public data class RoundEditing<out P, out WPID, out Metadata>(
@@ -215,6 +212,7 @@ public object GameStateMachine {
             public data object ListenerReady : UpdateGame<Nothing, Nothing, Nothing>
             public data object SpeakerAndListenerReady : UpdateGame<Nothing, Nothing, Nothing>
             public data class UpdateRoundInfo(
+                public val timer: Job,
                 public val roundNumber: UInt,
             ) : UpdateGame<Nothing, Nothing, Nothing>
             public data class WordExplanationState(
