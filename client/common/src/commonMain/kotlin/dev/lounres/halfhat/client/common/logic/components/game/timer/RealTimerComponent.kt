@@ -47,17 +47,16 @@ public class RealTimerComponent(
                     if (volumeOn.value)
                         when(newTimerState) {
                             is TimerState.Preparation ->
-                                if (volumeOn.value && (oldTimerState !is TimerState.Preparation || oldTimerState.millisecondsLeft.let { if (it % 1000u != 0u) it / 1000u + 1u else it / 1000u } != newTimerState.millisecondsLeft.let { if (it % 1000u != 0u) it / 1000u + 1u else it / 1000u }))
+                                if (oldTimerState !is TimerState.Preparation || oldTimerState.millisecondsLeft.let { if (it % 1000u != 0u) it / 1000u + 1u else it / 1000u } != newTimerState.millisecondsLeft.let { if (it % 1000u != 0u) it / 1000u + 1u else it / 1000u })
                                     coroutineScope.launch { DefaultSounds.preparationCountdown.await().play() }
                             is TimerState.Explanation ->
-                                if (volumeOn.value && oldTimerState !is TimerState.Explanation)
+                                if (oldTimerState !is TimerState.Explanation)
                                     coroutineScope.launch { DefaultSounds.explanationStart.await().play() }
                             is TimerState.LastGuess ->
-                                if (volumeOn.value && oldTimerState !is TimerState.LastGuess)
+                                if (oldTimerState !is TimerState.LastGuess)
                                     coroutineScope.launch { DefaultSounds.finalGuessStart.await().play() }
                             TimerState.Finished ->
-                                if (volumeOn.value)
-                                    coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                                coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
                         }
                 }
             }.start()
