@@ -212,7 +212,7 @@ public object GameStateMachine {
             public data object ListenerReady : UpdateGame<Nothing, Nothing, Nothing>
             public data object SpeakerAndListenerReady : UpdateGame<Nothing, Nothing, Nothing>
             public data class UpdateRoundInfo(
-                public val timer: Job,
+                public val stopTimer: () -> Unit,
                 public val roundNumber: UInt,
             ) : UpdateGame<Nothing, Nothing, Nothing>
             public data class WordExplanationState(
