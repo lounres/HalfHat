@@ -101,9 +101,10 @@ tasks.register("publishToProduction") {
     group = "publishing"
     description = "Publish the web application to production server"
 
+    val jsBrowserDistribution by tasks
     val wasmJsBrowserDistribution by tasks
 
-    dependsOn(wasmJsBrowserDistribution)
+    dependsOn(jsBrowserDistribution, wasmJsBrowserDistribution)
 
     doLast {
         val hostname = project.properties["halfhat.publishing.hostname"] as String
@@ -117,14 +118,28 @@ tasks.register("publishToProduction") {
             ssh.connect(hostname)
             ssh.authPassword(username, password)
             ssh.use {
-                val session = ssh.startSession()
-                val command = session.exec("rm -rf $destinationSite/*")
-                command.join()
+                run {
+                    val session = ssh.startSession()
+                    val command = session.exec("rm -rf $destinationSite/js/* $destinationSite/wasm/*")
+                    command.join()
+                }
+                
                 val scpFileTransfer = ssh.newSCPFileTransfer()
-                val sources = wasmJsBrowserDistribution.outputs.files
-                val directory = sources.singleFile
-                directory.listFiles()!!.forEach { file ->
-                    scpFileTransfer.upload(file.absolutePath, destinationSite)
+                
+                run {
+                    val sources = jsBrowserDistribution.outputs.files
+                    val directory = sources.singleFile
+                    directory.listFiles()!!.forEach { file ->
+                        scpFileTransfer.upload(file.absolutePath, "$destinationSite/js")
+                    }
+                }
+                
+                run {
+                    val sources = wasmJsBrowserDistribution.outputs.files
+                    val directory = sources.singleFile
+                    directory.listFiles()!!.forEach { file ->
+                        scpFileTransfer.upload(file.absolutePath, "$destinationSite/wasm")
+                    }
                 }
             }
         }

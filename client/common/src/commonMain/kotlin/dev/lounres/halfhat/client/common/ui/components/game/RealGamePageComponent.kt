@@ -38,7 +38,6 @@ public class RealGamePageComponent(
 
 public suspend fun RealGamePageComponent(
     componentContext: UIComponentContext,
-//    localDictionariesRegistry: LocalDictionariesRegistry,
     volumeOn: StateFlow<Boolean>,
 ): RealGamePageComponent {
     
@@ -100,7 +99,7 @@ public suspend fun RealGamePageComponent(
                     GamePageComponent.Child.DeviceGame(
                         RealDeviceGamePageComponent(
                             componentContext = componentContext,
-//                            localDictionariesRegistry = localDictionariesRegistry,
+                            volumeOn = volumeOn,
                             onExitDeviceGame = {
                                 CoroutineScope(Dispatchers.Default).launch {
                                     slotNavigation.set(RealGamePageComponent.Configuration.ModeSelection)

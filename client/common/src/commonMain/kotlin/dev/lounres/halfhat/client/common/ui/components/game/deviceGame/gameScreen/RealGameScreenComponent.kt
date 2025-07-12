@@ -26,6 +26,7 @@ import dev.lounres.kone.state.KoneAsynchronousState
 import dev.lounres.logKube.core.debug
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
@@ -68,6 +69,7 @@ public class RealGameScreenComponent(
 
 public suspend fun RealGameScreenComponent(
     componentContext: UIComponentContext,
+    volumeOn: StateFlow<Boolean>,
     playersList: KoneList<String>,
     settingsBuilder: GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>,
     onExitGame: () -> Unit,
@@ -94,7 +96,7 @@ public suspend fun RealGameScreenComponent(
                 )
             }
         ) { "Game state machine transition started" }
-        when (newState) {
+        if (volumeOn.value) when (newState) {
             is GameStateMachine.State.GameInitialisation ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation -> {}

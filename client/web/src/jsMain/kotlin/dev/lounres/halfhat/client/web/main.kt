@@ -22,56 +22,75 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.ComposeViewport
 import dev.lounres.halfhat.client.common.resources.Res
 import dev.lounres.halfhat.client.common.resources.allDrawableResources
+import dev.lounres.halfhat.client.common.utils.DefaultSounds
 import dev.lounres.halfhat.client.web.ui.components.RealMainWindowComponent
 import dev.lounres.halfhat.client.web.ui.implementation.MainWindowContentUI
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import dev.lounres.halfhat.client.web.ui.components.MainWindowComponent
 import kotlinx.browser.document
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.configureWebResources
 import org.jetbrains.compose.resources.preloadImageVector
+import org.jetbrains.skiko.wasm.onWasmReady
 
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalResourceApi::class)
 fun main() {
-    configureWebResources {
-        // Overrides the resource location
-        resourcePathMapping { path -> "./$path" }
-    }
-    
-    ComposeViewport(document.body!!) {
-        val preloadedDrawables = Res.allDrawableResources.mapValues { (_, resource) -> preloadImageVector(resource) }
-        var component by remember { mutableStateOf<MainWindowComponent?>(null) }
-        
-        val allPreloaded by remember { derivedStateOf { preloadedDrawables.all { it.value.value != null } && component != null } }
-        
-        LaunchedEffect(Unit) {
-            component = RealMainWindowComponent().also {
-                it.globalLifecycle.moveTo(UIComponentLifecycleState.Foreground)
-            }
+    onWasmReady {
+        configureWebResources {
+            // Overrides the resource location
+            resourcePathMapping { path -> "./$path" }
         }
         
-        if (allPreloaded) {
-            MainWindowContentUI(
-                component = component!!,
-                windowSizeClass = calculateWindowSizeClass()
-            )
-        } else {
-            Box(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
+        ComposeViewport(document.body!!) {
+            val preloadedDrawables =
+                Res.allDrawableResources.mapValues { (_, resource) -> preloadImageVector(resource) }
+            var soundsAreReady by remember { mutableStateOf(false) }
+            var component by remember { mutableStateOf<MainWindowComponent?>(null) }
+            
+            val allPreloaded by remember { derivedStateOf { preloadedDrawables.all { it.value.value != null } && soundsAreReady && component != null } }
+            
+            LaunchedEffect(Unit) {
+                launch {
+                    listOf(
+                        DefaultSounds.preparationCountdown,
+                        DefaultSounds.explanationStart,
+                        DefaultSounds.finalGuessStart,
+                        DefaultSounds.finalGuessEnd,
+                    ).joinAll()
+                    soundsAreReady = true
+                }
+                launch {
+                    component = RealMainWindowComponent().also {
+                        it.globalLifecycle.moveTo(UIComponentLifecycleState.Foreground)
+                    }
+                }
+            }
+            
+            if (allPreloaded) {
+                MainWindowContentUI(
+                    component = component!!,
+                    windowSizeClass = calculateWindowSizeClass()
+                )
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    Text(
-                        text = "Loading...",
-                        fontSize = 36.sp,
-                    )
-                    LoadingIndicator(
-                        modifier = Modifier.size(48.dp)
-                    )
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        Text(
+                            text = "Loading...",
+                            fontSize = 36.sp,
+                        )
+                        LoadingIndicator(
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
                 }
             }
         }

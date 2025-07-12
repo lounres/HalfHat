@@ -27,6 +27,7 @@ import dev.lounres.kone.state.KoneAsynchronousState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 
@@ -42,6 +43,7 @@ public class RealDeviceGamePageComponent(
 
 public suspend fun RealDeviceGamePageComponent(
     componentContext: UIComponentContext,
+    volumeOn: StateFlow<Boolean>,
     onExitDeviceGame: () -> Unit,
 ): RealDeviceGamePageComponent {
     val playersList: MutableStateFlow<KoneList<Player>> = MutableStateFlow(KoneList.of(Player(""), Player(""))) // TODO: Hardcoded settings!!!
@@ -119,6 +121,7 @@ public suspend fun RealDeviceGamePageComponent(
                     DeviceGamePageComponent.Child.GameScreen(
                         RealGameScreenComponent(
                             componentContext = componentContext,
+                            volumeOn = volumeOn,
                             playersList = playersList.value.map { it.name },
                             settingsBuilder = settingsBuilderState.value,
                             onExitGame = {

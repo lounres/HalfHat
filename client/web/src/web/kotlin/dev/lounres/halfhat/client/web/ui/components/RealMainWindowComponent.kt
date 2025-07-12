@@ -113,7 +113,6 @@ suspend fun RealMainWindowComponent(
                     MainWindowComponent.Child.Primary.Game(
                         RealGamePageComponent(
                             componentContext = componentContext,
-//                            localDictionariesRegistry = localDictionariesRegistry,
                             volumeOn = volumeOn
                         )
                     )
