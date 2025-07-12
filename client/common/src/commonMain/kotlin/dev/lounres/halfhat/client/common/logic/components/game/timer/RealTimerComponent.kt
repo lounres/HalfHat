@@ -1,7 +1,7 @@
 package dev.lounres.halfhat.client.common.logic.components.game.timer
 
 import dev.lounres.halfhat.client.common.utils.DefaultSounds
-import dev.lounres.halfhat.client.common.utils.playSound
+import dev.lounres.halfhat.client.common.utils.play
 import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.lifecycle.LogicComponentLifecycleState
@@ -48,15 +48,15 @@ public class RealTimerComponent(
                         when(newTimerState) {
                             is TimerState.Preparation ->
                                 if (oldTimerState !is TimerState.Preparation || oldTimerState.millisecondsLeft.let { if (it % 1000u != 0u) it / 1000u + 1u else it / 1000u } != newTimerState.millisecondsLeft.let { if (it % 1000u != 0u) it / 1000u + 1u else it / 1000u })
-                                    coroutineScope.launch { DefaultSounds.preparationCountdown.await().playSound() }
+                                    coroutineScope.launch { DefaultSounds.preparationCountdown.await().play() }
                             is TimerState.Explanation ->
                                 if (oldTimerState !is TimerState.Explanation)
-                                    coroutineScope.launch { DefaultSounds.explanationStart.await().playSound() }
+                                    coroutineScope.launch { DefaultSounds.explanationStart.await().play() }
                             is TimerState.LastGuess ->
                                 if (oldTimerState !is TimerState.LastGuess)
-                                    coroutineScope.launch { DefaultSounds.finalGuessStart.await().playSound() }
+                                    coroutineScope.launch { DefaultSounds.finalGuessStart.await().play() }
                             TimerState.Finished ->
-                                coroutineScope.launch { DefaultSounds.finalGuessEnd.await().playSound() }
+                                coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
                         }
                 }
             }.start()
