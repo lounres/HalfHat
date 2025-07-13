@@ -39,9 +39,6 @@ kotlin {
                 api(versions.ktor.client.websockets)
                 api(versions.ktor.serialization.kotlinx.json)
                 api(versions.ktor.serialization.kotlinx.protobuf)
-                
-                // KorGE
-                api("com.soywiz:korlibs-audio:6.0.0")
 
                 // Koin
 //                api(versions.koin.core)

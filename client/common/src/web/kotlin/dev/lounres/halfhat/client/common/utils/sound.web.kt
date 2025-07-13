@@ -36,7 +36,7 @@ public actual object DefaultSounds {
         CoroutineScope(Dispatchers.Default).async(start = CoroutineStart.LAZY) { Res.readBytes("files/sounds/finalGuessEnd.wav").toAudio() }
 }
 
-public actual suspend fun Audio.play() {
+public actual fun Audio.play() {
     val source = context.createBufferSource()
     source.buffer = this
     source.connect(context.destination)

@@ -15,10 +15,32 @@ import dev.lounres.kone.collections.utils.*
 import dev.lounres.kone.scope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 import kotlin.math.min
 import kotlin.random.Random
 import kotlin.time.Clock
 
+
+@PublishedApi
+internal inline fun <P, WPID, NoWordsProviderReason, MetadataTransition, GSM> GSM.timer(
+    coroutineScope: CoroutineScope,
+    roundNumber: UInt,
+    crossinline moveState: suspend GSM.(GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>) -> Unit,
+) {
+    coroutineScope.launch {
+        // TODO: Replace with Boolean holder that will be passed later instead of lambda
+        var isActive = true
+        while (isActive) {
+            moveState(
+                GameStateMachine.Transition.UpdateGame.UpdateRoundInfo(
+                    stopTimer = { isActive = false },
+                    roundNumber = roundNumber
+                )
+            )
+            yield()
+        }
+    }
+}
 
 @PublishedApi
 internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason, GSM> GSM.checkGameStateMachineTransition(
@@ -209,18 +231,11 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
             when (previousState) {
                 is GameStateMachine.State.RoundWaiting ->
                     if (previousState.listenerReady) {
-                        coroutineScope.launch {
-                            // TODO: Replace with Boolean holder that will be passed later instead of lambda
-                            var isActive = true
-                            while (isActive) {
-                                moveState(
-                                    GameStateMachine.Transition.UpdateGame.UpdateRoundInfo(
-                                        stopTimer = { isActive = false },
-                                        roundNumber = previousState.roundNumber
-                                    )
-                                )
-                            }
-                        }
+                        timer(
+                            coroutineScope = coroutineScope,
+                            roundNumber = previousState.roundNumber,
+                            moveState = moveState,
+                        )
                         CheckResult.Success(
                             GameStateMachine.State.RoundPreparation(
                                 metadata = metadataTransformer(previousState, transition),
@@ -269,18 +284,11 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
             when (previousState) {
                 is GameStateMachine.State.RoundWaiting ->
                     if (previousState.speakerReady) {
-                        coroutineScope.launch {
-                            // TODO: Replace with Boolean holder that will be passed later instead of lambda
-                            var isActive = true
-                            while (isActive) {
-                                moveState(
-                                    GameStateMachine.Transition.UpdateGame.UpdateRoundInfo(
-                                        stopTimer = { isActive = false },
-                                        roundNumber = previousState.roundNumber
-                                    )
-                                )
-                            }
-                        }
+                        timer(
+                            coroutineScope = coroutineScope,
+                            roundNumber = previousState.roundNumber,
+                            moveState = moveState,
+                        )
                         CheckResult.Success(
                             GameStateMachine.State.RoundPreparation(
                                 metadata = metadataTransformer(previousState, transition),
@@ -328,18 +336,11 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
         is GameStateMachine.Transition.UpdateGame.SpeakerAndListenerReady ->
             when (previousState) {
                 is GameStateMachine.State.RoundWaiting -> {
-                    coroutineScope.launch {
-                        // TODO: Replace with Boolean holder that will be passed later instead of lambda
-                        var isActive = true
-                        while (isActive) {
-                            moveState(
-                                GameStateMachine.Transition.UpdateGame.UpdateRoundInfo(
-                                    stopTimer = { isActive = false },
-                                    roundNumber = previousState.roundNumber
-                                )
-                            )
-                        }
-                    }
+                    timer(
+                        coroutineScope = coroutineScope,
+                        roundNumber = previousState.roundNumber,
+                        moveState = moveState,
+                    )
                     CheckResult.Success(
                         GameStateMachine.State.RoundPreparation(
                             metadata = metadataTransformer(previousState, transition),

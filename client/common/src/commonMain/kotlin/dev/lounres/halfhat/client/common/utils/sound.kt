@@ -12,4 +12,4 @@ public expect object DefaultSounds {
     public val finalGuessEnd: Deferred<Audio>
 }
 
-public expect suspend fun Audio.play()
+public expect fun Audio.play()

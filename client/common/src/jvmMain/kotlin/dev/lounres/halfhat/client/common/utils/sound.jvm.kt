@@ -1,12 +1,11 @@
 package dev.lounres.halfhat.client.common.utils
 
 import dev.lounres.halfhat.client.common.resources.Res
-import korlibs.audio.format.WAV
-import korlibs.audio.sound.toSound
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import javax.sound.sampled.AudioSystem
 
 
 public actual typealias Audio = ByteArray
@@ -22,6 +21,9 @@ public actual object DefaultSounds {
         CoroutineScope(Dispatchers.Default).async { Res.readBytes("files/sounds/finalGuessEnd.wav") }
 }
 
-public actual suspend fun ByteArray.play() {
-//    WAV.decode(this)!!.toSound().play()
+public actual fun Audio.play() {
+    val clip = AudioSystem.getClip()
+    clip.open(AudioSystem.getAudioInputStream(this.inputStream()))
+    clip.framePosition = 0
+    clip.start()
 }
