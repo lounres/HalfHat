@@ -52,6 +52,10 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.common)
                 implementation(versions.ktor.client.cio)
+                
+                // mp3spi
+                runtimeOnly("com.googlecode.soundlibs:tritonus-share:0.3.7-2")
+                runtimeOnly("com.googlecode.soundlibs:mp3spi:1.9.5-1")
             }
         }
         
