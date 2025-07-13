@@ -82,8 +82,7 @@ kotlin {
         }
         wasmJsMain {
             dependencies {
-//                implementation(project.dependencies.enforcedPlatform(versions.kotlin.wrappers.bom))
-//                implementation(versions.kotlin.wrappers.browser)
+            
             }
         }
     }

@@ -5,11 +5,6 @@ plugins {
 }
 
 kotlin {
-//    js {
-//        browser()
-//        nodejs()
-//    }
-
     sourceSets {
         commonMain {
             dependencies {
