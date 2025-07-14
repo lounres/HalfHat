@@ -259,21 +259,37 @@ public object ServerApi {
             @BetterBeReplaced
             public data object UnspecifiedError : Error
             
+            @Serializable
             public data object AttachmentIsDenied : Error
+            @Serializable
             public data object AttachmentIsAlreadySevered : Error
+            @Serializable
             public data object NoAttachmentWhenItIsNeeded : Error
+            @Serializable
             public data object NotHostChangingGameSettings : Error
+            @Serializable
             public data object CannotUpdateGameSettingsAfterInitialization : Error
+            @Serializable
             public data object NotEnoughPlayersForInitialization : Error
+            @Serializable
             public data object CannotFindDictionaryByID : Error
+            @Serializable
             public data object CannotInitializationGameSettingsAfterInitialization : Error
+            @Serializable
             public data object CannotSetSpeakerReadinessNotDuringRoundWaiting : Error
+            @Serializable
             public data object CannotSetListenerReadinessNotDuringRoundWaiting : Error
+            @Serializable
             public data object CannotSetSpeakerAndListenerReadinessNotDuringRoundWaiting : Error
+            @Serializable
             public data object CannotUpdateRoundInfoNotDuringTheRound : Error
+            @Serializable
             public data object CannotSubmitWordExplanationResultNotDuringExplanationOrLastGuess : Error
+            @Serializable
             public data object CannotUpdateWordExplanationResultsNotDuringRoundEditing : Error
+            @Serializable
             public data object CannotConfirmWordExplanationResultsNotDuringRoundEditing : Error
+            @Serializable
             public data object CannotFinishGameNotDuringRoundWaiting : Error
         }
     }

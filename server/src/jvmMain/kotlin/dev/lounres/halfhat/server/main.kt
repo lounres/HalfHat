@@ -296,6 +296,15 @@ class Connection(
             Room.Outgoing.Error.CannotFinishGameNotDuringRoundWaiting -> ServerApi.OnlineGame.Error.CannotFinishGameNotDuringRoundWaiting
         }
         
+        logger.debug(
+            items = {
+                mapOf(
+                    "connection" to this.toString(),
+                    "error" to errorToSend.toString(),
+                )
+            }
+        ) { "Sending error" }
+        
         socketSession.sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(errorToSend))
     }
 }
@@ -383,7 +392,7 @@ fun main() {
                                             "signal" to signal.toString(),
                                         )
                                     }
-                                ) { "Sending signal" }
+                                ) { "Sending room info" }
                                 
                                 sendSerialized<ServerApi.Signal>(signal)
                             }

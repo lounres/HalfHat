@@ -83,7 +83,7 @@ suspend fun RealMainWindowComponent(
                 finalGuessTimeSeconds = 3u,
                 strictMode = false,
                 cachedEndConditionWordsNumber = 100u,
-                cachedEndConditionCyclesNumber = 5u,
+                cachedEndConditionCyclesNumber = 10u,
                 gameEndConditionType = GameStateMachine.GameEndCondition.Type.Words,
                 wordsSource = GameStateMachine.WordsSource.Custom(DeviceGameWordsProviderID.Local("medium"))
             )

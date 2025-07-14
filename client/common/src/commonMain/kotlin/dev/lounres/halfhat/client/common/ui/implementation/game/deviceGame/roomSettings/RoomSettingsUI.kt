@@ -255,7 +255,7 @@ public fun RoomSettingsUI(
                         value = component.cachedEndConditionWordsNumber.collectAsState().value,
                         onValueChange = { input ->
                             component.cachedEndConditionWordsNumber.value =
-                                input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 999u).toString() }
+                                input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else it.dropWhile { d -> d == '0' }.ifBlank { "0" } }
                         },
                         label = {
                             Text(
@@ -271,8 +271,8 @@ public fun RoomSettingsUI(
                         modifier = Modifier.fillMaxWidth(),
                         value = component.cachedEndConditionCyclesNumber.collectAsState().value,
                         onValueChange = { input ->
-                            component.cachedEndConditionWordsNumber.value =
-                                input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 999u).toString() }
+                            component.cachedEndConditionCyclesNumber.value =
+                                input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 99u).toString() }
                         },
                         label = {
                             Text(
