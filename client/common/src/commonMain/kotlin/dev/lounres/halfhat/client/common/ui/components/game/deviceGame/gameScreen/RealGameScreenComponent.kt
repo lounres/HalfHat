@@ -16,13 +16,13 @@ import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScree
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.roundWaiting.RealRoundWaitingComponent
 import dev.lounres.halfhat.client.common.utils.play
 import dev.lounres.halfhat.client.components.logger.logger
+import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
 import dev.lounres.halfhat.logic.gameStateMachine.*
-import dev.lounres.komponentual.navigation.ChildrenSlot
-import dev.lounres.komponentual.navigation.MutableSlotNavigation
+import dev.lounres.komponentual.navigation.SlotNavigationHub
 import dev.lounres.kone.automata.CheckResult
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.toKoneMutableList
-import dev.lounres.kone.state.KoneAsynchronousState
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.logKube.core.debug
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +33,7 @@ import kotlin.random.Random
 
 public class RealGameScreenComponent(
     override val onExitGame: () -> Unit,
-    override val childSlot: KoneAsynchronousState<ChildrenSlot<*, GameScreenComponent.Child>>,
+    override val childSlot: KoneAsynchronousHub<ChildrenSlot<*, GameScreenComponent.Child>>,
 ) : GameScreenComponent {
     public sealed interface Configuration {
         public data object GameInitialisation : Configuration
@@ -76,7 +76,7 @@ public suspend fun RealGameScreenComponent(
 ): RealGameScreenComponent {
     val logger = componentContext.logger
     val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
-    val navigation = MutableSlotNavigation<RealGameScreenComponent.Configuration>()
+    val navigation = SlotNavigationHub<RealGameScreenComponent.Configuration>()
     
     val gameStateMachine = AsynchronousGameStateMachine.Initialization<String, DeviceGameWordsProviderID, NoDeviceGameWordsProviderReason, Nothing?, Nothing?, Nothing?>(
         metadata = null,
@@ -332,7 +332,7 @@ public suspend fun RealGameScreenComponent(
         wordsProviderRegistry = componentContext.deviceGameWordsProviderRegistry,
     )
     
-    val childSlot: KoneAsynchronousState<ChildrenSlot<RealGameScreenComponent.Configuration, GameScreenComponent.Child>> =
+    val childSlot: KoneAsynchronousHub<ChildrenSlot<RealGameScreenComponent.Configuration, GameScreenComponent.Child>> =
         componentContext.uiChildrenDefaultSlot(
             loggerSource = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
             source = navigation,

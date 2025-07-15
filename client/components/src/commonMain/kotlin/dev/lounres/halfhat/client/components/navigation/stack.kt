@@ -4,18 +4,29 @@ import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.buildUiChild
 import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
-import dev.lounres.halfhat.client.components.logger.logger
-import dev.lounres.komponentual.navigation.ChildrenStack
-import dev.lounres.komponentual.navigation.InnerStackNavigationState
-import dev.lounres.komponentual.navigation.StackNavigation
+import dev.lounres.halfhat.client.components.lifecycle.newMutableUIComponentLifecycle
+import dev.lounres.halfhat.client.components.logger.LoggerKey
+import dev.lounres.komponentual.navigation.ChildWithConfiguration
+import dev.lounres.komponentual.navigation.StackNavigationSource
+import dev.lounres.komponentual.navigation.StackNavigationState
 import dev.lounres.komponentual.navigation.childrenStack
 import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.map.get
+import dev.lounres.kone.collections.utils.dropLast
 import dev.lounres.kone.collections.utils.last
+import dev.lounres.kone.collections.utils.map
 import dev.lounres.kone.contexts.invoke
+import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.map
+import dev.lounres.kone.registry.getOrNull
 import dev.lounres.kone.relations.*
-import dev.lounres.kone.state.KoneAsynchronousState
 import dev.lounres.logKube.core.debug
 
+
+public data class ChildrenStack<Configuration, Component>(
+    public val active: ChildWithConfiguration<Configuration, Component>,
+    public val backStack: KoneList<ChildWithConfiguration<Configuration, Component>>,
+)
 
 public suspend fun <
     Configuration,
@@ -25,20 +36,21 @@ public suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    source: StackNavigation<Configuration>,
+    source: StackNavigationSource<Configuration>,
     initialStack: KoneList<Configuration>,
-    updateLifecycle: suspend (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: InnerStackNavigationState<Configuration>) -> Unit,
+    updateLifecycle: suspend (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: StackNavigationState<Configuration>) -> Unit,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext) -> Component,
-): KoneAsynchronousState<ChildrenStack<Configuration, Component>> =
-    childrenStack(
+): KoneAsynchronousHub<ChildrenStack<Configuration, Component>> {
+    val logger = this.getOrNull(LoggerKey)
+    return childrenStack(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
         configurationOrder = configurationOrder,
         source = source,
         initialStack = initialStack,
         createChild = { configuration, nextState ->
-            val controllingLifecycle = MutableUIComponentLifecycle()
-            logger.debug(
+            val controllingLifecycle = newMutableUIComponentLifecycle()
+            logger?.debug(
                 source = loggerSource,
                 items = {
                     mapOf(
@@ -50,7 +62,7 @@ public suspend fun <
             val component = this.buildUiChild(controllingLifecycle) {
                 childrenFactory(configuration, it)
             }
-            logger.debug(
+            logger?.debug(
                 source = loggerSource,
                 items = {
                     mapOf(
@@ -60,7 +72,7 @@ public suspend fun <
                     )
                 }
             ) { "Created child" }
-            logger.debug(
+            logger?.debug(
                 source = loggerSource,
                 items = {
                     mapOf(
@@ -72,7 +84,7 @@ public suspend fun <
                 }
             ) { "Updating controlling lifecycle" }
             updateLifecycle(configuration, controllingLifecycle, nextState)
-            logger.debug(
+            logger?.debug(
                 source = loggerSource,
                 items = {
                     mapOf(
@@ -89,7 +101,7 @@ public suspend fun <
             )
         },
         destroyChild = { configuration, child, nextState ->
-            logger.debug(
+            logger?.debug(
                 source = loggerSource,
                 items = {
                     mapOf(
@@ -101,7 +113,7 @@ public suspend fun <
                 }
             ) { "Destroying controlling lifecycle" }
             child.controllingLifecycle.moveTo(UIComponentLifecycleState.Destroyed)
-            logger.debug(
+            logger?.debug(
                 source = loggerSource,
                 items = {
                     mapOf(
@@ -116,8 +128,14 @@ public suspend fun <
         updateChild = { configuration, data, nextState ->
             updateLifecycle(configuration, data.controllingLifecycle, nextState)
         },
-        componentAccessor = { it.component },
-    )
+    ).map {
+        val stack = it.navigationState.map { configuration -> ChildWithConfiguration(configuration, it.children[configuration].component) }
+        ChildrenStack(
+            active = stack.last(),
+            backStack = stack.dropLast(1u),
+        )
+    }
+}
 
 public suspend fun <
     Configuration,
@@ -127,12 +145,12 @@ public suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    source: StackNavigation<Configuration>,
+    source: StackNavigationSource<Configuration>,
     initialStack: KoneList<Configuration>,
     inactiveState: UIComponentLifecycleState,
     activeState: UIComponentLifecycleState,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext) -> Component,
-): KoneAsynchronousState<ChildrenStack<Configuration, Component>> =
+): KoneAsynchronousHub<ChildrenStack<Configuration, Component>> =
     uiChildrenStack(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
@@ -141,7 +159,7 @@ public suspend fun <
         source = source,
         initialStack = initialStack,
         updateLifecycle = { configuration, lifecycle, nextState ->
-            if (configurationEquality { configuration eq nextState.stack.last() }) lifecycle.moveTo(activeState)
+            if (configurationEquality { configuration eq nextState.last() }) lifecycle.moveTo(activeState)
             else lifecycle.moveTo(inactiveState)
         },
         childrenFactory = childrenFactory,
@@ -155,7 +173,7 @@ public expect suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    source: StackNavigation<Configuration>,
+    source: StackNavigationSource<Configuration>,
     initialStack: KoneList<Configuration>,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext) -> Component,
-): KoneAsynchronousState<ChildrenStack<Configuration, Component>>
+): KoneAsynchronousHub<ChildrenStack<Configuration, Component>>

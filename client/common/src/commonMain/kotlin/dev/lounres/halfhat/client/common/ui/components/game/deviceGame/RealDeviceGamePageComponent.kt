@@ -8,10 +8,10 @@ import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.roomScree
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.roomScreen.RealRoomScreenComponent
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.roomSettings.RealRoomSettingsComponent
 import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.navigation.ChildrenStack
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStack
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.komponentual.navigation.ChildrenStack
-import dev.lounres.komponentual.navigation.MutableStackNavigation
+import dev.lounres.komponentual.navigation.StackNavigationHub
 import dev.lounres.komponentual.navigation.replaceCurrent
 import dev.lounres.kone.collections.iterables.isNotEmpty
 import dev.lounres.kone.collections.list.KoneList
@@ -21,9 +21,9 @@ import dev.lounres.kone.collections.set.KoneSet
 import dev.lounres.kone.collections.set.empty
 import dev.lounres.kone.collections.set.of
 import dev.lounres.kone.collections.utils.*
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.relations.Equality
 import dev.lounres.kone.relations.Hashing
-import dev.lounres.kone.state.KoneAsynchronousState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,7 +32,7 @@ import kotlinx.coroutines.launch
 
 
 public class RealDeviceGamePageComponent(
-    override val childStack: KoneAsynchronousState<ChildrenStack<*, DeviceGamePageComponent.Child>>,
+    override val childStack: KoneAsynchronousHub<ChildrenStack<*, DeviceGamePageComponent.Child>>,
 ) : DeviceGamePageComponent {
     public sealed interface Configuration {
         public data object RoomScreen : Configuration
@@ -49,11 +49,11 @@ public suspend fun RealDeviceGamePageComponent(
     val playersList: MutableStateFlow<KoneList<Player>> = MutableStateFlow(KoneList.of(Player(""), Player(""))) // TODO: Hardcoded settings!!!
     val settingsBuilderState: MutableStateFlow<GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>> = MutableStateFlow(componentContext.deviceGameDefaultSettings.value)
     
-    val navigation = MutableStackNavigation<RealDeviceGamePageComponent.Configuration>()
+    val navigation = StackNavigationHub<RealDeviceGamePageComponent.Configuration>()
     
     val possibleWordsSources = componentContext.deviceGameWordsProviderRegistry.list()
     
-    val childStack: KoneAsynchronousState<ChildrenStack<RealDeviceGamePageComponent.Configuration, DeviceGamePageComponent.Child>> =
+    val childStack: KoneAsynchronousHub<ChildrenStack<RealDeviceGamePageComponent.Configuration, DeviceGamePageComponent.Child>> =
         componentContext.uiChildrenDefaultStack(
             source = navigation,
             initialStack = KoneList.of(RealDeviceGamePageComponent.Configuration.RoomScreen),

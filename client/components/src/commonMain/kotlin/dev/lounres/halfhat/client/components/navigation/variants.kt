@@ -4,17 +4,30 @@ import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.buildUiChild
 import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
-import dev.lounres.halfhat.client.components.logger.logger
-import dev.lounres.komponentual.navigation.ChildrenVariants
-import dev.lounres.komponentual.navigation.InnerVariantsNavigationState
-import dev.lounres.komponentual.navigation.VariantsNavigation
+import dev.lounres.halfhat.client.components.lifecycle.newMutableUIComponentLifecycle
+import dev.lounres.halfhat.client.components.logger.LoggerKey
+import dev.lounres.komponentual.navigation.ChildWithConfiguration
+import dev.lounres.komponentual.navigation.VariantsNavigationState
+import dev.lounres.komponentual.navigation.VariantsNavigationSource
 import dev.lounres.komponentual.navigation.childrenVariants
+import dev.lounres.kone.collections.map.KoneMap
+import dev.lounres.kone.collections.map.component1
+import dev.lounres.kone.collections.map.component2
+import dev.lounres.kone.collections.map.get
+import dev.lounres.kone.collections.map.mapValues
 import dev.lounres.kone.collections.set.KoneSet
 import dev.lounres.kone.contexts.invoke
+import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.map
+import dev.lounres.kone.registry.getOrNull
 import dev.lounres.kone.relations.*
-import dev.lounres.kone.state.KoneAsynchronousState
 import dev.lounres.logKube.core.debug
 
+
+public data class ChildrenVariants<Configuration, Component>(
+    public val active: ChildWithConfiguration<Configuration, Component>,
+    public val allVariants: KoneMap<Configuration, Component>,
+)
 
 public suspend fun <
     Configuration,
@@ -24,13 +37,14 @@ public suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    source: VariantsNavigation<Configuration>,
+    source: VariantsNavigationSource<Configuration>,
     allVariants: KoneSet<Configuration>,
     initialVariant: Configuration,
-    updateLifecycle: suspend (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: InnerVariantsNavigationState<Configuration>) -> Unit,
+    updateLifecycle: suspend (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: VariantsNavigationState<Configuration>) -> Unit,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext) -> Component,
-): KoneAsynchronousState<ChildrenVariants<Configuration, Component>> =
-    childrenVariants(
+): KoneAsynchronousHub<ChildrenVariants<Configuration, Component>> {
+    val logger = this.getOrNull(LoggerKey)
+    return childrenVariants(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
         configurationOrder = configurationOrder,
@@ -38,8 +52,8 @@ public suspend fun <
         allVariants = allVariants,
         initialVariant = initialVariant,
         createChild = { configuration, nextState ->
-            val controllingLifecycle = MutableUIComponentLifecycle()
-            logger.debug(
+            val controllingLifecycle = newMutableUIComponentLifecycle()
+            logger?.debug(
                 source = loggerSource,
                 items = {
                     mapOf(
@@ -51,7 +65,7 @@ public suspend fun <
             val component = this.buildUiChild(controllingLifecycle) {
                 childrenFactory(configuration, it)
             }
-            logger.debug(
+            logger?.debug(
                 source = loggerSource,
                 items = {
                     mapOf(
@@ -61,7 +75,7 @@ public suspend fun <
                     )
                 }
             ) { "Created child" }
-            logger.debug(
+            logger?.debug(
                 source = loggerSource,
                 items = {
                     mapOf(
@@ -73,7 +87,7 @@ public suspend fun <
                 }
             ) { "Updating controlling lifecycle" }
             updateLifecycle(configuration, controllingLifecycle, nextState)
-            logger.debug(
+            logger?.debug(
                 source = loggerSource,
                 items = {
                     mapOf(
@@ -90,7 +104,7 @@ public suspend fun <
             )
         },
         destroyChild = { configuration, child, nextState ->
-            logger.debug(
+            logger?.debug(
                 source = loggerSource,
                 items = {
                     mapOf(
@@ -102,7 +116,7 @@ public suspend fun <
                 }
             ) { "Destroying controlling lifecycle" }
             child.controllingLifecycle.moveTo(UIComponentLifecycleState.Destroyed)
-            logger.debug(
+            logger?.debug(
                 source = loggerSource,
                 items = {
                     mapOf(
@@ -117,8 +131,22 @@ public suspend fun <
         updateChild = { configuration, data, nextState ->
             updateLifecycle(configuration, data.controllingLifecycle, nextState)
         },
-        componentAccessor = { it.component },
-    )
+    ).map {
+        ChildrenVariants(
+            active = it.navigationState.currentVariant.let { configuration ->
+                ChildWithConfiguration(
+                    configuration = configuration,
+                    component = it.children[configuration].component,
+                )
+            },
+            allVariants = it.children.mapValues(
+                keyEquality = configurationEquality,
+                keyHashing = configurationHashing,
+                keyOrder = configurationOrder,
+            ) { (_, child) -> child.component },
+        )
+    }
+}
 
 public suspend fun <
     Configuration,
@@ -128,13 +156,13 @@ public suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    source: VariantsNavigation<Configuration>,
+    source: VariantsNavigationSource<Configuration>,
     allVariants: KoneSet<Configuration>,
     initialVariant: Configuration,
     inactiveState: UIComponentLifecycleState,
     activeState: UIComponentLifecycleState,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext) -> Component,
-): KoneAsynchronousState<ChildrenVariants<Configuration, Component>> =
+): KoneAsynchronousHub<ChildrenVariants<Configuration, Component>> =
     uiChildrenVariants(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
@@ -158,8 +186,8 @@ public expect suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    source: VariantsNavigation<Configuration>,
+    source: VariantsNavigationSource<Configuration>,
     allVariants: KoneSet<Configuration>,
     initialVariant: Configuration,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext) -> Component,
-): KoneAsynchronousState<ChildrenVariants<Configuration, Component>>
+): KoneAsynchronousHub<ChildrenVariants<Configuration, Component>>

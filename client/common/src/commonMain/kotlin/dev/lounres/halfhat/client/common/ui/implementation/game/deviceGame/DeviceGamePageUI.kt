@@ -9,7 +9,7 @@ import dev.lounres.halfhat.client.common.ui.implementation.game.deviceGame.roomS
 import dev.lounres.halfhat.client.common.ui.implementation.game.deviceGame.roomScreen.RoomScreenUI
 import dev.lounres.halfhat.client.common.ui.implementation.game.deviceGame.roomSettings.RoomSettingsActionsUI
 import dev.lounres.halfhat.client.common.ui.implementation.game.deviceGame.roomSettings.RoomSettingsUI
-import dev.lounres.kone.state.subscribeAsState
+import dev.lounres.kone.hub.subscribeAsState
 
 
 @Composable

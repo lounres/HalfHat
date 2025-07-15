@@ -17,7 +17,7 @@ import dev.lounres.halfhat.client.common.ui.implementation.game.deviceGame.gameS
 import dev.lounres.halfhat.client.common.ui.implementation.game.deviceGame.gameScreen.roundPreparation.RoundPreparationUI
 import dev.lounres.halfhat.client.common.ui.implementation.game.deviceGame.gameScreen.roundWaiting.RoundWaitingActionsUI
 import dev.lounres.halfhat.client.common.ui.implementation.game.deviceGame.gameScreen.roundWaiting.RoundWaitingUI
-import dev.lounres.kone.state.subscribeAsState
+import dev.lounres.kone.hub.subscribeAsState
 
 
 @Composable

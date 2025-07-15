@@ -1,22 +1,22 @@
 package dev.lounres.halfhat.client.common.ui.components.game.modeSelection
 
 import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.navigation.ChildrenPossibility
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultPossibility
-import dev.lounres.komponentual.navigation.ChildrenPossibility
-import dev.lounres.komponentual.navigation.MutablePossibilityNavigation
+import dev.lounres.komponentual.navigation.PossibilityNavigationHub
 import dev.lounres.komponentual.navigation.clear
 import dev.lounres.komponentual.navigation.set
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.maybe.None
-import dev.lounres.kone.state.KoneAsynchronousState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
 public class RealModeSelectionPageComponent(
-    private val infoPopupNavigation: MutablePossibilityNavigation<ModeSelectionPageComponent.InfoPopup>,
+    private val infoPopupNavigation: PossibilityNavigationHub<ModeSelectionPageComponent.InfoPopup>,
     
-    override val infoPopup: KoneAsynchronousState<ChildrenPossibility<*, ModeSelectionPageComponent.InfoPopup>>,
+    override val infoPopup: KoneAsynchronousHub<ChildrenPossibility<*, ModeSelectionPageComponent.InfoPopup>>,
     
     override val onOnlineGameSelect: () -> Unit,
     override val onLocalGameSelect: () -> Unit,
@@ -60,9 +60,9 @@ public suspend fun RealModeSelectionPageComponent(
     onGameTimerSelect: () -> Unit,
 ): RealModeSelectionPageComponent {
     
-    val infoPopupNavigation = MutablePossibilityNavigation<ModeSelectionPageComponent.InfoPopup>()
+    val infoPopupNavigation = PossibilityNavigationHub<ModeSelectionPageComponent.InfoPopup>()
     
-    val infoPopup: KoneAsynchronousState<ChildrenPossibility<ModeSelectionPageComponent.InfoPopup, ModeSelectionPageComponent.InfoPopup>> =
+    val infoPopup: KoneAsynchronousHub<ChildrenPossibility<ModeSelectionPageComponent.InfoPopup, ModeSelectionPageComponent.InfoPopup>> =
         componentContext.uiChildrenDefaultPossibility(
             source = infoPopupNavigation,
             initialConfiguration = None,

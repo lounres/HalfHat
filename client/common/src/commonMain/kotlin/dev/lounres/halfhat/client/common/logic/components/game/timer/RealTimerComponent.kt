@@ -6,16 +6,17 @@ import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.lifecycle.LogicComponentLifecycleState
 import dev.lounres.halfhat.client.components.lifecycle.lifecycle
-import dev.lounres.kone.state.KoneMutableState
-import dev.lounres.util.atomic.updateAndGet
-import dev.lounres.util.atomic.value
+import dev.lounres.kone.hub.KoneMutableAsynchronousHub
+import dev.lounres.kone.hub.set
+import dev.lounres.kone.relations.defaultEquality
+import kotlinx.atomicfu.locks.ReentrantLock
+import kotlinx.atomicfu.locks.withLock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlin.concurrent.atomics.AtomicReference
 
 
 public class RealTimerComponent(
@@ -24,9 +25,10 @@ public class RealTimerComponent(
 ) : TimerComponent {
     private val coroutineScope: CoroutineScope = componentContext.coroutineScope(Dispatchers.Default)
     
-    override val timerState: KoneMutableState<TimerState> = KoneMutableState(TimerState.Finished)
+    override val timerState: KoneMutableAsynchronousHub<TimerState> = KoneMutableAsynchronousHub(TimerState.Finished, elementEquality = defaultEquality() /* FIXME: Remove the default value */)
     
-    private val timerJob = AtomicReference<Job>(Job())
+    private val timerJobLock = ReentrantLock()
+    private var timerJob: Job = Job()
     
     override fun startTimer(
         preparationTimeSetting: UInt,
@@ -34,15 +36,15 @@ public class RealTimerComponent(
         lastGuessTimeSetting: UInt,
     ) {
         if (componentContext.lifecycle.state == LogicComponentLifecycleState.Running)
-            timerJob.updateAndGet {
-                it.cancel()
+            timerJobLock.withLock {
+                timerJob.cancel()
                 coroutineScope.timerJob(
                     preparationTime = preparationTimeSetting,
                     explanationTime = explanationTimeSetting,
                     lastGuessTime = lastGuessTimeSetting,
                 ) { newTimerState ->
                     val oldTimerState = timerState.value
-                    timerState.value = newTimerState
+                    timerState.set(newTimerState)
                     
                     if (volumeOn.value)
                         when(newTimerState) {
@@ -58,13 +60,13 @@ public class RealTimerComponent(
                             TimerState.Finished ->
                                 coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
                         }
-                }
+                }.also { timerJob = it }
             }.start()
     }
     override fun resetTimer() {
         coroutineScope.launch {
-            timerJob.value.cancelAndJoin()
-            timerState.value = TimerState.Finished
+            timerJob.cancelAndJoin()
+            timerState.set(TimerState.Finished)
         }
     }
 }

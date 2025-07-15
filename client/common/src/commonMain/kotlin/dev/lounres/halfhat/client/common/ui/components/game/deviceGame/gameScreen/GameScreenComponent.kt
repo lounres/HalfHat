@@ -7,14 +7,14 @@ import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScree
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.roundLastGuess.RoundLastGuessComponent
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.roundPreparation.RoundPreparationComponent
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.roundWaiting.RoundWaitingComponent
-import dev.lounres.komponentual.navigation.ChildrenSlot
-import dev.lounres.kone.state.KoneAsynchronousState
+import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
+import dev.lounres.kone.hub.KoneAsynchronousHub
 
 
 public interface GameScreenComponent {
     public val onExitGame: () -> Unit
     
-    public val childSlot: KoneAsynchronousState<ChildrenSlot<*, Child>>
+    public val childSlot: KoneAsynchronousHub<ChildrenSlot<*, Child>>
     
     public sealed interface Child {
         public class Loading(public val component: LoadingComponent) : Child

@@ -16,7 +16,9 @@ import dev.lounres.halfhat.client.common.resources.Res
 import dev.lounres.halfhat.client.common.resources.exitGameTimerButton_dark_png_24dp
 import dev.lounres.halfhat.client.common.ui.components.game.timer.TimerPageComponent
 import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier
-import dev.lounres.kone.state.subscribeAsState
+import dev.lounres.halfhat.client.components.hub.subscribeAsState
+import dev.lounres.kone.hub.subscribeAsState
+import dev.lounres.kone.hub.value
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.min
 

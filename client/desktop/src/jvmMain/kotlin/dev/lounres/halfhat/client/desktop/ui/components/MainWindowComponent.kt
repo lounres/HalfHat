@@ -14,8 +14,8 @@ import dev.lounres.halfhat.client.common.ui.components.rules.RulesPageComponent
 import dev.lounres.halfhat.client.common.ui.components.settings.SettingsPageComponent
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
-import dev.lounres.komponentual.navigation.ChildrenVariants
-import dev.lounres.kone.state.KoneAsynchronousState
+import dev.lounres.halfhat.client.components.navigation.ChildrenVariants
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import kotlinx.coroutines.flow.MutableStateFlow
 
 
@@ -28,9 +28,9 @@ interface MainWindowComponent {
     val volumeOn: MutableStateFlow<Boolean>
     val language: MutableStateFlow<Language>
 
-    val pageVariants: KoneAsynchronousState<ChildrenVariants<Child.Kind, Child>>
+    val pageVariants: KoneAsynchronousHub<ChildrenVariants<Child.Kind, Child>>
     val openPage: (page: Child.Kind) -> Unit
-    val menuList: KoneAsynchronousState<KoneList<MenuItem>>
+    val menuList: KoneAsynchronousHub<KoneList<MenuItem>>
     
     sealed interface MenuItem {
         data object Separator: MenuItem

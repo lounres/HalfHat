@@ -1,6 +1,9 @@
 plugins {
 //    alias(versions.plugins.android.library)
 //    alias(versions.plugins.kotlinx.serialization)
+    // FIXME: Remove the plugins
+    alias(versions.plugins.kotlin.compose)
+    alias(versions.plugins.compose.multiplatform)
 }
 
 kotlin {
@@ -20,6 +23,10 @@ kotlin {
                 
                 // Coroutines
                 api(versions.kotlinx.coroutines.core)
+                
+                // FIXME: Remove the dependencies
+                // Compose
+                api(compose.runtime)
             }
         }
 

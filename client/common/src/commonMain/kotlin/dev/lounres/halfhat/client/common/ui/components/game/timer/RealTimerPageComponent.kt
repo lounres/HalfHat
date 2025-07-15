@@ -5,8 +5,10 @@ import dev.lounres.halfhat.client.common.logic.components.game.timer.TimerCompon
 import dev.lounres.halfhat.client.common.logic.components.game.timer.TimerState
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.buildLogicChildOnRunning
-import dev.lounres.kone.state.KoneMutableState
-import dev.lounres.kone.state.KoneState
+import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.KoneMutableBlockingHub
+import dev.lounres.kone.hub.value
+import dev.lounres.kone.relations.defaultEquality
 import kotlinx.coroutines.flow.StateFlow
 
 
@@ -18,11 +20,11 @@ public class RealTimerPageComponent(
     private val timerComponent: TimerComponent
 ) : TimerPageComponent {
     
-    override val timerState: KoneState<TimerState> get() = timerComponent.timerState
+    override val timerState: KoneAsynchronousHub<TimerState> get() = timerComponent.timerState
     
-    override val preparationTimeSetting: KoneMutableState<String> = KoneMutableState(initialPreparationTimeSetting.toString())
-    override val explanationTimeSetting: KoneMutableState<String> = KoneMutableState(initialExplanationTimeSetting.toString())
-    override val lastGuessTimeSetting: KoneMutableState<String> = KoneMutableState(initialLastGuessTimeSetting.toString())
+    override val preparationTimeSetting: KoneMutableBlockingHub<String> = KoneMutableBlockingHub(initialPreparationTimeSetting.toString(), defaultEquality() /* FIXME: Remove the default value */)
+    override val explanationTimeSetting: KoneMutableBlockingHub<String> = KoneMutableBlockingHub(initialExplanationTimeSetting.toString(), defaultEquality() /* FIXME: Remove the default value */)
+    override val lastGuessTimeSetting: KoneMutableBlockingHub<String> = KoneMutableBlockingHub(initialLastGuessTimeSetting.toString(), defaultEquality() /* FIXME: Remove the default value */)
     
     override val onStartTimer: () -> Unit = onStartTimer@{
         timerComponent.startTimer(

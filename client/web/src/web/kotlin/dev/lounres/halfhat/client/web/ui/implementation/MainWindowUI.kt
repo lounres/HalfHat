@@ -45,7 +45,7 @@ import dev.lounres.halfhat.client.common.ui.implementation.settings.SettingsPage
 import dev.lounres.halfhat.client.common.ui.utils.WorkInProgress
 import dev.lounres.halfhat.client.web.ui.components.MainWindowComponent
 import dev.lounres.kone.collections.iterables.next
-import dev.lounres.kone.state.subscribeAsState
+import dev.lounres.kone.hub.subscribeAsState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource

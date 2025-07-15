@@ -8,13 +8,13 @@ import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.gameScree
 import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.previewScreen.RealPreviewScreenComponent
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.buildLogicChildOnRunning
+import dev.lounres.halfhat.client.components.navigation.ChildrenStack
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStack
-import dev.lounres.komponentual.navigation.ChildrenStack
-import dev.lounres.komponentual.navigation.MutableStackNavigation
+import dev.lounres.komponentual.navigation.StackNavigationHub
 import dev.lounres.komponentual.navigation.replaceCurrent
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
-import dev.lounres.kone.state.KoneAsynchronousState
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 public class RealOnlineGamePageComponent(
     override val onExitOnlineGameMode: () -> Unit,
     private val onlineGameComponent: OnlineGameComponent,
-    override val childStack: KoneAsynchronousState<ChildrenStack<*, OnlineGamePageComponent.Child>>,
+    override val childStack: KoneAsynchronousHub<ChildrenStack<*, OnlineGamePageComponent.Child>>,
 ) : OnlineGamePageComponent {
     override val connectionStatus: StateFlow<ConnectionStatus> get() = onlineGameComponent.connectionStatus
     
@@ -43,9 +43,9 @@ public suspend fun RealOnlineGamePageComponent(
             RealOnlineGameComponent(it)
         }
     
-    val navigation = MutableStackNavigation<RealOnlineGamePageComponent.Configuration>()
+    val navigation = StackNavigationHub<RealOnlineGamePageComponent.Configuration>()
     
-    val childStack: KoneAsynchronousState<ChildrenStack<RealOnlineGamePageComponent.Configuration, OnlineGamePageComponent.Child>> =
+    val childStack: KoneAsynchronousHub<ChildrenStack<RealOnlineGamePageComponent.Configuration, OnlineGamePageComponent.Child>> =
         componentContext.uiChildrenDefaultStack(
             source = navigation,
             initialStack = KoneList.of(RealOnlineGamePageComponent.Configuration.PreviewScreen),

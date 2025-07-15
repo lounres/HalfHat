@@ -1,8 +1,7 @@
 package dev.lounres.halfhat.client.common.ui.components.game.modeSelection
 
-import dev.lounres.komponentual.navigation.ChildrenPossibility
-import dev.lounres.kone.state.KoneAsynchronousState
-import dev.lounres.kone.state.KoneState
+import dev.lounres.halfhat.client.components.navigation.ChildrenPossibility
+import dev.lounres.kone.hub.KoneAsynchronousHub
 
 
 public interface ModeSelectionPageComponent {
@@ -11,7 +10,7 @@ public interface ModeSelectionPageComponent {
     public val onDeviceGameSelect: () -> Unit
     public val onGameTimerSelect: () -> Unit
     
-    public val infoPopup: KoneAsynchronousState<ChildrenPossibility<*, InfoPopup>>
+    public val infoPopup: KoneAsynchronousHub<ChildrenPossibility<*, InfoPopup>>
     
     public val onOnlineGameInfo: () -> Unit
     public val onLocalGameInfo: () -> Unit

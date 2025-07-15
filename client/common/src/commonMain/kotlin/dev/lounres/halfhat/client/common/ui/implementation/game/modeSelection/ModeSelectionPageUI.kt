@@ -11,8 +11,8 @@ import androidx.compose.ui.window.Dialog
 import dev.lounres.halfhat.client.common.resources.*
 import dev.lounres.halfhat.client.common.ui.components.game.modeSelection.ModeSelectionPageComponent
 import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier
+import dev.lounres.kone.hub.subscribeAsState
 import dev.lounres.kone.maybe.ifSome
-import dev.lounres.kone.state.subscribeAsState
 import org.jetbrains.compose.resources.painterResource
 
 

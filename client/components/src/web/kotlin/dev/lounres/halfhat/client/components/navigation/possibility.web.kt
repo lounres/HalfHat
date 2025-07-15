@@ -2,13 +2,12 @@ package dev.lounres.halfhat.client.components.navigation
 
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
-import dev.lounres.komponentual.navigation.ChildrenPossibility
-import dev.lounres.komponentual.navigation.PossibilityNavigation
+import dev.lounres.komponentual.navigation.PossibilityNavigationSource
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.maybe.Maybe
 import dev.lounres.kone.relations.Equality
 import dev.lounres.kone.relations.Hashing
 import dev.lounres.kone.relations.Order
-import dev.lounres.kone.state.KoneAsynchronousState
 
 
 public actual suspend fun <Configuration, Component> UIComponentContext.uiChildrenDefaultPossibility(
@@ -16,10 +15,10 @@ public actual suspend fun <Configuration, Component> UIComponentContext.uiChildr
     configurationHashing: Hashing<Configuration>?,
     configurationOrder: Order<Configuration>?,
     loggerSource: String?,
-    source: PossibilityNavigation<Configuration>,
+    source: PossibilityNavigationSource<Configuration>,
     initialConfiguration: Maybe<Configuration>,
     childrenFactory: (configuration: Configuration, componentContext: UIComponentContext) -> Component,
-): KoneAsynchronousState<ChildrenPossibility<Configuration, Component>> =
+): KoneAsynchronousHub<ChildrenPossibility<Configuration, Component>> =
     uiChildrenToPossibility(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,

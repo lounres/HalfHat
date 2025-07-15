@@ -2,13 +2,12 @@ package dev.lounres.halfhat.client.components.navigation
 
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
-import dev.lounres.komponentual.navigation.ChildrenVariants
-import dev.lounres.komponentual.navigation.VariantsNavigation
+import dev.lounres.komponentual.navigation.VariantsNavigationSource
 import dev.lounres.kone.collections.set.KoneSet
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.relations.Equality
 import dev.lounres.kone.relations.Hashing
 import dev.lounres.kone.relations.Order
-import dev.lounres.kone.state.KoneAsynchronousState
 
 
 public actual suspend fun <Configuration, Component> UIComponentContext.uiChildrenDefaultVariants(
@@ -16,11 +15,11 @@ public actual suspend fun <Configuration, Component> UIComponentContext.uiChildr
     configurationHashing: Hashing<Configuration>?,
     configurationOrder: Order<Configuration>?,
     loggerSource: String?,
-    source: VariantsNavigation<Configuration>,
+    source: VariantsNavigationSource<Configuration>,
     allVariants: KoneSet<Configuration>,
     initialVariant: Configuration,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext) -> Component,
-): KoneAsynchronousState<ChildrenVariants<Configuration, Component>> =
+): KoneAsynchronousHub<ChildrenVariants<Configuration, Component>> =
     uiChildrenFromToVariants(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,

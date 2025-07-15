@@ -7,10 +7,10 @@ import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlot
 import dev.lounres.halfhat.client.common.ui.components.game.localGame.RealLocalGamePageComponent
 import dev.lounres.halfhat.client.common.ui.components.game.modeSelection.RealModeSelectionPageComponent
-import dev.lounres.komponentual.navigation.ChildrenSlot
-import dev.lounres.komponentual.navigation.MutableSlotNavigation
+import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
+import dev.lounres.komponentual.navigation.SlotNavigationHub
 import dev.lounres.komponentual.navigation.set
-import dev.lounres.kone.state.KoneAsynchronousState
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +19,7 @@ import kotlinx.serialization.Serializable
 
 
 public class RealGamePageComponent(
-    override val currentChild: KoneAsynchronousState<ChildrenSlot<*, GamePageComponent.Child>>,
+    override val currentChild: KoneAsynchronousHub<ChildrenSlot<*, GamePageComponent.Child>>,
 ): GamePageComponent {
     @Serializable
     public sealed interface Configuration {
@@ -41,8 +41,8 @@ public suspend fun RealGamePageComponent(
     volumeOn: StateFlow<Boolean>,
 ): RealGamePageComponent {
     
-    val slotNavigation = MutableSlotNavigation<RealGamePageComponent.Configuration>()
-    val currentChild: KoneAsynchronousState<ChildrenSlot<RealGamePageComponent.Configuration, GamePageComponent.Child>> =
+    val slotNavigation = SlotNavigationHub<RealGamePageComponent.Configuration>()
+    val currentChild: KoneAsynchronousHub<ChildrenSlot<RealGamePageComponent.Configuration, GamePageComponent.Child>> =
         componentContext.uiChildrenDefaultSlot(
             source = slotNavigation,
             initialConfiguration = RealGamePageComponent.Configuration.ModeSelection,

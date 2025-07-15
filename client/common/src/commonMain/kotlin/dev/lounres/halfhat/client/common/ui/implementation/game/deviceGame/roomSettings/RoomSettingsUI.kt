@@ -40,7 +40,6 @@ import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.roomSettings.RoomSettingsComponent
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.iterables.next
-import dev.lounres.kone.state.subscribeAsState
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.min
 

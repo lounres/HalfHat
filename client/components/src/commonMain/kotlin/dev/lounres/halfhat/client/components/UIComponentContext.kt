@@ -14,11 +14,11 @@ import dev.lounres.halfhat.client.components.lifecycle.logicChildDeferringOnRunn
 import dev.lounres.halfhat.client.components.lifecycle.mergeLogicAndUILifecyclesDeferringOnRunning
 import dev.lounres.halfhat.client.components.lifecycle.mergeUIComponentLifecyclesDeferring
 import dev.lounres.halfhat.client.components.logger.logger
+import dev.lounres.komponentual.lifecycle.subscribe
 import dev.lounres.kone.registry.Registry
 import dev.lounres.kone.registry.RegistryBuilder
 import dev.lounres.logKube.core.debug
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.coroutines.CoroutineContext

@@ -11,19 +11,17 @@ import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.gameScree
 import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.gameScreen.roundLastGuess.RealRoundLastGuessComponent
 import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.gameScreen.roundPreparation.RealRoundPreparationComponent
 import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.gameScreen.roundWaiting.RealRoundWaitingComponent
-import dev.lounres.halfhat.client.common.utils.runOnUiThread
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
+import dev.lounres.halfhat.client.components.navigation.ChildrenStack
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStack
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.komponentual.navigation.ChildrenStack
-import dev.lounres.komponentual.navigation.MutableStackNavigation
+import dev.lounres.komponentual.navigation.StackNavigationHub
 import dev.lounres.komponentual.navigation.replaceCurrent
 import dev.lounres.komponentual.navigation.updateCurrent
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
-import dev.lounres.kone.state.KoneAsynchronousState
-import dev.lounres.kone.state.KoneState
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +31,7 @@ import kotlinx.coroutines.launch
 
 public class RealGameScreenComponent(
     override val onExitOnlineGame: () -> Unit,
-    override val childStack: KoneAsynchronousState<ChildrenStack<*, GameScreenComponent.Child>>,
+    override val childStack: KoneAsynchronousHub<ChildrenStack<*, GameScreenComponent.Child>>,
 ) : GameScreenComponent {
     
     override val onCopyOnlineGameKey: () -> Unit = { TODO() }
@@ -81,9 +79,9 @@ public suspend fun RealGameScreenComponent(
     onUpdateExplanationResults: (KoneList<GameStateMachine.WordExplanation>) -> Unit,
     onConfirmExplanationResults: () -> Unit,
 ): RealGameScreenComponent {
-    val navigation = MutableStackNavigation<RealGameScreenComponent.Configuration>()
+    val navigation = StackNavigationHub<RealGameScreenComponent.Configuration>()
     
-    val childStack: KoneAsynchronousState<ChildrenStack<RealGameScreenComponent.Configuration, GameScreenComponent.Child>> =
+    val childStack: KoneAsynchronousHub<ChildrenStack<RealGameScreenComponent.Configuration, GameScreenComponent.Child>> =
         componentContext.uiChildrenDefaultStack(
             source = navigation,
             initialStack = KoneList.of(

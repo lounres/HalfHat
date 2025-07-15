@@ -19,7 +19,7 @@ import dev.lounres.halfhat.client.common.ui.implementation.game.onlineGame.Onlin
 import dev.lounres.halfhat.client.common.ui.implementation.game.timer.TimerPageActionsUI
 import dev.lounres.halfhat.client.common.ui.implementation.game.timer.TimerPageUI
 import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier
-import dev.lounres.kone.state.subscribeAsState
+import dev.lounres.kone.hub.subscribeAsState
 import org.jetbrains.compose.resources.painterResource
 
 

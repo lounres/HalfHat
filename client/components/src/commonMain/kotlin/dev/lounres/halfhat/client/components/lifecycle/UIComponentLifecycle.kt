@@ -5,8 +5,10 @@ import dev.lounres.komponentual.lifecycle.DeferredLifecycle
 import dev.lounres.komponentual.lifecycle.DelicateLifecycleAPI
 import dev.lounres.komponentual.lifecycle.Lifecycle
 import dev.lounres.komponentual.lifecycle.MutableLifecycle
+import dev.lounres.komponentual.lifecycle.buildSubscription
 import dev.lounres.komponentual.lifecycle.childDeferring
 import dev.lounres.komponentual.lifecycle.mergeDeferring
+import dev.lounres.komponentual.lifecycle.subscribe
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.registry.RegistryKey
 import dev.lounres.kone.registry.getOrElse
@@ -40,7 +42,8 @@ internal expect fun checkNextState(previousState: UIComponentLifecycleState, nex
 
 internal expect fun decomposeTransition(previousState: UIComponentLifecycleState, nextState: UIComponentLifecycleState): KoneList<UIComponentLifecycleTransition>
 
-public fun MutableUIComponentLifecycle(): MutableUIComponentLifecycle =
+// TODO: Rename
+public fun newMutableUIComponentLifecycle(): MutableUIComponentLifecycle =
     MutableLifecycle(
         initialState = UIComponentLifecycleState.Initialized,
         checkNextState = ::checkNextState,
@@ -76,8 +79,10 @@ internal fun Lifecycle.Companion.mergeUIComponentLifecyclesDeferring(
     )
 
 public fun CoroutineScope.attachTo(lifecycle: UIComponentLifecycle) {
-    val subscription = lifecycle.subscribe { if (it == UIComponentLifecycleTransition.Destroy) cancel() }
-    if (subscription.initialState == UIComponentLifecycleState.Destroyed) cancel()
+    lifecycle.buildSubscription {
+        if (it == UIComponentLifecycleState.Destroyed) cancel()
+        else subscribe { transition -> if (transition == UIComponentLifecycleTransition.Destroy) cancel() }
+    }
 }
 
 public fun UIComponentLifecycle.coroutineScope(context: CoroutineContext): CoroutineScope =

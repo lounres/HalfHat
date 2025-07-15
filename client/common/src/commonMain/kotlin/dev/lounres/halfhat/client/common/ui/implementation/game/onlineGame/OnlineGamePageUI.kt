@@ -23,7 +23,7 @@ import dev.lounres.halfhat.client.common.ui.implementation.game.onlineGame.gameS
 import dev.lounres.halfhat.client.common.ui.implementation.game.onlineGame.previewScreen.PreviewScreenActionsUI
 import dev.lounres.halfhat.client.common.ui.implementation.game.onlineGame.previewScreen.PreviewScreenUI
 import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier
-import dev.lounres.kone.state.subscribeAsState
+import dev.lounres.kone.hub.subscribeAsState
 import org.jetbrains.compose.resources.painterResource
 
 

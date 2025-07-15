@@ -19,9 +19,10 @@ import dev.lounres.halfhat.client.common.ui.components.settings.RealSettingsPage
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleKey
+import dev.lounres.halfhat.client.components.lifecycle.newMutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.logger.LoggerKey
-import dev.lounres.komponentual.navigation.ChildrenVariants
-import dev.lounres.komponentual.navigation.MutableVariantsNavigation
+import dev.lounres.halfhat.client.components.navigation.ChildrenVariants
+import dev.lounres.komponentual.navigation.VariantsNavigationHub
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.list.KoneList
@@ -30,9 +31,9 @@ import dev.lounres.kone.collections.map.get
 import dev.lounres.kone.collections.set.KoneSet
 import dev.lounres.kone.collections.set.build
 import dev.lounres.kone.collections.utils.map
-import dev.lounres.kone.state.KoneAsynchronousState
-import dev.lounres.kone.state.KoneMutableAsynchronousState
-import dev.lounres.kone.state.map
+import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.KoneMutableAsynchronousHub
+import dev.lounres.kone.hub.map
 import dev.lounres.logKube.core.DefaultCurrentPlatformLogWriter
 import dev.lounres.logKube.core.LogAcceptor
 import dev.lounres.logKube.core.Logger
@@ -48,10 +49,10 @@ class RealMainWindowComponent(
     override val volumeOn: MutableStateFlow<Boolean>,
     override val language: MutableStateFlow<Language>,
     
-    override val pageVariants: KoneAsynchronousState<ChildrenVariants<MainWindowComponent.Child.Kind, MainWindowComponent.Child>>,
+    override val pageVariants: KoneAsynchronousHub<ChildrenVariants<MainWindowComponent.Child.Kind, MainWindowComponent.Child>>,
     override val openPage: (page: MainWindowComponent.Child.Kind) -> Unit,
     
-    override val menuList: KoneAsynchronousState<KoneList<MainWindowComponent.MenuItem>>,
+    override val menuList: KoneAsynchronousHub<KoneList<MainWindowComponent.MenuItem>>,
 ): MainWindowComponent {
     
     sealed interface MenuItemByKind {
@@ -68,7 +69,7 @@ suspend fun RealMainWindowComponent(
     
     initialSelectedPage: MainWindowComponent.Child.Kind = MainWindowComponent.Child.Kind.Primary.Game /* TODO: Page.Primary.Home */,
 ): RealMainWindowComponent {
-    val globalLifecycle: MutableUIComponentLifecycle = MutableUIComponentLifecycle()
+    val globalLifecycle: MutableUIComponentLifecycle = newMutableUIComponentLifecycle()
     val globalComponentContext = UIComponentContext {
         UIComponentLifecycleKey correspondsTo globalLifecycle
         LoggerKey correspondsTo Logger(
@@ -76,7 +77,7 @@ suspend fun RealMainWindowComponent(
             LogAcceptor(DefaultCurrentPlatformLogWriter) { false },
         )
         DeviceGameWordsProviderRegistryKey correspondsTo DeviceGameWordsProviderRegistry
-        DeviceGameDefaultSettingsKey correspondsTo KoneMutableAsynchronousState(
+        DeviceGameDefaultSettingsKey correspondsTo KoneMutableAsynchronousHub(
             GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>(
                 preparationTimeSeconds = 3u,
                 explanationTimeSeconds = 20u,
@@ -93,9 +94,9 @@ suspend fun RealMainWindowComponent(
     val volumeOn: MutableStateFlow<Boolean> = MutableStateFlow(initialVolumeOn)
     val language: MutableStateFlow<Language> = MutableStateFlow(initialLanguage)
     
-    val pageVariantsNavigation = MutableVariantsNavigation<MainWindowComponent.Child.Kind>()
+    val pageVariantsNavigation = VariantsNavigationHub<MainWindowComponent.Child.Kind>()
     
-    val pageVariants: KoneAsynchronousState<ChildrenVariants<MainWindowComponent.Child.Kind, MainWindowComponent.Child>> =
+    val pageVariants: KoneAsynchronousHub<ChildrenVariants<MainWindowComponent.Child.Kind, MainWindowComponent.Child>> =
         globalComponentContext.uiChildrenDefaultVariants(
             source = pageVariantsNavigation,
             allVariants = KoneSet.build {
@@ -164,7 +165,7 @@ suspend fun RealMainWindowComponent(
         +RealMainWindowComponent.MenuItemByKind.Separator
         +MainWindowComponent.Child.Kind.Secondary.entries.toKoneList().map { RealMainWindowComponent.MenuItemByKind.Child(it) }
     }
-    val menuList: KoneAsynchronousState<KoneList<MainWindowComponent.MenuItem>> =
+    val menuList: KoneAsynchronousHub<KoneList<MainWindowComponent.MenuItem>> =
         pageVariants.map { childrenVariants ->
             menuListByKinds.map {
                 when (it) {
