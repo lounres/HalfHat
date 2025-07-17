@@ -9,8 +9,7 @@ import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.previewSc
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.buildLogicChildOnRunning
 import dev.lounres.halfhat.client.components.navigation.ChildrenStack
-import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStack
-import dev.lounres.komponentual.navigation.StackNavigationHub
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStackItem
 import dev.lounres.komponentual.navigation.replaceCurrent
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
@@ -43,13 +42,10 @@ public suspend fun RealOnlineGamePageComponent(
             RealOnlineGameComponent(it)
         }
     
-    val navigation = StackNavigationHub<RealOnlineGamePageComponent.Configuration>()
-    
-    val childStack: KoneAsynchronousHub<ChildrenStack<RealOnlineGamePageComponent.Configuration, OnlineGamePageComponent.Child>> =
-        componentContext.uiChildrenDefaultStack(
-            source = navigation,
+    val childStack =
+        componentContext.uiChildrenDefaultStackItem<RealOnlineGamePageComponent.Configuration, _>(
             initialStack = KoneList.of(RealOnlineGamePageComponent.Configuration.PreviewScreen),
-        ) { configuration: RealOnlineGamePageComponent.Configuration, componentContext: UIComponentContext ->
+        ) { configuration, componentContext, navigation ->
             when (configuration) {
                 RealOnlineGamePageComponent.Configuration.PreviewScreen ->
                     OnlineGamePageComponent.Child.PreviewScreen(
@@ -120,6 +116,6 @@ public suspend fun RealOnlineGamePageComponent(
     return RealOnlineGamePageComponent(
         onExitOnlineGameMode = onExitOnlineGameMode,
         onlineGameComponent = onlineGameComponent,
-        childStack = childStack,
+        childStack = childStack.hub,
     )
 }

@@ -4,11 +4,10 @@ import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.RealDevic
 import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.RealOnlineGamePageComponent
 import dev.lounres.halfhat.client.common.ui.components.game.timer.RealTimerPageComponent
 import dev.lounres.halfhat.client.components.UIComponentContext
-import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlot
 import dev.lounres.halfhat.client.common.ui.components.game.localGame.RealLocalGamePageComponent
 import dev.lounres.halfhat.client.common.ui.components.game.modeSelection.RealModeSelectionPageComponent
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
-import dev.lounres.komponentual.navigation.SlotNavigationHub
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotItem
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.hub.KoneAsynchronousHub
 import kotlinx.coroutines.CoroutineScope
@@ -41,12 +40,10 @@ public suspend fun RealGamePageComponent(
     volumeOn: StateFlow<Boolean>,
 ): RealGamePageComponent {
     
-    val slotNavigation = SlotNavigationHub<RealGamePageComponent.Configuration>()
-    val currentChild: KoneAsynchronousHub<ChildrenSlot<RealGamePageComponent.Configuration, GamePageComponent.Child>> =
-        componentContext.uiChildrenDefaultSlot(
-            source = slotNavigation,
+    val currentChild =
+        componentContext.uiChildrenDefaultSlotItem<RealGamePageComponent.Configuration, _>(
             initialConfiguration = RealGamePageComponent.Configuration.ModeSelection,
-        ) { configuration, componentContext ->
+        ) { configuration, componentContext, navigationTarget ->
             when (configuration) {
                 RealGamePageComponent.Configuration.ModeSelection ->
                     GamePageComponent.Child.ModeSelection(
@@ -54,22 +51,22 @@ public suspend fun RealGamePageComponent(
                             componentContext = componentContext,
                             onOnlineGameSelect = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    slotNavigation.set(RealGamePageComponent.Configuration.OnlineGame)
+                                    navigationTarget.set(RealGamePageComponent.Configuration.OnlineGame)
                                 }
                             },
                             onLocalGameSelect = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    slotNavigation.set(RealGamePageComponent.Configuration.LocalGame)
+                                    navigationTarget.set(RealGamePageComponent.Configuration.LocalGame)
                                 }
                             },
                             onDeviceGameSelect = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    slotNavigation.set(RealGamePageComponent.Configuration.DeviceGame)
+                                    navigationTarget.set(RealGamePageComponent.Configuration.DeviceGame)
                                 }
                             },
                             onGameTimerSelect = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    slotNavigation.set(RealGamePageComponent.Configuration.GameTimer)
+                                    navigationTarget.set(RealGamePageComponent.Configuration.GameTimer)
                                 }
                             },
                         )
@@ -80,7 +77,7 @@ public suspend fun RealGamePageComponent(
                             componentContext = componentContext,
                             onExitOnlineGameMode = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    slotNavigation.set(RealGamePageComponent.Configuration.ModeSelection)
+                                    navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
                                 }
                             },
                         )
@@ -90,7 +87,7 @@ public suspend fun RealGamePageComponent(
                         RealLocalGamePageComponent(
                             onExitLocalGame = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    slotNavigation.set(RealGamePageComponent.Configuration.ModeSelection)
+                                    navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
                                 }
                             }
                         )
@@ -102,7 +99,7 @@ public suspend fun RealGamePageComponent(
                             volumeOn = volumeOn,
                             onExitDeviceGame = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    slotNavigation.set(RealGamePageComponent.Configuration.ModeSelection)
+                                    navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
                                 }
                             },
                         )
@@ -113,7 +110,7 @@ public suspend fun RealGamePageComponent(
                             componentContext = componentContext,
                             onExitTimer = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    slotNavigation.set(RealGamePageComponent.Configuration.ModeSelection)
+                                    navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
                                 }
                             },
                             volumeOn = volumeOn,
@@ -127,6 +124,6 @@ public suspend fun RealGamePageComponent(
         }
     
     return RealGamePageComponent(
-        currentChild = currentChild,
+        currentChild = currentChild.hub,
     )
 }

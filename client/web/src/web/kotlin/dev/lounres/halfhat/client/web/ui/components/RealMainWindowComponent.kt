@@ -6,7 +6,6 @@ import dev.lounres.halfhat.client.common.logic.wordsProviders.DeviceGameWordsPro
 import dev.lounres.halfhat.client.common.logic.wordsProviders.DeviceGameWordsProviderRegistry
 import dev.lounres.halfhat.client.common.logic.wordsProviders.DeviceGameWordsProviderRegistryKey
 import dev.lounres.halfhat.client.components.UIComponentContext
-import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariants
 import dev.lounres.halfhat.client.common.ui.components.about.RealAboutPageComponent
 import dev.lounres.halfhat.client.common.ui.components.faq.RealFAQPageComponent
 import dev.lounres.halfhat.client.common.ui.components.feedback.RealFeedbackPageComponent
@@ -22,6 +21,7 @@ import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleKey
 import dev.lounres.halfhat.client.components.lifecycle.newMutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.logger.LoggerKey
 import dev.lounres.halfhat.client.components.navigation.ChildrenVariants
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariantsItem
 import dev.lounres.komponentual.navigation.VariantsNavigationHub
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.collections.interop.toKoneList
@@ -94,17 +94,14 @@ suspend fun RealMainWindowComponent(
     val volumeOn: MutableStateFlow<Boolean> = MutableStateFlow(initialVolumeOn)
     val language: MutableStateFlow<Language> = MutableStateFlow(initialLanguage)
     
-    val pageVariantsNavigation = VariantsNavigationHub<MainWindowComponent.Child.Kind>()
-    
-    val pageVariants: KoneAsynchronousHub<ChildrenVariants<MainWindowComponent.Child.Kind, MainWindowComponent.Child>> =
-        globalComponentContext.uiChildrenDefaultVariants(
-            source = pageVariantsNavigation,
+    val pageVariants =
+        globalComponentContext.uiChildrenDefaultVariantsItem(
             allVariants = KoneSet.build {
                 +MainWindowComponent.Child.Kind.Primary.entries.toKoneList()
                 +MainWindowComponent.Child.Kind.Secondary.entries.toKoneList()
             },
             initialVariant = initialSelectedPage,
-        ) { configuration, componentContext ->
+        ) { configuration, componentContext, navigation ->
             when (configuration) {
                 MainWindowComponent.Child.Kind.Primary.Home ->
                     MainWindowComponent.Child.Primary.Home(
@@ -130,7 +127,7 @@ suspend fun RealMainWindowComponent(
                         RealFAQPageComponent(
                             onFeedbackLinkClick = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    pageVariantsNavigation.set(MainWindowComponent.Child.Kind.Secondary.FAQ)
+                                    navigation.set(MainWindowComponent.Child.Kind.Secondary.FAQ)
                                 }
                             }
                         )
@@ -156,7 +153,7 @@ suspend fun RealMainWindowComponent(
     
     val openPage: (page: MainWindowComponent.Child.Kind) -> Unit = { page ->
         CoroutineScope(Dispatchers.Default).launch {
-            pageVariantsNavigation.set(page)
+            pageVariants.set(page)
         }
     }
     
@@ -166,7 +163,7 @@ suspend fun RealMainWindowComponent(
         +MainWindowComponent.Child.Kind.Secondary.entries.toKoneList().map { RealMainWindowComponent.MenuItemByKind.Child(it) }
     }
     val menuList: KoneAsynchronousHub<KoneList<MainWindowComponent.MenuItem>> =
-        pageVariants.map { childrenVariants ->
+        pageVariants.hub.map { childrenVariants ->
             menuListByKinds.map {
                 when (it) {
                     is RealMainWindowComponent.MenuItemByKind.Child -> MainWindowComponent.MenuItem.Child(childrenVariants.allVariants[it.child])
@@ -181,7 +178,7 @@ suspend fun RealMainWindowComponent(
         volumeOn = volumeOn,
         language = language,
         
-        pageVariants = pageVariants,
+        pageVariants = pageVariants.hub,
         openPage = openPage,
         
         menuList = menuList,

@@ -9,9 +9,8 @@ import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.roomScree
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.roomSettings.RealRoomSettingsComponent
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.navigation.ChildrenStack
-import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStack
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStackItem
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.komponentual.navigation.StackNavigationHub
 import dev.lounres.komponentual.navigation.replaceCurrent
 import dev.lounres.kone.collections.iterables.isNotEmpty
 import dev.lounres.kone.collections.list.KoneList
@@ -49,15 +48,12 @@ public suspend fun RealDeviceGamePageComponent(
     val playersList: MutableStateFlow<KoneList<Player>> = MutableStateFlow(KoneList.of(Player(""), Player(""))) // TODO: Hardcoded settings!!!
     val settingsBuilderState: MutableStateFlow<GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>> = MutableStateFlow(componentContext.deviceGameDefaultSettings.value)
     
-    val navigation = StackNavigationHub<RealDeviceGamePageComponent.Configuration>()
-    
     val possibleWordsSources = componentContext.deviceGameWordsProviderRegistry.list()
     
-    val childStack: KoneAsynchronousHub<ChildrenStack<RealDeviceGamePageComponent.Configuration, DeviceGamePageComponent.Child>> =
-        componentContext.uiChildrenDefaultStack(
-            source = navigation,
+    val childStack =
+        componentContext.uiChildrenDefaultStackItem<RealDeviceGamePageComponent.Configuration, _>(
             initialStack = KoneList.of(RealDeviceGamePageComponent.Configuration.RoomScreen),
-        ) { configuration: RealDeviceGamePageComponent.Configuration, componentContext: UIComponentContext ->
+        ) { configuration, componentContext, navigationTarget ->
             when (configuration) {
                 is RealDeviceGamePageComponent.Configuration.RoomScreen -> {
                     val showErrorForPlayers = MutableStateFlow(KoneSet.empty<Player>())
@@ -66,7 +62,7 @@ public suspend fun RealDeviceGamePageComponent(
                             onExitDeviceGame = onExitDeviceGame,
                             onOpenGameSettings = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigation.replaceCurrent(RealDeviceGamePageComponent.Configuration.RoomSettings)
+                                    navigationTarget.replaceCurrent(RealDeviceGamePageComponent.Configuration.RoomSettings)
                                 }
                             },
                             onStartGame = onStartGame@{
@@ -94,7 +90,7 @@ public suspend fun RealDeviceGamePageComponent(
                                 }
                                 
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigation.replaceCurrent(
+                                    navigationTarget.replaceCurrent(
                                         RealDeviceGamePageComponent.Configuration.GameScreen
                                     )
                                 }
@@ -112,7 +108,7 @@ public suspend fun RealDeviceGamePageComponent(
                             onUpdateSettingsBuilder = { settingsBuilderState.value = it },
                             onExitSettings = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigation.replaceCurrent(RealDeviceGamePageComponent.Configuration.RoomScreen)
+                                    navigationTarget.replaceCurrent(RealDeviceGamePageComponent.Configuration.RoomScreen)
                                 }
                             },
                         )
@@ -126,7 +122,7 @@ public suspend fun RealDeviceGamePageComponent(
                             settingsBuilder = settingsBuilderState.value,
                             onExitGame = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigation.replaceCurrent(RealDeviceGamePageComponent.Configuration.RoomScreen)
+                                    navigationTarget.replaceCurrent(RealDeviceGamePageComponent.Configuration.RoomScreen)
                                 }
                             },
                         )
@@ -135,6 +131,6 @@ public suspend fun RealDeviceGamePageComponent(
         }
     
     return RealDeviceGamePageComponent(
-        childStack = childStack,
+        childStack = childStack.hub,
     )
 }

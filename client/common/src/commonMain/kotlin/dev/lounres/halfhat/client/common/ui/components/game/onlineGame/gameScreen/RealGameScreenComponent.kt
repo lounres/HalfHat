@@ -13,14 +13,11 @@ import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.gameScree
 import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.gameScreen.roundWaiting.RealRoundWaitingComponent
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
-import dev.lounres.halfhat.client.components.navigation.ChildrenStack
-import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStack
+import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotItem
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.komponentual.navigation.StackNavigationHub
-import dev.lounres.komponentual.navigation.replaceCurrent
-import dev.lounres.komponentual.navigation.updateCurrent
+import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.collections.list.KoneList
-import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.hub.KoneAsynchronousHub
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,11 +28,11 @@ import kotlinx.coroutines.launch
 
 public class RealGameScreenComponent(
     override val onExitOnlineGame: () -> Unit,
-    override val childStack: KoneAsynchronousHub<ChildrenStack<*, GameScreenComponent.Child>>,
+    override val childSlot: KoneAsynchronousHub<ChildrenSlot<*, GameScreenComponent.Child>>,
 ) : GameScreenComponent {
     
-    override val onCopyOnlineGameKey: () -> Unit = { TODO() }
-    override val onCopyOnlineGameLink: () -> Unit = { TODO() }
+    override val onCopyOnlineGameKey: () -> Unit = { /*TODO()*/ }
+    override val onCopyOnlineGameLink: () -> Unit = { /*TODO()*/ }
 
     public sealed interface Configuration {
         public data object Loading : Configuration
@@ -79,24 +76,20 @@ public suspend fun RealGameScreenComponent(
     onUpdateExplanationResults: (KoneList<GameStateMachine.WordExplanation>) -> Unit,
     onConfirmExplanationResults: () -> Unit,
 ): RealGameScreenComponent {
-    val navigation = StackNavigationHub<RealGameScreenComponent.Configuration>()
     
-    val childStack: KoneAsynchronousHub<ChildrenStack<RealGameScreenComponent.Configuration, GameScreenComponent.Child>> =
-        componentContext.uiChildrenDefaultStack(
-            source = navigation,
-            initialStack = KoneList.of(
-                when(val gameState = gameStateFlow.value) {
-                    null -> RealGameScreenComponent.Configuration.Loading
-                    is ServerApi.OnlineGame.State.GameInitialisation -> RealGameScreenComponent.Configuration.RoomScreen(MutableStateFlow(gameState))
-                    is ServerApi.OnlineGame.State.RoundWaiting -> RealGameScreenComponent.Configuration.RoundWaiting(MutableStateFlow(gameState))
-                    is ServerApi.OnlineGame.State.RoundPreparation -> RealGameScreenComponent.Configuration.RoundPreparation(MutableStateFlow(gameState))
-                    is ServerApi.OnlineGame.State.RoundExplanation -> RealGameScreenComponent.Configuration.RoundExplanation(MutableStateFlow(gameState))
-                    is ServerApi.OnlineGame.State.RoundLastGuess -> RealGameScreenComponent.Configuration.RoundLastGuess(MutableStateFlow(gameState))
-                    is ServerApi.OnlineGame.State.RoundEditing -> RealGameScreenComponent.Configuration.RoundEditing(MutableStateFlow(gameState))
-                    is ServerApi.OnlineGame.State.GameResults -> RealGameScreenComponent.Configuration.GameResults(MutableStateFlow(gameState))
-                }
-            ),
-        ) { configuration, _ ->
+    val childSlot =
+        componentContext.uiChildrenDefaultSlotItem(
+            initialConfiguration = when(val gameState = gameStateFlow.value) {
+                null -> RealGameScreenComponent.Configuration.Loading
+                is ServerApi.OnlineGame.State.GameInitialisation -> RealGameScreenComponent.Configuration.RoomScreen(MutableStateFlow(gameState))
+                is ServerApi.OnlineGame.State.RoundWaiting -> RealGameScreenComponent.Configuration.RoundWaiting(MutableStateFlow(gameState))
+                is ServerApi.OnlineGame.State.RoundPreparation -> RealGameScreenComponent.Configuration.RoundPreparation(MutableStateFlow(gameState))
+                is ServerApi.OnlineGame.State.RoundExplanation -> RealGameScreenComponent.Configuration.RoundExplanation(MutableStateFlow(gameState))
+                is ServerApi.OnlineGame.State.RoundLastGuess -> RealGameScreenComponent.Configuration.RoundLastGuess(MutableStateFlow(gameState))
+                is ServerApi.OnlineGame.State.RoundEditing -> RealGameScreenComponent.Configuration.RoundEditing(MutableStateFlow(gameState))
+                is ServerApi.OnlineGame.State.GameResults -> RealGameScreenComponent.Configuration.GameResults(MutableStateFlow(gameState))
+            },
+        ) { configuration, _, navigation ->
             when(configuration) {
                 RealGameScreenComponent.Configuration.Loading ->
                     GameScreenComponent.Child.Loading(
@@ -110,7 +103,7 @@ public suspend fun RealGameScreenComponent(
                             
                             onOpenGameSettings = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigation.replaceCurrent(
+                                    navigation.set(
                                         RealGameScreenComponent.Configuration.RoomSettings(
                                             configuration.stateFlow
                                         )
@@ -126,7 +119,7 @@ public suspend fun RealGameScreenComponent(
                             onApplySettings = {
                                 onApplySettings(it)
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigation.replaceCurrent(
+                                    navigation.set(
                                         RealGameScreenComponent.Configuration.RoomScreen(
                                             configuration.stateFlow
                                         )
@@ -135,7 +128,7 @@ public suspend fun RealGameScreenComponent(
                             },
                             onDiscardSettings = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigation.replaceCurrent(
+                                    navigation.set(
                                         RealGameScreenComponent.Configuration.RoomScreen(
                                             configuration.stateFlow
                                         )
@@ -206,7 +199,7 @@ public suspend fun RealGameScreenComponent(
     
     componentContext.coroutineScope(Dispatchers.Default).launch {
         gameStateFlow.collect { newState ->
-            navigation.updateCurrent { currentConfiguration ->
+            childSlot.navigate { currentConfiguration ->
                 when (newState) {
                     null -> RealGameScreenComponent.Configuration.Loading
                     is ServerApi.OnlineGame.State.GameInitialisation ->
@@ -290,6 +283,6 @@ public suspend fun RealGameScreenComponent(
     
     return RealGameScreenComponent(
         onExitOnlineGame = onExitOnlineGame,
-        childStack = childStack,
+        childSlot = childSlot.hub,
     )
 }

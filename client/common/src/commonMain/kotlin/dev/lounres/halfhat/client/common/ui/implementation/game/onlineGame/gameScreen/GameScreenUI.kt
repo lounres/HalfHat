@@ -50,7 +50,7 @@ import org.jetbrains.compose.resources.painterResource
 public fun RowScope.GameScreenActionsUI(
     component: GameScreenComponent
 ) {
-    when (val child = component.childStack.subscribeAsState().value.active.component) {
+    when (val child = component.childSlot.subscribeAsState().value.component) {
         is GameScreenComponent.Child.Loading -> LoadingActionsUI(child.component)
         is GameScreenComponent.Child.RoomScreen -> RoomScreenActionsUI(child.component)
         is GameScreenComponent.Child.RoomSettings -> RoomSettingsActionsUI(child.component)
@@ -67,7 +67,7 @@ public fun RowScope.GameScreenActionsUI(
 public fun ColumnScope.GameScreenUI(
     component: GameScreenComponent
 ) {
-    val child = component.childStack.subscribeAsState().value.active.component
+    val child = component.childSlot.subscribeAsState().value.component
     Column(
         modifier = Modifier.fillMaxWidth().weight(1f),
     ) {

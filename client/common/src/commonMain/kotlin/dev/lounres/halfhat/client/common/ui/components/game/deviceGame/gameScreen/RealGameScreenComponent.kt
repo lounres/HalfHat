@@ -6,7 +6,6 @@ import dev.lounres.halfhat.client.common.logic.wordsProviders.deviceGameWordsPro
 import dev.lounres.halfhat.client.common.utils.DefaultSounds
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
-import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlot
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.gameResults.RealGameResultsComponent
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.loading.RealLoadingComponent
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.roundEditing.RealRoundEditingComponent
@@ -17,6 +16,7 @@ import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScree
 import dev.lounres.halfhat.client.common.utils.play
 import dev.lounres.halfhat.client.components.logger.logger
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotItem
 import dev.lounres.halfhat.logic.gameStateMachine.*
 import dev.lounres.komponentual.navigation.SlotNavigationHub
 import dev.lounres.kone.automata.CheckResult
@@ -76,7 +76,7 @@ public suspend fun RealGameScreenComponent(
 ): RealGameScreenComponent {
     val logger = componentContext.logger
     val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
-    val navigation = SlotNavigationHub<RealGameScreenComponent.Configuration>()
+    val intermediateNavigation = SlotNavigationHub<RealGameScreenComponent.Configuration>()
     
     val gameStateMachine = AsynchronousGameStateMachine.Initialization<String, DeviceGameWordsProviderID, NoDeviceGameWordsProviderReason, Nothing?, Nothing?, Nothing?>(
         metadata = null,
@@ -231,7 +231,7 @@ public suspend fun RealGameScreenComponent(
                     is GameStateMachine.State.GameResults -> {}
                 }
         }
-        navigation.navigate { currentConfiguration ->
+        intermediateNavigation.navigate { currentConfiguration ->
             when (newState) {
                 is GameStateMachine.State.GameInitialisation ->
                     RealGameScreenComponent.Configuration.GameInitialisation
@@ -332,10 +332,9 @@ public suspend fun RealGameScreenComponent(
         wordsProviderRegistry = componentContext.deviceGameWordsProviderRegistry,
     )
     
-    val childSlot: KoneAsynchronousHub<ChildrenSlot<RealGameScreenComponent.Configuration, GameScreenComponent.Child>> =
-        componentContext.uiChildrenDefaultSlot(
+    val childSlot =
+        componentContext.uiChildrenDefaultSlotItem(
             loggerSource = "dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
-            source = navigation,
             initialConfiguration = when(val state = gameStateMachine.state) {
                 is GameStateMachine.State.GameInitialisation<*, *, *> ->
                     RealGameScreenComponent.Configuration.GameInitialisation
@@ -373,7 +372,7 @@ public suspend fun RealGameScreenComponent(
                         results = MutableStateFlow(state.personalResults),
                     )
             },
-        ) { configuration, _ ->
+        ) { configuration, _, _ ->
             when(configuration) {
                 RealGameScreenComponent.Configuration.GameInitialisation ->
                     GameScreenComponent.Child.Loading(
@@ -650,8 +649,10 @@ public suspend fun RealGameScreenComponent(
             }
         }
     
+    intermediateNavigation.subscribe { childSlot.navigate(it) }
+    
     return RealGameScreenComponent(
         onExitGame = onExitGame,
-        childSlot = childSlot,
+        childSlot = childSlot.hub,
     )
 }

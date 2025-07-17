@@ -2,8 +2,8 @@ package dev.lounres.halfhat.client.common.ui.components.game.modeSelection
 
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.navigation.ChildrenPossibility
-import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultPossibility
-import dev.lounres.komponentual.navigation.PossibilityNavigationHub
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultPossibilityItem
+import dev.lounres.komponentual.navigation.PossibilityNavigationTarget
 import dev.lounres.komponentual.navigation.clear
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.hub.KoneAsynchronousHub
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 
 
 public class RealModeSelectionPageComponent(
-    private val infoPopupNavigation: PossibilityNavigationHub<ModeSelectionPageComponent.InfoPopup>,
+    private val infoPopupNavigation: PossibilityNavigationTarget<ModeSelectionPageComponent.InfoPopup>,
     
     override val infoPopup: KoneAsynchronousHub<ChildrenPossibility<*, ModeSelectionPageComponent.InfoPopup>>,
     
@@ -60,17 +60,14 @@ public suspend fun RealModeSelectionPageComponent(
     onGameTimerSelect: () -> Unit,
 ): RealModeSelectionPageComponent {
     
-    val infoPopupNavigation = PossibilityNavigationHub<ModeSelectionPageComponent.InfoPopup>()
-    
-    val infoPopup: KoneAsynchronousHub<ChildrenPossibility<ModeSelectionPageComponent.InfoPopup, ModeSelectionPageComponent.InfoPopup>> =
-        componentContext.uiChildrenDefaultPossibility(
-            source = infoPopupNavigation,
+    val infoPopup =
+        componentContext.uiChildrenDefaultPossibilityItem<ModeSelectionPageComponent.InfoPopup, _>(
             initialConfiguration = None,
-        ) { configuration, _ -> configuration }
+        ) { configuration, _, _ -> configuration }
     
     return RealModeSelectionPageComponent(
-        infoPopupNavigation = infoPopupNavigation,
-        infoPopup = infoPopup,
+        infoPopupNavigation = infoPopup,
+        infoPopup = infoPopup.hub,
         
         onOnlineGameSelect = onOnlineGameSelect,
         onLocalGameSelect = onLocalGameSelect,

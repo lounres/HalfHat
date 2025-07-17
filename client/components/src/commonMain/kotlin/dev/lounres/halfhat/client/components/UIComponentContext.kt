@@ -14,6 +14,7 @@ import dev.lounres.halfhat.client.components.lifecycle.logicChildDeferringOnRunn
 import dev.lounres.halfhat.client.components.lifecycle.mergeLogicAndUILifecyclesDeferringOnRunning
 import dev.lounres.halfhat.client.components.lifecycle.mergeUIComponentLifecyclesDeferring
 import dev.lounres.halfhat.client.components.logger.logger
+import dev.lounres.halfhat.client.components.navigation.controller.NavigationNodeController
 import dev.lounres.komponentual.lifecycle.subscribe
 import dev.lounres.kone.registry.Registry
 import dev.lounres.kone.registry.RegistryBuilder
@@ -41,6 +42,7 @@ public fun UIComponentContext.coroutineScope(context: CoroutineContext): Corouti
 @PublishedApi
 internal fun UIComponentContext.uiChildDeferring(
     controllingLifecycle: UIComponentLifecycle? = null,
+    navigationNodeController: NavigationNodeController? = null,
 ): UIComponentContext =
     UIComponentContext {
         val base = this@uiChildDeferring
@@ -64,14 +66,29 @@ internal fun UIComponentContext.uiChildDeferring(
                 }
             ) { "Lifecycle transition in progress" }
         }
+        
+        if (navigationNodeController != null) NavigationNodeController correspondsTo navigationNodeController
+        else remove(NavigationNodeController)
     }
 
+//@OptIn(DelicateLifecycleAPI::class)
+//public suspend inline fun <Result> UIComponentContext.buildUiChild(
+//    controllingLifecycle: UIComponentLifecycle? = null,
+//    provider: (UIComponentContext) -> Result,
+//): Result {
+//    val childContext = uiChildDeferring(controllingLifecycle)
+//    val result = provider(childContext)
+//    childContext.launch()
+//    return result
+//}
+
 @OptIn(DelicateLifecycleAPI::class)
-public suspend inline fun <Result> UIComponentContext.buildUiChild(
+internal suspend inline fun <Result> UIComponentContext.buildUiChild(
     controllingLifecycle: UIComponentLifecycle? = null,
+    navigationNodeController: NavigationNodeController? = null,
     provider: (UIComponentContext) -> Result,
 ): Result {
-    val childContext = uiChildDeferring(controllingLifecycle)
+    val childContext = uiChildDeferring(controllingLifecycle, navigationNodeController)
     val result = provider(childContext)
     childContext.launch()
     return result

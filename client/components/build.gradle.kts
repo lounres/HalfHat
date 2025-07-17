@@ -1,15 +1,13 @@
 plugins {
 //    alias(versions.plugins.android.library)
-//    alias(versions.plugins.kotlinx.serialization)
-    // FIXME: Remove the plugins
-    alias(versions.plugins.kotlin.compose)
-    alias(versions.plugins.compose.multiplatform)
+    alias(versions.plugins.kotlinx.serialization)
 }
 
 kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                implementation(versions.kone.util.misc)
                 api(versions.kone.collections)
                 api(versions.kone.state)
                 api(versions.kone.typeSafeRegistry)
@@ -24,9 +22,8 @@ kotlin {
                 // Coroutines
                 api(versions.kotlinx.coroutines.core)
                 
-                // FIXME: Remove the dependencies
-                // Compose
-                api(compose.runtime)
+                // Serialization
+                implementation(versions.kotlinx.serialization.json)
             }
         }
 
