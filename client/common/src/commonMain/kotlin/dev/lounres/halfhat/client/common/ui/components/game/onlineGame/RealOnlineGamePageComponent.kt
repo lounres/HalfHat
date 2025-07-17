@@ -8,14 +8,21 @@ import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.gameScree
 import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.previewScreen.RealPreviewScreenComponent
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.buildLogicChildOnRunning
+import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.navigation.ChildrenStack
+import dev.lounres.halfhat.client.components.navigation.controller.navigationContext
+import dev.lounres.halfhat.client.components.navigation.controller.navigationController
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStackItem
 import dev.lounres.komponentual.navigation.replaceCurrent
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.KoneMutableAsynchronousHub
+import dev.lounres.kone.hub.set
+import dev.lounres.kone.hub.subscribe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -37,10 +44,28 @@ public suspend fun RealOnlineGamePageComponent(
     componentContext: UIComponentContext,
     onExitOnlineGameMode: () -> Unit,
 ): RealOnlineGamePageComponent {
+    val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
     val onlineGameComponent: OnlineGameComponent =
         componentContext.buildLogicChildOnRunning {
             RealOnlineGameComponent(it)
         }
+    
+    val navigationController = componentContext.navigationController
+    
+    val currentRoomSearchEntry = KoneMutableAsynchronousHub("")
+    coroutineScope.launch {
+        onlineGameComponent.freeRoomIdFlow.collect {
+            currentRoomSearchEntry.set(it)
+        }
+    }
+    if (navigationController != null) {
+        currentRoomSearchEntry.subscribe {
+            navigationController.configuration = it
+        }
+        navigationController.restoration = {
+            currentRoomSearchEntry.set(it)
+        }
+    }
     
     val childStack =
         componentContext.uiChildrenDefaultStackItem<RealOnlineGamePageComponent.Configuration, _>(
@@ -51,8 +76,8 @@ public suspend fun RealOnlineGamePageComponent(
                     OnlineGamePageComponent.Child.PreviewScreen(
                         RealPreviewScreenComponent(
                             componentContext = componentContext,
+                            currentRoomSearchEntry = currentRoomSearchEntry,
                             onFetchFreeRoomId = { onlineGameComponent.sendSignal(ClientApi.Signal.FetchFreeRoomId) },
-                            freeRoomIdFlow = onlineGameComponent.freeRoomIdFlow,
                             onFetchRoomInfo = { onlineGameComponent.sendSignal(ClientApi.Signal.FetchRoomInfo(it)) },
                             roomDescriptionFlow = onlineGameComponent.roomDescriptionFlow,
                             onEnterRoom = { roomId, playerName ->
@@ -112,6 +137,8 @@ public suspend fun RealOnlineGamePageComponent(
                     )
             }
         }
+    
+    componentContext.navigationContext
     
     return RealOnlineGamePageComponent(
         onExitOnlineGameMode = onExitOnlineGameMode,

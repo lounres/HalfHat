@@ -23,7 +23,7 @@ kotlin {
                 api(versions.kotlinx.coroutines.core)
                 
                 // Serialization
-                implementation(versions.kotlinx.serialization.json)
+                implementation(versions.kotlinx.serialization.core)
             }
         }
 

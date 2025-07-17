@@ -16,6 +16,7 @@ import dev.lounres.halfhat.client.common.resources.Res
 import dev.lounres.halfhat.client.common.resources.enterOnlineRoomButton_dark_png_24dp
 import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.previewScreen.PreviewScreenComponent
 import dev.lounres.kone.collections.iterables.next
+import dev.lounres.kone.hub.subscribeAsState
 import org.jetbrains.compose.resources.painterResource
 
 
@@ -38,7 +39,7 @@ public fun ColumnScope.PreviewScreenUI(
     ) {
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
-            value = component.currentRoomSearchEntry.collectAsState().value,
+            value = component.currentRoomSearchEntry.subscribeAsState().value,
             onValueChange = component.onChangeRoomSearchEntry,
             label = {
                 Text(

@@ -1,5 +1,6 @@
 package dev.lounres.halfhat.client.components.navigation.controller
 
+import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.kone.castOrNull
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.list.KoneList
@@ -14,13 +15,16 @@ import dev.lounres.kone.collections.map.iterator
 import dev.lounres.kone.collections.map.mapValuesReified
 import dev.lounres.kone.collections.map.mapsTo
 import dev.lounres.kone.collections.map.of
+import dev.lounres.kone.registry.Registry
 import dev.lounres.kone.registry.RegistryBuilder
 import dev.lounres.kone.registry.RegistryKey
+import dev.lounres.kone.registry.getOrNull
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.StringFormat
 
 
 @Serializable
@@ -88,10 +92,10 @@ public class NavigationNodeController {
             is Items.Multiple -> NavigationNode.Multidirectional(configuration, items.items.mapValuesReified { it.value.state })
         }
     
-    public companion object : RegistryKey<NavigationNodeController>
+    internal companion object : RegistryKey<NavigationNodeController>
     
     internal suspend fun restore(state: NavigationNode) {
-        val controller = this
+        val items = items
         
         val newConfiguration = state.configuration
         if (newConfiguration != null) this.restoration?.invoke(newConfiguration)
@@ -99,8 +103,8 @@ public class NavigationNodeController {
         coroutineScope {
             when (state) {
                 is NavigationNode.Undirectional -> {}
-                is NavigationNode.Unidirectional -> launch { controller.items.castOrNull<Items.Sole>()?.item?.restore(state.item) }
-                is NavigationNode.Multidirectional -> controller.items.castOrNull<Items.Multiple>()?.items?.let {
+                is NavigationNode.Unidirectional -> items.castOrNull<Items.Sole>()?.item?.let { launch { it.restore(state.item) } }
+                is NavigationNode.Multidirectional -> items.castOrNull<Items.Multiple>()?.items?.let {
                     for ((configuration, navigationItem) in state.items) launch {
                         it.getOrNull(configuration)?.restore(navigationItem)
                     }
@@ -109,6 +113,8 @@ public class NavigationNodeController {
         }
     }
 }
+
+public val UIComponentContext.navigationController: NavigationNodeController? get() = this.getOrNull(NavigationNodeController)
 
 internal class NavigationItemController {
     var configuration: String? = null
@@ -142,10 +148,15 @@ public abstract class NavigationContext internal constructor(
     public companion object : RegistryKey<NavigationContext>
 }
 
-public suspend inline fun NavigationContext.updateAndStore(block: () -> Unit) {
+public val Registry.navigationContext: NavigationContext get() = this[NavigationContext]
+
+public suspend inline fun NavigationContext.doStoringNavigation(block: () -> Unit) {
     mutex.withLock {
-        block()
-        store()
+        try {
+            block()
+        } finally {
+            store()
+        }
     }
 }
 
@@ -162,9 +173,23 @@ public class NavigationRoot(
             onStore(history)
         }
     }
+    public suspend fun init() {
+        context.store()
+    }
+    public suspend fun navigate(node: NavigationNode) {
+        mutex.withLock {
+            controller.restore(node)
+        }
+    }
 }
 
-public fun RegistryBuilder.setUpNavigationRoot(navigationRoot: NavigationRoot) {
+public data object NavigationControllerStringFormatKey : RegistryKey<StringFormat>
+
+public fun RegistryBuilder.setUpNavigationControl(
+    navigationRoot: NavigationRoot,
+    stringFormat: StringFormat,
+) {
     NavigationNodeController correspondsTo navigationRoot.controller
     NavigationContext correspondsTo navigationRoot.context
+    NavigationControllerStringFormatKey correspondsTo stringFormat
 }

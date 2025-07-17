@@ -31,6 +31,9 @@ kotlin {
                 implementation(versions.ktor.client.cio)
                 runtimeOnly(versions.logback.classic)
                 
+                // Serialization
+                implementation(versions.kotlinx.serialization.json)
+                
                 // SQLDelight
                 implementation(libs.sqldelight.driver.sqlite.jvm)
                 implementation(libs.sqldelight.async.extensions)

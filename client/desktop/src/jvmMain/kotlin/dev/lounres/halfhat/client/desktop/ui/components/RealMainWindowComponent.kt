@@ -22,8 +22,12 @@ import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleKey
 import dev.lounres.halfhat.client.components.lifecycle.newMutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.logger.LoggerKey
 import dev.lounres.halfhat.client.components.navigation.ChildrenVariants
+import dev.lounres.halfhat.client.components.navigation.NavigationControllerSpec
+import dev.lounres.halfhat.client.components.navigation.controller.NavigationRoot
+import dev.lounres.halfhat.client.components.navigation.controller.navigationContext
+import dev.lounres.halfhat.client.components.navigation.controller.setUpNavigationControl
+import dev.lounres.halfhat.client.components.navigation.controller.doStoringNavigation
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariantsItem
-import dev.lounres.komponentual.navigation.VariantsNavigationHub
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.list.KoneList
@@ -42,6 +46,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 
 
 class RealMainWindowComponent(
@@ -77,6 +82,7 @@ suspend fun RealMainWindowComponent(
 ): RealMainWindowComponent {
     
     val globalLifecycle: MutableUIComponentLifecycle = newMutableUIComponentLifecycle()
+    val navigationRoot = NavigationRoot { println(it) }
     val globalComponentContext = UIComponentContext {
         UIComponentLifecycleKey correspondsTo globalLifecycle
         LoggerKey correspondsTo Logger(
@@ -96,6 +102,11 @@ suspend fun RealMainWindowComponent(
                 wordsSource = GameStateMachine.WordsSource.Custom(DeviceGameWordsProviderID.Local("medium"))
             )
         )
+        @Suppress("JSON_FORMAT_REDUNDANT_DEFAULT")
+        setUpNavigationControl(
+            navigationRoot = navigationRoot,
+            stringFormat = Json,
+        )
     }
     
     val volumeOn: MutableStateFlow<Boolean> = MutableStateFlow(initialVolumeOn)
@@ -103,6 +114,10 @@ suspend fun RealMainWindowComponent(
     
     val pageVariants =
         globalComponentContext.uiChildrenDefaultVariantsItem(
+            navigationControllerSpec = NavigationControllerSpec(
+                key = null,
+                configurationSerializer = MainWindowComponent.Child.Kind.serializer(),
+            ),
             allVariants = KoneSet.build {
                 +MainWindowComponent.Child.Kind.Primary.entries.toKoneList()
                 +MainWindowComponent.Child.Kind.Secondary.entries.toKoneList()
@@ -158,9 +173,13 @@ suspend fun RealMainWindowComponent(
             }
         }
     
+    navigationRoot.init()
+    
     val openPage: (page: MainWindowComponent.Child.Kind) -> Unit = { page ->
         CoroutineScope(Dispatchers.Default).launch {
-            pageVariants.set(page)
+            globalComponentContext.navigationContext.doStoringNavigation {
+                pageVariants.set(page)
+            }
         }
     }
     

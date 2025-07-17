@@ -7,6 +7,9 @@ import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.common.ui.components.game.localGame.RealLocalGamePageComponent
 import dev.lounres.halfhat.client.common.ui.components.game.modeSelection.RealModeSelectionPageComponent
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
+import dev.lounres.halfhat.client.components.navigation.NavigationControllerSpec
+import dev.lounres.halfhat.client.components.navigation.controller.navigationContext
+import dev.lounres.halfhat.client.components.navigation.controller.doStoringNavigation
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotItem
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.hub.KoneAsynchronousHub
@@ -21,17 +24,12 @@ public class RealGamePageComponent(
     override val currentChild: KoneAsynchronousHub<ChildrenSlot<*, GamePageComponent.Child>>,
 ): GamePageComponent {
     @Serializable
-    public sealed interface Configuration {
-        @Serializable
-        public data object ModeSelection : Configuration
-        @Serializable
-        public data object OnlineGame : Configuration
-        @Serializable
-        public data object LocalGame : Configuration
-        @Serializable
-        public data object DeviceGame : Configuration
-        @Serializable
-        public data object GameTimer: Configuration
+    public enum class Configuration {
+        ModeSelection,
+        OnlineGame,
+        LocalGame,
+        DeviceGame,
+        GameTimer,
     }
 }
 
@@ -42,6 +40,10 @@ public suspend fun RealGamePageComponent(
     
     val currentChild =
         componentContext.uiChildrenDefaultSlotItem<RealGamePageComponent.Configuration, _>(
+            navigationControllerSpec = NavigationControllerSpec(
+                key = null,
+                configurationSerializer = RealGamePageComponent.Configuration.serializer(),
+            ),
             initialConfiguration = RealGamePageComponent.Configuration.ModeSelection,
         ) { configuration, componentContext, navigationTarget ->
             when (configuration) {
@@ -51,22 +53,30 @@ public suspend fun RealGamePageComponent(
                             componentContext = componentContext,
                             onOnlineGameSelect = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigationTarget.set(RealGamePageComponent.Configuration.OnlineGame)
+                                    componentContext.navigationContext.doStoringNavigation {
+                                        navigationTarget.set(RealGamePageComponent.Configuration.OnlineGame)
+                                    }
                                 }
                             },
                             onLocalGameSelect = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigationTarget.set(RealGamePageComponent.Configuration.LocalGame)
+                                    componentContext.navigationContext.doStoringNavigation {
+                                        navigationTarget.set(RealGamePageComponent.Configuration.LocalGame)
+                                    }
                                 }
                             },
                             onDeviceGameSelect = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigationTarget.set(RealGamePageComponent.Configuration.DeviceGame)
+                                    componentContext.navigationContext.doStoringNavigation {
+                                        navigationTarget.set(RealGamePageComponent.Configuration.DeviceGame)
+                                    }
                                 }
                             },
                             onGameTimerSelect = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigationTarget.set(RealGamePageComponent.Configuration.GameTimer)
+                                    componentContext.navigationContext.doStoringNavigation {
+                                        navigationTarget.set(RealGamePageComponent.Configuration.GameTimer)
+                                    }
                                 }
                             },
                         )
@@ -77,7 +87,9 @@ public suspend fun RealGamePageComponent(
                             componentContext = componentContext,
                             onExitOnlineGameMode = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
+                                    componentContext.navigationContext.doStoringNavigation {
+                                        navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
+                                    }
                                 }
                             },
                         )
@@ -87,7 +99,9 @@ public suspend fun RealGamePageComponent(
                         RealLocalGamePageComponent(
                             onExitLocalGame = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
+                                    componentContext.navigationContext.doStoringNavigation {
+                                        navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
+                                    }
                                 }
                             }
                         )
@@ -110,7 +124,9 @@ public suspend fun RealGamePageComponent(
                             componentContext = componentContext,
                             onExitTimer = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
+                                    componentContext.navigationContext.doStoringNavigation {
+                                        navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
+                                    }
                                 }
                             },
                             volumeOn = volumeOn,

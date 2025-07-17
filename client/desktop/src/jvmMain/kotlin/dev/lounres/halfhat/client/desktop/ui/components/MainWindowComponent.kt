@@ -12,11 +12,22 @@ import dev.lounres.halfhat.client.common.ui.components.home.HomePageComponent
 import dev.lounres.halfhat.client.common.ui.components.news.NewsPageComponent
 import dev.lounres.halfhat.client.common.ui.components.rules.RulesPageComponent
 import dev.lounres.halfhat.client.common.ui.components.settings.SettingsPageComponent
-import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.navigation.ChildrenVariants
+import dev.lounres.kone.collections.interop.toKoneList
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.of
+import dev.lounres.kone.collections.utils.firstThat
+import dev.lounres.kone.collections.utils.flatten
 import dev.lounres.kone.hub.KoneAsynchronousHub
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 
 interface MainWindowComponent {
@@ -41,12 +52,31 @@ interface MainWindowComponent {
         val component: PageComponent
         val kind: Kind
         
+        @Serializable(with = Kind.Serializer::class)
         sealed interface Kind {
+            val name: String
+            
             enum class Primary : Kind {
                 Home, Game
             }
             enum class Secondary : Kind {
                 News, Rules, FAQ, GameHistory, Settings, Feedback, About
+            }
+            
+            private object Serializer : KSerializer<Kind> {
+                val registeredEnumInheritors = KoneList.of<KoneList<Kind>>(
+                    Primary.entries.toKoneList(),
+                    Secondary.entries.toKoneList(),
+                ).flatten()
+                
+                override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("kind", PrimitiveKind.STRING)
+                override fun serialize(encoder: Encoder, value: Kind) {
+                    encoder.encodeString(value.toString())
+                }
+                override fun deserialize(decoder: Decoder): Kind {
+                    val value = decoder.decodeString()
+                    return registeredEnumInheritors.firstThat { it.name == value }
+                }
             }
         }
         sealed interface Primary : Child {

@@ -1,12 +1,13 @@
 package dev.lounres.halfhat.client.common.ui.components.game.onlineGame.previewScreen
 
 import dev.lounres.halfhat.api.onlineGame.ServerApi
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 
 public interface PreviewScreenComponent {
-    public val currentRoomSearchEntry: StateFlow<String>
+    public val currentRoomSearchEntry: KoneAsynchronousHub<String>
     public val onChangeRoomSearchEntry: (String) -> Unit
     public val generateRoomSearchEntry: () -> Unit
     

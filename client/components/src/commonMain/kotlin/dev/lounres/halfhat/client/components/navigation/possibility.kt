@@ -6,6 +6,7 @@ import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecyc
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import dev.lounres.halfhat.client.components.lifecycle.newMutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.logger.LoggerKey
+import dev.lounres.halfhat.client.components.navigation.controller.NavigationControllerStringFormatKey
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationItemController
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationNodeController
 import dev.lounres.komponentual.navigation.*
@@ -23,7 +24,6 @@ import dev.lounres.kone.registry.getOrNull
 import dev.lounres.kone.relations.*
 import dev.lounres.logKube.core.debug
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.Json
 
 
 public typealias ChildrenPossibility<Configuration, Component> = Maybe<ChildWithConfiguration<Configuration, Component>>
@@ -149,24 +149,25 @@ public suspend fun <
         },
     )
     if (navigationItemController != null) {
+        val stringFormat = this[NavigationControllerStringFormatKey]
         val serializer = navigationControllerSpec!!.configurationSerializer
         possibilityHub.buildSubscription {
             subscribe {
                 navigationItemController.configuration =
-                    Json.encodeToString(Maybe.serializer(serializer), it.navigationState)
+                    stringFormat.encodeToString(Maybe.serializer(serializer), it.navigationState)
                 navigationItemController.nodes = it.children.nodesView.associateReified { node ->
-                    Json.encodeToString(serializer, node.key) mapsTo node.value.navigationNodeController!!
+                    stringFormat.encodeToString(serializer, node.key) mapsTo node.value.navigationNodeController!!
                 }
             }
             navigationItemController.configuration =
-                Json.encodeToString(Maybe.serializer(serializer), it.navigationState)
+                stringFormat.encodeToString(Maybe.serializer(serializer), it.navigationState)
             navigationItemController.nodes = it.children.nodesView.associateReified { node ->
-                Json.encodeToString(serializer, node.key) mapsTo node.value.navigationNodeController!!
+                stringFormat.encodeToString(serializer, node.key) mapsTo node.value.navigationNodeController!!
             }
         }
         navigationItemController.restoration = {
             try {
-                val restoredConfiguration = Json.decodeFromString(Maybe.serializer(serializer), it)
+                val restoredConfiguration = stringFormat.decodeFromString(Maybe.serializer(serializer), it)
                 navigationHub.set(restoredConfiguration)
             } catch (e: SerializationException) {} catch (e: IllegalArgumentException /* TODO: Remove eventually when Kone will start using correct exception types */) {}
         }
