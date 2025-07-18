@@ -15,12 +15,19 @@ import dev.lounres.halfhat.client.common.ui.components.home.RealHomePageComponen
 import dev.lounres.halfhat.client.common.ui.components.news.RealNewsPageComponent
 import dev.lounres.halfhat.client.common.ui.components.rules.RealRulesPageComponent
 import dev.lounres.halfhat.client.common.ui.components.settings.RealSettingsPageComponent
+import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleKey
 import dev.lounres.halfhat.client.components.lifecycle.newMutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.logger.LoggerKey
 import dev.lounres.halfhat.client.components.navigation.ChildrenVariants
+import dev.lounres.halfhat.client.components.navigation.NavigationControllerSpec
+import dev.lounres.halfhat.client.components.navigation.controller.NavigationNodeState
+import dev.lounres.halfhat.client.components.navigation.controller.NavigationRoot
+import dev.lounres.halfhat.client.components.navigation.controller.doStoringNavigation
+import dev.lounres.halfhat.client.components.navigation.controller.navigationContext
+import dev.lounres.halfhat.client.components.navigation.controller.setUpNavigationControl
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariantsItem
 import dev.lounres.komponentual.navigation.VariantsNavigationHub
 import dev.lounres.komponentual.navigation.set
@@ -37,10 +44,21 @@ import dev.lounres.kone.hub.map
 import dev.lounres.logKube.core.DefaultCurrentPlatformLogWriter
 import dev.lounres.logKube.core.LogAcceptor
 import dev.lounres.logKube.core.Logger
+import js.core.JsPrimitives.toJsString
+import js.core.JsString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.serializer
+import web.events.EventType
+import web.events.addEventListener
+import web.history.PopStateEvent
+import web.history.history
+import web.window.window
 
 
 class RealMainWindowComponent(
@@ -70,6 +88,7 @@ suspend fun RealMainWindowComponent(
     initialSelectedPage: MainWindowComponent.Child.Kind = MainWindowComponent.Child.Kind.Primary.Game /* TODO: Page.Primary.Home */,
 ): RealMainWindowComponent {
     val globalLifecycle: MutableUIComponentLifecycle = newMutableUIComponentLifecycle()
+    val navigationRoot = NavigationRoot()
     val globalComponentContext = UIComponentContext {
         UIComponentLifecycleKey correspondsTo globalLifecycle
         LoggerKey correspondsTo Logger(
@@ -89,13 +108,23 @@ suspend fun RealMainWindowComponent(
                 wordsSource = GameStateMachine.WordsSource.Custom(DeviceGameWordsProviderID.Local("medium"))
             )
         )
+        @Suppress("JSON_FORMAT_REDUNDANT_DEFAULT")
+        setUpNavigationControl(
+            navigationRoot = navigationRoot,
+            stringFormat = Json,
+        )
     }
+    val coroutineScope = globalComponentContext.coroutineScope(Dispatchers.Default)
     
     val volumeOn: MutableStateFlow<Boolean> = MutableStateFlow(initialVolumeOn)
     val language: MutableStateFlow<Language> = MutableStateFlow(initialLanguage)
     
     val pageVariants =
         globalComponentContext.uiChildrenDefaultVariantsItem(
+            navigationControllerSpec = NavigationControllerSpec(
+                key = null,
+                configurationSerializer = MainWindowComponent.Child.Kind.serializer(),
+            ),
             allVariants = KoneSet.build {
                 +MainWindowComponent.Child.Kind.Primary.entries.toKoneList()
                 +MainWindowComponent.Child.Kind.Secondary.entries.toKoneList()
@@ -127,7 +156,9 @@ suspend fun RealMainWindowComponent(
                         RealFAQPageComponent(
                             onFeedbackLinkClick = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigation.set(MainWindowComponent.Child.Kind.Secondary.FAQ)
+                                    componentContext.navigationContext.doStoringNavigation {
+                                        navigation.set(MainWindowComponent.Child.Kind.Secondary.FAQ)
+                                    }
                                 }
                             }
                         )
@@ -151,9 +182,48 @@ suspend fun RealMainWindowComponent(
             }
         }
     
+    @Suppress("JSON_FORMAT_REDUNDANT_DEFAULT")
+    val json = Json {
+        serializersModule = SerializersModule {
+        
+        }
+    }
+    
+    Json.encodeToString(navigationRoot.state).let { stateString ->
+        history.replaceState(
+            data = stateString.toJsString(),
+            unused = "",
+            url = window.location.let { "${it.origin}${it.pathname}#${stateString}" }
+        )
+    }
+    
+    navigationRoot.onStore = { state ->
+        val stateString = Json.encodeToString(state)
+        history.pushState(
+            data = stateString.toJsString(),
+            unused = "",
+            url = window.location.let { "${it.origin}${it.pathname}#${stateString}" }
+        )
+    }
+    
+    window.addEventListener(
+        EventType<PopStateEvent>("popstate"),
+        { event ->
+            println("Popped state: event.state")
+            val state = try {
+                (event.state as? JsString)?.toString()?.let { json.decodeFromString<NavigationNodeState>(it) }
+            } catch (e: SerializationException) { null }
+            if (state != null) coroutineScope.launch {
+                navigationRoot.restore(state)
+            }
+        },
+    )
+    
     val openPage: (page: MainWindowComponent.Child.Kind) -> Unit = { page ->
         CoroutineScope(Dispatchers.Default).launch {
-            pageVariants.set(page)
+            globalComponentContext.navigationContext.doStoringNavigation {
+                pageVariants.set(page)
+            }
         }
     }
     

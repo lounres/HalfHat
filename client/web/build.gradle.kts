@@ -7,7 +7,7 @@ plugins {
     alias(versions.plugins.kotlin.compose)
     alias(versions.plugins.compose.multiplatform)
 //    alias(versions.plugins.ktor)
-//    alias(versions.plugins.kotlinx.serialization)
+    alias(versions.plugins.kotlinx.serialization)
 }
 
 kotlin {

@@ -80,9 +80,8 @@ suspend fun RealMainWindowComponent(
     
     initialSelectedPage: MainWindowComponent.Child.Kind = MainWindowComponent.Child.Kind.Primary.Game /* TODO: Page.Primary.Home */,
 ): RealMainWindowComponent {
-    
     val globalLifecycle: MutableUIComponentLifecycle = newMutableUIComponentLifecycle()
-    val navigationRoot = NavigationRoot { println(it) }
+    val navigationRoot = NavigationRoot()
     val globalComponentContext = UIComponentContext {
         UIComponentLifecycleKey correspondsTo globalLifecycle
         LoggerKey correspondsTo Logger(
@@ -149,7 +148,9 @@ suspend fun RealMainWindowComponent(
                         RealFAQPageComponent(
                             onFeedbackLinkClick = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigation.set(MainWindowComponent.Child.Kind.Secondary.FAQ)
+                                    componentContext.navigationContext.doStoringNavigation {
+                                        navigation.set(MainWindowComponent.Child.Kind.Secondary.FAQ)
+                                    }
                                 }
                             }
                         )
@@ -173,7 +174,7 @@ suspend fun RealMainWindowComponent(
             }
         }
     
-    navigationRoot.init()
+    navigationRoot.onStore = { /* TODO */ }
     
     val openPage: (page: MainWindowComponent.Child.Kind) -> Unit = { page ->
         CoroutineScope(Dispatchers.Default).launch {
