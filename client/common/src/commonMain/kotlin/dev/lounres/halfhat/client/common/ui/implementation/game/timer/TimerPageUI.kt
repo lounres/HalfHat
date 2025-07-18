@@ -73,7 +73,7 @@ public fun TimerPageUI(
                                 value = preparationTime,
                                 onValueChange = { input ->
                                     component.preparationTimeSetting.value =
-                                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 999u).toString() }
+                                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else it.dropWhile { d -> d == '0' }.ifBlank { "0" }.let { if (it.length > 3) "999" else it } }
                                 },
                                 label = { Text(text = "Countdown duration") },
                                 suffix = { Text(text = " seconds") },
@@ -97,7 +97,7 @@ public fun TimerPageUI(
                                 value = explanationTime,
                                 onValueChange = { input ->
                                     component.explanationTimeSetting.value =
-                                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 999u).toString() }
+                                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else it.dropWhile { d -> d == '0' }.ifBlank { "0" }.let { if (it.length > 3) "999" else it } }
                                 },
                                 label = { Text(text = "Explanation duration") },
                                 suffix = { Text(text = " seconds") },
@@ -121,7 +121,7 @@ public fun TimerPageUI(
                                 value = lastGuessTime,
                                 onValueChange = { input ->
                                     component.lastGuessTimeSetting.value =
-                                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 999u).toString() }
+                                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else it.dropWhile { d -> d == '0' }.ifBlank { "0" }.let { if (it.length > 3) "999" else it } }
                                 },
                                 label = { Text(text = "Last guess duration") },
                                 suffix = { Text(text = " seconds") },

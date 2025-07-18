@@ -1,34 +1,8 @@
 package dev.lounres.halfhat.client.common.ui.implementation.game.deviceGame.roomSettings
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -36,12 +10,11 @@ import androidx.compose.ui.unit.sp
 import dev.lounres.halfhat.client.common.resources.Res
 import dev.lounres.halfhat.client.common.resources.applyDeviceGameSettingsButton_dark_png_24dp
 import dev.lounres.halfhat.client.common.resources.discardDeviceGameSettingsButton_dark_png_24dp
-import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.roomSettings.RoomSettingsComponent
+import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.iterables.next
 import org.jetbrains.compose.resources.painterResource
-import kotlin.math.min
 
 
 @Composable
@@ -86,8 +59,9 @@ public fun RoomSettingsUI(
                 modifier = Modifier.fillMaxWidth(),
                 value = preparationTime,
                 onValueChange = { input ->
+                    component.showErrorForPreparationTimeSeconds.value = false
                     component.preparationTimeSeconds.value =
-                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 999u).toString() }
+                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else it.dropWhile { d -> d == '0' }.ifBlank { "0" }.let { if (it.length > 3) "999" else it } }
                 },
                 label = {
                     Text(
@@ -95,7 +69,7 @@ public fun RoomSettingsUI(
                     )
                 },
                 singleLine = true,
-                isError = preparationTime.isBlank(),
+                isError = preparationTime.isBlank() && component.showErrorForPreparationTimeSeconds.collectAsState().value,
             )
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -104,8 +78,9 @@ public fun RoomSettingsUI(
                 modifier = Modifier.fillMaxWidth(),
                 value = explanationTime,
                 onValueChange = { input ->
+                    component.showErrorForExplanationTimeSeconds.value = false
                     component.explanationTimeSeconds.value =
-                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 999u).toString() }
+                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else it.dropWhile { d -> d == '0' }.ifBlank { "0" }.let { if (it.length > 3) "999" else it } }
                 },
                 label = {
                     Text(
@@ -113,7 +88,7 @@ public fun RoomSettingsUI(
                     )
                 },
                 singleLine = true,
-                isError = explanationTime.isBlank(),
+                isError = explanationTime.isBlank() && component.showErrorForExplanationTimeSeconds.collectAsState().value,
             )
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -122,8 +97,9 @@ public fun RoomSettingsUI(
                 modifier = Modifier.fillMaxWidth(),
                 value = lastGuessTime,
                 onValueChange = { input ->
+                    component.showErrorForFinalGuessTimeSeconds.value = false
                     component.finalGuessTimeSeconds.value =
-                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 999u).toString() }
+                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else it.dropWhile { d -> d == '0' }.ifBlank { "0" }.let { if (it.length > 3) "999" else it } }
                 },
                 label = {
                     Text(
@@ -131,7 +107,7 @@ public fun RoomSettingsUI(
                     )
                 },
                 singleLine = true,
-                isError = lastGuessTime.isBlank(),
+                isError = lastGuessTime.isBlank() && component.showErrorForFinalGuessTimeSeconds.collectAsState().value,
             )
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -249,10 +225,12 @@ public fun RoomSettingsUI(
             
             when (component.gameEndConditionType.collectAsState().value) {
                 GameStateMachine.GameEndCondition.Type.Words -> {
+                    val currentInput = component.cachedEndConditionWordsNumber.collectAsState().value
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        value = component.cachedEndConditionWordsNumber.collectAsState().value,
+                        value = currentInput,
                         onValueChange = { input ->
+                            component.showErrorForCachedEndConditionWordsNumber.value = false
                             component.cachedEndConditionWordsNumber.value =
                                 input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else it.dropWhile { d -> d == '0' }.ifBlank { "0" } }
                         },
@@ -262,16 +240,19 @@ public fun RoomSettingsUI(
                             )
                         },
                         singleLine = true,
+                        isError = (currentInput.isEmpty() || currentInput == "0") && component.showErrorForCachedEndConditionWordsNumber.collectAsState().value,
                     )
                 }
                 
                 GameStateMachine.GameEndCondition.Type.Cycles -> {
+                    val currentInput = component.cachedEndConditionCyclesNumber.collectAsState().value
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        value = component.cachedEndConditionCyclesNumber.collectAsState().value,
+                        value = currentInput,
                         onValueChange = { input ->
+                            component.showErrorForCachedEndConditionCyclesNumber.value = false
                             component.cachedEndConditionCyclesNumber.value =
-                                input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else min(it.dropWhile { d -> d == '0' }.ifBlank { "0" }.toUInt(), 99u).toString() }
+                                input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else it.dropWhile { d -> d == '0' }.ifBlank { "0" }.let { if (it.length > 2) "99" else it } }
                         },
                         label = {
                             Text(
@@ -279,6 +260,7 @@ public fun RoomSettingsUI(
                             )
                         },
                         singleLine = true,
+                        isError = (currentInput.isEmpty() || currentInput == "0") && component.showErrorForCachedEndConditionCyclesNumber.collectAsState().value,
                     )
                 }
             }

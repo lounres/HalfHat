@@ -4,10 +4,8 @@ import dev.lounres.kone.automata.AsynchronousAutomaton
 import dev.lounres.kone.automata.CheckResult
 import dev.lounres.kone.automata.move
 import dev.lounres.kone.collections.list.KoneList
-import dev.lounres.kone.scope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.sync.Mutex
-import kotlin.math.min
 import kotlin.random.Random
 
 
