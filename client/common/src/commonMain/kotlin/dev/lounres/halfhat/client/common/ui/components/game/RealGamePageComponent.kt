@@ -113,7 +113,9 @@ public suspend fun RealGamePageComponent(
                             volumeOn = volumeOn,
                             onExitDeviceGame = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
+                                    componentContext.navigationContext.doStoringNavigation {
+                                        navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
+                                    }
                                 }
                             },
                         )
