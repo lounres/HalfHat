@@ -1,6 +1,7 @@
 plugins {
 //    alias(versions.plugins.android.library)
     alias(versions.plugins.kotlinx.serialization)
+    alias(versions.plugins.kotlinx.atomicfu)
 }
 
 kotlin {

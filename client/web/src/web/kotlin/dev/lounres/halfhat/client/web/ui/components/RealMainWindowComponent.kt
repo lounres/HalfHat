@@ -122,7 +122,7 @@ suspend fun RealMainWindowComponent(
     val pageVariants =
         globalComponentContext.uiChildrenDefaultVariantsItem(
             navigationControllerSpec = NavigationControllerSpec(
-                key = null,
+                key = "page",
                 configurationSerializer = MainWindowComponent.Child.Kind.serializer(),
             ),
             allVariants = KoneSet.build {
@@ -189,27 +189,21 @@ suspend fun RealMainWindowComponent(
         }
     }
     
-    Json.encodeToString(navigationRoot.state).let { stateString ->
-        history.replaceState(
-            data = stateString.toJsString(),
-            unused = "",
-            url = window.location.let { "${it.origin}${it.pathname}#${stateString}" }
-        )
-    }
+    history.replaceState(
+        data = Json.encodeToString(navigationRoot.state).toJsString(),
+        unused = "",
+    )
     
     navigationRoot.onStore = { state ->
-        val stateString = Json.encodeToString(state)
         history.pushState(
-            data = stateString.toJsString(),
+            data = Json.encodeToString(state).toJsString(),
             unused = "",
-            url = window.location.let { "${it.origin}${it.pathname}#${stateString}" }
         )
     }
     
     window.addEventListener(
         EventType<PopStateEvent>("popstate"),
         { event ->
-            println("Popped state: event.state")
             val state = try {
                 (event.state as? JsString)?.toString()?.let { json.decodeFromString<NavigationNodeState>(it) }
             } catch (e: SerializationException) { null }

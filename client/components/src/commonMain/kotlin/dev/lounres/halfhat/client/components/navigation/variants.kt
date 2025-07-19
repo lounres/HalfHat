@@ -58,11 +58,9 @@ public suspend fun <
 ): VariantsItem<Configuration, Component> {
     val logger = this.getOrNull(LoggerKey)
     val navigationNodeController = this.getOrNull(NavigationNodeController)
-    val navigationItemController = when {
-        navigationNodeController == null || navigationControllerSpec == null -> null
-        navigationControllerSpec.key == null -> NavigationItemController().also { navigationNodeController.attachSoleItem(it) }
-        else -> NavigationItemController().also { navigationNodeController.attachItem(navigationControllerSpec.key, it) }
-    }
+    val navigationItemController =
+        if (navigationNodeController == null || navigationControllerSpec == null) null
+        else NavigationItemController().also { navigationNodeController.attachItem(navigationControllerSpec.key, it) }
     val navigationHub = VariantsNavigationHub<Configuration>()
     val variantsHub = childrenVariants(
         configurationEquality = configurationEquality,
@@ -181,8 +179,8 @@ public suspend fun <
             try {
                 val restoredConfiguration = stringFormat.decodeFromString(serializer, it)
                 navigationHub.set(restoredConfiguration)
-            } catch (e: SerializationException) {
-            } catch (e: IllegalArgumentException /* TODO: Remove eventually when Kone will start using correct exception types */) {
+            } catch (_: SerializationException) {
+            } catch (_: IllegalArgumentException /* TODO: Remove eventually when Kone will start using correct exception types */) {
             }
         }
     }

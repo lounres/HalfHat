@@ -41,7 +41,7 @@ public suspend fun RealGamePageComponent(
     val currentChild =
         componentContext.uiChildrenDefaultSlotItem<RealGamePageComponent.Configuration, _>(
             navigationControllerSpec = NavigationControllerSpec(
-                key = null,
+                key = "mode",
                 configurationSerializer = RealGamePageComponent.Configuration.serializer(),
             ),
             initialConfiguration = RealGamePageComponent.Configuration.ModeSelection,

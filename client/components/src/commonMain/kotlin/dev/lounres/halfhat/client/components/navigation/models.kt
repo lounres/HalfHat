@@ -16,6 +16,6 @@ internal data class Child<Component, ControllingLifecycle>(
 )
 
 public data class NavigationControllerSpec<Configuration>(
-    val key: String?,
+    val key: String,
     val configurationSerializer: KSerializer<Configuration>,
 )

@@ -4,13 +4,14 @@ import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.kone.castOrNull
 import dev.lounres.kone.collections.interop.asKotlin
 import dev.lounres.kone.collections.interop.toKoneList
-import dev.lounres.kone.collections.iterables.KoneIterator
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.map.*
 import dev.lounres.kone.registry.Registry
 import dev.lounres.kone.registry.RegistryBuilder
 import dev.lounres.kone.registry.RegistryKey
 import dev.lounres.kone.registry.getOrNull
+import kotlinx.atomicfu.locks.ReentrantLock
+import kotlinx.atomicfu.locks.withLock
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -25,33 +26,12 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 
-private fun <Element> KoneIterator<Element>.forEach(block: (Element) -> Unit) {
-    while (hasNext()) {
-        block(getNext())
-        moveNext()
-    }
-}
-
 @Serializable
-public sealed interface NavigationNodeState {
-    public val configuration: String?
-    
-    @Serializable
-    public data class Undirectional(
-        public override val configuration: String?,
-    ) : NavigationNodeState
-    @Serializable
-    public data class Unidirectional(
-        public override val configuration: String?,
-        public val item: NavigationItemState,
-    ) : NavigationNodeState
-    @Serializable
-    public data class Multidirectional(
-        public override val configuration: String?,
-        @Serializable(with = NavigationItemStateMapSerializer::class)
-        public val items: KoneReifiedMap<String, NavigationItemState>,
-    ) : NavigationNodeState
-}
+public data class NavigationNodeState(
+    public val configuration: String?,
+    @Serializable(with = NavigationItemStateMapSerializer::class)
+    public val items: KoneReifiedMap<String, NavigationItemState>,
+)
 
 private object NavigationNodeStateMapSerializer: KSerializer<KoneReifiedMap<String, NavigationNodeState>> {
     val stringSerializer = String.serializer()
@@ -92,40 +72,18 @@ public class NavigationNodeController {
     public var configuration: String? = null
     public var restoration: (suspend (configuration: String) -> Unit)? = null
     
-    internal sealed interface Items {
-        data object None : Items
-        data class Sole(val item: NavigationItemController) : Items
-        data class Multiple(val items: KoneReifiedMap<String, NavigationItemController>) : Items
-    }
-    
-    private var items: Items = Items.None
+    private val itemsLock = ReentrantLock()
+    private val items = KoneMutableReifiedMap.of<String, NavigationItemController>()
     
     internal fun attachItem(key: String, item: NavigationItemController) {
-        items = when (val items = items) {
-            Items.None -> Items.Multiple(KoneReifiedMap.of(key mapsTo item))
-            is Items.Sole -> error("Can not register usual item when there is sole item")
-            is Items.Multiple -> Items.Multiple(
-                KoneReifiedMap.build {
-                    +items.items
-                    +(key mapsTo item)
-                }
-            )
-        }
-    }
-    internal fun attachSoleItem(item: NavigationItemController) {
-        items = when (items) {
-            Items.None -> Items.Sole(item)
-            is Items.Sole -> error("Can not register sole item when there is other sole item")
-            is Items.Multiple -> error("Can not register sole item when there are usual items")
+        itemsLock.withLock {
+            require(key !in items) { "Navigation node controller already registered an item with the key: '$key'" }
+            items[key] = item
         }
     }
     
     internal val state: NavigationNodeState
-        get() = when(val items = items) {
-            Items.None -> NavigationNodeState.Undirectional(configuration)
-            is Items.Sole -> NavigationNodeState.Unidirectional(configuration, items.item.state)
-            is Items.Multiple -> NavigationNodeState.Multidirectional(configuration, items.items.mapValuesReified { it.value.state })
-        }
+        get() = NavigationNodeState(configuration, items.mapValuesReified { it.value.state })
     
     internal companion object : RegistryKey<NavigationNodeController>
     
@@ -136,14 +94,8 @@ public class NavigationNodeController {
         if (newConfiguration != null) this.restoration?.invoke(newConfiguration)
         
         coroutineScope {
-            when (state) {
-                is NavigationNodeState.Undirectional -> {}
-                is NavigationNodeState.Unidirectional -> items.castOrNull<Items.Sole>()?.item?.let { launch { it.restore(state.item) } }
-                is NavigationNodeState.Multidirectional -> items.castOrNull<Items.Multiple>()?.items?.let {
-                    for ((configuration, navigationItem) in state.items) launch {
-                        it.getOrNull(configuration)?.restore(navigationItem)
-                    }
-                }
+            for ((configuration, navigationItem) in state.items) launch {
+                items.getOrNull(configuration)?.restore(navigationItem)
             }
         }
     }

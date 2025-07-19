@@ -114,7 +114,7 @@ suspend fun RealMainWindowComponent(
     val pageVariants =
         globalComponentContext.uiChildrenDefaultVariantsItem(
             navigationControllerSpec = NavigationControllerSpec(
-                key = null,
+                key = "page",
                 configurationSerializer = MainWindowComponent.Child.Kind.serializer(),
             ),
             allVariants = KoneSet.build {
