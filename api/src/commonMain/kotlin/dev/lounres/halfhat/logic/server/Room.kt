@@ -24,7 +24,7 @@ import dev.lounres.kone.collections.list.KoneMutableList
 import dev.lounres.kone.collections.list.KoneMutableListNode
 import dev.lounres.kone.collections.list.KoneMutableNoddedList
 import dev.lounres.kone.collections.list.empty
-import dev.lounres.kone.collections.list.implementations.KoneGCLinkedList
+import dev.lounres.kone.collections.list.implementations.KoneGCLinkedSizedList
 import dev.lounres.kone.collections.utils.filter
 import dev.lounres.kone.collections.utils.firstIndexThat
 import dev.lounres.kone.collections.utils.firstThat
@@ -229,7 +229,7 @@ public class Room<
             val isOnline: Boolean
         )
         
-        internal val connectionsRegistry: KoneMutableNoddedList<ConnectionType> = KoneGCLinkedList()
+        internal val connectionsRegistry: KoneMutableNoddedList<ConnectionType> = KoneGCLinkedSizedList()
         public val isOnline: Boolean get() = connectionsRegistry.isNotEmpty()
         public val description: Description<PlayerMetadata> get() = Description(metadata, isOnline)
     }
@@ -541,7 +541,7 @@ public class Room<
             coroutineScope = coroutineScope,
             random = random,
             metadata = GameStateMachineMetadata<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>(
-                allPlayersList = KoneGCLinkedList(),
+                allPlayersList = KoneGCLinkedSizedList(),
             ),
             playersList = KoneList.empty<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>>(),
             settingsBuilder = GameStateMachine.GameSettings.Builder(

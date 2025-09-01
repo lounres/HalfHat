@@ -467,7 +467,7 @@ fun MainWindowUI(
                         text = "Loading...",
                         fontSize = 36.sp,
                     )
-                    LoadingIndicator(
+                    CircularProgressIndicator(
                         modifier = Modifier.size(48.dp)
                     )
                 }

@@ -44,7 +44,7 @@ public suspend fun <
     Configuration,
     Component,
 > UIComponentContext.uiChildrenStackItem(
-    configurationEquality: Equality<Configuration> = defaultEquality(),
+    configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
@@ -198,7 +198,7 @@ public suspend fun <
     Configuration,
     Component,
 > UIComponentContext.uiChildrenFromToStackItem(
-    configurationEquality: Equality<Configuration> = defaultEquality(),
+    configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
@@ -226,7 +226,7 @@ public expect suspend fun <
     Configuration,
     Component,
 > UIComponentContext.uiChildrenDefaultStackItem(
-    configurationEquality: Equality<Configuration> = defaultEquality(),
+    configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,

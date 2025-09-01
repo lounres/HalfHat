@@ -25,7 +25,7 @@ kotlin {
                 api(compose.ui)
                 api(compose.foundation)
                 api(compose.material3)
-                api("org.jetbrains.compose.material3:material3-window-size-class:${versions.versions.compose.multiplatform.asProvider().get()}")
+                api("org.jetbrains.compose.material3:material3-window-size-class:1.9.0-beta04") // FIXME: Replace the version
                 versions.versions.compose.multiplatform.hot
                 api(compose.components.resources)
 

@@ -36,7 +36,7 @@ public suspend fun <
     Configuration,
     Component,
 > UIComponentContext.uiChildrenPossibilityItem(
-    configurationEquality: Equality<Configuration> = defaultEquality(),
+    configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
@@ -184,7 +184,7 @@ public suspend fun <
     Configuration,
     Component,
 > UIComponentContext.uiChildrenToPossibilityItem(
-    configurationEquality: Equality<Configuration> = defaultEquality(),
+    configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
@@ -211,7 +211,7 @@ public expect suspend fun <
     Configuration,
     Component,
 > UIComponentContext.uiChildrenDefaultPossibilityItem(
-    configurationEquality: Equality<Configuration> = defaultEquality(),
+    configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,

@@ -18,6 +18,7 @@ import dev.lounres.halfhat.client.components.navigation.controller.NavigationNod
 import dev.lounres.komponentual.lifecycle.subscribe
 import dev.lounres.kone.registry.Registry
 import dev.lounres.kone.registry.RegistryBuilder
+import dev.lounres.kone.registry.build
 import dev.lounres.logKube.core.debug
 import kotlinx.coroutines.CoroutineScope
 import kotlin.contracts.InvocationKind
@@ -29,11 +30,11 @@ import kotlin.jvm.JvmInline
 @JvmInline
 public value class UIComponentContext(public val elements: Registry) : Registry by elements
 
-public inline fun UIComponentContext(builder: RegistryBuilder.() -> Unit): UIComponentContext {
+public inline fun UIComponentContext(builder: RegistryBuilder<UIComponentContext>.() -> Unit): UIComponentContext {
     contract {
         callsInPlace(builder, InvocationKind.EXACTLY_ONCE)
     }
-    return UIComponentContext(Registry(builder))
+    return UIComponentContext(Registry.build(builder))
 }
 
 public fun UIComponentContext.coroutineScope(context: CoroutineContext): CoroutineScope = lifecycle.coroutineScope(context)

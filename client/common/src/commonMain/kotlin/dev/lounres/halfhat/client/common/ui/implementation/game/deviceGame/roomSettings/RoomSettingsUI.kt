@@ -136,7 +136,7 @@ public fun RoomSettingsUI(
                 onExpandedChange = { dictionaryMenuExpanded = it },
             ) {
                 OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                    modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable),
                     value = when (val wordsSource = component.wordsSource.collectAsState().value) {
                         GameStateMachine.WordsSource.Players -> error("For some reason from-each-player dictionary is chosen")
                         is GameStateMachine.WordsSource.Custom -> "Custom: ${wordsSource.providerId.name}"
@@ -184,7 +184,7 @@ public fun RoomSettingsUI(
                 onExpandedChange = { gameEndConditionMenuExpanded = it },
             ) {
                 OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                    modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable),
                     value = when (component.gameEndConditionType.collectAsState().value) {
                         GameStateMachine.GameEndCondition.Type.Words -> "Words"
                         GameStateMachine.GameEndCondition.Type.Cycles -> "Cycles"

@@ -71,7 +71,7 @@ public fun ColumnScope.PreviewScreenUI(
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            LoadingIndicator(
+                            CircularProgressIndicator(
                                 modifier = Modifier.padding(16.dp),
                             )
                         }

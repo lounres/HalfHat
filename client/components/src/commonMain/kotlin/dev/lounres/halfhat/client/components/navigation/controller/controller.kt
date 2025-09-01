@@ -168,7 +168,7 @@ public class NavigationRoot {
 
 public data object NavigationControllerStringFormatKey : RegistryKey<StringFormat>
 
-public fun RegistryBuilder.setUpNavigationControl(
+public fun RegistryBuilder<UIComponentContext>.setUpNavigationControl(
     navigationRoot: NavigationRoot,
     stringFormat: StringFormat,
 ) {
