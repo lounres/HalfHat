@@ -1,7 +1,7 @@
 package dev.lounres.halfhat.client.web
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
@@ -75,7 +75,7 @@ fun main() {
                         text = "Loading...",
                         fontSize = 36.sp,
                     )
-                    LoadingIndicator(
+                    CircularProgressIndicator(
                         modifier = Modifier.size(48.dp)
                     )
                 }

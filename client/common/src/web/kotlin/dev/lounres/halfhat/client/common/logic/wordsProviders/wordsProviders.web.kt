@@ -16,8 +16,9 @@ import dev.lounres.kone.collections.set.toKoneSet
 import dev.lounres.kone.collections.utils.filterTo
 import dev.lounres.kone.collections.utils.shuffled
 import dev.lounres.kone.collections.utils.take
-import dev.lounres.kone.relations.defaultEquality
-import dev.lounres.kone.relations.defaultHashing
+import dev.lounres.kone.relations.Equality
+import dev.lounres.kone.relations.Hashing
+import dev.lounres.kone.relations.defaultFor
 import dev.lounres.kone.scope
 import js.buffer.ArrayBufferLike
 import js.core.JsPrimitives.toJsByte
@@ -58,8 +59,8 @@ public actual object DeviceGameWordsProviderRegistry : GameStateMachine.WordsPro
             "easy" mapsTo "files/wordsProviders/easy",
             "medium" mapsTo "files/wordsProviders/medium",
             "hard" mapsTo "files/wordsProviders/hard",
-            keyEquality = defaultEquality(),
-            keyHashing = defaultHashing(),
+            keyEquality = Equality.defaultFor(),
+            keyHashing = Hashing.defaultFor(),
         )
     
     private val localWordsProvidersIDs =
