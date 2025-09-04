@@ -21,6 +21,7 @@ public class RealModeSelectionPageComponent(
     override val onOnlineGameSelect: () -> Unit,
     override val onLocalGameSelect: () -> Unit,
     override val onDeviceGameSelect: () -> Unit,
+    override val onGameControllerSelect: () -> Unit,
     override val onGameTimerSelect: () -> Unit,
 ): ModeSelectionPageComponent {
     
@@ -37,6 +38,11 @@ public class RealModeSelectionPageComponent(
     override val onDeviceGameInfo: () -> Unit = {
         CoroutineScope(Dispatchers.Default).launch {
             infoPopupNavigation.set(ModeSelectionPageComponent.InfoPopup.DeviceGame)
+        }
+    }
+    override val onGameControllerInfo: () -> Unit = {
+        CoroutineScope(Dispatchers.Default).launch {
+            infoPopupNavigation.set(ModeSelectionPageComponent.InfoPopup.GameController)
         }
     }
     override val onGameTimerInfo: () -> Unit = {
@@ -57,6 +63,7 @@ public suspend fun RealModeSelectionPageComponent(
     onOnlineGameSelect: () -> Unit,
     onLocalGameSelect: () -> Unit,
     onDeviceGameSelect: () -> Unit,
+    onGameControllerSelect: () -> Unit,
     onGameTimerSelect: () -> Unit,
 ): RealModeSelectionPageComponent {
     
@@ -72,6 +79,7 @@ public suspend fun RealModeSelectionPageComponent(
         onOnlineGameSelect = onOnlineGameSelect,
         onLocalGameSelect = onLocalGameSelect,
         onDeviceGameSelect = onDeviceGameSelect,
+        onGameControllerSelect = onGameControllerSelect,
         onGameTimerSelect = onGameTimerSelect,
     )
 }

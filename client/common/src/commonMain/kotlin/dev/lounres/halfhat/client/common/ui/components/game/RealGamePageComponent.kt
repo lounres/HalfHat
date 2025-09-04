@@ -1,5 +1,6 @@
 package dev.lounres.halfhat.client.common.ui.components.game
 
+import dev.lounres.halfhat.client.common.ui.components.game.controller.RealControllerPageComponent
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.RealDeviceGamePageComponent
 import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.RealOnlineGamePageComponent
 import dev.lounres.halfhat.client.common.ui.components.game.timer.RealTimerPageComponent
@@ -29,6 +30,7 @@ public class RealGamePageComponent(
         OnlineGame,
         LocalGame,
         DeviceGame,
+        GameController,
         GameTimer,
     }
 }
@@ -69,6 +71,13 @@ public suspend fun RealGamePageComponent(
                                 CoroutineScope(Dispatchers.Default).launch {
                                     componentContext.navigationContext.doStoringNavigation {
                                         navigationTarget.set(RealGamePageComponent.Configuration.DeviceGame)
+                                    }
+                                }
+                            },
+                            onGameControllerSelect = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    componentContext.navigationContext.doStoringNavigation {
+                                        navigationTarget.set(RealGamePageComponent.Configuration.GameController)
                                     }
                                 }
                             },
@@ -118,6 +127,20 @@ public suspend fun RealGamePageComponent(
                                     }
                                 }
                             },
+                        )
+                    )
+                RealGamePageComponent.Configuration.GameController ->
+                    GamePageComponent.Child.GameController(
+                        RealControllerPageComponent(
+                            componentContext = componentContext,
+                            volumeOn = volumeOn,
+                            onExitController = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    componentContext.navigationContext.doStoringNavigation {
+                                        navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
+                                    }
+                                }
+                            }
                         )
                     )
                 RealGamePageComponent.Configuration.GameTimer ->

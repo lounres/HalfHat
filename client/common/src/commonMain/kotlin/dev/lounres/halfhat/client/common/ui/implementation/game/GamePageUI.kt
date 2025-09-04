@@ -9,6 +9,8 @@ import androidx.compose.ui.unit.dp
 import dev.lounres.halfhat.client.common.resources.Res
 import dev.lounres.halfhat.client.common.resources.gamePage_dark_png_24dp
 import dev.lounres.halfhat.client.common.ui.components.game.GamePageComponent
+import dev.lounres.halfhat.client.common.ui.implementation.game.controller.ControllerPageActionsUI
+import dev.lounres.halfhat.client.common.ui.implementation.game.controller.ControllerPageUI
 import dev.lounres.halfhat.client.common.ui.implementation.game.deviceGame.DeviceGamePageActionsUI
 import dev.lounres.halfhat.client.common.ui.implementation.game.deviceGame.DeviceGamePageUI
 import dev.lounres.halfhat.client.common.ui.implementation.game.localGame.LocalGamePageActionsUI
@@ -51,6 +53,7 @@ public fun RowScope.GamePageActionsUI(
         is GamePageComponent.Child.OnlineGame -> OnlineGamePageActionsUI(active.component)
         is GamePageComponent.Child.LocalGame -> LocalGamePageActionsUI(active.component)
         is GamePageComponent.Child.DeviceGame -> DeviceGamePageActionsUI(active.component)
+        is GamePageComponent.Child.GameController -> ControllerPageActionsUI(active.component)
         is GamePageComponent.Child.GameTimer -> TimerPageActionsUI(active.component)
     }
 }
@@ -73,6 +76,7 @@ public fun GamePageUI(
                 is GamePageComponent.Child.OnlineGame -> OnlineGamePageUI(active.component)
                 is GamePageComponent.Child.LocalGame -> LocalGamePageUI(active.component)
                 is GamePageComponent.Child.DeviceGame -> DeviceGamePageUI(active.component)
+                is GamePageComponent.Child.GameController -> ControllerPageUI(active.component)
                 is GamePageComponent.Child.GameTimer -> TimerPageUI(active.component)
             }
         }

@@ -49,6 +49,7 @@ public fun ColumnScope.ModeSelectionPageUI(
                                     ModeSelectionPageComponent.InfoPopup.OnlineGame -> "This is a mode that provides a game over internet by official HalfHat server."
                                     ModeSelectionPageComponent.InfoPopup.LocalGame -> "This is a mode that provides a game over local network by HalfHat application on some device."
                                     ModeSelectionPageComponent.InfoPopup.DeviceGame -> "This is a mode that provides a game on this device."
+                                    ModeSelectionPageComponent.InfoPopup.GameController -> "This is a mode that provides a timer and a controller of playing players for the game."
                                     ModeSelectionPageComponent.InfoPopup.GameTimer -> "This is a mode that provides only a timer for the game."
                                 },
                         )
@@ -141,6 +142,33 @@ public fun ColumnScope.ModeSelectionPageUI(
                     painter = painterResource(Res.drawable.gameModeDescriptionButton_dark_png_24dp),
                     modifier = commonIconModifier,
                     contentDescription = "Device game description",
+                )
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Button(
+                modifier = Modifier.weight(1f),
+                onClick = component.onGameControllerSelect,
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.timerPage_dark_png_24dp),
+                    modifier = commonIconModifier,
+                    contentDescription = null,
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Game controller"
+                )
+            }
+            IconButton(
+                onClick = component.onGameControllerInfo,
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.gameModeDescriptionButton_dark_png_24dp),
+                    modifier = commonIconModifier,
+                    contentDescription = "Game controller description",
                 )
             }
         }

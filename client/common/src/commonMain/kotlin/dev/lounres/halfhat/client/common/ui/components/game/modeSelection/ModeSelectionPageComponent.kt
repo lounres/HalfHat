@@ -8,6 +8,7 @@ public interface ModeSelectionPageComponent {
     public val onOnlineGameSelect: () -> Unit
     public val onLocalGameSelect: () -> Unit
     public val onDeviceGameSelect: () -> Unit
+    public val onGameControllerSelect: () -> Unit
     public val onGameTimerSelect: () -> Unit
     
     public val infoPopup: KoneAsynchronousHub<ChildrenPossibility<*, InfoPopup>>
@@ -15,10 +16,11 @@ public interface ModeSelectionPageComponent {
     public val onOnlineGameInfo: () -> Unit
     public val onLocalGameInfo: () -> Unit
     public val onDeviceGameInfo: () -> Unit
+    public val onGameControllerInfo: () -> Unit
     public val onGameTimerInfo: () -> Unit
     public val onCloseInfo: () -> Unit
     
     public enum class InfoPopup {
-        OnlineGame, LocalGame, DeviceGame, GameTimer
+        OnlineGame, LocalGame, DeviceGame, GameController, GameTimer
     }
 }

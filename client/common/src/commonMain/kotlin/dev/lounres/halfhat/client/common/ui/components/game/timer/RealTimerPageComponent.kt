@@ -8,8 +8,6 @@ import dev.lounres.halfhat.client.components.buildLogicChildOnRunning
 import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.hub.KoneMutableBlockingHub
 import dev.lounres.kone.hub.value
-import dev.lounres.kone.relations.Equality
-import dev.lounres.kone.relations.defaultFor
 import kotlinx.coroutines.flow.StateFlow
 
 
@@ -23,9 +21,9 @@ public class RealTimerPageComponent(
     
     override val timerState: KoneAsynchronousHub<TimerState> get() = timerComponent.timerState
     
-    override val preparationTimeSetting: KoneMutableBlockingHub<String> = KoneMutableBlockingHub(initialPreparationTimeSetting.toString(), Equality.defaultFor() /* FIXME: Remove the default value */)
-    override val explanationTimeSetting: KoneMutableBlockingHub<String> = KoneMutableBlockingHub(initialExplanationTimeSetting.toString(), Equality.defaultFor() /* FIXME: Remove the default value */)
-    override val lastGuessTimeSetting: KoneMutableBlockingHub<String> = KoneMutableBlockingHub(initialLastGuessTimeSetting.toString(), Equality.defaultFor() /* FIXME: Remove the default value */)
+    override val preparationTimeSetting: KoneMutableBlockingHub<String> = KoneMutableBlockingHub(initialPreparationTimeSetting.toString())
+    override val explanationTimeSetting: KoneMutableBlockingHub<String> = KoneMutableBlockingHub(initialExplanationTimeSetting.toString())
+    override val lastGuessTimeSetting: KoneMutableBlockingHub<String> = KoneMutableBlockingHub(initialLastGuessTimeSetting.toString())
     
     override val onStartTimer: () -> Unit = onStartTimer@{
         timerComponent.startTimer(

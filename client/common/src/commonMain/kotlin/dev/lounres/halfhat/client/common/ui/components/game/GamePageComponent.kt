@@ -1,6 +1,7 @@
 package dev.lounres.halfhat.client.common.ui.components.game
 
 import dev.lounres.halfhat.client.common.ui.components.PageComponent
+import dev.lounres.halfhat.client.common.ui.components.game.controller.ControllerPageComponent
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.DeviceGamePageComponent
 import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.OnlineGamePageComponent
 import dev.lounres.halfhat.client.common.ui.components.game.timer.TimerPageComponent
@@ -19,6 +20,7 @@ public interface GamePageComponent : PageComponent {
         public class OnlineGame(public val component: OnlineGamePageComponent) : Child
         public class LocalGame(public val component: LocalGamePageComponent) : Child
         public class DeviceGame(public val component: DeviceGamePageComponent) : Child
+        public class GameController(public val component: ControllerPageComponent) : Child
         public class GameTimer(public val component: TimerPageComponent) : Child
     }
 }
