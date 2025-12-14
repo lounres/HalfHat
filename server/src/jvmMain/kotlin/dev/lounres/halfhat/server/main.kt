@@ -4,32 +4,41 @@ import dev.lounres.halfhat.api.onlineGame.ClientApi
 import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.halfhat.logic.server.Room
+import dev.lounres.kone.collections.array.KoneMutableUIntArray
+import dev.lounres.kone.collections.array.generate
+import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.empty
-import dev.lounres.kone.collections.set.KoneSet
-import dev.lounres.kone.collections.set.of
-import dev.lounres.kone.collections.set.toKoneSet
+import dev.lounres.kone.collections.map.associate
+import dev.lounres.kone.collections.map.contains
+import dev.lounres.kone.collections.map.getOrNull
+import dev.lounres.kone.collections.map.mapsTo
+import dev.lounres.kone.collections.set.*
 import dev.lounres.kone.collections.utils.map
+import dev.lounres.kone.collections.utils.sort
 import dev.lounres.kone.collections.utils.take
-import dev.lounres.logKube.core.DefaultJvmLogWriter
-import dev.lounres.logKube.core.JvmLogger
-import dev.lounres.logKube.core.LogAcceptor
-import dev.lounres.logKube.core.debug
-import dev.lounres.logKube.core.info
-import dev.lounres.logKube.core.warn
-import io.ktor.serialization.deserialize
-import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
-import io.ktor.server.application.install
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
-import io.ktor.server.routing.routing
+import dev.lounres.kone.repeat
+import dev.lounres.logKube.core.*
+import io.ktor.serialization.*
+import io.ktor.serialization.kotlinx.*
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.name
+import kotlin.io.path.readLines
+import kotlin.io.path.toPath
+import kotlin.random.Random
+import kotlin.random.nextUInt
 import kotlin.uuid.Uuid
 
 
@@ -56,19 +65,66 @@ sealed interface NoWordsProviderReason {
     data object CannotFindDictionaryByID : NoWordsProviderReason
 }
 
-object OnlineGameWordsProviderRegistry : Room.WordProviderRegistry<WordsProviderID, NoWordsProviderReason> {
-    override fun contains(id: String): Boolean = id == "kek"
+object DummyOnlineGameWordsProviderRegistry : Room.WordProviderRegistry<WordsProviderID, NoWordsProviderReason> {
+    override fun contains(id: WordsProviderID): Boolean = id == "kek"
     
-    override suspend fun get(providerId: String): GameStateMachine.WordsProviderRegistry.ResultOrReason<NoWordsProviderReason> =
+    override suspend fun get(providerId: WordsProviderID): GameStateMachine.WordsProviderRegistry.ResultOrReason<NoWordsProviderReason> =
         if (providerId == "kek") GameStateMachine.WordsProviderRegistry.ResultOrReason.Success(TemporaryDictionary)
         else GameStateMachine.WordsProviderRegistry.ResultOrReason.Failure(NoWordsProviderReason.CannotFindDictionaryByID)
     
-    private object TemporaryDictionary: GameStateMachine.WordsProvider {
+    private object TemporaryDictionary : GameStateMachine.WordsProvider {
         private val words = KoneSet.of("картина", "корзина", "картонка", "собачонка")
         
         override val size: UInt get() = words.size
         override fun randomWords(number: UInt): KoneSet<String> = words.take(number).toKoneSet()
         override fun allWords(): KoneSet<String> = words
+    }
+}
+
+object OnlineGameWordsProviderRegistry : Room.WordProviderRegistry<WordsProviderID, NoWordsProviderReason> {
+    private class ResourceDictionary(pathToRead: Path) : GameStateMachine.WordsProvider {
+        private val words = pathToRead.readLines().toKoneList().toKoneSet()
+        
+        override val size: UInt get() = words.size
+        override fun allWords(): KoneSet<String> = words
+        override fun randomWords(number: UInt): KoneSet<String> {
+            if (number == 0u) return KoneSet.empty()
+            
+            val indices = KoneMutableUIntArray.generate(number) { Random.nextUInt(words.size - it) }
+            if (number >= 2u) for (i in number - 2u downTo 0u) for (j in number - 1u downTo i + 1u) {
+                if (indices[j] >= indices[i]) indices[j]++
+            }
+            
+            indices.sort()
+            
+            return KoneSet.build {
+                var indexIndex = 0u
+                var currentIndex = 0u
+                val iterator = words.iterator()
+                while (indexIndex < number) {
+                    repeat(indices[indexIndex] - currentIndex) { iterator.moveNext() }
+                    currentIndex = indices[indexIndex]
+                    add(iterator.getNext())
+                    indexIndex++
+                }
+            }
+        }
+    }
+    
+    private val dictionaries = javaClass
+        .getResource("/dictionaries")!!
+        .toURI()
+        .toPath()
+        .listDirectoryEntries()
+        .toKoneList()
+        .associate { it.name mapsTo lazy { ResourceDictionary(it) } }
+    
+    override fun contains(id: WordsProviderID): Boolean = id in dictionaries
+    
+    override suspend fun get(providerId: WordsProviderID): GameStateMachine.WordsProviderRegistry.ResultOrReason<NoWordsProviderReason> {
+        val provider = dictionaries.getOrNull(providerId)?.value
+        return if (provider != null) GameStateMachine.WordsProviderRegistry.ResultOrReason.Success(provider)
+        else GameStateMachine.WordsProviderRegistry.ResultOrReason.Failure(NoWordsProviderReason.CannotFindDictionaryByID)
     }
 }
 
@@ -88,7 +144,7 @@ fun getRoomByIdOrCreate(id: String): ServerRoom = rooms.computeIfAbsent(id) {
             cachedEndConditionWordsNumber = 100u,
             cachedEndConditionCyclesNumber = 4u,
             gameEndConditionType = GameStateMachine.GameEndCondition.Type.Words,
-            wordsSource = Room.WordsSource.ServerDictionary("kek")
+            wordsSource = Room.WordsSource.ServerDictionary("medium")
         ),
         initialMetadataFactory = { PlayerMetadata(it) },
         checkConnectionAttachment = { _, isOnline, _ -> !isOnline }

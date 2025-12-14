@@ -19,6 +19,9 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation(projects.api)
+                
+                // Utils
+                implementation(versions.kone.util.misc)
 
                 // Logging
                 implementation(versions.logKube.core)
