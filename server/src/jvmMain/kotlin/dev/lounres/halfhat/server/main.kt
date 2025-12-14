@@ -9,10 +9,10 @@ import dev.lounres.kone.collections.array.generate
 import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.empty
-import dev.lounres.kone.collections.map.associate
+import dev.lounres.kone.collections.list.of
+import dev.lounres.kone.collections.map.associateWith
 import dev.lounres.kone.collections.map.contains
 import dev.lounres.kone.collections.map.getOrNull
-import dev.lounres.kone.collections.map.mapsTo
 import dev.lounres.kone.collections.set.*
 import dev.lounres.kone.collections.utils.map
 import dev.lounres.kone.collections.utils.sort
@@ -27,16 +27,12 @@ import io.ktor.server.netty.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.io.path.listDirectoryEntries
-import kotlin.io.path.name
-import kotlin.io.path.readLines
-import kotlin.io.path.toPath
 import kotlin.random.Random
 import kotlin.random.nextUInt
 import kotlin.uuid.Uuid
@@ -82,9 +78,9 @@ object DummyOnlineGameWordsProviderRegistry : Room.WordProviderRegistry<WordsPro
 }
 
 object OnlineGameWordsProviderRegistry : Room.WordProviderRegistry<WordsProviderID, NoWordsProviderReason> {
-    private class ResourceDictionary(pathToRead: Path) : GameStateMachine.WordsProvider {
-        private val words = pathToRead.readLines().toKoneList().toKoneSet()
-        
+    private class ResourceDictionary(
+        private val words: KoneSet<String>
+    ) : GameStateMachine.WordsProvider {
         override val size: UInt get() = words.size
         override fun allWords(): KoneSet<String> = words
         override fun randomWords(number: UInt): KoneSet<String> {
@@ -111,13 +107,15 @@ object OnlineGameWordsProviderRegistry : Room.WordProviderRegistry<WordsProvider
         }
     }
     
-    private val dictionaries = javaClass
-        .getResource("/dictionaries")!!
-        .toURI()
-        .toPath()
-        .listDirectoryEntries()
-        .toKoneList()
-        .associate { it.name mapsTo lazy { ResourceDictionary(it) } }
+    private val dictionaries = KoneList
+        .of("easy", "medium", "hard")
+        .associateWith {
+            lazy {
+                ResourceDictionary(
+                    javaClass.getResourceAsStream("/dictionaries/$it")!!.bufferedReader().readLines().toKoneList().toKoneSet()
+                )
+            }
+        }
     
     override fun contains(id: WordsProviderID): Boolean = id in dictionaries
     

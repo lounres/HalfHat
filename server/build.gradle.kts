@@ -4,14 +4,17 @@ plugins {
     alias(versions.plugins.kotlinx.serialization)
     alias(versions.plugins.kotlinx.atomicfu)
 //    alias(versions.plugins.ktor)
+    id("com.gradleup.shadow") version "9.3.0"
 }
+
+val mainClassFQN = "dev.lounres.halfhat.server.MainKt"
 
 kotlin {
     jvm {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         binaries {
             executable {
-                mainClass = "dev.lounres.halfhat.server.MainKt"
+                mainClass = mainClassFQN
             }
         }
     }
@@ -38,6 +41,10 @@ kotlin {
     }
 }
 
-//application {
-//    mainClass = "dev.lounres.halfhat.server.MainKt"
-//}
+tasks.shadowJar {
+    archiveBaseName = "halfhat-server"
+    archiveClassifier = ""
+    manifest {
+        attributes["Main-Class"] = mainClassFQN
+    }
+}
