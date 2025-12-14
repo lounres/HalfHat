@@ -54,7 +54,7 @@ public fun ColumnScope.RoundPreparationUI(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "${gameState.playersList[gameState.speakerIndex]} explains",
+                        text = "${gameState.playersList[gameState.speakerIndex].name} explains",
                         fontSize = 16.sp,
                     )
                 }
@@ -62,7 +62,7 @@ public fun ColumnScope.RoundPreparationUI(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "${gameState.playersList[gameState.listenerIndex]} guesses",
+                        text = "${gameState.playersList[gameState.listenerIndex].name} guesses",
                         fontSize = 16.sp,
                     )
                     Spacer(modifier = Modifier.width(8.dp))

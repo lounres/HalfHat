@@ -118,8 +118,11 @@ public object ServerApi {
             ) : Role {
                 @Serializable
                 public sealed interface RoundRole {
+                    @Serializable
                     public data object Player : RoundRole
+                    @Serializable
                     public data class Speaker(val currentWord: String) : RoundRole
+                    @Serializable
                     public data object Listener : RoundRole
                 }
             }
@@ -133,8 +136,11 @@ public object ServerApi {
             ) : Role {
                 @Serializable
                 public sealed interface RoundRole {
+                    @Serializable
                     public data object Player : RoundRole
+                    @Serializable
                     public data class Speaker(val currentWord: String) : RoundRole
+                    @Serializable
                     public data object Listener : RoundRole
                 }
             }
@@ -148,10 +154,13 @@ public object ServerApi {
             ) : Role {
                 @Serializable
                 public sealed interface RoundRole {
+                    @Serializable
                     public data object Player : RoundRole
+                    @Serializable
                     public data class Speaker(
                         public val wordsToEdit: KoneList<GameStateMachine.WordExplanation>,
                     ) : RoundRole
+                    @Serializable
                     public data object Listener : RoundRole
                 }
             }
@@ -260,6 +269,8 @@ public object ServerApi {
             public data object UnspecifiedError : Error
             
             @Serializable
+            public data object AttachmentIsAlreadyProvided : Error
+            @Serializable
             public data object AttachmentIsDenied : Error
             @Serializable
             public data object AttachmentIsAlreadySevered : Error
@@ -274,11 +285,15 @@ public object ServerApi {
             @Serializable
             public data object CannotFindDictionaryByID : Error
             @Serializable
-            public data object CannotInitializationGameSettingsAfterInitialization : Error
+            public data object CannotInitializeGameAfterInitialization : Error
             @Serializable
             public data object CannotSetSpeakerReadinessNotDuringRoundWaiting : Error
             @Serializable
+            public data object NotSpeakerSettingSpeakerReadiness : Error
+            @Serializable
             public data object CannotSetListenerReadinessNotDuringRoundWaiting : Error
+            @Serializable
+            public data object NotListenerSettingListenerReadiness : Error
             @Serializable
             public data object CannotSetSpeakerAndListenerReadinessNotDuringRoundWaiting : Error
             @Serializable
@@ -286,11 +301,19 @@ public object ServerApi {
             @Serializable
             public data object CannotSubmitWordExplanationResultNotDuringExplanationOrLastGuess : Error
             @Serializable
+            public data object NotSpeakerSubmittingWordExplanationResult : Error
+            @Serializable
             public data object CannotUpdateWordExplanationResultsNotDuringRoundEditing : Error
+            @Serializable
+            public data object NotSpeakerUpdatingWordExplanationResults : Error
             @Serializable
             public data object CannotConfirmWordExplanationResultsNotDuringRoundEditing : Error
             @Serializable
+            public data object NotSpeakerConfirmingWordExplanationResults : Error
+            @Serializable
             public data object CannotFinishGameNotDuringRoundWaiting : Error
+            @Serializable
+            public data object NotHostFinishingGame : Error
         }
     }
     

@@ -2,7 +2,6 @@ package dev.lounres.halfhat.logic.gameStateMachine
 
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.set.KoneSet
-import kotlinx.coroutines.Job
 import kotlinx.serialization.Serializable
 import kotlin.time.Instant
 
@@ -231,7 +230,7 @@ public object GameStateMachine {
         public data class NoWordsProvider<out NoWordsProviderReason>(public val reason: NoWordsProviderReason) : NoNextStateReason<Nothing, NoWordsProviderReason>
         public data object CannotUpdateGameSettingsAfterInitialization : NoNextStateReason<Nothing, Nothing>
         public data object NotEnoughPlayersForInitialization : NoNextStateReason<Nothing, Nothing>
-        public data object CannotInitializationGameSettingsAfterInitialization : NoNextStateReason<Nothing, Nothing>
+        public data object CannotInitializeGameAfterInitialization : NoNextStateReason<Nothing, Nothing>
         public data object CannotSetSpeakerReadinessNotDuringRoundWaiting : NoNextStateReason<Nothing, Nothing>
         public data object CannotSetListenerReadinessNotDuringRoundWaiting : NoNextStateReason<Nothing, Nothing>
         public data object CannotSetSpeakerAndListenerReadinessNotDuringRoundWaiting : NoNextStateReason<Nothing, Nothing>

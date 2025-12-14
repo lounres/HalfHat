@@ -285,15 +285,21 @@ class Connection(
             Room.Outgoing.Error.NotHostChangingGameSettings -> ServerApi.OnlineGame.Error.NotHostChangingGameSettings
             Room.Outgoing.Error.CannotUpdateGameSettingsAfterInitialization -> ServerApi.OnlineGame.Error.CannotUpdateGameSettingsAfterInitialization
             Room.Outgoing.Error.NotEnoughPlayersForInitialization -> ServerApi.OnlineGame.Error.NotEnoughPlayersForInitialization
-            Room.Outgoing.Error.CannotInitializationGameSettingsAfterInitialization -> ServerApi.OnlineGame.Error.CannotInitializationGameSettingsAfterInitialization
+            Room.Outgoing.Error.CannotInitializeGameAfterInitialization -> ServerApi.OnlineGame.Error.CannotInitializeGameAfterInitialization
             Room.Outgoing.Error.CannotSetSpeakerReadinessNotDuringRoundWaiting -> ServerApi.OnlineGame.Error.CannotSetSpeakerReadinessNotDuringRoundWaiting
+            Room.Outgoing.Error.NotSpeakerSettingSpeakerReadiness -> ServerApi.OnlineGame.Error.NotSpeakerSettingSpeakerReadiness
             Room.Outgoing.Error.CannotSetListenerReadinessNotDuringRoundWaiting -> ServerApi.OnlineGame.Error.CannotSetListenerReadinessNotDuringRoundWaiting
+            Room.Outgoing.Error.NotListenerSettingListenerReadiness -> ServerApi.OnlineGame.Error.NotListenerSettingListenerReadiness
             Room.Outgoing.Error.CannotSetSpeakerAndListenerReadinessNotDuringRoundWaiting -> ServerApi.OnlineGame.Error.CannotSetSpeakerAndListenerReadinessNotDuringRoundWaiting
             Room.Outgoing.Error.CannotUpdateRoundInfoNotDuringTheRound -> ServerApi.OnlineGame.Error.CannotUpdateRoundInfoNotDuringTheRound
             Room.Outgoing.Error.CannotSubmitWordExplanationResultNotDuringExplanationOrLastGuess -> ServerApi.OnlineGame.Error.CannotSubmitWordExplanationResultNotDuringExplanationOrLastGuess
+            Room.Outgoing.Error.NotSpeakerSubmittingWordExplanationResult -> ServerApi.OnlineGame.Error.NotSpeakerSubmittingWordExplanationResult
             Room.Outgoing.Error.CannotUpdateWordExplanationResultsNotDuringRoundEditing -> ServerApi.OnlineGame.Error.CannotUpdateWordExplanationResultsNotDuringRoundEditing
+            Room.Outgoing.Error.NotSpeakerUpdatingWordExplanationResults -> ServerApi.OnlineGame.Error.NotSpeakerUpdatingWordExplanationResults
             Room.Outgoing.Error.CannotConfirmWordExplanationResultsNotDuringRoundEditing -> ServerApi.OnlineGame.Error.CannotConfirmWordExplanationResultsNotDuringRoundEditing
+            Room.Outgoing.Error.NotSpeakerConfirmingWordExplanationResults -> ServerApi.OnlineGame.Error.NotSpeakerConfirmingWordExplanationResults
             Room.Outgoing.Error.CannotFinishGameNotDuringRoundWaiting -> ServerApi.OnlineGame.Error.CannotFinishGameNotDuringRoundWaiting
+            Room.Outgoing.Error.NotHostFinishingGame -> ServerApi.OnlineGame.Error.NotHostFinishingGame
         }
         
         logger.debug(
@@ -351,6 +357,13 @@ fun main() {
                         when (signal) {
                             is ClientApi.Signal.FetchFreeRoomId -> {
                                 // TODO
+                                logger.debug(
+                                    items = {
+                                        mapOf(
+                                            "connection" to this.toString(),
+                                        )
+                                    }
+                                ) { "Cannot answer to 'FetchFreeRoomId' as it is not implemented!" }
                             }
                             is ClientApi.Signal.FetchRoomInfo -> {
                                 val room = rooms[signal.roomId]
@@ -398,7 +411,15 @@ fun main() {
                             }
                             is ClientApi.Signal.OnlineGame.JoinRoom -> connection.playerAttachmentMutex.withLock {
                                 if (connection.playerAttachment != null) {
-                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
+                                    logger.debug(
+                                        items = {
+                                            mapOf(
+                                                "connection" to this.toString(),
+                                            )
+                                        }
+                                    ) { "Attachment is already provided" }
+                                    
+                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.AttachmentIsAlreadyProvided))
                                     return@withLock
                                 }
                                 
@@ -445,17 +466,43 @@ fun main() {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
+                                    logger.debug(
+                                        items = {
+                                            mapOf(
+                                                "connection" to this.toString(),
+                                            )
+                                        }
+                                    ) { "No attachment when it is needed" }
+                                    
                                     sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
                                 
                                 attachment.sever()
+                                
+                                connection.playerAttachment = null
+                                
+                                logger.debug(
+                                    items = {
+                                        mapOf(
+                                            "connection" to this.toString(),
+                                        )
+                                    }
+                                ) { "Attachment is successfully severed" }
                             }
                             
                             is ClientApi.Signal.OnlineGame.UpdateSettings -> connection.playerAttachmentMutex.withLock {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
+                                    logger.debug(
+                                        items = {
+                                            mapOf(
+                                                "connection" to this.toString(),
+                                            )
+                                        }
+                                    ) { "No attachment when it is needed" }
+                                    
                                     sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
@@ -482,6 +529,14 @@ fun main() {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
+                                    logger.debug(
+                                        items = {
+                                            mapOf(
+                                                "connection" to this.toString(),
+                                            )
+                                        }
+                                    ) { "No attachment when it is needed" }
+                                    
                                     sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
@@ -492,6 +547,14 @@ fun main() {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
+                                    logger.debug(
+                                        items = {
+                                            mapOf(
+                                                "connection" to this.toString(),
+                                            )
+                                        }
+                                    ) { "No attachment when it is needed" }
+                                    
                                     sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
@@ -502,6 +565,14 @@ fun main() {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
+                                    logger.debug(
+                                        items = {
+                                            mapOf(
+                                                "connection" to this.toString(),
+                                            )
+                                        }
+                                    ) { "No attachment when it is needed" }
+                                    
                                     sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
@@ -512,6 +583,14 @@ fun main() {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
+                                    logger.debug(
+                                        items = {
+                                            mapOf(
+                                                "connection" to this.toString(),
+                                            )
+                                        }
+                                    ) { "No attachment when it is needed" }
+                                    
                                     sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
@@ -522,6 +601,14 @@ fun main() {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
+                                    logger.debug(
+                                        items = {
+                                            mapOf(
+                                                "connection" to this.toString(),
+                                            )
+                                        }
+                                    ) { "No attachment when it is needed" }
+                                    
                                     sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
@@ -532,6 +619,14 @@ fun main() {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
+                                    logger.debug(
+                                        items = {
+                                            mapOf(
+                                                "connection" to this.toString(),
+                                            )
+                                        }
+                                    ) { "No attachment when it is needed" }
+                                    
                                     sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }
@@ -542,6 +637,14 @@ fun main() {
                                 val attachment = connection.playerAttachment
                                 
                                 if (attachment == null) {
+                                    logger.debug(
+                                        items = {
+                                            mapOf(
+                                                "connection" to this.toString(),
+                                            )
+                                        }
+                                    ) { "No attachment when it is needed" }
+                                    
                                     sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
                                     return@withLock
                                 }

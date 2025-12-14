@@ -62,7 +62,7 @@ public fun ColumnScope.RoundWaitingUI(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "${gameState.playersList[gameState.speakerIndex]} explains",
+                    text = "${gameState.playersList[gameState.speakerIndex].name} explains",
                     fontSize = 24.sp,
                 )
             }
@@ -73,7 +73,7 @@ public fun ColumnScope.RoundWaitingUI(
                 horizontalArrangement = Arrangement.End,
             ) {
                 Text(
-                    text = "${gameState.playersList[gameState.listenerIndex]} guesses",
+                    text = "${gameState.playersList[gameState.listenerIndex].name} guesses",
                     fontSize = 24.sp,
                 )
                 Spacer(modifier = Modifier.width(8.dp))

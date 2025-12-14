@@ -1,38 +1,12 @@
 package dev.lounres.halfhat.logic.server
 
-import dev.lounres.halfhat.logic.gameStateMachine.AsynchronousGameStateMachine
-import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.halfhat.logic.gameStateMachine.Initialization
-import dev.lounres.halfhat.logic.gameStateMachine.moveMaybe
-import dev.lounres.halfhat.logic.gameStateMachine.moveMaybeAndCompute
-import dev.lounres.halfhat.logic.gameStateMachine.confirmWordsExplanationResults
-import dev.lounres.halfhat.logic.gameStateMachine.listenerReady
-import dev.lounres.halfhat.logic.gameStateMachine.speakerReady
-import dev.lounres.halfhat.logic.gameStateMachine.state
-import dev.lounres.halfhat.logic.gameStateMachine.updateWordsExplanationResults
-import dev.lounres.halfhat.logic.gameStateMachine.wordExplanationState
+import dev.lounres.halfhat.logic.gameStateMachine.*
 import dev.lounres.halfhat.logic.server.Room.GameStateMachineMetadataTransition.*
-import dev.lounres.kone.automata.CheckResult
-import dev.lounres.kone.automata.MovementMaybeAndComputationResult
-import dev.lounres.kone.automata.MovementMaybeResult
-import dev.lounres.kone.automata.MovementResult
-import dev.lounres.kone.automata.TransitionOrReason
-import dev.lounres.kone.automata.TransitionOrReasonAndComputation
+import dev.lounres.kone.automata.*
 import dev.lounres.kone.collections.iterables.isNotEmpty
-import dev.lounres.kone.collections.list.KoneList
-import dev.lounres.kone.collections.list.KoneMutableList
-import dev.lounres.kone.collections.list.KoneMutableListNode
-import dev.lounres.kone.collections.list.KoneMutableNoddedList
-import dev.lounres.kone.collections.list.empty
+import dev.lounres.kone.collections.list.*
 import dev.lounres.kone.collections.list.implementations.KoneGCLinkedSizedList
-import dev.lounres.kone.collections.utils.filter
-import dev.lounres.kone.collections.utils.firstIndexThat
-import dev.lounres.kone.collections.utils.firstThat
-import dev.lounres.kone.collections.utils.firstThatOrNull
-import dev.lounres.kone.collections.utils.forEach
-import dev.lounres.kone.collections.utils.forEachIndexed
-import dev.lounres.kone.collections.utils.map
-import dev.lounres.kone.scope
+import dev.lounres.kone.collections.utils.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.Serializable
@@ -82,9 +56,9 @@ public class Room<
             public suspend fun sever() {
                 player.room.gameStateMachine.moveMaybe { previousState ->
                     val isNodeActuallyAttached = !node.isDetached
-                    node.remove()
                     
-                    if (isNodeActuallyAttached)
+                    if (isNodeActuallyAttached) {
+                        node.remove()
                         TransitionOrReason.Success(
                             when (previousState) {
                                 is GameStateMachine.State.GameInitialisation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> ->
@@ -92,18 +66,20 @@ public class Room<
                                         playersList = previousState.metadata.allPlayersList.filter { it.isOnline },
                                         settingsBuilder = previousState.settingsBuilder,
                                     )
+                                
                                 is GameStateMachine.State.RoundWaiting<*, *, *>,
                                 is GameStateMachine.State.RoundPreparation<*, *, *>,
                                 is GameStateMachine.State.RoundExplanation<*, *, *>,
                                 is GameStateMachine.State.RoundLastGuess<*, *, *>,
                                 is GameStateMachine.State.RoundEditing<*, *, *>,
-                                is GameStateMachine.State.GameResults<*, *>, ->
+                                is GameStateMachine.State.GameResults<*, *>,
+                                    ->
                                     GameStateMachine.Transition.UpdateMetadata(
                                         SeverConnectionAttachment
                                     )
                             }
                         )
-                    else {
+                    } else {
                         node.element.sendError(Outgoing.Error.AttachmentIsAlreadySevered)
                         TransitionOrReason.Failure(null)
                     }
@@ -111,13 +87,13 @@ public class Room<
             }
             
             public suspend fun updateGameSettings(settingsBuilder: GameSettings.Builder<WordsProviderID>) {
-                player.room.gameStateMachine.moveMaybe { previousState ->
-                    if (previousState.metadata.allPlayersList.firstThat { it.isOnline } != this) {
+                val result = player.room.gameStateMachine.moveMaybe { previousState ->
+                    if (previousState.metadata.allPlayersList.firstThat { it.isOnline } != player) {
                         node.element.sendError(Outgoing.Error.NotHostChangingGameSettings)
                         return@moveMaybe TransitionOrReason.Failure(null)
                     }
                     when (previousState) {
-                        is GameStateMachine.State.GameInitialisation<*, WordsProviderID, *> -> scope {
+                        is GameStateMachine.State.GameInitialisation<*, WordsProviderID, *> ->
                             TransitionOrReason.Success(
                                 GameStateMachine.Transition.UpdateGame.UpdateGameSettings(
                                     playersList = previousState.playersList,
@@ -136,7 +112,6 @@ public class Room<
                                     ),
                                 )
                             )
-                        }
                         is GameStateMachine.State.RoundWaiting<*, *, *>,
                         is GameStateMachine.State.RoundPreparation<*, *, *>,
                         is GameStateMachine.State.RoundExplanation<*, *, *>,
@@ -146,11 +121,19 @@ public class Room<
                             -> TransitionOrReason.Failure(null)
                     }
                 }
+                when (result) {
+                    is MovementMaybeResult.NoTransition<*, *> -> {}
+                    is MovementMaybeResult.NoNextState<*, *, GameStateMachine.NoNextStateReason<Nothing?, NoWordsProviderReason>> -> {
+                        val error = Outgoing.Error.fromGameStateMachineNoNextStateReason(result.noNextStateReason)
+                        if (error != null) node.element.sendError(error)
+                    }
+                    is MovementMaybeResult.Success<*, *> -> {}
+                }
             }
             
             public suspend fun initializeGame() {
                 val result = player.room.gameStateMachine.moveMaybe { previousState ->
-                    if (previousState.metadata.allPlayersList.firstThat { it.isOnline } != this) {
+                    if (previousState.metadata.allPlayersList.firstThat { it.isOnline } != player) {
                         node.element.sendError(Outgoing.Error.NotHostChangingGameSettings)
                         return@moveMaybe TransitionOrReason.Failure(null)
                     }
@@ -168,57 +151,164 @@ public class Room<
                     }
                     is MovementMaybeResult.Success<*, *> -> {}
                 }
-//                if (result is MovementResult.NoNextState<*, *, GameStateMachine.NoNextStateReason<Nothing?>>) {
-//                    val error = Outgoing.Error.fromGameStateMachineNoNextStateReason(result.noNextStateReason)
-//                    if (error != null) node.element.sendError(error)
-//                }
             }
             
             public suspend fun speakerReady() {
-                val result = player.room.gameStateMachine.speakerReady()
-                if (result is MovementResult.NoNextState<*, *, GameStateMachine.NoNextStateReason<Nothing?, NoWordsProviderReason>>) {
-                    val error = Outgoing.Error.fromGameStateMachineNoNextStateReason(result.noNextStateReason)
-                    if (error != null) node.element.sendError(error)
+                val result = player.room.gameStateMachine.moveMaybe { previousState ->
+                    when (previousState) {
+                        is GameStateMachine.State.RoundWaiting<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, *, *> ->
+                            if (previousState.speaker != player) {
+                                node.element.sendError(Outgoing.Error.NotSpeakerSettingSpeakerReadiness)
+                                TransitionOrReason.Failure(null)
+                            } else TransitionOrReason.Success(GameStateMachine.Transition.UpdateGame.SpeakerReady)
+                        is GameStateMachine.State.GameInitialisation<*, *, *>,
+                        is GameStateMachine.State.RoundPreparation<*, *, *>,
+                        is GameStateMachine.State.RoundExplanation<*, *, *>,
+                        is GameStateMachine.State.RoundLastGuess<*, *, *>,
+                        is GameStateMachine.State.RoundEditing<*, *, *>,
+                        is GameStateMachine.State.GameResults<*, *>,
+                            -> TransitionOrReason.Failure(null)
+                    }
+                }
+                when (result) {
+                    is MovementMaybeResult.NoTransition<*, *> -> {}
+                    is MovementMaybeResult.NoNextState<*, *, GameStateMachine.NoNextStateReason<Nothing?, NoWordsProviderReason>> -> {
+                        val error = Outgoing.Error.fromGameStateMachineNoNextStateReason(result.noNextStateReason)
+                        if (error != null) node.element.sendError(error)
+                    }
+                    is MovementMaybeResult.Success<*, *> -> {}
                 }
             }
             
             public suspend fun listenerReady() {
-                val result = player.room.gameStateMachine.listenerReady()
-                if (result is MovementResult.NoNextState<*, *, GameStateMachine.NoNextStateReason<Nothing?, NoWordsProviderReason>>) {
-                    val error = Outgoing.Error.fromGameStateMachineNoNextStateReason(result.noNextStateReason)
-                    if (error != null) node.element.sendError(error)
+                val result = player.room.gameStateMachine.moveMaybe { previousState ->
+                    when (previousState) {
+                        is GameStateMachine.State.RoundWaiting<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, *, *> ->
+                            if (previousState.listener != player) {
+                                node.element.sendError(Outgoing.Error.NotListenerSettingListenerReadiness)
+                                TransitionOrReason.Failure(null)
+                            } else TransitionOrReason.Success(GameStateMachine.Transition.UpdateGame.ListenerReady)
+                        is GameStateMachine.State.GameInitialisation<*, *, *>,
+                        is GameStateMachine.State.RoundPreparation<*, *, *>,
+                        is GameStateMachine.State.RoundExplanation<*, *, *>,
+                        is GameStateMachine.State.RoundLastGuess<*, *, *>,
+                        is GameStateMachine.State.RoundEditing<*, *, *>,
+                        is GameStateMachine.State.GameResults<*, *>,
+                            -> TransitionOrReason.Failure(null)
+                    }
+                }
+                when (result) {
+                    is MovementMaybeResult.NoTransition<*, *> -> {}
+                    is MovementMaybeResult.NoNextState<*, *, GameStateMachine.NoNextStateReason<Nothing?, NoWordsProviderReason>> -> {
+                        val error = Outgoing.Error.fromGameStateMachineNoNextStateReason(result.noNextStateReason)
+                        if (error != null) node.element.sendError(error)
+                    }
+                    is MovementMaybeResult.Success<*, *> -> {}
                 }
             }
             
             public suspend fun wordExplanationState(state: GameStateMachine.WordExplanation.State) {
-                val result = player.room.gameStateMachine.wordExplanationState(state)
-                if (result is MovementResult.NoNextState<*, *, GameStateMachine.NoNextStateReason<Nothing?, NoWordsProviderReason>>) {
-                    val error = Outgoing.Error.fromGameStateMachineNoNextStateReason(result.noNextStateReason)
-                    if (error != null) node.element.sendError(error)
+                val result = player.room.gameStateMachine.moveMaybe { previousState ->
+                    when (previousState) {
+                        is GameStateMachine.State.RoundExplanation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, *, *> ->
+                            if (previousState.speaker != player) {
+                                node.element.sendError(Outgoing.Error.NotSpeakerSubmittingWordExplanationResult)
+                                TransitionOrReason.Failure(null)
+                            } else TransitionOrReason.Success(GameStateMachine.Transition.UpdateGame.WordExplanationState(state))
+                        is GameStateMachine.State.RoundLastGuess<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, *, *> ->
+                            if (previousState.speaker != player) {
+                                node.element.sendError(Outgoing.Error.NotSpeakerSubmittingWordExplanationResult)
+                                TransitionOrReason.Failure(null)
+                            } else TransitionOrReason.Success(GameStateMachine.Transition.UpdateGame.WordExplanationState(state))
+                        is GameStateMachine.State.GameInitialisation<*, *, *>,
+                        is GameStateMachine.State.RoundWaiting<*, *, *>,
+                        is GameStateMachine.State.RoundPreparation<*, *, *>,
+                        is GameStateMachine.State.RoundEditing<*, *, *>,
+                        is GameStateMachine.State.GameResults<*, *>,
+                            -> TransitionOrReason.Failure(null)
+                    }
+                }
+                when (result) {
+                    is MovementMaybeResult.NoTransition<*, *> -> {}
+                    is MovementMaybeResult.NoNextState<*, *, GameStateMachine.NoNextStateReason<Nothing?, NoWordsProviderReason>> -> {
+                        val error = Outgoing.Error.fromGameStateMachineNoNextStateReason(result.noNextStateReason)
+                        if (error != null) node.element.sendError(error)
+                    }
+                    is MovementMaybeResult.Success<*, *> -> {}
                 }
             }
             
             public suspend fun updateWordsExplanationResults(newExplanationResults: KoneList<GameStateMachine.WordExplanation>) {
-                val result = player.room.gameStateMachine.updateWordsExplanationResults(newExplanationResults)
-                if (result is MovementResult.NoNextState<*, *, GameStateMachine.NoNextStateReason<Nothing?, NoWordsProviderReason>>) {
-                    val error = Outgoing.Error.fromGameStateMachineNoNextStateReason(result.noNextStateReason)
-                    if (error != null) node.element.sendError(error)
+                val result = player.room.gameStateMachine.moveMaybe { previousState ->
+                    when (previousState) {
+                        is GameStateMachine.State.RoundEditing<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, *, *> ->
+                            if (previousState.speaker != player) {
+                                node.element.sendError(Outgoing.Error.NotSpeakerUpdatingWordExplanationResults)
+                                TransitionOrReason.Failure(null)
+                            } else TransitionOrReason.Success(GameStateMachine.Transition.UpdateGame.UpdateWordsExplanationResults(newExplanationResults))
+                        is GameStateMachine.State.GameInitialisation<*, *, *>,
+                        is GameStateMachine.State.RoundWaiting<*, *, *>,
+                        is GameStateMachine.State.RoundPreparation<*, *, *>,
+                        is GameStateMachine.State.RoundExplanation<*, *, *>,
+                        is GameStateMachine.State.RoundLastGuess<*, *, *>,
+                        is GameStateMachine.State.GameResults<*, *>,
+                            -> TransitionOrReason.Failure(null)
+                    }
+                }
+                when (result) {
+                    is MovementMaybeResult.NoTransition<*, *> -> {}
+                    is MovementMaybeResult.NoNextState<*, *, GameStateMachine.NoNextStateReason<Nothing?, NoWordsProviderReason>> -> {
+                        val error = Outgoing.Error.fromGameStateMachineNoNextStateReason(result.noNextStateReason)
+                        if (error != null) node.element.sendError(error)
+                    }
+                    is MovementMaybeResult.Success<*, *> -> {}
                 }
             }
             
             public suspend fun confirmWordsExplanationResults() {
-                val result = player.room.gameStateMachine.confirmWordsExplanationResults()
-                if (result is MovementResult.NoNextState<*, *, GameStateMachine.NoNextStateReason<Nothing?, NoWordsProviderReason>>) {
-                    val error = Outgoing.Error.fromGameStateMachineNoNextStateReason(result.noNextStateReason)
-                    if (error != null) node.element.sendError(error)
+                val result = player.room.gameStateMachine.moveMaybe { previousState ->
+                    when (previousState) {
+                        is GameStateMachine.State.RoundEditing<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, *, *> ->
+                            if (previousState.speaker != player) {
+                                node.element.sendError(Outgoing.Error.NotSpeakerConfirmingWordExplanationResults)
+                                TransitionOrReason.Failure(null)
+                            } else TransitionOrReason.Success(GameStateMachine.Transition.UpdateGame.ConfirmWordsExplanationResults)
+                        is GameStateMachine.State.GameInitialisation<*, *, *>,
+                        is GameStateMachine.State.RoundWaiting<*, *, *>,
+                        is GameStateMachine.State.RoundPreparation<*, *, *>,
+                        is GameStateMachine.State.RoundExplanation<*, *, *>,
+                        is GameStateMachine.State.RoundLastGuess<*, *, *>,
+                        is GameStateMachine.State.GameResults<*, *>,
+                            -> TransitionOrReason.Failure(null)
+                    }
+                }
+                when (result) {
+                    is MovementMaybeResult.NoTransition<*, *> -> {}
+                    is MovementMaybeResult.NoNextState<*, *, GameStateMachine.NoNextStateReason<Nothing?, NoWordsProviderReason>> -> {
+                        val error = Outgoing.Error.fromGameStateMachineNoNextStateReason(result.noNextStateReason)
+                        if (error != null) node.element.sendError(error)
+                    }
+                    is MovementMaybeResult.Success<*, *> -> {}
                 }
             }
             
             public suspend fun finishGame() {
-                val result = player.room.gameStateMachine.confirmWordsExplanationResults()
-                if (result is MovementResult.NoNextState<*, *, GameStateMachine.NoNextStateReason<Nothing?, NoWordsProviderReason>>) {
-                    val error = Outgoing.Error.fromGameStateMachineNoNextStateReason(result.noNextStateReason)
-                    if (error != null) node.element.sendError(error)
+                val result = player.room.gameStateMachine.moveMaybe { previousState ->
+                    if (previousState.metadata.allPlayersList.firstThat { it.isOnline } != player) {
+                        node.element.sendError(Outgoing.Error.NotHostFinishingGame)
+                        return@moveMaybe TransitionOrReason.Failure(null)
+                    }
+                    TransitionOrReason.Success(
+                        GameStateMachine.Transition.UpdateGame.FinishGame
+                    )
+                }
+                when (result) {
+                    is MovementMaybeResult.NoTransition<*, *> -> {}
+                    is MovementMaybeResult.NoNextState<*, *, GameStateMachine.NoNextStateReason<Nothing?, NoWordsProviderReason>> -> {
+                        val error = Outgoing.Error.fromGameStateMachineNoNextStateReason(result.noNextStateReason)
+                        if (error != null) node.element.sendError(error)
+                    }
+                    is MovementMaybeResult.Success<*, *> -> {}
                 }
             }
         }
@@ -493,15 +583,21 @@ public class Room<
             public data object CannotUpdateGameSettingsAfterInitialization : Error<Nothing>
             public data object NotEnoughPlayersForInitialization : Error<Nothing>
             public data class NoWordsProvider<out NoWordsProviderReason>(val reason: NoWordsProviderReason) : Error<NoWordsProviderReason>
-            public data object CannotInitializationGameSettingsAfterInitialization : Error<Nothing>
+            public data object CannotInitializeGameAfterInitialization : Error<Nothing>
             public data object CannotSetSpeakerReadinessNotDuringRoundWaiting : Error<Nothing>
+            public data object NotSpeakerSettingSpeakerReadiness : Error<Nothing>
             public data object CannotSetListenerReadinessNotDuringRoundWaiting : Error<Nothing>
+            public data object NotListenerSettingListenerReadiness : Error<Nothing>
             public data object CannotSetSpeakerAndListenerReadinessNotDuringRoundWaiting : Error<Nothing>
             public data object CannotUpdateRoundInfoNotDuringTheRound : Error<Nothing>
             public data object CannotSubmitWordExplanationResultNotDuringExplanationOrLastGuess : Error<Nothing>
+            public data object NotSpeakerSubmittingWordExplanationResult : Error<Nothing>
             public data object CannotUpdateWordExplanationResultsNotDuringRoundEditing : Error<Nothing>
+            public data object NotSpeakerUpdatingWordExplanationResults : Error<Nothing>
             public data object CannotConfirmWordExplanationResultsNotDuringRoundEditing : Error<Nothing>
+            public data object NotSpeakerConfirmingWordExplanationResults : Error<Nothing>
             public data object CannotFinishGameNotDuringRoundWaiting : Error<Nothing>
+            public data object NotHostFinishingGame : Error<Nothing>
             
             public companion object {
                 internal fun <NoWordsProviderReason> fromGameStateMachineNoNextStateReason(reason: GameStateMachine.NoNextStateReason<Nothing?, NoWordsProviderReason>): Error<NoWordsProviderReason>? =
@@ -510,7 +606,7 @@ public class Room<
                         GameStateMachine.NoNextStateReason.CannotUpdateGameSettingsAfterInitialization -> CannotUpdateGameSettingsAfterInitialization
                         GameStateMachine.NoNextStateReason.NotEnoughPlayersForInitialization -> NotEnoughPlayersForInitialization
                         is GameStateMachine.NoNextStateReason.NoWordsProvider<NoWordsProviderReason> -> NoWordsProvider(reason.reason)
-                        GameStateMachine.NoNextStateReason.CannotInitializationGameSettingsAfterInitialization -> CannotInitializationGameSettingsAfterInitialization
+                        GameStateMachine.NoNextStateReason.CannotInitializeGameAfterInitialization -> CannotInitializeGameAfterInitialization
                         GameStateMachine.NoNextStateReason.CannotSetSpeakerReadinessNotDuringRoundWaiting -> CannotSetSpeakerReadinessNotDuringRoundWaiting
                         GameStateMachine.NoNextStateReason.CannotSetListenerReadinessNotDuringRoundWaiting -> CannotSetListenerReadinessNotDuringRoundWaiting
                         GameStateMachine.NoNextStateReason.CannotSetSpeakerAndListenerReadinessNotDuringRoundWaiting -> CannotSetSpeakerAndListenerReadinessNotDuringRoundWaiting

@@ -226,7 +226,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                 is GameStateMachine.State.RoundLastGuess,
                 is GameStateMachine.State.RoundEditing,
                 is GameStateMachine.State.GameResults,
-                    -> CheckResult.Failure(GameStateMachine.NoNextStateReason.CannotInitializationGameSettingsAfterInitialization)
+                    -> CheckResult.Failure(GameStateMachine.NoNextStateReason.CannotInitializeGameAfterInitialization)
             }
         is GameStateMachine.Transition.UpdateGame.SpeakerReady ->
             when (previousState) {
