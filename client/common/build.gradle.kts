@@ -21,13 +21,12 @@ kotlin {
                 implementation(versions.kone.util.atomics)
 
                 // Compose
-                api(compose.runtime)
-                api(compose.ui)
-                api(compose.foundation)
-                api(compose.material3)
-                api("org.jetbrains.compose.material3:material3-window-size-class:1.9.0-beta04") // FIXME: Replace the version
-                versions.versions.compose.multiplatform.hot
-                api(compose.components.resources)
+                api(versions.compose.multiplatform.runtime)
+                api(versions.compose.multiplatform.ui)
+                api(versions.compose.multiplatform.foundation)
+                api(versions.compose.multiplatform.material3)
+                api(versions.compose.multiplatform.material3.windowSizeClass)
+                api(versions.compose.multiplatform.components.resources)
 
                 // Ktor
                 api(versions.ktor.client.core)
@@ -50,7 +49,7 @@ kotlin {
 
         jvmMain {
             dependencies {
-                implementation(compose.desktop.common)
+                implementation(versions.compose.multiplatform.desktop.common)
                 implementation(versions.ktor.client.cio)
                 
                 // mp3spi

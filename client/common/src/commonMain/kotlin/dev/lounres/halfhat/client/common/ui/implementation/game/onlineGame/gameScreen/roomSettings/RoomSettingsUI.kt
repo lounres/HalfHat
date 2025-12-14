@@ -97,7 +97,7 @@ public fun ColumnScope.RoomSettingsUI(
             onExpandedChange = { menuExpanded = it },
         ) {
             TextField(
-                modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                 value = when (component.gameEndConditionType.collectAsState().value) {
                     GameStateMachine.GameEndCondition.Type.Words -> "Words"
                     GameStateMachine.GameEndCondition.Type.Cycles -> "Cycles"

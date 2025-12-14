@@ -36,9 +36,11 @@ import dev.lounres.kone.collections.map.get
 import dev.lounres.kone.collections.set.KoneSet
 import dev.lounres.kone.collections.set.build
 import dev.lounres.kone.collections.utils.map
+import dev.lounres.kone.collections.utils.plusAssign
 import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.hub.map
+import dev.lounres.kone.registry.correspondsTo
 import dev.lounres.logKube.core.DefaultCurrentPlatformLogWriter
 import dev.lounres.logKube.core.LogAcceptor
 import dev.lounres.logKube.core.Logger
@@ -185,9 +187,9 @@ suspend fun RealMainWindowComponent(
     }
     
     val menuListByKinds: KoneList<RealMainWindowComponent.MenuItemByKind> = KoneList.build {
-        +MainWindowComponent.Child.Kind.Primary.entries.toKoneList().map { RealMainWindowComponent.MenuItemByKind.Child(it) }
+        this += MainWindowComponent.Child.Kind.Primary.entries.toKoneList().map { RealMainWindowComponent.MenuItemByKind.Child(it) }
         +RealMainWindowComponent.MenuItemByKind.Separator
-        +MainWindowComponent.Child.Kind.Secondary.entries.toKoneList().map { RealMainWindowComponent.MenuItemByKind.Child(it) }
+        this += MainWindowComponent.Child.Kind.Secondary.entries.toKoneList().map { RealMainWindowComponent.MenuItemByKind.Child(it) }
     }
     val menuList: KoneAsynchronousHub<KoneList<MainWindowComponent.MenuItem>> =
         pageVariants.hub.map { childrenVariants ->

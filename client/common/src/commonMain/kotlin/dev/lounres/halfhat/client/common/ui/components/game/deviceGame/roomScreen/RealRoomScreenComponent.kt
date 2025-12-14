@@ -5,6 +5,7 @@ import dev.lounres.kone.collections.list.build
 import dev.lounres.kone.collections.list.toKoneMutableList
 import dev.lounres.kone.collections.set.KoneSet
 import dev.lounres.kone.collections.set.empty
+import dev.lounres.kone.collections.utils.plusAssign
 import dev.lounres.kone.collections.utils.shuffled
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -38,7 +39,7 @@ public class RealRoomScreenComponent(
         showErrorForPlayers.value = KoneSet.empty()
         playersList.update {
             KoneList.build(it.size + 1u) {
-                +it
+                this += it
                 +Player("")
             }
         }

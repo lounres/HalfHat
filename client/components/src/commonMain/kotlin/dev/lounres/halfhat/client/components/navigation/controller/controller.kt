@@ -9,6 +9,7 @@ import dev.lounres.kone.collections.map.*
 import dev.lounres.kone.registry.Registry
 import dev.lounres.kone.registry.RegistryBuilder
 import dev.lounres.kone.registry.RegistryKey
+import dev.lounres.kone.registry.correspondsTo
 import dev.lounres.kone.registry.getOrNull
 import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.atomicfu.locks.withLock

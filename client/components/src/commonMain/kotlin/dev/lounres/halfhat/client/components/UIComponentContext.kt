@@ -19,6 +19,7 @@ import dev.lounres.komponentual.lifecycle.subscribe
 import dev.lounres.kone.registry.Registry
 import dev.lounres.kone.registry.RegistryBuilder
 import dev.lounres.kone.registry.build
+import dev.lounres.kone.registry.correspondsTo
 import dev.lounres.logKube.core.debug
 import kotlinx.coroutines.CoroutineScope
 import kotlin.contracts.InvocationKind

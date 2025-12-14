@@ -18,7 +18,6 @@ plugins {
     alias(versions.plugins.kotlinx.atomicfu) apply false
     alias(versions.plugins.kotlinx.serialization) apply false
     alias(versions.plugins.compose.multiplatform) apply false
-    alias(versions.plugins.compose.multiplatform.hot.reload) apply false
 }
 
 buildscript {

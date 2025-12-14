@@ -6,6 +6,7 @@ import dev.lounres.kone.collections.iterables.isNotEmpty
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.KoneSettableList
 import dev.lounres.kone.collections.list.empty
+import dev.lounres.kone.collections.list.generate
 import dev.lounres.kone.collections.list.indices
 import dev.lounres.kone.collections.set.KoneMutableSet
 import dev.lounres.kone.collections.set.KoneSet
@@ -208,8 +209,8 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                                 }
                                                 GameStateMachine.GameEndCondition.Type.Cycles -> wordsProviderOrReason.result.allWords()
                                             },
-                                            explanationScores = KoneList(playersList.size) { 0u },
-                                            guessingScores = KoneList(playersList.size) { 0u },
+                                            explanationScores = KoneList.generate(playersList.size) { 0u },
+                                            guessingScores = KoneList.generate(playersList.size) { 0u },
                                             speakerReady = false,
                                             listenerReady = false,
                                         )
@@ -568,7 +569,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                         restWords = previousState.restWords,
                                         explanationScores = previousState.explanationScores,
                                         guessingScores = previousState.guessingScores,
-                                        currentExplanationResults = KoneList(previousState.currentExplanationResults.size + 1u) {
+                                        currentExplanationResults = KoneList.generate(previousState.currentExplanationResults.size + 1u) {
                                             when (it) {
                                                 in previousState.currentExplanationResults.indices -> previousState.currentExplanationResults[it]
                                                 else -> GameStateMachine.WordExplanation(
@@ -648,7 +649,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                         restWords = previousState.restWords,
                                         explanationScores = previousState.explanationScores,
                                         guessingScores = previousState.guessingScores,
-                                        currentExplanationResults = KoneList(previousState.currentExplanationResults.size + 1u) {
+                                        currentExplanationResults = KoneList.generate(previousState.currentExplanationResults.size + 1u) {
                                             when (it) {
                                                 in previousState.currentExplanationResults.indices -> previousState.currentExplanationResults[it]
                                                 else -> GameStateMachine.WordExplanation(
@@ -711,7 +712,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                 currentWord = nextCurrentWord,
                                 explanationScores = previousState.explanationScores,
                                 guessingScores = previousState.guessingScores,
-                                currentExplanationResults = KoneList(previousState.currentExplanationResults.size + 1u) {
+                                currentExplanationResults = KoneList.generate(previousState.currentExplanationResults.size + 1u) {
                                     when (it) {
                                         in previousState.currentExplanationResults.indices -> previousState.currentExplanationResults[it]
                                         else -> GameStateMachine.WordExplanation(previousState.currentWord, transition.wordState)
@@ -732,7 +733,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                 restWords = previousState.restWords,
                                 explanationScores = previousState.explanationScores,
                                 guessingScores = previousState.guessingScores,
-                                currentExplanationResults = KoneList(previousState.currentExplanationResults.size + 1u) {
+                                currentExplanationResults = KoneList.generate(previousState.currentExplanationResults.size + 1u) {
                                     when (it) {
                                         in previousState.currentExplanationResults.indices -> previousState.currentExplanationResults[it]
                                         else -> GameStateMachine.WordExplanation(
@@ -757,7 +758,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                             restWords = previousState.restWords,
                             explanationScores = previousState.explanationScores,
                             guessingScores = previousState.guessingScores,
-                            currentExplanationResults = KoneList(previousState.currentExplanationResults.size + 1u) {
+                            currentExplanationResults = KoneList.generate(previousState.currentExplanationResults.size + 1u) {
                                 when (it) {
                                     in previousState.currentExplanationResults.indices -> previousState.currentExplanationResults[it]
                                     else -> GameStateMachine.WordExplanation(previousState.currentWord, transition.wordState)
@@ -809,8 +810,8 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         this += previousState.currentExplanationResults.filter { it.state == GameStateMachine.WordExplanation.State.NotExplained }.map { it.word }
                     }
                     val numberOfExplainedWords = previousState.currentExplanationResults.count { it.state == GameStateMachine.WordExplanation.State.Explained }
-                    val explanationScores = KoneList(previousState.playersList.size) { previousState.explanationScores[it] + if (it == previousState.speakerIndex) numberOfExplainedWords else 0u }
-                    val guessingScores = KoneList(previousState.playersList.size) { previousState.guessingScores[it] + if (it == previousState.listenerIndex) numberOfExplainedWords else 0u }
+                    val explanationScores = KoneList.generate(previousState.playersList.size) { previousState.explanationScores[it] + if (it == previousState.speakerIndex) numberOfExplainedWords else 0u }
+                    val guessingScores = KoneList.generate(previousState.playersList.size) { previousState.guessingScores[it] + if (it == previousState.listenerIndex) numberOfExplainedWords else 0u }
                     val nextRoundNumber = previousState.roundNumber + 1u
                     var nextCycleNumber = previousState.cycleNumber
                     val nextSpeakerIndex = (previousState.speakerIndex + 1u) % previousState.playersList.size
@@ -832,7 +833,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                             GameStateMachine.State.GameResults(
                                 metadata = metadataTransformer(previousState, transition),
                                 playersList = previousState.playersList,
-                                results = KoneSettableList(previousState.playersList.size) {
+                                results = KoneSettableList.generate(previousState.playersList.size) {
                                     GameStateMachine.GameResult(
                                         it,
                                         explanationScores[it],
@@ -875,7 +876,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         GameStateMachine.State.GameResults(
                             metadata = metadataTransformer(previousState, transition),
                             playersList = previousState.playersList,
-                            results = KoneSettableList(previousState.playersList.size) {
+                            results = KoneSettableList.generate(previousState.playersList.size) {
                                 GameStateMachine.GameResult(
                                     player = it,
                                     scoreExplained = previousState.explanationScores[it],

@@ -4,7 +4,6 @@ import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
 plugins {
     alias(versions.plugins.kotlin.compose)
     alias(versions.plugins.compose.multiplatform)
-    alias(versions.plugins.compose.multiplatform.hot.reload)
 //    alias(versions.plugins.ktor)
     alias(versions.plugins.kotlinx.serialization)
 //    alias(versions.plugins.kotlinx.atomicfu)
@@ -53,10 +52,6 @@ sqldelight {
 
 composeCompiler {
     featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
-}
-
-tasks.jvmRunHot {
-    mainClass = "dev.lounres.halfhat.client.desktop.MainKt"
 }
 
 compose {

@@ -24,13 +24,11 @@ kotlin {
                     //     )
                     // )
                     
-                    static = (static ?: mutableListOf()).apply {
-                        // Serve sources to debug inside browser
-                        add(rootDir.path + "/api")
-                        add(rootDir.path + "/client/components")
-                        add(rootDir.path + "/client/common")
-                        add(rootDir.path + "/client/web/")
-                    }
+                    // Serve sources to debug inside browser
+                    static(rootDir.path + "/api")
+                    static(rootDir.path + "/client/components")
+                    static(rootDir.path + "/client/common")
+                    static(rootDir.path + "/client/web/")
                 }
             }
         }
@@ -50,14 +48,12 @@ kotlin {
                     //         "name" to "google chrome"
                     //     )
                     // )
-
-                    static = (static ?: mutableListOf()).apply {
-                        // Serve sources to debug inside browser
-                        add(rootDir.path + "/api")
-                        add(rootDir.path + "/client/components")
-                        add(rootDir.path + "/client/common")
-                        add(rootDir.path + "/client/web/")
-                    }
+                    
+                    // Serve sources to debug inside browser
+                    static(rootDir.path + "/api")
+                    static(rootDir.path + "/client/components")
+                    static(rootDir.path + "/client/common")
+                    static(rootDir.path + "/client/web/")
                 }
             }
         }
