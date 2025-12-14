@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -58,7 +58,7 @@ public fun LoadingUI(
                 fontSize = 16.sp
             )
             Spacer(modifier = Modifier.height(4.dp))
-            CircularProgressIndicator()
+            ContainedLoadingIndicator()
         }
     }
 }

@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.LaunchedEffect
@@ -87,7 +87,7 @@ fun main() {
                             text = "Loading...",
                             fontSize = 36.sp,
                         )
-                        CircularProgressIndicator(
+                        ContainedLoadingIndicator(
                             modifier = Modifier.size(48.dp)
                         )
                     }
