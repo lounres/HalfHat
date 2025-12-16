@@ -44,6 +44,7 @@ kotlin {
 tasks.shadowJar {
     archiveBaseName = "halfhat-server"
     archiveClassifier = ""
+    archiveVersion = ""
     manifest {
         attributes["Main-Class"] = mainClassFQN
     }
