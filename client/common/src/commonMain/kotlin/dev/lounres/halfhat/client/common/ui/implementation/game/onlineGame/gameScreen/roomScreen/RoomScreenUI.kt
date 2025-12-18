@@ -87,7 +87,7 @@ public fun RowScope.RoomScreenButtonsUI(
         )
     }
     Spacer(Modifier.weight(1f))
-    if (component.gameStateFlow.collectAsState().value.role.userIndex == 0u)
+    if (component.gameStateFlow.collectAsState().value.role.userIndex == 0u) // TODO: Replace with server-sent flag
         FloatingActionButton(
             onClick = component.onStartGame,
             shape = CircleShape,

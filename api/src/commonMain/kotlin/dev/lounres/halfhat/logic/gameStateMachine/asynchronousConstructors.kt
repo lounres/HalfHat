@@ -7,11 +7,14 @@ import dev.lounres.kone.collections.list.KoneList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlin.random.Random
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 
 public fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason> AsynchronousGameStateMachine(
     coroutineScope: CoroutineScope,
     random: Random = DefaultRandom,
+    timerDelayDuration: Duration = 90.milliseconds,
     mutex: Mutex = Mutex(),
     initialState: GameStateMachine.State<P, WPID, Metadata>,
     checkMetadataUpdate: suspend AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
@@ -36,6 +39,7 @@ public fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMeta
                 checkGameStateMachineTransition(
                     coroutineScope = coroutineScope,
                     random = random,
+                    timerDelayDuration = timerDelayDuration,
                     moveState = { move(it) },
                     checkMetadataUpdate = { previousState, metadataTransition -> AsynchronousGameStateMachine(this).checkMetadataUpdate(previousState, metadataTransition) },
                     metadataTransformer = { previousState, transition -> AsynchronousGameStateMachine(this).metadataTransformer(previousState, transition) },

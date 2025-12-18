@@ -146,13 +146,14 @@ public fun ColumnScope.RoundWaitingUI(
 public fun RowScope.RoundWaitingButtonsUI(
     component: RoundWaitingComponent,
 ) {
-    IconButton(
-        onClick = component.onFinishGame
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            painter = painterResource(Res.drawable.finishDeviceGameButton_dark_png_24dp), // TODO: Copy the icons
-            contentDescription = "Finish online game"
-        )
-    }
+    if (component.gameState.collectAsState().value.role.userIndex == 0u) // TODO: Replace with server-sent flag
+        IconButton(
+            onClick = component.onFinishGame
+        ) {
+            Icon(
+                modifier = commonIconModifier,
+                painter = painterResource(Res.drawable.finishDeviceGameButton_dark_png_24dp), // TODO: Copy the icons
+                contentDescription = "Finish online game"
+            )
+        }
 }

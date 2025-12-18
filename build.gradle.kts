@@ -58,7 +58,7 @@ stal {
                 }
             }
         }
-        "kotlin wasm-js target" {
+        "kotlin web targets" {
             pluginManager.withPlugin(versions.plugins.kotlin.multiplatform) {
                 configure<KotlinMultiplatformExtension> {
                     js {
@@ -71,14 +71,14 @@ stal {
                         browser()
                     }
                     sourceSets {
-                        val web by creating {
+                        webMain {
                             dependsOn(commonMain.get())
                         }
                         jsMain {
-                            dependsOn(web)
+                            dependsOn(webMain.get())
                         }
                         wasmJsMain {
-                            dependsOn(web)
+                            dependsOn(webMain.get())
                         }
                     }
                 }

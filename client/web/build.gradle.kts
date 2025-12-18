@@ -66,7 +66,7 @@ kotlin {
                 implementation(projects.client.common)
             }
         }
-        web {
+        webMain {
             dependencies {
                 implementation(versions.kotlin.wrappers.browser)
             }

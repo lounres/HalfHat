@@ -394,7 +394,7 @@ fun main() {
                                         "frame" to frame.toString(),
                                     )
                                 }
-                            ) { "Received inconvertible frame" }
+                            ) { "Received inconvertible frame. Skipping." }
                             continue
                         }
                         val signal = converter.deserialize<ClientApi.Signal>(frame)

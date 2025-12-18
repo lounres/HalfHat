@@ -55,7 +55,7 @@ stal {
     tag {
         "kotlin" since { hasAnyOf("server", "desktop", "web", "android", "library") }
         "kotlin jvm target" since { hasAnyOf("server", "desktop") }
-        "kotlin wasm-js target" since { hasAnyOf("web") }
+        "kotlin web targets" since { hasAnyOf("web") }
         "kotlin android target" since { hasAnyOf("android") }
     }
     action {

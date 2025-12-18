@@ -15,21 +15,22 @@ import dev.lounres.kone.collections.set.of
 import dev.lounres.kone.collections.utils.*
 import dev.lounres.kone.scope
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.yield
 import kotlin.math.min
 import kotlin.random.Random
 import kotlin.time.Clock
+import kotlin.time.Duration
 
 
 @PublishedApi
 internal inline fun <P, WPID, NoWordsProviderReason, MetadataTransition, GSM> GSM.timer(
     coroutineScope: CoroutineScope,
+    timerDelayDuration: Duration,
     roundNumber: UInt,
     crossinline moveState: suspend GSM.(GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>) -> Unit,
 ) {
     coroutineScope.launch {
-        // TODO: Replace with Boolean holder that will be passed later instead of lambda
         var isActive = true
         while (isActive) {
             moveState(
@@ -38,7 +39,7 @@ internal inline fun <P, WPID, NoWordsProviderReason, MetadataTransition, GSM> GS
                     roundNumber = roundNumber
                 )
             )
-            yield()
+            delay(timerDelayDuration)
         }
     }
 }
@@ -47,6 +48,7 @@ internal inline fun <P, WPID, NoWordsProviderReason, MetadataTransition, GSM> GS
 internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason, GSM> GSM.checkGameStateMachineTransition(
     coroutineScope: CoroutineScope,
     random: Random = DefaultRandom,
+    timerDelayDuration: Duration,
     crossinline moveState: suspend GSM.(GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>) -> Unit,
     checkMetadataUpdate: GSM.(previousState: GameStateMachine.State<P, WPID, Metadata>, metadataTransition: MetadataTransition) -> CheckResult<Metadata, NoMetadataTransitionReason>,
     metadataTransformer: GSM.(previousState: GameStateMachine.State<P, WPID, Metadata>, transition: GameStateMachine.Transition.UpdateGame<P, WPID, NoWordsProviderReason>) -> Metadata = { previousState, _ -> previousState.metadata },
@@ -234,6 +236,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                     if (previousState.listenerReady) {
                         timer(
                             coroutineScope = coroutineScope,
+                            timerDelayDuration = timerDelayDuration,
                             roundNumber = previousState.roundNumber,
                             moveState = moveState,
                         )
@@ -287,6 +290,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                     if (previousState.speakerReady) {
                         timer(
                             coroutineScope = coroutineScope,
+                            timerDelayDuration = timerDelayDuration,
                             roundNumber = previousState.roundNumber,
                             moveState = moveState,
                         )
@@ -339,6 +343,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                 is GameStateMachine.State.RoundWaiting -> {
                     timer(
                         coroutineScope = coroutineScope,
+                        timerDelayDuration = timerDelayDuration,
                         roundNumber = previousState.roundNumber,
                         moveState = moveState,
                     )

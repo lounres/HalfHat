@@ -58,7 +58,7 @@ kotlin {
             }
         }
         
-        web {
+        webMain {
             dependencies {
                 implementation(versions.ktor.client.js)
                 implementation(versions.kotlin.wrappers.browser)
