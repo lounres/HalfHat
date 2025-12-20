@@ -5,8 +5,7 @@ import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.utils.defaultHttpClient
 import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
-import dev.lounres.halfhat.client.components.logger.LoggerKey
-import dev.lounres.kone.registry.getOrNull
+import dev.lounres.halfhat.client.utils.logger
 import dev.lounres.logKube.core.debug
 import dev.lounres.logKube.core.info
 import dev.lounres.logKube.core.warn
@@ -27,9 +26,8 @@ import kotlinx.io.IOException
 
 public class RealOnlineGameComponent(
     componentContext: LogicComponentContext,
-) : dev.lounres.halfhat.client.logic.components.game.onlineGame.OnlineGameComponent {
-    override val connectionStatus: MutableStateFlow<dev.lounres.halfhat.client.logic.components.game.onlineGame.ConnectionStatus> = MutableStateFlow(
-        _root_ide_package_.dev.lounres.halfhat.client.logic.components.game.onlineGame.ConnectionStatus.Disconnected)
+) : OnlineGameComponent {
+    override val connectionStatus: MutableStateFlow<ConnectionStatus> = MutableStateFlow(ConnectionStatus.Disconnected)
     override val freeRoomIdFlow: MutableSharedFlow<String> = MutableSharedFlow(extraBufferCapacity = 1)
     override val roomDescriptionFlow: MutableSharedFlow<ServerApi.RoomDescription> = MutableSharedFlow(extraBufferCapacity = 1)
     override val gameStateFlow: MutableStateFlow<ServerApi.OnlineGame.State?> = MutableStateFlow(null)
@@ -44,7 +42,6 @@ public class RealOnlineGameComponent(
     
     init {
         componentContext.coroutineScope(Dispatchers.Default).launch {
-            val logger = componentContext.getOrNull(LoggerKey)
             val defaultOnlineGameSettings = componentContext[DefaultOnlineGameSettingsKey]
             while (true) {
                 try {
@@ -67,7 +64,7 @@ public class RealOnlineGameComponent(
                         }
                         for (frame in incoming) {
                             if (!converter.isApplicable(frame)) {
-                                logger?.info(
+                                logger.info(
                                     items = {
                                         mapOf(
                                             "frame" to frame.toString(),
@@ -79,7 +76,7 @@ public class RealOnlineGameComponent(
                             
                             val signal = converter.deserialize<ServerApi.Signal>(frame)
                             
-                            logger?.debug(
+                            logger.debug(
                                 items = {
                                     mapOf(
                                         "signal" to signal.toString(),
@@ -96,7 +93,7 @@ public class RealOnlineGameComponent(
                         cancel()
                     }
                 } catch (exception: IOException) {
-                    logger?.warn(throwable = exception) { "Online game websocket connection exception" }
+                    logger.warn(throwable = exception) { "Online game websocket connection exception" }
                 }
                 connectionStatus.value = ConnectionStatus.Disconnected
                 gameStateFlow.value = null

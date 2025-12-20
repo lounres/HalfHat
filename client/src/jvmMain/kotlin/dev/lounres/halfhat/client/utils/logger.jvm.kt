@@ -9,5 +9,5 @@ import dev.lounres.logKube.core.Logger
 
 actual val logger: CurrentPlatformLogger<LogLevel> = Logger(
     name = "Desktop HalfHat application logger",
-    LogAcceptor(DefaultCurrentPlatformLogWriter),
+    LogAcceptor(DefaultCurrentPlatformLogWriter) { false },
 )
