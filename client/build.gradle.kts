@@ -4,6 +4,7 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
 //    alias(versions.plugins.android.library)
@@ -63,7 +64,13 @@ kotlin {
     }
     
     sourceSets {
+        val buildDirectory = project.layout.buildDirectory.get().asFile!!
+        val constsDirectory = buildDirectory.resolve("generated/halfhat/client/consts")
+        val constsKotlinDirectory = constsDirectory.resolve("kotlin")
+        
         commonMain {
+            val constsCommonMainDirectory = constsKotlinDirectory.resolve("commonMain")
+            kotlin.srcDir(constsCommonMainDirectory)
             dependencies {
                 implementation(versions.kone.util.misc)
                 
@@ -209,6 +216,68 @@ compose {
     }
 }
 
+//android {
+//    compileSdk = (findProperty("android.compileSdk") as String).toInt()
+//    namespace = "com.myapplication.common"
+//
+//    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
+//    sourceSets["main"].res.srcDirs("src/androidMain/res")
+//    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
+//
+//    defaultConfig {
+//        minSdk = (findProperty("android.minSdk") as String).toInt()
+//        targetSdk = (findProperty("android.targetSdk") as String).toInt()
+//    }
+//    compileOptions {
+//        sourceCompatibility = JavaVersion.VERSION_11
+//        targetCompatibility = JavaVersion.VERSION_11
+//    }
+//    kotlin {
+//        jvmToolchain(11)
+//    }
+//}
+
+fun ExtraPropertiesExtension.getOrNull(name: String): Any? = if (has(name)) get(name) else null
+
+val generateClientConsts by tasks.registering {
+    group = "build"
+    description = "Generates either dev or prod consts for the client"
+    
+    doLast {
+        val debug = when (val debugFlag = rootProject.extra.getOrNull("halfhat.client.debug")) {
+            "true" -> true
+            "false", null -> false
+            else -> error("Undefined value for 'halfhat.client.debug' project property: $debugFlag")
+        }
+        
+        val buildDirectory = project.layout.buildDirectory.get().asFile!!
+        val constsDirectory = buildDirectory.resolve("generated/halfhat/client/consts").apply { mkdirs() }
+        val constsKotlinDirectory = constsDirectory.resolve("kotlin").apply { mkdirs() }
+        val constsCommonMainDirectory = constsKotlinDirectory.resolve("commonMain").apply { mkdirs() }
+        val constsCommonMainPackageDirectory = constsCommonMainDirectory.resolve("dev/lounres/halfhat/client/consts").apply { mkdirs() }
+        constsCommonMainPackageDirectory.resolve("OnlineGameSettings.kt").bufferedWriter().use {
+            it.append(
+                """
+                    package dev.lounres.halfhat.client.consts
+                    
+                    
+                    @Suppress("RedundantNullableReturnType")
+                    data object OnlineGameSettings {
+                        val host: String? = ${if (debug) rootProject.extra["halfhat.client.consts.dev.host"] else rootProject.extra["halfhat.client.consts.prod.host"]}
+                        val port: Int? = ${if (debug) rootProject.extra["halfhat.client.consts.dev.port"] else rootProject.extra["halfhat.client.consts.prod.port"]}
+                        val path: String? = ${if (debug) rootProject.extra["halfhat.client.consts.dev.path"] else rootProject.extra["halfhat.client.consts.prod.path"]}
+                        val isSecure: Boolean = ${if (debug) rootProject.extra["halfhat.client.consts.dev.isSecure"] else rootProject.extra["halfhat.client.consts.prod.isSecure"]}
+                    }
+                """.trimIndent()
+            )
+        }
+    }
+}
+
+tasks.withType<KotlinCompilationTask<*>> {
+    dependsOn(generateClientConsts)
+}
+
 tasks.register("publishToProduction") {
     group = "publishing"
     description = "Publish the web application to production server"
@@ -257,24 +326,3 @@ tasks.register("publishToProduction") {
         }
     }
 }
-
-//android {
-//    compileSdk = (findProperty("android.compileSdk") as String).toInt()
-//    namespace = "com.myapplication.common"
-//
-//    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
-//    sourceSets["main"].res.srcDirs("src/androidMain/res")
-//    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
-//
-//    defaultConfig {
-//        minSdk = (findProperty("android.minSdk") as String).toInt()
-//        targetSdk = (findProperty("android.targetSdk") as String).toInt()
-//    }
-//    compileOptions {
-//        sourceCompatibility = JavaVersion.VERSION_11
-//        targetCompatibility = JavaVersion.VERSION_11
-//    }
-//    kotlin {
-//        jvmToolchain(11)
-//    }
-//}

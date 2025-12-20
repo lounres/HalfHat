@@ -5,6 +5,7 @@ import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.utils.defaultHttpClient
 import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
+import dev.lounres.halfhat.client.consts.OnlineGameSettings
 import dev.lounres.halfhat.client.utils.logger
 import dev.lounres.logKube.core.debug
 import dev.lounres.logKube.core.info
@@ -42,16 +43,15 @@ public class RealOnlineGameComponent(
     
     init {
         componentContext.coroutineScope(Dispatchers.Default).launch {
-            val defaultOnlineGameSettings = componentContext[DefaultOnlineGameSettingsKey]
             while (true) {
                 try {
                     defaultHttpClient.webSocket(
-                        host = defaultOnlineGameSettings.host, // "lounres.dev", // "localhost",
-                        port = defaultOnlineGameSettings.port, // null, // 3000,
-                        path = defaultOnlineGameSettings.path, // "HalfHat/ws", // "ws",
+                        host = OnlineGameSettings.host,
+                        port = OnlineGameSettings.port,
+                        path = OnlineGameSettings.path,
                         request = {
-                            url.protocol = // URLProtocol.WSS // URLProtocol.WS
-                                if (defaultOnlineGameSettings.isSecure) URLProtocol.WSS
+                            url.protocol =
+                                if (OnlineGameSettings.isSecure) URLProtocol.WSS
                                 else URLProtocol.WS
                         }
                     ) {
