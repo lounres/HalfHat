@@ -1,6 +1,8 @@
 package dev.lounres.halfhat.client.web.ui.components
 
 import dev.lounres.halfhat.Language
+import dev.lounres.halfhat.client.common.logic.components.game.onlineGame.DefaultOnlineGameSettingsKey
+import dev.lounres.halfhat.client.common.logic.components.game.onlineGame.OnlineGameSettings
 import dev.lounres.halfhat.client.common.logic.settings.DeviceGameDefaultSettingsKey
 import dev.lounres.halfhat.client.common.logic.wordsProviders.DeviceGameWordsProviderID
 import dev.lounres.halfhat.client.common.logic.wordsProviders.DeviceGameWordsProviderRegistry
@@ -91,6 +93,12 @@ suspend fun RealMainWindowComponent(
     val globalLifecycle: MutableUIComponentLifecycle = newMutableUIComponentLifecycle()
     val navigationRoot = NavigationRoot()
     val globalComponentContext = UIComponentContext {
+        DefaultOnlineGameSettingsKey correspondsTo OnlineGameSettings(
+            host = "lounres.dev", // "localhost",
+            port = null, // 3000,
+            path = "HalfHat/ws", // "ws",
+            isSecure = true, // false,
+        )
         UIComponentLifecycleKey correspondsTo globalLifecycle
         LoggerKey correspondsTo Logger(
             name = "Web HalfHat application logger",
