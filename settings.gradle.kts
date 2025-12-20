@@ -44,12 +44,8 @@ stal {
     structure {
         "api"("library", "server", "desktop", "web", "android")
         "server"("server")
-        "client" {
-            "components"("library", "desktop", "web", /*"android"*/)
-            "common"("library", "desktop", "web", /*"android"*/)
-            "desktop"("desktop")
-            "web"("web")
-//            "android"("android")
+        "client"("desktop", "web", "android") {
+            "components"("library", "desktop", "web", "android")
         }
     }
     tag {
