@@ -162,7 +162,7 @@ compose {
     }
     desktop {
         application {
-            mainClass = "dev.lounres.halfhat.client.desktop.MainKt"
+            mainClass = "dev.lounres.halfhat.client.MainKt"
             
             buildTypes.release.proguard {
 //            obfuscate = true

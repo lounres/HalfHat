@@ -1,0 +1,136 @@
+package dev.lounres.halfhat.client.ui.components.game.deviceGame
+
+import dev.lounres.halfhat.client.logic.settings.deviceGameDefaultSettings
+import dev.lounres.halfhat.client.logic.wordsProviders.DeviceGameWordsProviderID
+import dev.lounres.halfhat.client.logic.wordsProviders.deviceGameWordsProviderRegistry
+import dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent
+import dev.lounres.halfhat.client.ui.components.game.deviceGame.roomScreen.Player
+import dev.lounres.halfhat.client.ui.components.game.deviceGame.roomScreen.RealRoomScreenComponent
+import dev.lounres.halfhat.client.ui.components.game.deviceGame.roomSettings.RealRoomSettingsComponent
+import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.navigation.ChildrenStack
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStackItem
+import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
+import dev.lounres.komponentual.navigation.replaceCurrent
+import dev.lounres.kone.collections.iterables.isNotEmpty
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.of
+import dev.lounres.kone.collections.set.KoneMutableSet
+import dev.lounres.kone.collections.set.KoneSet
+import dev.lounres.kone.collections.set.empty
+import dev.lounres.kone.collections.set.of
+import dev.lounres.kone.collections.utils.*
+import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.relations.Equality
+import dev.lounres.kone.relations.Hashing
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+
+
+public class RealDeviceGamePageComponent(
+    override val childStack: KoneAsynchronousHub<ChildrenStack<*, DeviceGamePageComponent.Child>>,
+) : DeviceGamePageComponent {
+    public sealed interface Configuration {
+        public data object RoomScreen : Configuration
+        public data object RoomSettings : Configuration
+        public data object GameScreen : Configuration
+    }
+}
+
+public suspend fun RealDeviceGamePageComponent(
+    componentContext: UIComponentContext,
+    volumeOn: StateFlow<Boolean>,
+    onExitDeviceGame: () -> Unit,
+): RealDeviceGamePageComponent {
+    val playersList: MutableStateFlow<KoneList<Player>> = MutableStateFlow(KoneList.of(Player(""), Player(""))) // TODO: Hardcoded settings!!!
+    val settingsBuilderState: MutableStateFlow<GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>> = MutableStateFlow(componentContext.deviceGameDefaultSettings.value)
+    
+    val possibleWordsSources = componentContext.deviceGameWordsProviderRegistry.list()
+    
+    val childStack =
+        componentContext.uiChildrenDefaultStackItem<RealDeviceGamePageComponent.Configuration, _>(
+            initialStack = KoneList.of(RealDeviceGamePageComponent.Configuration.RoomScreen),
+        ) { configuration, componentContext, navigationTarget ->
+            when (configuration) {
+                is RealDeviceGamePageComponent.Configuration.RoomScreen -> {
+                    val showErrorForPlayers = MutableStateFlow(KoneSet.empty<Player>())
+                    DeviceGamePageComponent.Child.RoomScreen(
+                        RealRoomScreenComponent(
+                            onExitDeviceGame = onExitDeviceGame,
+                            onOpenGameSettings = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    navigationTarget.replaceCurrent(RealDeviceGamePageComponent.Configuration.RoomSettings)
+                                }
+                            },
+                            onStartGame = onStartGame@{
+                                val errorPlayers = playersList.value
+                                    .groupBy { it.name }
+                                    .nodesView
+                                    .filter { it.value.size > 1u || it.key.isEmpty() }
+                                    .flatMap { it.value }
+                                    .mapTo(
+                                        KoneMutableSet.of(
+                                            elementEquality = Equality { left, right -> left.id == right.id },
+                                            elementHashing = Hashing { it.id.hashCode() },
+                                        )
+                                    ) {
+                                        it
+                                    }
+                                
+                                if (errorPlayers.isNotEmpty()) {
+                                    showErrorForPlayers.value = errorPlayers
+                                    return@onStartGame
+                                }
+                                
+                                if (playersList.value.size < 2u) {
+                                    error { "Cannot remove player when there are no more than two of them" }
+                                }
+                                
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    navigationTarget.replaceCurrent(
+                                        RealDeviceGamePageComponent.Configuration.GameScreen
+                                    )
+                                }
+                            },
+                            playersList = playersList,
+                            showErrorForPlayers = showErrorForPlayers,
+                        )
+                    )
+                }
+                RealDeviceGamePageComponent.Configuration.RoomSettings ->
+                    DeviceGamePageComponent.Child.RoomSettings(
+                        RealRoomSettingsComponent(
+                            initialSettingsBuilder = settingsBuilderState.value,
+                            possibleWordsSources = possibleWordsSources,
+                            onUpdateSettingsBuilder = { settingsBuilderState.value = it },
+                            onExitSettings = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    navigationTarget.replaceCurrent(RealDeviceGamePageComponent.Configuration.RoomScreen)
+                                }
+                            },
+                        )
+                    )
+                is RealDeviceGamePageComponent.Configuration.GameScreen ->
+                    DeviceGamePageComponent.Child.GameScreen(
+                        RealGameScreenComponent(
+                            componentContext = componentContext,
+                            volumeOn = volumeOn,
+                            playersList = playersList.value.map { it.name },
+                            settingsBuilder = settingsBuilderState.value,
+                            onExitGame = {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    navigationTarget.replaceCurrent(RealDeviceGamePageComponent.Configuration.RoomScreen)
+                                }
+                            },
+                        )
+                    )
+            }
+        }
+    
+    return RealDeviceGamePageComponent(
+        childStack = childStack.hub,
+    )
+}
