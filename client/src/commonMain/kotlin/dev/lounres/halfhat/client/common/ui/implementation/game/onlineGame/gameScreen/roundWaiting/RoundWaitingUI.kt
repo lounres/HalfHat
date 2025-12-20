@@ -13,10 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.halfhat.client.common.resources.Res
-import dev.lounres.halfhat.client.common.resources.deviceGameListenerIcon_dark_png_24dp
-import dev.lounres.halfhat.client.common.resources.deviceGameSpeakerIcon_dark_png_24dp
-import dev.lounres.halfhat.client.common.resources.finishDeviceGameButton_dark_png_24dp
+import dev.lounres.halfhat.client.resources.Res
+import dev.lounres.halfhat.client.resources.deviceGameListenerIcon_dark_png_24dp
+import dev.lounres.halfhat.client.resources.deviceGameSpeakerIcon_dark_png_24dp
+import dev.lounres.halfhat.client.resources.finishDeviceGameButton_dark_png_24dp
 import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.gameScreen.roundWaiting.RoundWaitingComponent
 import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier
 import org.jetbrains.compose.resources.painterResource

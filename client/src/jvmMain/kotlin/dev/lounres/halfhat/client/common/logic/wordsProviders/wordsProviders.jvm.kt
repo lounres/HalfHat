@@ -1,6 +1,6 @@
 package dev.lounres.halfhat.client.common.logic.wordsProviders
 
-import dev.lounres.halfhat.client.common.resources.Res
+import dev.lounres.halfhat.client.resources.Res
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.list.KoneList

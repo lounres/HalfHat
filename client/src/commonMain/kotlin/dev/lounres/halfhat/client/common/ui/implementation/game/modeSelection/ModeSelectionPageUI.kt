@@ -8,7 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import dev.lounres.halfhat.client.common.resources.*
+import dev.lounres.halfhat.client.resources.*
 import dev.lounres.halfhat.client.common.ui.components.game.modeSelection.ModeSelectionPageComponent
 import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier
 import dev.lounres.kone.hub.subscribeAsState

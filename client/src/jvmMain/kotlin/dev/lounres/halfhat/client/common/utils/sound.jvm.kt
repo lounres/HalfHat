@@ -1,6 +1,6 @@
 package dev.lounres.halfhat.client.common.utils
 
-import dev.lounres.halfhat.client.common.resources.Res
+import dev.lounres.halfhat.client.resources.Res
 import dev.lounres.kone.scope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred

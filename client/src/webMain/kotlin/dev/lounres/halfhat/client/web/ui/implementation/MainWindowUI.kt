@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import dev.lounres.halfhat.Language
-import dev.lounres.halfhat.client.common.resources.*
+import dev.lounres.halfhat.client.resources.*
 import dev.lounres.halfhat.client.common.ui.implementation.about.AboutPageBadge
 import dev.lounres.halfhat.client.common.ui.implementation.about.AboutPageIcon
 import dev.lounres.halfhat.client.common.ui.implementation.about.AboutPageUI

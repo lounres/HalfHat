@@ -9,8 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
-import dev.lounres.halfhat.client.common.resources.Res
-import dev.lounres.halfhat.client.common.resources.workInProgressIcon_dark_png_24dp
+import dev.lounres.halfhat.client.resources.Res
+import dev.lounres.halfhat.client.resources.workInProgressIcon_dark_png_24dp
 import org.jetbrains.compose.resources.painterResource
 
 

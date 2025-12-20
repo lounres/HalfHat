@@ -12,8 +12,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.halfhat.client.common.resources.Res
-import dev.lounres.halfhat.client.common.resources.enterOnlineRoomButton_dark_png_24dp
+import dev.lounres.halfhat.client.resources.Res
+import dev.lounres.halfhat.client.resources.enterOnlineRoomButton_dark_png_24dp
 import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.previewScreen.PreviewScreenComponent
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.hub.subscribeAsState

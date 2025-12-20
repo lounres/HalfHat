@@ -28,10 +28,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lounres.halfhat.client.common.logic.components.game.timer.TimerState
-import dev.lounres.halfhat.client.common.resources.Res
-import dev.lounres.halfhat.client.common.resources.deviceGameListenerIcon_dark_png_24dp
-import dev.lounres.halfhat.client.common.resources.deviceGameSpeakerIcon_dark_png_24dp
-import dev.lounres.halfhat.client.common.resources.exitGameTimerButton_dark_png_24dp
+import dev.lounres.halfhat.client.resources.Res
+import dev.lounres.halfhat.client.resources.deviceGameListenerIcon_dark_png_24dp
+import dev.lounres.halfhat.client.resources.deviceGameSpeakerIcon_dark_png_24dp
+import dev.lounres.halfhat.client.resources.exitGameTimerButton_dark_png_24dp
 import dev.lounres.halfhat.client.common.ui.components.game.controller.gameScreen.GameScreenComponent
 import dev.lounres.halfhat.client.common.ui.utils.AutoScalingText
 import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier

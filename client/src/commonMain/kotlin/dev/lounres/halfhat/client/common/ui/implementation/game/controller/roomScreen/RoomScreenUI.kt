@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import dev.lounres.halfhat.client.common.resources.*
+import dev.lounres.halfhat.client.resources.*
 import dev.lounres.halfhat.client.common.ui.components.game.controller.roomScreen.RoomScreenComponent
 import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier
 import dev.lounres.kone.collections.iterables.next

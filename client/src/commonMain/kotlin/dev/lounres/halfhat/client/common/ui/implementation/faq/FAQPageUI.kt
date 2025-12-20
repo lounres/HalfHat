@@ -21,8 +21,8 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.halfhat.client.common.resources.Res
-import dev.lounres.halfhat.client.common.resources.faqPage_dark_png_24dp
+import dev.lounres.halfhat.client.resources.Res
+import dev.lounres.halfhat.client.resources.faqPage_dark_png_24dp
 import dev.lounres.halfhat.client.common.ui.components.faq.FAQPageComponent
 import dev.lounres.halfhat.client.common.ui.components.faq.questionsAndAnswers
 import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier

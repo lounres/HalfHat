@@ -1,6 +1,6 @@
 package dev.lounres.halfhat.client.common.utils
 
-import dev.lounres.halfhat.client.common.resources.Res
+import dev.lounres.halfhat.client.resources.Res
 import js.buffer.ArrayBuffer
 import js.core.JsPrimitives.toJsByte
 import js.typedarrays.Int8Array

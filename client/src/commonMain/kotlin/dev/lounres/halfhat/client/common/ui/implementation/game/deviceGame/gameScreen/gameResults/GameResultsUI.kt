@@ -24,8 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import dev.lounres.halfhat.client.common.resources.Res
-import dev.lounres.halfhat.client.common.resources.exitDeviceGameButton_dark_png_24dp
+import dev.lounres.halfhat.client.resources.Res
+import dev.lounres.halfhat.client.resources.exitDeviceGameButton_dark_png_24dp
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.gameResults.GameResultsComponent
 import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier
 import dev.lounres.kone.collections.iterables.next

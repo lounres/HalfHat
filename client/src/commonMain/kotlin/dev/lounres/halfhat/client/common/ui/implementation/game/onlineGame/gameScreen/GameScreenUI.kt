@@ -9,10 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import dev.lounres.halfhat.client.common.resources.Res
-import dev.lounres.halfhat.client.common.resources.exitDeviceGameButton_dark_png_24dp
-import dev.lounres.halfhat.client.common.resources.onlineGameKey_dark_png_24dp
-import dev.lounres.halfhat.client.common.resources.onlineGameLink_dark_png_24dp
+import dev.lounres.halfhat.client.resources.Res
+import dev.lounres.halfhat.client.resources.exitDeviceGameButton_dark_png_24dp
+import dev.lounres.halfhat.client.resources.onlineGameKey_dark_png_24dp
+import dev.lounres.halfhat.client.resources.onlineGameLink_dark_png_24dp
 import dev.lounres.halfhat.client.common.ui.components.game.onlineGame.gameScreen.GameScreenComponent
 import dev.lounres.halfhat.client.common.ui.implementation.game.onlineGame.gameScreen.gameResults.GameResultsActionsUI
 import dev.lounres.halfhat.client.common.ui.implementation.game.onlineGame.gameScreen.gameResults.GameResultsButtonsUI

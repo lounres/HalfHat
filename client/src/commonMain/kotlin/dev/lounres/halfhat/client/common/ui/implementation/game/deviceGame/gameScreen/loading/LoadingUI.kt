@@ -15,8 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.halfhat.client.common.resources.Res
-import dev.lounres.halfhat.client.common.resources.exitDeviceGameButton_dark_png_24dp
+import dev.lounres.halfhat.client.resources.Res
+import dev.lounres.halfhat.client.resources.exitDeviceGameButton_dark_png_24dp
 import dev.lounres.halfhat.client.common.ui.components.game.deviceGame.gameScreen.loading.LoadingComponent
 import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier
 import org.jetbrains.compose.resources.painterResource

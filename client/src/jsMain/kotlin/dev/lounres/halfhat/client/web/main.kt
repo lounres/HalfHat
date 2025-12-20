@@ -20,8 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.ComposeViewport
-import dev.lounres.halfhat.client.common.resources.Res
-import dev.lounres.halfhat.client.common.resources.allDrawableResources
+import dev.lounres.halfhat.client.resources.Res
+import dev.lounres.halfhat.client.resources.allDrawableResources
 import dev.lounres.halfhat.client.common.utils.DefaultSounds
 import dev.lounres.halfhat.client.web.ui.components.RealMainWindowComponent
 import dev.lounres.halfhat.client.web.ui.implementation.MainWindowContentUI

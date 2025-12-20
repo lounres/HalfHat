@@ -6,8 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import dev.lounres.halfhat.client.common.resources.Res
-import dev.lounres.halfhat.client.common.resources.gamePage_dark_png_24dp
+import dev.lounres.halfhat.client.resources.Res
+import dev.lounres.halfhat.client.resources.gamePage_dark_png_24dp
 import dev.lounres.halfhat.client.common.ui.components.game.GamePageComponent
 import dev.lounres.halfhat.client.common.ui.implementation.game.controller.ControllerPageActionsUI
 import dev.lounres.halfhat.client.common.ui.implementation.game.controller.ControllerPageUI

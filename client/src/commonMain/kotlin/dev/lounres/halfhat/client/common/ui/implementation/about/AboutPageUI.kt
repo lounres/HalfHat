@@ -20,8 +20,8 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.halfhat.client.common.resources.Res
-import dev.lounres.halfhat.client.common.resources.aboutPage_dark_png_24dp
+import dev.lounres.halfhat.client.resources.Res
+import dev.lounres.halfhat.client.resources.aboutPage_dark_png_24dp
 import dev.lounres.halfhat.client.common.ui.components.about.AboutPageComponent
 import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier
 import org.jetbrains.compose.resources.painterResource

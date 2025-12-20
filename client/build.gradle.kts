@@ -156,7 +156,7 @@ composeCompiler {
 
 compose {
     resources {
-        packageOfResClass = "dev.lounres.halfhat.client.common.resources"
+        packageOfResClass = "dev.lounres.halfhat.client.resources"
         generateResClass = always
         publicResClass = true
     }

@@ -2,8 +2,8 @@ package dev.lounres.halfhat.client.common.ui.implementation.home
 
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import dev.lounres.halfhat.client.common.resources.Res
-import dev.lounres.halfhat.client.common.resources.homePage_dark_png_24dp
+import dev.lounres.halfhat.client.resources.Res
+import dev.lounres.halfhat.client.resources.homePage_dark_png_24dp
 import dev.lounres.halfhat.client.common.ui.components.home.HomePageComponent
 import dev.lounres.halfhat.client.common.ui.utils.WorkInProgress
 import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier

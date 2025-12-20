@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
-import dev.lounres.halfhat.client.common.resources.Res
-import dev.lounres.halfhat.client.common.resources.exitOnlineGameButton_dark_png_24dp
+import dev.lounres.halfhat.client.resources.Res
+import dev.lounres.halfhat.client.resources.exitOnlineGameButton_dark_png_24dp
 import dev.lounres.halfhat.client.common.ui.components.game.localGame.LocalGamePageComponent
 import dev.lounres.halfhat.client.common.ui.utils.WorkInProgress
 import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier

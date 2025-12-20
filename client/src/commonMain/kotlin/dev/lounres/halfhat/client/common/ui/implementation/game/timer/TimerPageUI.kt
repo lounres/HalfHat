@@ -12,8 +12,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lounres.halfhat.client.common.logic.components.game.timer.TimerState
 import dev.lounres.halfhat.client.common.logic.components.game.timer.represent
-import dev.lounres.halfhat.client.common.resources.Res
-import dev.lounres.halfhat.client.common.resources.exitGameTimerButton_dark_png_24dp
+import dev.lounres.halfhat.client.resources.Res
+import dev.lounres.halfhat.client.resources.exitGameTimerButton_dark_png_24dp
 import dev.lounres.halfhat.client.common.ui.components.game.timer.TimerPageComponent
 import dev.lounres.halfhat.client.common.ui.utils.commonIconModifier
 import dev.lounres.kone.hub.subscribeAsState
