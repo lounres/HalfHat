@@ -54,6 +54,9 @@ public object ClientApi {
             public data object InitializeGame : OnlineGame
             
             @Serializable
+            public data class SubmitWords(val words: /* TODO: Replace with `KoneSet` with serializer */ KoneList<String>): OnlineGame
+            
+            @Serializable
             public data object SpeakerReady : OnlineGame
             
             @Serializable
