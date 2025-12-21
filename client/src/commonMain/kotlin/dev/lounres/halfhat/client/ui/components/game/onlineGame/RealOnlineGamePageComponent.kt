@@ -42,12 +42,13 @@ public class RealOnlineGamePageComponent(
 
 public suspend fun RealOnlineGamePageComponent(
     componentContext: UIComponentContext,
+    volumeOn: StateFlow<Boolean>,
     onExitOnlineGameMode: () -> Unit,
 ): RealOnlineGamePageComponent {
     val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
     val onlineGameComponent: OnlineGameComponent =
         componentContext.buildLogicChildOnRunning {
-            RealOnlineGameComponent(it)
+            RealOnlineGameComponent(it, volumeOn)
         }
     
     val navigationController = componentContext.navigationController

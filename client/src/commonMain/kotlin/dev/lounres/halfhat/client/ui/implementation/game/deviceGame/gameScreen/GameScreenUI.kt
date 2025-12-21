@@ -26,6 +26,7 @@ public fun RowScope.GameScreenActionsUI(
 ) {
     when (val child: GameScreenComponent.Child = component.childSlot.subscribeAsState().value.component) {
         is GameScreenComponent.Child.Loading -> LoadingActionsUI(child.component)
+        is GameScreenComponent.Child.PlayersWordsCollection -> TODO()
         is GameScreenComponent.Child.RoundWaiting -> RoundWaitingActionsUI(child.component)
         is GameScreenComponent.Child.RoundPreparation -> RoundPreparationActionsUI(child.component)
         is GameScreenComponent.Child.RoundExplanation -> RoundExplanationActionsUI(child.component)
@@ -41,6 +42,7 @@ public fun GameScreenUI(
 ) {
     when (val child: GameScreenComponent.Child = component.childSlot.subscribeAsState().value.component) {
         is GameScreenComponent.Child.Loading -> LoadingUI(child.component)
+        is GameScreenComponent.Child.PlayersWordsCollection -> TODO()
         is GameScreenComponent.Child.RoundWaiting -> RoundWaitingUI(child.component)
         is GameScreenComponent.Child.RoundPreparation -> RoundPreparationUI(child.component)
         is GameScreenComponent.Child.RoundExplanation -> RoundExplanationUI(child.component)

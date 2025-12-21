@@ -94,6 +94,7 @@ public suspend fun RealGamePageComponent(
                     GamePageComponent.Child.OnlineGame(
                         RealOnlineGamePageComponent(
                             componentContext = componentContext,
+                            volumeOn = volumeOn,
                             onExitOnlineGameMode = {
                                 CoroutineScope(Dispatchers.Default).launch {
                                     componentContext.navigationContext.doStoringNavigation {

@@ -42,6 +42,9 @@ public class RealGameScreenComponent(
         public data class RoomSettings(
             val stateFlow: MutableStateFlow<ServerApi.OnlineGame.State.GameInitialisation>,
         ) : Configuration
+        public data class PlayersWordsCollection(
+            val stateFlow: MutableStateFlow<ServerApi.OnlineGame.State.PlayersWordsCollection>,
+        ) : Configuration
         public data class RoundWaiting(
             val stateFlow: MutableStateFlow<ServerApi.OnlineGame.State.RoundWaiting>,
         ) : Configuration
@@ -82,6 +85,7 @@ public suspend fun RealGameScreenComponent(
             initialConfiguration = when(val gameState = gameStateFlow.value) {
                 null -> RealGameScreenComponent.Configuration.Loading
                 is ServerApi.OnlineGame.State.GameInitialisation -> RealGameScreenComponent.Configuration.RoomScreen(MutableStateFlow(gameState))
+                is ServerApi.OnlineGame.State.PlayersWordsCollection -> RealGameScreenComponent.Configuration.PlayersWordsCollection(MutableStateFlow(gameState))
                 is ServerApi.OnlineGame.State.RoundWaiting -> RealGameScreenComponent.Configuration.RoundWaiting(MutableStateFlow(gameState))
                 is ServerApi.OnlineGame.State.RoundPreparation -> RealGameScreenComponent.Configuration.RoundPreparation(MutableStateFlow(gameState))
                 is ServerApi.OnlineGame.State.RoundExplanation -> RealGameScreenComponent.Configuration.RoundExplanation(MutableStateFlow(gameState))
@@ -156,6 +160,10 @@ public suspend fun RealGameScreenComponent(
                             onListenerReady = onListenerReady,
                         )
                     )
+                is RealGameScreenComponent.Configuration.PlayersWordsCollection ->
+                    GameScreenComponent.Child.PlayersWordsCollection(
+                        TODO()
+                    )
                 is RealGameScreenComponent.Configuration.RoundPreparation ->
                     GameScreenComponent.Child.RoundPreparation(
                         RealRoundPreparationComponent(
@@ -213,6 +221,16 @@ public suspend fun RealGameScreenComponent(
                                     stateFlow.value = newState
                                 }
                             else -> RealGameScreenComponent.Configuration.RoomScreen(
+                                stateFlow = MutableStateFlow(newState),
+                            )
+                        }
+                    is ServerApi.OnlineGame.State.PlayersWordsCollection ->
+                        when (currentConfiguration) {
+                            is RealGameScreenComponent.Configuration.PlayersWordsCollection ->
+                                currentConfiguration.apply {
+                                    stateFlow.value = newState
+                                }
+                            else -> RealGameScreenComponent.Configuration.PlayersWordsCollection(
                                 stateFlow = MutableStateFlow(newState),
                             )
                         }

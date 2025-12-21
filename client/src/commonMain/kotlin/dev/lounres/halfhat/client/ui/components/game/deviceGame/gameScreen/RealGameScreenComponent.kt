@@ -37,6 +37,7 @@ public class RealGameScreenComponent(
 ) : GameScreenComponent {
     public sealed interface Configuration {
         public data object GameInitialisation : Configuration
+        public data object PlayersWordsCollection : Configuration
         public data class RoundWaiting(
             val speaker: MutableStateFlow<String>,
             val listener: MutableStateFlow<String>,
@@ -101,6 +102,22 @@ public suspend fun RealGameScreenComponent(
             is GameStateMachine.State.GameInitialisation ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation -> {}
+                    is GameStateMachine.State.PlayersWordsCollection -> {}
+                    is GameStateMachine.State.RoundWaiting -> {}
+                    is GameStateMachine.State.RoundPreparation ->
+                        coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                    is GameStateMachine.State.RoundExplanation ->
+                        coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                    is GameStateMachine.State.RoundLastGuess ->
+                        if (previousState.millisecondsLeft > 0u)
+                            coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                    is GameStateMachine.State.RoundEditing -> {}
+                    is GameStateMachine.State.GameResults -> {}
+                }
+            is GameStateMachine.State.PlayersWordsCollection ->
+                when (previousState) {
+                    is GameStateMachine.State.GameInitialisation -> {}
+                    is GameStateMachine.State.PlayersWordsCollection -> {}
                     is GameStateMachine.State.RoundWaiting -> {}
                     is GameStateMachine.State.RoundPreparation ->
                         coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
@@ -115,6 +132,7 @@ public suspend fun RealGameScreenComponent(
             is GameStateMachine.State.RoundWaiting ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation -> {}
+                    is GameStateMachine.State.PlayersWordsCollection -> {}
                     is GameStateMachine.State.RoundWaiting -> {}
                     is GameStateMachine.State.RoundPreparation ->
                         coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
@@ -129,6 +147,8 @@ public suspend fun RealGameScreenComponent(
             is GameStateMachine.State.RoundPreparation ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation ->
+                        coroutineScope.launch { DefaultSounds.preparationCountdown.await().play() }
+                    is GameStateMachine.State.PlayersWordsCollection ->
                         coroutineScope.launch { DefaultSounds.preparationCountdown.await().play() }
                     is GameStateMachine.State.RoundWaiting ->
                         coroutineScope.launch { DefaultSounds.preparationCountdown.await().play() }
@@ -148,6 +168,8 @@ public suspend fun RealGameScreenComponent(
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation ->
                         coroutineScope.launch { DefaultSounds.explanationStart.await().play() }
+                    is GameStateMachine.State.PlayersWordsCollection ->
+                        coroutineScope.launch { DefaultSounds.explanationStart.await().play() }
                     is GameStateMachine.State.RoundWaiting ->
                         coroutineScope.launch { DefaultSounds.explanationStart.await().play() }
                     is GameStateMachine.State.RoundPreparation ->
@@ -165,6 +187,11 @@ public suspend fun RealGameScreenComponent(
             is GameStateMachine.State.RoundLastGuess ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation ->
+                        if (newState.millisecondsLeft > 0u)
+                            coroutineScope.launch { DefaultSounds.finalGuessStart.await().play() }
+                        else
+                            coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                    is GameStateMachine.State.PlayersWordsCollection ->
                         if (newState.millisecondsLeft > 0u)
                             coroutineScope.launch { DefaultSounds.finalGuessStart.await().play() }
                         else
@@ -206,6 +233,7 @@ public suspend fun RealGameScreenComponent(
             is GameStateMachine.State.RoundEditing ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation -> {}
+                    is GameStateMachine.State.PlayersWordsCollection -> {}
                     is GameStateMachine.State.RoundWaiting -> {}
                     is GameStateMachine.State.RoundPreparation ->
                         coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
@@ -220,6 +248,7 @@ public suspend fun RealGameScreenComponent(
             is GameStateMachine.State.GameResults ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation -> {}
+                    is GameStateMachine.State.PlayersWordsCollection -> {}
                     is GameStateMachine.State.RoundWaiting -> {}
                     is GameStateMachine.State.RoundPreparation ->
                         coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
@@ -236,6 +265,8 @@ public suspend fun RealGameScreenComponent(
             when (newState) {
                 is GameStateMachine.State.GameInitialisation ->
                     RealGameScreenComponent.Configuration.GameInitialisation
+                is GameStateMachine.State.PlayersWordsCollection ->
+                    RealGameScreenComponent.Configuration.PlayersWordsCollection
                 is GameStateMachine.State.RoundWaiting ->
                     if (currentConfiguration is RealGameScreenComponent.Configuration.RoundWaiting)
                         currentConfiguration.apply {
@@ -339,6 +370,8 @@ public suspend fun RealGameScreenComponent(
             initialConfiguration = when(val state = gameStateMachine.state) {
                 is GameStateMachine.State.GameInitialisation<*, *, *> ->
                     RealGameScreenComponent.Configuration.GameInitialisation
+                is GameStateMachine.State.PlayersWordsCollection<*, *, *> ->
+                    RealGameScreenComponent.Configuration.PlayersWordsCollection
                 is GameStateMachine.State.RoundWaiting<String, *, *> ->
                     RealGameScreenComponent.Configuration.RoundWaiting(
                         speaker = MutableStateFlow(state.speaker),
@@ -380,6 +413,10 @@ public suspend fun RealGameScreenComponent(
                         RealLoadingComponent(
                             onExitGame = onExitGame,
                         )
+                    )
+                RealGameScreenComponent.Configuration.PlayersWordsCollection ->
+                    GameScreenComponent.Child.PlayersWordsCollection(
+                        TODO()
                     )
                 is RealGameScreenComponent.Configuration.RoundWaiting ->
                     GameScreenComponent.Child.RoundWaiting(

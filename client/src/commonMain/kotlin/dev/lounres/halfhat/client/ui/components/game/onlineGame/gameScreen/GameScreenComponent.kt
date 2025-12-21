@@ -24,6 +24,7 @@ public interface GameScreenComponent {
         public data class Loading(val component: LoadingComponent) : Child
         public data class RoomScreen(val component: RoomScreenComponent) : Child
         public data class RoomSettings(val component: RoomSettingsComponent) : Child
+        public data class PlayersWordsCollection(val component: Nothing) : Child
         public data class RoundWaiting(val component: RoundWaitingComponent) : Child
         public data class RoundPreparation(val component: RoundPreparationComponent) : Child
         public data class RoundExplanation(val component: RoundExplanationComponent) : Child

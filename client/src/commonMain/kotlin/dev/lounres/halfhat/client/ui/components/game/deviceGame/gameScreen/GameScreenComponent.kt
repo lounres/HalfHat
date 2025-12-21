@@ -18,6 +18,7 @@ public interface GameScreenComponent {
     
     public sealed interface Child {
         public class Loading(public val component: LoadingComponent) : Child
+        public class PlayersWordsCollection(public val component: Nothing) : Child
         public class RoundWaiting(public val component: RoundWaitingComponent) : Child
         public class RoundPreparation(public val component: RoundPreparationComponent) : Child
         public class RoundExplanation(public val component: RoundExplanationComponent) : Child
