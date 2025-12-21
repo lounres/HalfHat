@@ -1,6 +1,6 @@
 package dev.lounres.halfhat.client.utils
 
 
-public expect fun copyToClipboard(content: String)
+public expect suspend fun copyToClipboard(content: String)
 
-public expect fun copyFromClipboard(): String
+public expect suspend fun copyFromClipboard(): String

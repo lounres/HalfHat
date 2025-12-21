@@ -27,7 +27,6 @@ import io.ktor.server.netty.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -198,6 +197,7 @@ class Connection(
                 when (state) {
                     is Room.Outgoing.State.GameInitialisation<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.GameInitialisation(
+                            roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.GameInitialisation(
                                 name = state.role.metadata.name,
                                 userIndex = state.role.userIndex,
@@ -208,6 +208,7 @@ class Connection(
                         )
                     is Room.Outgoing.State.PlayersWordsCollection<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.PlayersWordsCollection(
+                            roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.PlayersWordsCollection(
                                 name = state.role.metadata.name,
                                 userIndex = state.role.userIndex,
@@ -219,6 +220,7 @@ class Connection(
                         )
                     is Room.Outgoing.State.RoundWaiting<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.RoundWaiting(
+                            roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.RoundWaiting(
                                 name = state.role.metadata.name,
                                 userIndex = state.role.userIndex,
@@ -242,6 +244,7 @@ class Connection(
                         )
                     is Room.Outgoing.State.RoundPreparation<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.RoundPreparation(
+                            roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.RoundPreparation(
                                 name = state.role.metadata.name,
                                 userIndex = state.role.userIndex,
@@ -264,6 +267,7 @@ class Connection(
                         )
                     is Room.Outgoing.State.RoundExplanation<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.RoundExplanation(
+                            roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.RoundExplanation(
                                 name = state.role.metadata.name,
                                 userIndex = state.role.userIndex,
@@ -286,6 +290,7 @@ class Connection(
                         )
                     is Room.Outgoing.State.RoundLastGuess<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.RoundLastGuess(
+                            roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.RoundLastGuess(
                                 name = state.role.metadata.name,
                                 userIndex = state.role.userIndex,
@@ -308,6 +313,7 @@ class Connection(
                         )
                     is Room.Outgoing.State.RoundEditing<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.RoundEditing(
+                            roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.RoundEditing(
                                 name = state.role.metadata.name,
                                 userIndex = state.role.userIndex,
@@ -329,6 +335,7 @@ class Connection(
                         )
                     is Room.Outgoing.State.GameResults<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.GameResults(
+                            roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.GameResults(
                                 name = state.role.metadata.name,
                                 userIndex = state.role.userIndex,

@@ -8,8 +8,6 @@ import dev.lounres.halfhat.client.components.lifecycle.LogicComponentLifecycleSt
 import dev.lounres.halfhat.client.components.lifecycle.lifecycle
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.hub.set
-import dev.lounres.kone.relations.Equality
-import dev.lounres.kone.relations.defaultFor
 import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.atomicfu.locks.withLock
 import kotlinx.coroutines.CoroutineScope
@@ -26,7 +24,7 @@ public class RealTimerComponent(
 ) : TimerComponent {
     private val coroutineScope: CoroutineScope = componentContext.coroutineScope(Dispatchers.Default)
     
-    override val timerState: KoneMutableAsynchronousHub<TimerState> = KoneMutableAsynchronousHub(TimerState.Finished, elementEquality = Equality.defaultFor() /* FIXME: Remove the default value */)
+    override val timerState: KoneMutableAsynchronousHub<TimerState> = KoneMutableAsynchronousHub(TimerState.Finished)
     
     private val timerJobLock = ReentrantLock()
     private var timerJob: Job = Job()

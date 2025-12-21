@@ -15,6 +15,7 @@ import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotItem
+import dev.lounres.halfhat.client.utils.copyToClipboard
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.collections.list.KoneList
@@ -29,10 +30,10 @@ import kotlinx.coroutines.launch
 public class RealGameScreenComponent(
     override val onExitOnlineGame: () -> Unit,
     override val childSlot: KoneAsynchronousHub<ChildrenSlot<*, GameScreenComponent.Child>>,
+    override val onCopyOnlineGameKey: () -> Unit,
+    override val onCopyOnlineGameLink: () -> Unit,
 ) : GameScreenComponent {
     
-    override val onCopyOnlineGameKey: () -> Unit = { /*TODO()*/ }
-    override val onCopyOnlineGameLink: () -> Unit = { /*TODO()*/ }
 
     public sealed interface Configuration {
         public data object Loading : Configuration
@@ -205,7 +206,9 @@ public suspend fun RealGameScreenComponent(
             }
         }
     
-    componentContext.coroutineScope(Dispatchers.Default).launch {
+    val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
+    
+    coroutineScope.launch {
         gameStateFlow.collect { newState ->
             childSlot.navigate { currentConfiguration ->
                 when (newState) {
@@ -302,5 +305,14 @@ public suspend fun RealGameScreenComponent(
     return RealGameScreenComponent(
         onExitOnlineGame = onExitOnlineGame,
         childSlot = childSlot.hub,
+        onCopyOnlineGameKey = {
+            coroutineScope.launch {
+                val gameState = gameStateFlow.value
+                if (gameState != null) copyToClipboard(gameState.roomName)
+            }
+        },
+        onCopyOnlineGameLink = {
+            /* TODO */
+        }
     )
 }

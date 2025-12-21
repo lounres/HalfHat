@@ -184,10 +184,12 @@ public object ServerApi {
         
         @Serializable
         public sealed interface State {
+            public val roomName: String
             public val role: Role
             
             @Serializable
             public data class GameInitialisation(
+                override val roomName: String,
                 override val role: Role.GameInitialisation,
                 public val playersList: KoneList<PlayerDescription>,
                 public val settingsBuilder: SettingsBuilder,
@@ -195,6 +197,7 @@ public object ServerApi {
             
             @Serializable
             public data class PlayersWordsCollection(
+                override val roomName: String,
                 override val role: Role.PlayersWordsCollection,
                 public val playersList: KoneList<PlayerDescription>,
                 public val settings: Settings,
@@ -203,6 +206,7 @@ public object ServerApi {
             
             @Serializable
             public data class RoundWaiting(
+                override val roomName: String,
                 override val role: Role.RoundWaiting,
                 public val playersList: KoneList<PlayerDescription>,
                 public val settings: Settings,
@@ -218,6 +222,7 @@ public object ServerApi {
             
             @Serializable
             public data class RoundPreparation(
+                override val roomName: String,
                 override val role: Role.RoundPreparation,
                 public val playersList: KoneList<PlayerDescription>,
                 public val settings: Settings,
@@ -232,6 +237,7 @@ public object ServerApi {
             
             @Serializable
             public data class RoundExplanation(
+                override val roomName: String,
                 override val role: Role.RoundExplanation,
                 public val playersList: KoneList<PlayerDescription>,
                 public val settings: Settings,
@@ -246,6 +252,7 @@ public object ServerApi {
             
             @Serializable
             public data class RoundLastGuess(
+                override val roomName: String,
                 override val role: Role.RoundLastGuess,
                 public val playersList: KoneList<PlayerDescription>,
                 public val settings: Settings,
@@ -260,6 +267,7 @@ public object ServerApi {
             
             @Serializable
             public data class RoundEditing(
+                override val roomName: String,
                 override val role: Role.RoundEditing,
                 public val playersList: KoneList<PlayerDescription>,
                 public val settings: Settings,
@@ -273,6 +281,7 @@ public object ServerApi {
             
             @Serializable
             public data class GameResults(
+                override val roomName: String,
                 override val role: Role.GameResults,
                 public val playersList: KoneList<String>,
                 public val results: KoneList<GameStateMachine.GameResult>,
