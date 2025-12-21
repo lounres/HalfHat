@@ -206,6 +206,17 @@ class Connection(
                             playersList = state.playersList.toServerApi(),
                             settingsBuilder = state.settingsBuilder.toServerApi(),
                         )
+                    is Room.Outgoing.State.PlayersWordsCollection<RoomMetadata, PlayerMetadata, WordsProviderID> ->
+                        ServerApi.OnlineGame.State.PlayersWordsCollection(
+                            role = ServerApi.OnlineGame.Role.PlayersWordsCollection(
+                                name = state.role.metadata.name,
+                                userIndex = state.role.userIndex,
+                                isHost = state.role.isHost
+                            ),
+                            playersList = state.playersList.toServerApi(),
+                            settings = state.settings.toServerApi(),
+                            playersWordsAreReady = state.playersWordsAreReady,
+                        )
                     is Room.Outgoing.State.RoundWaiting<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.RoundWaiting(
                             role = ServerApi.OnlineGame.Role.RoundWaiting(
@@ -340,6 +351,8 @@ class Connection(
             Room.Outgoing.Error.CannotUpdateGameSettingsAfterInitialization -> ServerApi.OnlineGame.Error.CannotUpdateGameSettingsAfterInitialization
             Room.Outgoing.Error.NotEnoughPlayersForInitialization -> ServerApi.OnlineGame.Error.NotEnoughPlayersForInitialization
             Room.Outgoing.Error.CannotInitializeGameAfterInitialization -> ServerApi.OnlineGame.Error.CannotInitializeGameAfterInitialization
+            Room.Outgoing.Error.PlayerAlreadySubmittedWords -> ServerApi.OnlineGame.Error.PlayerAlreadySubmittedWords
+            Room.Outgoing.Error.CannotSubmitPlayerWordsNotDuringPlayersWordsCollection -> ServerApi.OnlineGame.Error.CannotSubmitPlayerWordsNotDuringPlayersWordsCollection
             Room.Outgoing.Error.CannotSetSpeakerReadinessNotDuringRoundWaiting -> ServerApi.OnlineGame.Error.CannotSetSpeakerReadinessNotDuringRoundWaiting
             Room.Outgoing.Error.NotSpeakerSettingSpeakerReadiness -> ServerApi.OnlineGame.Error.NotSpeakerSettingSpeakerReadiness
             Room.Outgoing.Error.CannotSetListenerReadinessNotDuringRoundWaiting -> ServerApi.OnlineGame.Error.CannotSetListenerReadinessNotDuringRoundWaiting
@@ -436,6 +449,7 @@ fun main() {
                                                     },
                                                     state = when (it.stateType) {
                                                         Room.StateType.GameInitialisation -> ServerApi.RoomStateType.GameInitialisation
+                                                        Room.StateType.PlayersWordsCollection -> ServerApi.RoomStateType.PlayersWordsCollection
                                                         Room.StateType.RoundWaiting -> ServerApi.RoomStateType.RoundWaiting
                                                         Room.StateType.RoundPreparation -> ServerApi.RoomStateType.RoundPreparation
                                                         Room.StateType.RoundExplanation -> ServerApi.RoomStateType.RoundExplanation
@@ -596,6 +610,24 @@ fun main() {
                                 }
                                 
                                 attachment.initializeGame()
+                            }
+                            is ClientApi.Signal.OnlineGame.SubmitWords -> connection.playerAttachmentMutex.withLock {
+                                val attachment = connection.playerAttachment
+                                
+                                if (attachment == null) {
+                                    logger.debug(
+                                        items = {
+                                            mapOf(
+                                                "connection" to this.toString(),
+                                            )
+                                        }
+                                    ) { "No attachment when it is needed" }
+                                    
+                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
+                                    return@withLock
+                                }
+                                
+                                attachment.submitWords(signal.words.toKoneSet())
                             }
                             ClientApi.Signal.OnlineGame.SpeakerReady -> connection.playerAttachmentMutex.withLock {
                                 val attachment = connection.playerAttachment
