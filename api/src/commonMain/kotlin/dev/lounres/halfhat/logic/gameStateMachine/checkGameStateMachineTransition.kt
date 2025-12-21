@@ -3,13 +3,16 @@ package dev.lounres.halfhat.logic.gameStateMachine
 import dev.lounres.kone.automata.CheckResult
 import dev.lounres.kone.collections.iterables.isEmpty
 import dev.lounres.kone.collections.iterables.isNotEmpty
+import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.KoneSettableList
 import dev.lounres.kone.collections.list.empty
 import dev.lounres.kone.collections.list.generate
 import dev.lounres.kone.collections.list.indices
+import dev.lounres.kone.collections.list.toKoneSettableList
 import dev.lounres.kone.collections.set.KoneMutableSet
 import dev.lounres.kone.collections.set.KoneSet
+import dev.lounres.kone.collections.set.addAllFrom
 import dev.lounres.kone.collections.set.build
 import dev.lounres.kone.collections.set.of
 import dev.lounres.kone.collections.utils.*
@@ -70,6 +73,13 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         metadata = newMetadata,
                         playersList = previousState.playersList,
                         settingsBuilder = previousState.settingsBuilder,
+                    )
+                is GameStateMachine.State.PlayersWordsCollection ->
+                    GameStateMachine.State.PlayersWordsCollection(
+                        metadata = newMetadata,
+                        playersList = previousState.playersList,
+                        settings = previousState.settings,
+                        playersWords = previousState.playersWords,
                     )
                 is GameStateMachine.State.RoundWaiting ->
                     GameStateMachine.State.RoundWaiting(
@@ -170,6 +180,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         )
                     )
                 
+                is GameStateMachine.State.PlayersWordsCollection,
                 is GameStateMachine.State.RoundWaiting,
                 is GameStateMachine.State.RoundPreparation,
                 is GameStateMachine.State.RoundExplanation,
@@ -187,7 +198,15 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                     if (playersList.size < 2u) return@scope CheckResult.Failure(GameStateMachine.NoNextStateReason.NotEnoughPlayersForInitialization)
                     
                     when (val wordsSource = settingsBuilder.wordsSource) {
-                        GameStateMachine.WordsSource.Players -> TODO()
+                        GameStateMachine.WordsSource.Players ->
+                            CheckResult.Success(
+                                GameStateMachine.State.PlayersWordsCollection(
+                                    metadata = metadataTransformer(previousState, transition),
+                                    playersList = playersList,
+                                    settings = settingsBuilder.build(),
+                                    playersWords = KoneList.generate(playersList.size) { null }
+                                )
+                            )
                         is GameStateMachine.WordsSource.Custom -> {
                             val wordsProviderOrReason = transition.wordsProviderRegistry[wordsSource.providerId]
                             
@@ -222,6 +241,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                     }
                 }
                 
+                is GameStateMachine.State.PlayersWordsCollection,
                 is GameStateMachine.State.RoundWaiting,
                 is GameStateMachine.State.RoundPreparation,
                 is GameStateMachine.State.RoundExplanation,
@@ -229,6 +249,53 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                 is GameStateMachine.State.RoundEditing,
                 is GameStateMachine.State.GameResults,
                     -> CheckResult.Failure(GameStateMachine.NoNextStateReason.CannotInitializeGameAfterInitialization)
+            }
+        is GameStateMachine.Transition.UpdateGame.SubmitPlayerWords ->
+            when (previousState) {
+                is GameStateMachine.State.PlayersWordsCollection ->
+                    if (previousState.playersList[transition.playerIndex] != null)
+                        CheckResult.Failure(GameStateMachine.NoNextStateReason.PlayerAlreadySubmittedWords)
+                    else {
+                        val newPlayersWords = previousState.playersWords.toKoneSettableList()
+                        newPlayersWords[transition.playerIndex] = transition.playerWords
+                        if (newPlayersWords.all { it != null })
+                            CheckResult.Success(
+                                GameStateMachine.State.RoundWaiting(
+                                    metadata = metadataTransformer(previousState, transition),
+                                    playersList = previousState.playersList,
+                                    settings = previousState.settings,
+                                    roundNumber = 0u,
+                                    cycleNumber = 0u,
+                                    speakerIndex = 0u,
+                                    listenerIndex = 1u,
+                                    restWords = KoneSet.build {
+                                        for (words in newPlayersWords) addAllFrom(words!!)
+                                    },
+                                    explanationScores = KoneList.generate(previousState.playersList.size) { 0u },
+                                    guessingScores = KoneList.generate(previousState.playersList.size) { 0u },
+                                    speakerReady = false,
+                                    listenerReady = false,
+                                )
+                            )
+                        else
+                            CheckResult.Success(
+                                GameStateMachine.State.PlayersWordsCollection(
+                                    metadata = metadataTransformer(previousState, transition),
+                                    playersList = previousState.playersList,
+                                    settings = previousState.settings,
+                                    playersWords = newPlayersWords,
+                                )
+                            )
+                    }
+                    
+                is GameStateMachine.State.GameInitialisation,
+                is GameStateMachine.State.RoundWaiting,
+                is GameStateMachine.State.RoundPreparation,
+                is GameStateMachine.State.RoundExplanation,
+                is GameStateMachine.State.RoundLastGuess,
+                is GameStateMachine.State.RoundEditing,
+                is GameStateMachine.State.GameResults,
+                    -> CheckResult.Failure(GameStateMachine.NoNextStateReason.CannotSubmitPlayerWordsNotDuringPlayersWordsCollection)
             }
         is GameStateMachine.Transition.UpdateGame.SpeakerReady ->
             when (previousState) {
@@ -277,6 +344,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         )
                 
                 is GameStateMachine.State.GameInitialisation,
+                is GameStateMachine.State.PlayersWordsCollection,
                 is GameStateMachine.State.RoundPreparation,
                 is GameStateMachine.State.RoundExplanation,
                 is GameStateMachine.State.RoundLastGuess,
@@ -331,6 +399,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         )
                 
                 is GameStateMachine.State.GameInitialisation,
+                is GameStateMachine.State.PlayersWordsCollection,
                 is GameStateMachine.State.RoundPreparation,
                 is GameStateMachine.State.RoundExplanation,
                 is GameStateMachine.State.RoundLastGuess,
@@ -367,6 +436,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                 }
                 
                 is GameStateMachine.State.GameInitialisation,
+                is GameStateMachine.State.PlayersWordsCollection,
                 is GameStateMachine.State.RoundPreparation,
                 is GameStateMachine.State.RoundExplanation,
                 is GameStateMachine.State.RoundLastGuess,
@@ -377,6 +447,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
         is GameStateMachine.Transition.UpdateGame.UpdateRoundInfo ->
             when (previousState) {
                 is GameStateMachine.State.GameInitialisation -> {
+                    transition.stopTimer()
+                    CheckResult.Failure(GameStateMachine.NoNextStateReason.CannotUpdateRoundInfoNotDuringTheRound)
+                }
+                is GameStateMachine.State.PlayersWordsCollection -> {
                     transition.stopTimer()
                     CheckResult.Failure(GameStateMachine.NoNextStateReason.CannotUpdateRoundInfoNotDuringTheRound)
                 }
@@ -774,6 +848,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                 }
                 
                 is GameStateMachine.State.GameInitialisation,
+                is GameStateMachine.State.PlayersWordsCollection,
                 is GameStateMachine.State.RoundWaiting,
                 is GameStateMachine.State.RoundPreparation,
                 is GameStateMachine.State.RoundEditing,
@@ -800,6 +875,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                     )
                 
                 is GameStateMachine.State.GameInitialisation,
+                is GameStateMachine.State.PlayersWordsCollection,
                 is GameStateMachine.State.RoundWaiting,
                 is GameStateMachine.State.RoundPreparation,
                 is GameStateMachine.State.RoundExplanation,
@@ -867,6 +943,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         )
                 }
                 is GameStateMachine.State.GameInitialisation,
+                is GameStateMachine.State.PlayersWordsCollection,
                 is GameStateMachine.State.RoundWaiting,
                 is GameStateMachine.State.RoundPreparation,
                 is GameStateMachine.State.RoundExplanation,
@@ -892,6 +969,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         )
                     )
                 is GameStateMachine.State.GameInitialisation,
+                is GameStateMachine.State.PlayersWordsCollection,
                 is GameStateMachine.State.RoundPreparation,
                 is GameStateMachine.State.RoundExplanation,
                 is GameStateMachine.State.RoundLastGuess,

@@ -1,6 +1,7 @@
 package dev.lounres.halfhat.api.onlineGame
 
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
+import dev.lounres.kone.collections.array.KoneBooleanArray
 import dev.lounres.kone.collections.list.KoneList
 import kotlinx.serialization.Serializable
 
@@ -39,6 +40,7 @@ public object ServerApi {
     @Serializable
     public enum class RoomStateType {
         GameInitialisation,
+        PlayersWordsCollection,
         RoundWaiting,
         RoundPreparation,
         RoundExplanation,
@@ -78,6 +80,13 @@ public object ServerApi {
             
             @Serializable
             public data class GameInitialisation(
+                override val name: String,
+                override val userIndex: UInt,
+                override val isHost: Boolean,
+            ) : Role
+            
+            @Serializable
+            public data class PlayersWordsCollection(
                 override val name: String,
                 override val userIndex: UInt,
                 override val isHost: Boolean,
@@ -185,6 +194,14 @@ public object ServerApi {
             ) : State
             
             @Serializable
+            public data class PlayersWordsCollection(
+                override val role: Role.PlayersWordsCollection,
+                public val playersList: KoneList<PlayerDescription>,
+                public val settings: Settings,
+                public val playersWordsAreReady: KoneBooleanArray,
+            ) : State
+            
+            @Serializable
             public data class RoundWaiting(
                 override val role: Role.RoundWaiting,
                 public val playersList: KoneList<PlayerDescription>,
@@ -286,6 +303,10 @@ public object ServerApi {
             public data object CannotFindDictionaryByID : Error
             @Serializable
             public data object CannotInitializeGameAfterInitialization : Error
+            @Serializable
+            public data object PlayerAlreadySubmittedWords : Error
+            @Serializable
+            public data object CannotSubmitPlayerWordsNotDuringPlayersWordsCollection : Error
             @Serializable
             public data object CannotSetSpeakerReadinessNotDuringRoundWaiting : Error
             @Serializable

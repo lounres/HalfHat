@@ -3,10 +3,16 @@ package dev.lounres.halfhat.logic.server
 import dev.lounres.halfhat.logic.gameStateMachine.*
 import dev.lounres.halfhat.logic.server.Room.GameStateMachineMetadataTransition.*
 import dev.lounres.kone.automata.*
+import dev.lounres.kone.collections.array.KoneBooleanArray
+import dev.lounres.kone.collections.array.generate
 import dev.lounres.kone.collections.iterables.isNotEmpty
 import dev.lounres.kone.collections.list.*
 import dev.lounres.kone.collections.list.implementations.KoneGCLinkedSizedList
+import dev.lounres.kone.collections.set.KoneSet
 import dev.lounres.kone.collections.utils.*
+import dev.lounres.kone.contexts.invoke
+import dev.lounres.kone.relations.Equality
+import dev.lounres.kone.relations.defaultFor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.Serializable
@@ -67,6 +73,7 @@ public class Room<
                                         settingsBuilder = previousState.settingsBuilder,
                                     )
                                 
+                                is GameStateMachine.State.PlayersWordsCollection<*, *, *>,
                                 is GameStateMachine.State.RoundWaiting<*, *, *>,
                                 is GameStateMachine.State.RoundPreparation<*, *, *>,
                                 is GameStateMachine.State.RoundExplanation<*, *, *>,
@@ -112,6 +119,7 @@ public class Room<
                                     ),
                                 )
                             )
+                        is GameStateMachine.State.PlayersWordsCollection<*, *, *>,
                         is GameStateMachine.State.RoundWaiting<*, *, *>,
                         is GameStateMachine.State.RoundPreparation<*, *, *>,
                         is GameStateMachine.State.RoundExplanation<*, *, *>,
@@ -153,6 +161,22 @@ public class Room<
                 }
             }
             
+            public suspend fun submitWords(words: KoneSet<String>) {
+                val result = player.room.gameStateMachine.move { previousState ->
+                    GameStateMachine.Transition.UpdateGame.SubmitPlayerWords(
+                        playerIndex = (Equality.defaultFor<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>>()) { previousState.playersList.firstIndexOf(player) },
+                        playerWords = words,
+                    )
+                }
+                when (result) {
+                    is MovementResult.NoNextState<*, *, GameStateMachine.NoNextStateReason<Nothing?, NoWordsProviderReason>> -> {
+                        val error = Outgoing.Error.fromGameStateMachineNoNextStateReason(result.noNextStateReason)
+                        if (error != null) node.element.sendError(error)
+                    }
+                    is MovementResult.Success<*, *> -> {}
+                }
+            }
+            
             public suspend fun speakerReady() {
                 val result = player.room.gameStateMachine.moveMaybe { previousState ->
                     when (previousState) {
@@ -162,6 +186,7 @@ public class Room<
                                 TransitionOrReason.Failure(null)
                             } else TransitionOrReason.Success(GameStateMachine.Transition.UpdateGame.SpeakerReady)
                         is GameStateMachine.State.GameInitialisation<*, *, *>,
+                        is GameStateMachine.State.PlayersWordsCollection<*, *, *>,
                         is GameStateMachine.State.RoundPreparation<*, *, *>,
                         is GameStateMachine.State.RoundExplanation<*, *, *>,
                         is GameStateMachine.State.RoundLastGuess<*, *, *>,
@@ -189,6 +214,7 @@ public class Room<
                                 TransitionOrReason.Failure(null)
                             } else TransitionOrReason.Success(GameStateMachine.Transition.UpdateGame.ListenerReady)
                         is GameStateMachine.State.GameInitialisation<*, *, *>,
+                        is GameStateMachine.State.PlayersWordsCollection<*, *, *>,
                         is GameStateMachine.State.RoundPreparation<*, *, *>,
                         is GameStateMachine.State.RoundExplanation<*, *, *>,
                         is GameStateMachine.State.RoundLastGuess<*, *, *>,
@@ -221,6 +247,7 @@ public class Room<
                                 TransitionOrReason.Failure(null)
                             } else TransitionOrReason.Success(GameStateMachine.Transition.UpdateGame.WordExplanationState(state))
                         is GameStateMachine.State.GameInitialisation<*, *, *>,
+                        is GameStateMachine.State.PlayersWordsCollection<*, *, *>,
                         is GameStateMachine.State.RoundWaiting<*, *, *>,
                         is GameStateMachine.State.RoundPreparation<*, *, *>,
                         is GameStateMachine.State.RoundEditing<*, *, *>,
@@ -247,6 +274,7 @@ public class Room<
                                 TransitionOrReason.Failure(null)
                             } else TransitionOrReason.Success(GameStateMachine.Transition.UpdateGame.UpdateWordsExplanationResults(newExplanationResults))
                         is GameStateMachine.State.GameInitialisation<*, *, *>,
+                        is GameStateMachine.State.PlayersWordsCollection<*, *, *>,
                         is GameStateMachine.State.RoundWaiting<*, *, *>,
                         is GameStateMachine.State.RoundPreparation<*, *, *>,
                         is GameStateMachine.State.RoundExplanation<*, *, *>,
@@ -274,6 +302,7 @@ public class Room<
                                 TransitionOrReason.Failure(null)
                             } else TransitionOrReason.Success(GameStateMachine.Transition.UpdateGame.ConfirmWordsExplanationResults)
                         is GameStateMachine.State.GameInitialisation<*, *, *>,
+                        is GameStateMachine.State.PlayersWordsCollection<*, *, *>,
                         is GameStateMachine.State.RoundWaiting<*, *, *>,
                         is GameStateMachine.State.RoundPreparation<*, *, *>,
                         is GameStateMachine.State.RoundExplanation<*, *, *>,
@@ -334,6 +363,7 @@ public class Room<
     @Serializable
     public enum class StateType {
         GameInitialisation,
+        PlayersWordsCollection,
         RoundWaiting,
         RoundPreparation,
         RoundExplanation,
@@ -395,6 +425,13 @@ public class Room<
             
             @Serializable
             public data class GameInitialisation<out PlayerMetadata>(
+                override val metadata: PlayerMetadata,
+                override val userIndex: UInt,
+                override val isHost: Boolean,
+            ) : Role<PlayerMetadata>
+            
+            @Serializable
+            public data class PlayersWordsCollection<out PlayerMetadata>(
                 override val metadata: PlayerMetadata,
                 override val userIndex: UInt,
                 override val isHost: Boolean,
@@ -493,6 +530,15 @@ public class Room<
             ) : State<RoomMetadata, PlayerMetadata, WordsProviderID>
             
             @Serializable
+            public data class PlayersWordsCollection<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
+                override val roomMetadata: RoomMetadata,
+                override val role: Role.PlayersWordsCollection<PlayerMetadata>,
+                public val playersList: KoneList<Player.Description<PlayerMetadata>>,
+                public val settings: GameSettings<WordsProviderID>,
+                public val playersWordsAreReady: KoneBooleanArray,
+            ) : State<RoomMetadata, PlayerMetadata, WordsProviderID>
+            
+            @Serializable
             public data class RoundWaiting<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
                 override val roomMetadata: RoomMetadata,
                 override val role: Role.RoundWaiting<PlayerMetadata>,
@@ -584,6 +630,8 @@ public class Room<
             public data object NotEnoughPlayersForInitialization : Error<Nothing>
             public data class NoWordsProvider<out NoWordsProviderReason>(val reason: NoWordsProviderReason) : Error<NoWordsProviderReason>
             public data object CannotInitializeGameAfterInitialization : Error<Nothing>
+            public data object PlayerAlreadySubmittedWords : Error<Nothing>
+            public data object CannotSubmitPlayerWordsNotDuringPlayersWordsCollection : Error<Nothing>
             public data object CannotSetSpeakerReadinessNotDuringRoundWaiting : Error<Nothing>
             public data object NotSpeakerSettingSpeakerReadiness : Error<Nothing>
             public data object CannotSetListenerReadinessNotDuringRoundWaiting : Error<Nothing>
@@ -607,6 +655,8 @@ public class Room<
                         GameStateMachine.NoNextStateReason.NotEnoughPlayersForInitialization -> NotEnoughPlayersForInitialization
                         is GameStateMachine.NoNextStateReason.NoWordsProvider<NoWordsProviderReason> -> NoWordsProvider(reason.reason)
                         GameStateMachine.NoNextStateReason.CannotInitializeGameAfterInitialization -> CannotInitializeGameAfterInitialization
+                        GameStateMachine.NoNextStateReason.PlayerAlreadySubmittedWords -> PlayerAlreadySubmittedWords
+                        GameStateMachine.NoNextStateReason.CannotSubmitPlayerWordsNotDuringPlayersWordsCollection -> CannotSubmitPlayerWordsNotDuringPlayersWordsCollection
                         GameStateMachine.NoNextStateReason.CannotSetSpeakerReadinessNotDuringRoundWaiting -> CannotSetSpeakerReadinessNotDuringRoundWaiting
                         GameStateMachine.NoNextStateReason.CannotSetListenerReadinessNotDuringRoundWaiting -> CannotSetListenerReadinessNotDuringRoundWaiting
                         GameStateMachine.NoNextStateReason.CannotSetSpeakerAndListenerReadinessNotDuringRoundWaiting -> CannotSetSpeakerAndListenerReadinessNotDuringRoundWaiting
@@ -658,6 +708,7 @@ public class Room<
                     is AttachConnection -> {
                         when (previousState) {
                             is GameStateMachine.State.GameInitialisation<*, *, *> -> CheckResult.Failure(null)
+                            is GameStateMachine.State.PlayersWordsCollection<*, *, *>,
                             is GameStateMachine.State.RoundWaiting<*, *, *>,
                             is GameStateMachine.State.RoundPreparation<*, *, *>,
                             is GameStateMachine.State.RoundExplanation<*, *, *>,
@@ -669,6 +720,7 @@ public class Room<
                     SeverConnectionAttachment -> {
                         when (previousState) {
                             is GameStateMachine.State.GameInitialisation<*, *, *> -> CheckResult.Failure(null)
+                            is GameStateMachine.State.PlayersWordsCollection<*, *, *>,
                             is GameStateMachine.State.RoundWaiting<*, *, *>,
                             is GameStateMachine.State.RoundPreparation<*, *, *>,
                             is GameStateMachine.State.RoundExplanation<*, *, *>,
@@ -706,6 +758,30 @@ public class Room<
                                     is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.ServerDictionary(wordsSource.providerId)
                                 }
                             )
+                        )
+                    }
+                    is GameStateMachine.State.PlayersWordsCollection<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
+                        val gameMachineSettings = nextState.settings
+                        Outgoing.State.PlayersWordsCollection(
+                            roomMetadata = metadata,
+                            role = Outgoing.Role.PlayersWordsCollection(
+                                metadata = player.metadata,
+                                userIndex = index,
+                                isHost = index == hostIndex,
+                            ),
+                            playersList = nextState.playersList.map { it.description },
+                            settings = GameSettings(
+                                preparationTimeSeconds = gameMachineSettings.preparationTimeSeconds,
+                                explanationTimeSeconds = gameMachineSettings.explanationTimeSeconds,
+                                finalGuessTimeSeconds = gameMachineSettings.finalGuessTimeSeconds,
+                                strictMode = gameMachineSettings.strictMode,
+                                gameEndCondition = gameMachineSettings.gameEndCondition,
+                                wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
+                                    GameStateMachine.WordsSource.Players -> WordsSource.Players
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.ServerDictionary(wordsSource.providerId)
+                                },
+                            ),
+                            playersWordsAreReady = KoneBooleanArray.generate(nextState.playersWords.size) { nextState.playersWords[it] != null }
                         )
                     }
                     is GameStateMachine.State.RoundWaiting<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
@@ -907,6 +983,7 @@ public class Room<
                 playersList = gameStateMachine.state.playersList.map { it.description },
                 stateType = when(gameStateMachine.state) {
                     is GameStateMachine.State.GameInitialisation -> StateType.GameInitialisation
+                    is GameStateMachine.State.PlayersWordsCollection -> StateType.PlayersWordsCollection
                     is GameStateMachine.State.RoundWaiting -> StateType.RoundWaiting
                     is GameStateMachine.State.RoundPreparation -> StateType.RoundPreparation
                     is GameStateMachine.State.RoundExplanation -> StateType.RoundExplanation
@@ -961,6 +1038,7 @@ public class Room<
                         }
                     }
                 }
+                is GameStateMachine.State.PlayersWordsCollection<*, *, *>,
                 is GameStateMachine.State.RoundWaiting<*, *, *>,
                 is GameStateMachine.State.RoundPreparation<*, *, *>,
                 is GameStateMachine.State.RoundExplanation<*, *, *>,

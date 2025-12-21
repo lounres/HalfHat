@@ -109,6 +109,13 @@ public object GameStateMachine {
             val settingsBuilder: GameSettings.Builder<WPID>,
         ) : State<P, WPID, Metadata>
         
+        public data class PlayersWordsCollection<out P, out WPID, out Metadata>(
+            override val metadata: Metadata,
+            override val playersList: KoneList<P>,
+            val settings: GameSettings<WPID>,
+            val playersWords: KoneList<KoneSet<String>?>,
+        ) : State<P, WPID, Metadata>
+        
         public data class RoundWaiting<out P, out WPID, out Metadata>(
             override val metadata: Metadata,
             override val playersList: KoneList<P>,
@@ -207,6 +214,10 @@ public object GameStateMachine {
             public data class InitialiseGame<WPID, out NoWordsProviderReason>(
                 val wordsProviderRegistry: WordsProviderRegistry<WPID, NoWordsProviderReason>
             ) : UpdateGame<Nothing, WPID, NoWordsProviderReason>
+            public data class SubmitPlayerWords(
+                public val playerIndex: UInt,
+                public val playerWords: KoneSet<String>,
+            ) : UpdateGame<Nothing, Nothing, Nothing>
             public data object SpeakerReady : UpdateGame<Nothing, Nothing, Nothing>
             public data object ListenerReady : UpdateGame<Nothing, Nothing, Nothing>
             public data object SpeakerAndListenerReady : UpdateGame<Nothing, Nothing, Nothing>
@@ -231,6 +242,8 @@ public object GameStateMachine {
         public data object CannotUpdateGameSettingsAfterInitialization : NoNextStateReason<Nothing, Nothing>
         public data object NotEnoughPlayersForInitialization : NoNextStateReason<Nothing, Nothing>
         public data object CannotInitializeGameAfterInitialization : NoNextStateReason<Nothing, Nothing>
+        public data object PlayerAlreadySubmittedWords : NoNextStateReason<Nothing, Nothing>
+        public data object CannotSubmitPlayerWordsNotDuringPlayersWordsCollection : NoNextStateReason<Nothing, Nothing>
         public data object CannotSetSpeakerReadinessNotDuringRoundWaiting : NoNextStateReason<Nothing, Nothing>
         public data object CannotSetListenerReadinessNotDuringRoundWaiting : NoNextStateReason<Nothing, Nothing>
         public data object CannotSetSpeakerAndListenerReadinessNotDuringRoundWaiting : NoNextStateReason<Nothing, Nothing>
