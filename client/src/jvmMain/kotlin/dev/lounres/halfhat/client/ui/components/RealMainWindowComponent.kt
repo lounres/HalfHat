@@ -81,7 +81,7 @@ suspend fun RealMainWindowComponent(
     initialSelectedPage: MainWindowComponent.Child.Kind = MainWindowComponent.Child.Kind.Primary.Game /* TODO: Page.Primary.Home */,
 ): RealMainWindowComponent {
     val globalLifecycle: MutableUIComponentLifecycle = newMutableUIComponentLifecycle()
-    val navigationRoot = NavigationRoot()
+    val navigationRoot = NavigationRoot { /* TODO */ }
     val globalComponentContext = UIComponentContext {
         UIComponentLifecycleKey correspondsTo globalLifecycle
         LoggerKey correspondsTo logger
@@ -170,8 +170,6 @@ suspend fun RealMainWindowComponent(
                     )
             }
         }
-    
-    navigationRoot.onStore = { /* TODO */ }
     
     val openPage: (page: MainWindowComponent.Child.Kind) -> Unit = { page ->
         CoroutineScope(Dispatchers.Default).launch {

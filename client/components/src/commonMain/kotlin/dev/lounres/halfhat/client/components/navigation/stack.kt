@@ -7,7 +7,6 @@ import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import dev.lounres.halfhat.client.components.lifecycle.newMutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.logger.LoggerKey
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationControllerStringFormatKey
-import dev.lounres.halfhat.client.components.navigation.controller.NavigationItemController
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationNodeController
 import dev.lounres.komponentual.navigation.StackNavigationEvent
 import dev.lounres.komponentual.navigation.StackNavigationHub
@@ -15,9 +14,12 @@ import dev.lounres.komponentual.navigation.StackNavigationState
 import dev.lounres.komponentual.navigation.StackNavigationTarget
 import dev.lounres.komponentual.navigation.childrenStack
 import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.map.KoneMap
 import dev.lounres.kone.collections.map.associateReified
+import dev.lounres.kone.collections.map.build
 import dev.lounres.kone.collections.map.get
 import dev.lounres.kone.collections.map.mapsTo
+import dev.lounres.kone.collections.map.setAllFrom
 import dev.lounres.kone.collections.utils.dropLast
 import dev.lounres.kone.collections.utils.last
 import dev.lounres.kone.collections.utils.map
@@ -54,10 +56,15 @@ public suspend fun <
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: StackNavigationTarget<Configuration>) -> Component,
 ): StackItem<Configuration, Component> {
     val logger = this.getOrNull(LoggerKey)
-    val navigationNodeController = this.getOrNull(NavigationNodeController)
-    val navigationItemController =
-        if (navigationNodeController == null || navigationControllerSpec == null) null
-        else NavigationItemController().also { navigationNodeController.attachItem(navigationControllerSpec.key, it) }
+    val componentNavigationNodeController = this.getOrNull(NavigationNodeController.Key)
+    val childrenNavigationNodeController =
+        if (componentNavigationNodeController == null || navigationControllerSpec == null) null
+        else NavigationNodeController().also {
+            componentNavigationNodeController.children = KoneMap.build {
+                setAllFrom(componentNavigationNodeController.children)
+                set(navigationControllerSpec.key, it)
+            }
+        }
     val navigationHub = StackNavigationHub<Configuration>()
     val stackHub = childrenStack(
         configurationEquality = configurationEquality,
@@ -67,7 +74,7 @@ public suspend fun <
         initialStack = initialStack,
         createChild = { configuration, nextState ->
             val controllingLifecycle = newMutableUIComponentLifecycle()
-            val childNavigationNodeController = if (navigationItemController != null) NavigationNodeController() else null
+            val childNavigationNodeController = if (childrenNavigationNodeController != null) NavigationNodeController() else null
             logger?.debug(
                 source = loggerSource,
                 items = {
@@ -154,24 +161,24 @@ public suspend fun <
             updateLifecycle(configuration, data.controllingLifecycle, nextState)
         },
     )
-    if (navigationItemController != null) {
+    if (childrenNavigationNodeController != null) {
         val stringFormat = this[NavigationControllerStringFormatKey]
         val serializer = navigationControllerSpec!!.configurationSerializer
         stackHub.buildSubscription {
             subscribe {
-                navigationItemController.configuration =
+                childrenNavigationNodeController.configuration =
                     stringFormat.encodeToString(KoneList.serializer(serializer), it.navigationState)
-                navigationItemController.nodes = it.children.nodesView.associateReified { node ->
+                childrenNavigationNodeController.children = it.children.nodesView.associateReified { node ->
                     stringFormat.encodeToString(serializer, node.key) mapsTo node.value.navigationNodeController!!
                 }
             }
-            navigationItemController.configuration =
+            childrenNavigationNodeController.configuration =
                 stringFormat.encodeToString(KoneList.serializer(serializer), it.navigationState)
-            navigationItemController.nodes = it.children.nodesView.associateReified { node ->
+            childrenNavigationNodeController.children = it.children.nodesView.associateReified { node ->
                 stringFormat.encodeToString(serializer, node.key) mapsTo node.value.navigationNodeController!!
             }
         }
-        navigationItemController.restoration = {
+        childrenNavigationNodeController.setRestoration {
             try {
                 val restoredConfiguration = stringFormat.decodeFromString(KoneList.serializer(serializer), it)
                 navigationHub.navigate { restoredConfiguration }

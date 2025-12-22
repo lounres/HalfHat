@@ -86,7 +86,12 @@ suspend fun RealMainWindowComponent(
     initialSelectedPage: MainWindowComponent.Child.Kind = MainWindowComponent.Child.Kind.Primary.Game /* TODO: Page.Primary.Home */,
 ): RealMainWindowComponent {
     val globalLifecycle: MutableUIComponentLifecycle = newMutableUIComponentLifecycle()
-    val navigationRoot = NavigationRoot()
+    val navigationRoot = NavigationRoot { state ->
+        history.pushState(
+            data = Json.encodeToString(state).toJsString(),
+            unused = "",
+        )
+    }
     val globalComponentContext = UIComponentContext {
         UIComponentLifecycleKey correspondsTo globalLifecycle
         LoggerKey correspondsTo logger
@@ -188,13 +193,6 @@ suspend fun RealMainWindowComponent(
         data = Json.encodeToString(navigationRoot.state).toJsString(),
         unused = "",
     )
-    
-    navigationRoot.onStore = { state ->
-        history.pushState(
-            data = Json.encodeToString(state).toJsString(),
-            unused = "",
-        )
-    }
     
     window.addEventListener(
         EventType<PopStateEvent>("popstate"),

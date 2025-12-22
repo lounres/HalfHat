@@ -69,8 +69,8 @@ internal fun UIComponentContext.uiChildDeferring(
             ) { "Lifecycle transition in progress" }
         }
         
-        if (navigationNodeController != null) NavigationNodeController correspondsTo navigationNodeController
-        else remove(NavigationNodeController)
+        if (navigationNodeController != null) NavigationNodeController.Key correspondsTo navigationNodeController
+        else remove(NavigationNodeController.Key)
     }
 
 //@OptIn(DelicateLifecycleAPI::class)

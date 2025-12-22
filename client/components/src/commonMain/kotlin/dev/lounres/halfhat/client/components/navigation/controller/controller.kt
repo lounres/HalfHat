@@ -1,7 +1,6 @@
 package dev.lounres.halfhat.client.components.navigation.controller
 
 import dev.lounres.halfhat.client.components.UIComponentContext
-import dev.lounres.kone.castOrNull
 import dev.lounres.kone.collections.interop.asKotlin
 import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.iterables.next
@@ -11,8 +10,6 @@ import dev.lounres.kone.registry.RegistryBuilder
 import dev.lounres.kone.registry.RegistryKey
 import dev.lounres.kone.registry.correspondsTo
 import dev.lounres.kone.registry.getOrNull
-import kotlinx.atomicfu.locks.ReentrantLock
-import kotlinx.atomicfu.locks.withLock
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -25,19 +22,20 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 
 
 @Serializable
 public data class NavigationNodeState(
     public val configuration: String?,
-    @Serializable(with = NavigationItemStateMapSerializer::class)
-    public val items: KoneReifiedMap<String, NavigationItemState>,
+    @Serializable(with = NavigationNodeStateMapSerializer::class)
+    public val children: KoneReifiedMap<String, NavigationNodeState>,
 )
 
+// TODO: Replace with Kone specialized serializer
 private object NavigationNodeStateMapSerializer: KSerializer<KoneReifiedMap<String, NavigationNodeState>> {
-    val stringSerializer = String.serializer()
-    val navigationItemStateSerializer = NavigationNodeState.serializer()
-    val mapSerializer = MapSerializer(stringSerializer, navigationItemStateSerializer)
+    val mapSerializer = MapSerializer(String.serializer(), NavigationNodeState.serializer())
     
     override val descriptor: SerialDescriptor = mapSerializer.descriptor
     override fun serialize(encoder: Encoder, value: KoneReifiedMap<String, NavigationNodeState>) {
@@ -48,97 +46,53 @@ private object NavigationNodeStateMapSerializer: KSerializer<KoneReifiedMap<Stri
     }
 }
 
-@Serializable
-public data class NavigationItemState(
-    public val configuration: String?,
-    @Serializable(with = NavigationNodeStateMapSerializer::class)
-    public val nodes: KoneReifiedMap<String, NavigationNodeState>,
-)
-
-private object NavigationItemStateMapSerializer: KSerializer<KoneReifiedMap<String, NavigationItemState>> {
-    val stringSerializer = String.serializer()
-    val navigationItemStateSerializer = NavigationItemState.serializer()
-    val mapSerializer = MapSerializer(stringSerializer, navigationItemStateSerializer)
-    
-    override val descriptor: SerialDescriptor = mapSerializer.descriptor
-    override fun serialize(encoder: Encoder, value: KoneReifiedMap<String, NavigationItemState>) {
-        encoder.encodeSerializableValue(mapSerializer, value.nodesView.asKotlin().associate { it.key to it.value })
-    }
-    override fun deserialize(decoder: Decoder): KoneReifiedMap<String, NavigationItemState> {
-        return decoder.decodeSerializableValue(mapSerializer).entries.toKoneList().associateReified { it.key mapsTo it.value }
-    }
-}
-
 public class NavigationNodeController {
     public var configuration: String? = null
-    public var restoration: (suspend (configuration: String) -> Unit)? = null
-    
-    private val itemsLock = ReentrantLock()
-    private val items = KoneMutableReifiedMap.of<String, NavigationItemController>()
-    
-    internal fun attachItem(key: String, item: NavigationItemController) {
-        itemsLock.withLock {
-            require(key !in items) { "Navigation node controller already registered an item with the key: '$key'" }
-            items[key] = item
-        }
+    private var restoration: (suspend (configuration: String) -> Unit)? = null
+    public fun setRestoration(restoration: suspend (configuration: String) -> Unit) {
+        check(this.restoration == null)
+        this.restoration = restoration
     }
     
-    internal val state: NavigationNodeState
-        get() = NavigationNodeState(configuration, items.mapValuesReified { it.value.state })
+    internal var children = KoneMap.of<String, NavigationNodeController>()
     
-    internal companion object : RegistryKey<NavigationNodeController>
+    internal val state: NavigationNodeState
+        get() = NavigationNodeState(configuration, children.mapValuesReified { it.value.state })
+    
+    internal object Key : RegistryKey<NavigationNodeController>
     
     internal suspend fun restore(state: NavigationNodeState) {
-        val items = items
+        val items = children
         
         val newConfiguration = state.configuration
         if (newConfiguration != null) this.restoration?.invoke(newConfiguration)
         
         coroutineScope {
-            for ((configuration, navigationItem) in state.items) launch {
+            for ((configuration, navigationItem) in state.children) launch {
                 items.getOrNull(configuration)?.restore(navigationItem)
             }
         }
     }
 }
 
-public val UIComponentContext.navigationController: NavigationNodeController? get() = this.getOrNull(NavigationNodeController)
+public val UIComponentContext.navigationController: NavigationNodeController? get() = this.getOrNull(NavigationNodeController.Key)
 
-internal class NavigationItemController {
-    var configuration: String? = null
-    var restoration: (suspend (configuration: String) -> Unit)? = null
-    
-    var nodes: KoneReifiedMap<String, NavigationNodeController> = KoneReifiedMap.of()
-    
-    val state: NavigationItemState get() = NavigationItemState(configuration, nodes.mapValuesReified { it.value.state })
-    
-    internal suspend fun restore(state: NavigationItemState) {
-        val controller = this
-        
-        val newConfiguration = state.configuration
-        if (newConfiguration != null) this.restoration?.invoke(newConfiguration)
-        
-        coroutineScope {
-            for ((configuration, navigationNode) in state.nodes) launch {
-                controller.nodes.getOrNull(configuration)?.restore(navigationNode)
-            }
-        }
-    }
-}
-
-public abstract class NavigationContext internal constructor(
+public abstract class NavigationContext internal constructor() {
     @PublishedApi
-    internal val mutex: Mutex
-) {
+    internal val mutex: Mutex = Mutex()
+    
     @PublishedApi
     internal abstract suspend fun store()
     
-    public companion object : RegistryKey<NavigationContext>
+    public object Key : RegistryKey<NavigationContext>
 }
 
-public val Registry.navigationContext: NavigationContext? get() = this.getOrNull(NavigationContext)
+public val Registry.navigationContext: NavigationContext? get() = this.getOrNull(NavigationContext.Key)
 
 public suspend inline fun NavigationContext?.doStoringNavigation(block: () -> Unit) {
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
     if (this != null)
         mutex.withLock {
             try {
@@ -150,18 +104,16 @@ public suspend inline fun NavigationContext?.doStoringNavigation(block: () -> Un
     else block()
 }
 
-public class NavigationRoot {
-    public var onStore: (suspend (NavigationNodeState) -> Unit)? = null
-    private val mutex: Mutex = Mutex()
+public class NavigationRoot(public val onStore: (suspend (NavigationNodeState) -> Unit)? = null) {
     internal val controller = NavigationNodeController()
-    internal val context = object : NavigationContext(mutex) {
+    internal val context = object : NavigationContext() {
         override suspend fun store() {
             onStore?.invoke(controller.state)
         }
     }
     public val state: NavigationNodeState get() = controller.state
     public suspend fun restore(state: NavigationNodeState) {
-        mutex.withLock {
+        context.mutex.withLock {
             controller.restore(state)
         }
     }
@@ -173,7 +125,7 @@ public fun RegistryBuilder<UIComponentContext>.setUpNavigationControl(
     navigationRoot: NavigationRoot,
     stringFormat: StringFormat,
 ) {
-    NavigationNodeController correspondsTo navigationRoot.controller
-    NavigationContext correspondsTo navigationRoot.context
+    NavigationNodeController.Key correspondsTo navigationRoot.controller
+    NavigationContext.Key correspondsTo navigationRoot.context
     NavigationControllerStringFormatKey correspondsTo stringFormat
 }

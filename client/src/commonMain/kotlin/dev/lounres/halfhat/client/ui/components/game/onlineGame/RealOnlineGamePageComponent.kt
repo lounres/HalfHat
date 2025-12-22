@@ -51,19 +51,9 @@ public suspend fun RealOnlineGamePageComponent(
             RealOnlineGameComponent(it, volumeOn)
         }
     
-    val navigationController = componentContext.navigationController
-    
     val currentRoomSearchEntry = KoneMutableAsynchronousHub("")
     coroutineScope.launch {
         onlineGameComponent.freeRoomIdFlow.collect {
-            currentRoomSearchEntry.set(it)
-        }
-    }
-    if (navigationController != null) {
-        currentRoomSearchEntry.subscribe {
-            navigationController.configuration = it
-        }
-        navigationController.restoration = {
             currentRoomSearchEntry.set(it)
         }
     }
