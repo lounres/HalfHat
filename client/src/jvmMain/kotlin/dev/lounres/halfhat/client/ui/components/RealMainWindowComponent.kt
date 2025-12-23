@@ -28,7 +28,7 @@ import dev.lounres.halfhat.client.components.navigation.controller.NavigationRoo
 import dev.lounres.halfhat.client.components.navigation.controller.navigationContext
 import dev.lounres.halfhat.client.components.navigation.controller.setUpNavigationControl
 import dev.lounres.halfhat.client.components.navigation.controller.doStoringNavigation
-import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariantsItem
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariantsNode
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.list.KoneList
@@ -109,7 +109,7 @@ suspend fun RealMainWindowComponent(
     val language: MutableStateFlow<Language> = MutableStateFlow(initialLanguage)
     
     val pageVariants =
-        globalComponentContext.uiChildrenDefaultVariantsItem(
+        globalComponentContext.uiChildrenDefaultVariantsNode(
             navigationControllerSpec = NavigationControllerSpec(
                 key = "page",
                 configurationSerializer = MainWindowComponent.Child.Kind.serializer(),

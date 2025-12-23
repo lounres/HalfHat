@@ -2,7 +2,7 @@ package dev.lounres.halfhat.client.ui.components.game.modeSelection
 
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.navigation.ChildrenPossibility
-import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultPossibilityItem
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultPossibilityNode
 import dev.lounres.komponentual.navigation.PossibilityNavigationTarget
 import dev.lounres.komponentual.navigation.clear
 import dev.lounres.komponentual.navigation.set
@@ -68,7 +68,7 @@ public suspend fun RealModeSelectionPageComponent(
 ): RealModeSelectionPageComponent {
     
     val infoPopup =
-        componentContext.uiChildrenDefaultPossibilityItem<ModeSelectionPageComponent.InfoPopup, _>(
+        componentContext.uiChildrenDefaultPossibilityNode<ModeSelectionPageComponent.InfoPopup, _>(
             initialConfiguration = None,
         ) { configuration, _, _ -> configuration }
     

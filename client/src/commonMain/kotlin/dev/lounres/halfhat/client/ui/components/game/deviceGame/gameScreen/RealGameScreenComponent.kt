@@ -16,7 +16,7 @@ import dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.round
 import dev.lounres.halfhat.client.utils.play
 import dev.lounres.halfhat.client.components.logger.logger
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
-import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotItem
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotNode
 import dev.lounres.halfhat.logic.gameStateMachine.*
 import dev.lounres.komponentual.navigation.SlotNavigationHub
 import dev.lounres.kone.automata.CheckResult
@@ -365,7 +365,7 @@ public suspend fun RealGameScreenComponent(
     )
     
     val childSlot =
-        componentContext.uiChildrenDefaultSlotItem(
+        componentContext.uiChildrenDefaultSlotNode(
             loggerSource = "dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
             initialConfiguration = when(val state = gameStateMachine.state) {
                 is GameStateMachine.State.GameInitialisation<*, *, *> ->

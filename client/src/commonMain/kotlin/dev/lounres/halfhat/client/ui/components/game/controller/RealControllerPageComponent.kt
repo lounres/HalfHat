@@ -6,7 +6,7 @@ import dev.lounres.halfhat.client.ui.components.game.controller.roomScreen.RealR
 import dev.lounres.halfhat.client.ui.components.game.controller.roomSettings.RealRoomSettingsComponent
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.navigation.ChildrenStack
-import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStackItem
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStackNode
 import dev.lounres.komponentual.navigation.replaceCurrent
 import dev.lounres.kone.collections.iterables.isNotEmpty
 import dev.lounres.kone.collections.list.KoneList
@@ -51,7 +51,7 @@ public suspend fun RealControllerPageComponent(
     val finalGuessTimeSeconds: MutableStateFlow<UInt> = MutableStateFlow(3u) // TODO: Hardcoded settings!!!
     
     val childStack =
-        componentContext.uiChildrenDefaultStackItem<RealControllerPageComponent.Configuration, _>(
+        componentContext.uiChildrenDefaultStackNode<RealControllerPageComponent.Configuration, _>(
             initialStack = KoneList.of(RealControllerPageComponent.Configuration.RoomScreen),
         ) { configuration, componentContext, navigationTarget ->
             when (configuration) {

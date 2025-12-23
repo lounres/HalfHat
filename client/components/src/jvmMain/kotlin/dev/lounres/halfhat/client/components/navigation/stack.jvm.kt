@@ -9,7 +9,7 @@ import dev.lounres.kone.relations.Hashing
 import dev.lounres.kone.relations.Order
 
 
-public actual suspend fun <Configuration, Component> UIComponentContext.uiChildrenDefaultStackItem(
+public actual suspend fun <Configuration, Component> UIComponentContext.uiChildrenDefaultStackNode(
     configurationEquality: Equality<Configuration>,
     configurationHashing: Hashing<Configuration>?,
     configurationOrder: Order<Configuration>?,
@@ -17,8 +17,8 @@ public actual suspend fun <Configuration, Component> UIComponentContext.uiChildr
     navigationControllerSpec: NavigationControllerSpec<Configuration>?,
     initialStack: KoneList<Configuration>,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: StackNavigationTarget<Configuration>) -> Component,
-): StackItem<Configuration, Component> =
-    uiChildrenFromToStackItem(
+): StackNode<Configuration, Component> =
+    uiChildrenFromToStackNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
         configurationOrder = configurationOrder,

@@ -31,14 +31,14 @@ import kotlinx.serialization.SerializationException
 
 public typealias ChildrenSlot<Configuration, Component> = ChildWithConfiguration<Configuration, Component>
 
-public interface SlotItem<Configuration, Component> : SlotNavigationTarget<Configuration> {
+public interface SlotNode<Configuration, Component> : SlotNavigationTarget<Configuration> {
     public val hub: KoneAsynchronousHub<ChildrenSlot<Configuration, Component>>
 }
 
 public suspend fun <
     Configuration,
     Component,
-> UIComponentContext.uiChildrenSlotItem(
+> UIComponentContext.uiChildrenSlotNode(
     configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
@@ -47,7 +47,7 @@ public suspend fun <
     initialConfiguration: Configuration,
     updateLifecycle: suspend (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: Configuration) -> Unit,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: SlotNavigationTarget<Configuration>) -> Component,
-): SlotItem<Configuration, Component> {
+): SlotNode<Configuration, Component> {
     val logger = this.getOrNull(LoggerKey)
     val componentNavigationNodeController = this.getOrNull(NavigationNodeController.Key)
     val childrenNavigationNodeController =
@@ -178,7 +178,7 @@ public suspend fun <
             } catch (_: SerializationException) {} catch (_: IllegalArgumentException /* TODO: Remove eventually when Kone will start using correct exception types */) {}
         }
     }
-    return object : SlotItem<Configuration, Component> {
+    return object : SlotNode<Configuration, Component> {
         override val hub: KoneAsynchronousHub<ChildrenSlot<Configuration, Component>> =
             slotHub.map { it.navigationState.let { configuration -> ChildWithConfiguration(configuration, it.children[configuration].component) } }
         
@@ -191,7 +191,7 @@ public suspend fun <
 public suspend fun <
     Configuration,
     Component,
-> UIComponentContext.uiChildrenToSlotItem(
+> UIComponentContext.uiChildrenToSlotNode(
     configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
@@ -200,8 +200,8 @@ public suspend fun <
     initialConfiguration: Configuration,
     activeState: UIComponentLifecycleState,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: SlotNavigationTarget<Configuration>) -> Component,
-): SlotItem<Configuration, Component> =
-    uiChildrenSlotItem(
+): SlotNode<Configuration, Component> =
+    uiChildrenSlotNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
         configurationOrder = configurationOrder,
@@ -218,7 +218,7 @@ public suspend fun <
 public expect suspend fun <
     Configuration,
     Component,
-> UIComponentContext.uiChildrenDefaultSlotItem(
+> UIComponentContext.uiChildrenDefaultSlotNode(
     configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
@@ -226,4 +226,4 @@ public expect suspend fun <
     navigationControllerSpec: NavigationControllerSpec<Configuration>? = null,
     initialConfiguration: Configuration,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: SlotNavigationTarget<Configuration>) -> Component,
-): SlotItem<Configuration, Component>
+): SlotNode<Configuration, Component>

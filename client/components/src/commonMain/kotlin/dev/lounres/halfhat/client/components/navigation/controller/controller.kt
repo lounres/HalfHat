@@ -46,6 +46,11 @@ private object NavigationNodeStateMapSerializer: KSerializer<KoneReifiedMap<Stri
     }
 }
 
+//public data class NavigationNodePath(
+//    public val path: KoneList<String>,
+//    public val arguments: KoneMap<String, String>,
+//)
+
 public class NavigationNodeController {
     public var configuration: String? = null
     private var restoration: (suspend (configuration: String) -> Unit)? = null
@@ -53,26 +58,31 @@ public class NavigationNodeController {
         check(this.restoration == null)
         this.restoration = restoration
     }
+//    private var restorationByPath: (suspend (path: NavigationNodePath) -> Unit)? = null
+//    public fun setRestorationByPath(restoration: suspend (path: NavigationNodePath) -> Unit) {
+//        check(this.restorationByPath == null)
+//        this.restorationByPath = restoration
+//    }
     
     internal var children = KoneMap.of<String, NavigationNodeController>()
     
     internal val state: NavigationNodeState
         get() = NavigationNodeState(configuration, children.mapValuesReified { it.value.state })
     
-    internal object Key : RegistryKey<NavigationNodeController>
-    
     internal suspend fun restore(state: NavigationNodeState) {
-        val items = children
+        val children = this.children
         
         val newConfiguration = state.configuration
         if (newConfiguration != null) this.restoration?.invoke(newConfiguration)
         
         coroutineScope {
             for ((configuration, navigationItem) in state.children) launch {
-                items.getOrNull(configuration)?.restore(navigationItem)
+                children.getOrNull(configuration)?.restore(navigationItem)
             }
         }
     }
+    
+    internal object Key : RegistryKey<NavigationNodeController>
 }
 
 public val UIComponentContext.navigationController: NavigationNodeController? get() = this.getOrNull(NavigationNodeController.Key)
@@ -111,7 +121,7 @@ public class NavigationRoot(public val onStore: (suspend (NavigationNodeState) -
             onStore?.invoke(controller.state)
         }
     }
-    public val state: NavigationNodeState get() = controller.state
+    public suspend fun getState(): NavigationNodeState = context.mutex.withLock { controller.state }
     public suspend fun restore(state: NavigationNodeState) {
         context.mutex.withLock {
             controller.restore(state)

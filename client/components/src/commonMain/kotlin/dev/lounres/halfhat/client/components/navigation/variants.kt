@@ -39,14 +39,14 @@ public data class ChildrenVariants<Configuration, Component>(
     public val allVariants: KoneMap<Configuration, Component>,
 )
 
-public interface VariantsItem<Configuration, Component> : VariantsNavigationTarget<Configuration> {
+public interface VariantsNode<Configuration, Component> : VariantsNavigationTarget<Configuration> {
     public val hub: KoneAsynchronousHub<ChildrenVariants<Configuration, Component>>
 }
 
 public suspend fun <
     Configuration,
     Component,
-> UIComponentContext.uiChildrenVariantsItem(
+> UIComponentContext.uiChildrenVariantsNode(
     configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
@@ -56,7 +56,7 @@ public suspend fun <
     initialVariant: Configuration,
     updateLifecycle: suspend (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: VariantsNavigationState<Configuration>) -> Unit,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: VariantsNavigationTarget<Configuration>) -> Component,
-): VariantsItem<Configuration, Component> {
+): VariantsNode<Configuration, Component> {
     val logger = this.getOrNull(LoggerKey)
     val componentNavigationNodeController = this.getOrNull(NavigationNodeController.Key)
     val childrenNavigationNodeController =
@@ -190,7 +190,7 @@ public suspend fun <
             }
         }
     }
-    return object : VariantsItem<Configuration, Component> {
+    return object : VariantsNode<Configuration, Component> {
         override val hub: KoneAsynchronousHub<ChildrenVariants<Configuration, Component>> =
             variantsHub.map {
                 ChildrenVariants(
@@ -217,7 +217,7 @@ public suspend fun <
 public suspend fun <
     Configuration,
     Component,
-> UIComponentContext.uiChildrenFromToVariantsItem(
+> UIComponentContext.uiChildrenFromToVariantsNode(
     configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
@@ -228,8 +228,8 @@ public suspend fun <
     inactiveState: UIComponentLifecycleState,
     activeState: UIComponentLifecycleState,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: VariantsNavigationTarget<Configuration>) -> Component,
-): VariantsItem<Configuration, Component> =
-    uiChildrenVariantsItem(
+): VariantsNode<Configuration, Component> =
+    uiChildrenVariantsNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
         configurationOrder = configurationOrder,
@@ -247,7 +247,7 @@ public suspend fun <
 public expect suspend fun <
     Configuration,
     Component,
-> UIComponentContext.uiChildrenDefaultVariantsItem(
+> UIComponentContext.uiChildrenDefaultVariantsNode(
     configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
@@ -256,4 +256,4 @@ public expect suspend fun <
     allVariants: KoneSet<Configuration>,
     initialVariant: Configuration,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: VariantsNavigationTarget<Configuration>) -> Component,
-): VariantsItem<Configuration, Component>
+): VariantsNode<Configuration, Component>

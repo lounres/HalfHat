@@ -9,7 +9,7 @@ import dev.lounres.kone.relations.Hashing
 import dev.lounres.kone.relations.Order
 
 
-public actual suspend fun <Configuration, Component> UIComponentContext.uiChildrenDefaultVariantsItem(
+public actual suspend fun <Configuration, Component> UIComponentContext.uiChildrenDefaultVariantsNode(
     configurationEquality: Equality<Configuration>,
     configurationHashing: Hashing<Configuration>?,
     configurationOrder: Order<Configuration>?,
@@ -18,8 +18,8 @@ public actual suspend fun <Configuration, Component> UIComponentContext.uiChildr
     allVariants: KoneSet<Configuration>,
     initialVariant: Configuration,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: VariantsNavigationTarget<Configuration>) -> Component,
-): VariantsItem<Configuration, Component> =
-    uiChildrenFromToVariantsItem(
+): VariantsNode<Configuration, Component> =
+    uiChildrenFromToVariantsNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
         configurationOrder = configurationOrder,

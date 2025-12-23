@@ -30,14 +30,14 @@ import kotlinx.serialization.SerializationException
 
 public typealias ChildrenPossibility<Configuration, Component> = Maybe<ChildWithConfiguration<Configuration, Component>>
 
-public interface PossibilityItem<Configuration, Component> : PossibilityNavigationTarget<Configuration> {
+public interface PossibilityNode<Configuration, Component> : PossibilityNavigationTarget<Configuration> {
     public val hub: KoneAsynchronousHub<ChildrenPossibility<Configuration, Component>>
 }
 
 public suspend fun <
     Configuration,
     Component,
-> UIComponentContext.uiChildrenPossibilityItem(
+> UIComponentContext.uiChildrenPossibilityNode(
     configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
@@ -46,7 +46,7 @@ public suspend fun <
     initialConfiguration: Maybe<Configuration>,
     updateLifecycle: suspend (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: PossibilityNavigationState<Configuration>) -> Unit,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: PossibilityNavigationTarget<Configuration>) -> Component,
-): PossibilityItem<Configuration, Component> {
+): PossibilityNode<Configuration, Component> {
     val logger = this.getOrNull(LoggerKey)
     val componentNavigationNodeController = this.getOrNull(NavigationNodeController.Key)
     val childrenNavigationNodeController =
@@ -177,7 +177,7 @@ public suspend fun <
             } catch (_: SerializationException) {} catch (_: IllegalArgumentException /* TODO: Remove eventually when Kone will start using correct exception types */) {}
         }
     }
-    return object : PossibilityItem<Configuration, Component> {
+    return object : PossibilityNode<Configuration, Component> {
         override val hub: KoneAsynchronousHub<ChildrenPossibility<Configuration, Component>> =
             possibilityHub.map { it.navigationState.map { configuration -> ChildWithConfiguration(configuration, it.children[configuration].component) } }
         
@@ -190,7 +190,7 @@ public suspend fun <
 public suspend fun <
     Configuration,
     Component,
-> UIComponentContext.uiChildrenToPossibilityItem(
+> UIComponentContext.uiChildrenToPossibilityNode(
     configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
@@ -199,8 +199,8 @@ public suspend fun <
     initialConfiguration: Maybe<Configuration>,
     activeState: UIComponentLifecycleState,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: PossibilityNavigationTarget<Configuration>) -> Component,
-): PossibilityItem<Configuration, Component> =
-    uiChildrenPossibilityItem(
+): PossibilityNode<Configuration, Component> =
+    uiChildrenPossibilityNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
         configurationOrder = configurationOrder,
@@ -217,7 +217,7 @@ public suspend fun <
 public expect suspend fun <
     Configuration,
     Component,
-> UIComponentContext.uiChildrenDefaultPossibilityItem(
+> UIComponentContext.uiChildrenDefaultPossibilityNode(
     configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
@@ -225,4 +225,4 @@ public expect suspend fun <
     navigationControllerSpec: NavigationControllerSpec<Configuration>? = null,
     initialConfiguration: Maybe<Configuration>,
     childrenFactory: (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: PossibilityNavigationTarget<Configuration>) -> Component,
-): PossibilityItem<Configuration, Component>
+): PossibilityNode<Configuration, Component>

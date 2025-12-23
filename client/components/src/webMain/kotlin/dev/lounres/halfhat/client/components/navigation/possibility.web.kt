@@ -9,7 +9,7 @@ import dev.lounres.kone.relations.Hashing
 import dev.lounres.kone.relations.Order
 
 
-public actual suspend fun <Configuration, Component> UIComponentContext.uiChildrenDefaultPossibilityItem(
+public actual suspend fun <Configuration, Component> UIComponentContext.uiChildrenDefaultPossibilityNode(
     configurationEquality: Equality<Configuration>,
     configurationHashing: Hashing<Configuration>?,
     configurationOrder: Order<Configuration>?,
@@ -17,8 +17,8 @@ public actual suspend fun <Configuration, Component> UIComponentContext.uiChildr
     navigationControllerSpec: NavigationControllerSpec<Configuration>?,
     initialConfiguration: Maybe<Configuration>,
     childrenFactory: (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: PossibilityNavigationTarget<Configuration>) -> Component,
-): PossibilityItem<Configuration, Component> =
-    uiChildrenToPossibilityItem(
+): PossibilityNode<Configuration, Component> =
+    uiChildrenToPossibilityNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
         configurationOrder = configurationOrder,

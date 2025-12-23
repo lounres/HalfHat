@@ -9,7 +9,7 @@ import dev.lounres.halfhat.client.ui.components.game.deviceGame.roomScreen.RealR
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.roomSettings.RealRoomSettingsComponent
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.navigation.ChildrenStack
-import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStackItem
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStackNode
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.komponentual.navigation.replaceCurrent
 import dev.lounres.kone.collections.iterables.isNotEmpty
@@ -51,7 +51,7 @@ public suspend fun RealDeviceGamePageComponent(
     val possibleWordsSources = componentContext.deviceGameWordsProviderRegistry.list()
     
     val childStack =
-        componentContext.uiChildrenDefaultStackItem<RealDeviceGamePageComponent.Configuration, _>(
+        componentContext.uiChildrenDefaultStackNode<RealDeviceGamePageComponent.Configuration, _>(
             initialStack = KoneList.of(RealDeviceGamePageComponent.Configuration.RoomScreen),
         ) { configuration, componentContext, navigationTarget ->
             when (configuration) {

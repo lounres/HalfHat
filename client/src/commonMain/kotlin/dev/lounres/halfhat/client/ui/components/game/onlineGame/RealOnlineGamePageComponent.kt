@@ -11,18 +11,15 @@ import dev.lounres.halfhat.client.components.buildLogicChildOnRunning
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.navigation.ChildrenStack
 import dev.lounres.halfhat.client.components.navigation.controller.navigationContext
-import dev.lounres.halfhat.client.components.navigation.controller.navigationController
-import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStackItem
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStackNode
 import dev.lounres.komponentual.navigation.replaceCurrent
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.hub.set
-import dev.lounres.kone.hub.subscribe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -59,7 +56,7 @@ public suspend fun RealOnlineGamePageComponent(
     }
     
     val childStack =
-        componentContext.uiChildrenDefaultStackItem<RealOnlineGamePageComponent.Configuration, _>(
+        componentContext.uiChildrenDefaultStackNode<RealOnlineGamePageComponent.Configuration, _>(
             initialStack = KoneList.of(RealOnlineGamePageComponent.Configuration.PreviewScreen),
         ) { configuration, componentContext, navigation ->
             when (configuration) {

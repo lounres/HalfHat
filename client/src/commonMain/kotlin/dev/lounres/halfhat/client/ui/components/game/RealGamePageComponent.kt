@@ -11,7 +11,7 @@ import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
 import dev.lounres.halfhat.client.components.navigation.NavigationControllerSpec
 import dev.lounres.halfhat.client.components.navigation.controller.navigationContext
 import dev.lounres.halfhat.client.components.navigation.controller.doStoringNavigation
-import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotItem
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotNode
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.hub.KoneAsynchronousHub
 import kotlinx.coroutines.CoroutineScope
@@ -41,7 +41,7 @@ public suspend fun RealGamePageComponent(
 ): RealGamePageComponent {
     
     val currentChild =
-        componentContext.uiChildrenDefaultSlotItem<RealGamePageComponent.Configuration, _>(
+        componentContext.uiChildrenDefaultSlotNode<RealGamePageComponent.Configuration, _>(
             navigationControllerSpec = NavigationControllerSpec(
                 key = "mode",
                 configurationSerializer = RealGamePageComponent.Configuration.serializer(),

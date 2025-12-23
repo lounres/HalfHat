@@ -14,7 +14,7 @@ import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.round
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
-import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotItem
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotNode
 import dev.lounres.halfhat.client.utils.copyToClipboard
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.komponentual.navigation.set
@@ -82,7 +82,7 @@ public suspend fun RealGameScreenComponent(
 ): RealGameScreenComponent {
     
     val childSlot =
-        componentContext.uiChildrenDefaultSlotItem(
+        componentContext.uiChildrenDefaultSlotNode(
             initialConfiguration = when(val gameState = gameStateFlow.value) {
                 null -> RealGameScreenComponent.Configuration.Loading
                 is ServerApi.OnlineGame.State.GameInitialisation -> RealGameScreenComponent.Configuration.RoomScreen(MutableStateFlow(gameState))

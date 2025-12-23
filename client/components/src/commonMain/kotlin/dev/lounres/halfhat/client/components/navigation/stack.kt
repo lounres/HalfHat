@@ -38,14 +38,14 @@ public data class ChildrenStack<Configuration, Component>(
     public val backStack: KoneList<ChildWithConfiguration<Configuration, Component>>,
 )
 
-public interface StackItem<Configuration, Component> : StackNavigationTarget<Configuration> {
+public interface StackNode<Configuration, Component> : StackNavigationTarget<Configuration> {
     public val hub: KoneAsynchronousHub<ChildrenStack<Configuration, Component>>
 }
 
 public suspend fun <
     Configuration,
     Component,
-> UIComponentContext.uiChildrenStackItem(
+> UIComponentContext.uiChildrenStackNode(
     configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
@@ -54,7 +54,7 @@ public suspend fun <
     initialStack: KoneList<Configuration>,
     updateLifecycle: suspend (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: StackNavigationState<Configuration>) -> Unit,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: StackNavigationTarget<Configuration>) -> Component,
-): StackItem<Configuration, Component> {
+): StackNode<Configuration, Component> {
     val logger = this.getOrNull(LoggerKey)
     val componentNavigationNodeController = this.getOrNull(NavigationNodeController.Key)
     val childrenNavigationNodeController =
@@ -185,7 +185,7 @@ public suspend fun <
             } catch (_: SerializationException) {} catch (_: IllegalArgumentException /* TODO: Remove eventually when Kone will start using correct exception types */) {}
         }
     }
-    return object : StackItem<Configuration, Component> {
+    return object : StackNode<Configuration, Component> {
         override val hub: KoneAsynchronousHub<ChildrenStack<Configuration, Component>> =
             stackHub.map {
                 val stack = it.navigationState.map { configuration -> ChildWithConfiguration(configuration, it.children[configuration].component) }
@@ -204,7 +204,7 @@ public suspend fun <
 public suspend fun <
     Configuration,
     Component,
-> UIComponentContext.uiChildrenFromToStackItem(
+> UIComponentContext.uiChildrenFromToStackNode(
     configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
@@ -214,8 +214,8 @@ public suspend fun <
     inactiveState: UIComponentLifecycleState,
     activeState: UIComponentLifecycleState,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: StackNavigationTarget<Configuration>) -> Component,
-): StackItem<Configuration, Component> =
-    uiChildrenStackItem(
+): StackNode<Configuration, Component> =
+    uiChildrenStackNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
         configurationOrder = configurationOrder,
@@ -232,7 +232,7 @@ public suspend fun <
 public expect suspend fun <
     Configuration,
     Component,
-> UIComponentContext.uiChildrenDefaultStackItem(
+> UIComponentContext.uiChildrenDefaultStackNode(
     configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
@@ -240,4 +240,4 @@ public expect suspend fun <
     navigationControllerSpec: NavigationControllerSpec<Configuration>? = null,
     initialStack: KoneList<Configuration>,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: StackNavigationTarget<Configuration>) -> Component,
-): StackItem<Configuration, Component>
+): StackNode<Configuration, Component>

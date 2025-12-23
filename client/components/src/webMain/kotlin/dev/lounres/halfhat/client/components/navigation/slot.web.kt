@@ -8,7 +8,7 @@ import dev.lounres.kone.relations.Hashing
 import dev.lounres.kone.relations.Order
 
 
-public actual suspend fun <Configuration, Component> UIComponentContext.uiChildrenDefaultSlotItem(
+public actual suspend fun <Configuration, Component> UIComponentContext.uiChildrenDefaultSlotNode(
     configurationEquality: Equality<Configuration>,
     configurationHashing: Hashing<Configuration>?,
     configurationOrder: Order<Configuration>?,
@@ -16,8 +16,8 @@ public actual suspend fun <Configuration, Component> UIComponentContext.uiChildr
     navigationControllerSpec: NavigationControllerSpec<Configuration>?,
     initialConfiguration: Configuration,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: SlotNavigationTarget<Configuration>) -> Component,
-): SlotItem<Configuration, Component> =
-    uiChildrenToSlotItem(
+): SlotNode<Configuration, Component> =
+    uiChildrenToSlotNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
         configurationOrder = configurationOrder,
