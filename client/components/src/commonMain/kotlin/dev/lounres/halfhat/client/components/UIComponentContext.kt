@@ -90,6 +90,7 @@ internal suspend inline fun <Result> UIComponentContext.buildUiChild(
     navigationNodeController: NavigationNodeController? = null,
     provider: (UIComponentContext) -> Result,
 ): Result {
+    contract { callsInPlace(provider, InvocationKind.EXACTLY_ONCE) }
     val childContext = uiChildDeferring(controllingLifecycle, navigationNodeController)
     val result = provider(childContext)
     childContext.launch()

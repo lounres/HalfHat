@@ -2,6 +2,7 @@ package dev.lounres.halfhat.client.components.navigation
 
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
+import dev.lounres.komponentual.navigation.StackNavigationState
 import dev.lounres.komponentual.navigation.StackNavigationTarget
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.relations.Equality
@@ -14,7 +15,7 @@ public actual suspend fun <Configuration, Component> UIComponentContext.uiChildr
     configurationHashing: Hashing<Configuration>?,
     configurationOrder: Order<Configuration>?,
     loggerSource: String?,
-    navigationControllerSpec: NavigationControllerSpec<Configuration>?,
+    navigationControllerSpec: NavigationControllerSpec<StackNavigationState<Configuration>, Configuration, Component, UIComponentContext, StackNavigationTarget<Configuration>>?,
     initialStack: KoneList<Configuration>,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: StackNavigationTarget<Configuration>) -> Component,
 ): StackNode<Configuration, Component> =

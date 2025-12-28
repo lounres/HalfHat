@@ -66,10 +66,9 @@ kotlin {
     sourceSets {
         val buildDirectory = project.layout.buildDirectory.get().asFile!!
         val constsDirectory = buildDirectory.resolve("generated/halfhat/client/consts")
-        val constsKotlinDirectory = constsDirectory.resolve("kotlin")
         
         commonMain {
-            val constsCommonMainDirectory = constsKotlinDirectory.resolve("commonMain")
+            val constsCommonMainDirectory = constsDirectory.resolve("commonMain")
             kotlin.srcDir(constsCommonMainDirectory)
             dependencies {
                 implementation(versions.kone.util.misc)
@@ -133,6 +132,8 @@ kotlin {
         }
         
         webMain {
+            val constsCommonMainDirectory = constsDirectory.resolve("webMain")
+            kotlin.srcDir(constsCommonMainDirectory)
             dependencies {
                 implementation(versions.ktor.client.js)
                 implementation(versions.kotlin.wrappers.browser)
@@ -252,24 +253,42 @@ val generateClientConsts by tasks.registering {
         
         val buildDirectory = project.layout.buildDirectory.get().asFile!!
         val constsDirectory = buildDirectory.resolve("generated/halfhat/client/consts").apply { mkdirs() }
-        val constsKotlinDirectory = constsDirectory.resolve("kotlin").apply { mkdirs() }
-        val constsCommonMainDirectory = constsKotlinDirectory.resolve("commonMain").apply { mkdirs() }
-        val constsCommonMainPackageDirectory = constsCommonMainDirectory.resolve("dev/lounres/halfhat/client/consts").apply { mkdirs() }
-        constsCommonMainPackageDirectory.resolve("OnlineGameSettings.kt").bufferedWriter().use {
-            it.append(
-                """
+        run {
+            val constsCommonMainDirectory = constsDirectory.resolve("commonMain").apply { mkdirs() }
+            val constsCommonMainPackageDirectory = constsCommonMainDirectory.resolve("dev/lounres/halfhat/client/consts").apply { mkdirs() }
+            constsCommonMainPackageDirectory.resolve("OnlineGameSettings.kt").bufferedWriter().use {
+                it.append(
+                    """
                     package dev.lounres.halfhat.client.consts
                     
                     
                     @Suppress("RedundantNullableReturnType")
                     data object OnlineGameSettings {
-                        val host: String? = ${if (debug) rootProject.extra["halfhat.client.consts.dev.host"] else rootProject.extra["halfhat.client.consts.prod.host"]}
-                        val port: Int? = ${if (debug) rootProject.extra["halfhat.client.consts.dev.port"] else rootProject.extra["halfhat.client.consts.prod.port"]}
-                        val path: String? = ${if (debug) rootProject.extra["halfhat.client.consts.dev.path"] else rootProject.extra["halfhat.client.consts.prod.path"]}
-                        val isSecure: Boolean = ${if (debug) rootProject.extra["halfhat.client.consts.dev.isSecure"] else rootProject.extra["halfhat.client.consts.prod.isSecure"]}
+                        val host: String? = ${if (debug) rootProject.extra["halfhat.client.consts.dev.onlineGame.host"] else rootProject.extra["halfhat.client.consts.prod.onlineGame.host"]}
+                        val port: Int? = ${if (debug) rootProject.extra["halfhat.client.consts.dev.onlineGame.port"] else rootProject.extra["halfhat.client.consts.prod.onlineGame.port"]}
+                        val path: String? = ${if (debug) rootProject.extra["halfhat.client.consts.dev.onlineGame.path"] else rootProject.extra["halfhat.client.consts.prod.onlineGame.path"]}
+                        val isSecure: Boolean = ${if (debug) rootProject.extra["halfhat.client.consts.dev.onlineGame.isSecure"] else rootProject.extra["halfhat.client.consts.prod.onlineGame.isSecure"]}
                     }
-                """.trimIndent()
-            )
+                    """.trimIndent()
+                )
+            }
+        }
+        run {
+            val constsCommonMainDirectory = constsDirectory.resolve("webMain").apply { mkdirs() }
+            val constsCommonMainPackageDirectory = constsCommonMainDirectory.resolve("dev/lounres/halfhat/client/consts").apply { mkdirs() }
+            constsCommonMainPackageDirectory.resolve("WebPageSettings.kt").bufferedWriter().use {
+                it.append(
+                    """
+                    package dev.lounres.halfhat.client.consts
+                    
+                    
+                    @Suppress("RedundantNullableReturnType")
+                    data object WebPageSettings {
+                        val base: String = ${if (debug) rootProject.extra["halfhat.client.consts.dev.webPage.base"] else rootProject.extra["halfhat.client.consts.prod.webPage.base"]}
+                    }
+                    """.trimIndent()
+                )
+            }
         }
     }
 }

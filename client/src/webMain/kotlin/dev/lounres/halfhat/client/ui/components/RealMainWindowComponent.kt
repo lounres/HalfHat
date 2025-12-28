@@ -24,25 +24,31 @@ import dev.lounres.halfhat.client.components.lifecycle.newMutableUIComponentLife
 import dev.lounres.halfhat.client.components.logger.LoggerKey
 import dev.lounres.halfhat.client.components.navigation.ChildrenVariants
 import dev.lounres.halfhat.client.components.navigation.NavigationControllerSpec
+import dev.lounres.halfhat.client.components.navigation.controller.NavigationNodePath
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationNodeState
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationRoot
-import dev.lounres.halfhat.client.components.navigation.controller.doStoringNavigation
-import dev.lounres.halfhat.client.components.navigation.controller.navigationContext
+import dev.lounres.halfhat.client.components.navigation.controller.navigationController
 import dev.lounres.halfhat.client.components.navigation.controller.setUpNavigationControl
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariantsNode
+import dev.lounres.halfhat.client.consts.WebPageSettings
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.build
+import dev.lounres.kone.collections.list.empty
+import dev.lounres.kone.collections.map.KoneMap
+import dev.lounres.kone.collections.map.empty
 import dev.lounres.kone.collections.map.get
 import dev.lounres.kone.collections.set.KoneSet
 import dev.lounres.kone.collections.set.build
+import dev.lounres.kone.collections.utils.joinToString
 import dev.lounres.kone.collections.utils.map
 import dev.lounres.kone.collections.utils.plusAssign
 import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.hub.map
 import dev.lounres.kone.registry.correspondsTo
+import dev.lounres.kone.scope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,6 +60,8 @@ import web.events.EventType
 import web.events.addEventListener
 import web.history.PopStateEvent
 import web.history.history
+import web.location.location
+import web.url.URL
 import web.window.window
 import kotlin.js.JsString
 import kotlin.js.toJsString
@@ -86,10 +94,12 @@ suspend fun RealMainWindowComponent(
     initialSelectedPage: MainWindowComponent.Child.Kind = MainWindowComponent.Child.Kind.Primary.Game /* TODO: Page.Primary.Home */,
 ): RealMainWindowComponent {
     val globalLifecycle: MutableUIComponentLifecycle = newMutableUIComponentLifecycle()
-    val navigationRoot = NavigationRoot { state ->
+    val navigationRoot = NavigationRoot { state, path ->
+        println(URL(WebPageSettings.base + (path?.path?.joinToString(separator = "/") ?: ""), location.origin))
         history.pushState(
             data = Json.encodeToString(state).toJsString(),
             unused = "",
+//            url = URL(WebPageSettings.base + (path?.path?.joinToString(separator = "/") ?: ""), location.origin)
         )
     }
     val globalComponentContext = UIComponentContext {
@@ -156,9 +166,7 @@ suspend fun RealMainWindowComponent(
                         RealFAQPageComponent(
                             onFeedbackLinkClick = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    componentContext.navigationContext.doStoringNavigation {
-                                        navigation.set(MainWindowComponent.Child.Kind.Secondary.FAQ)
-                                    }
+                                    navigation.set(MainWindowComponent.Child.Kind.Secondary.FAQ)
                                 }
                             }
                         )
@@ -181,6 +189,13 @@ suspend fun RealMainWindowComponent(
                     )
             }
         }
+    
+    globalComponentContext.navigationController?.setPathBuilder {
+        pageVariants.context.navigationController?.pathBuilder?.invoke() ?: NavigationNodePath(
+            path = KoneList.empty(),
+            arguments = KoneMap.empty(),
+        )
+    }
     
     @Suppress("JSON_FORMAT_REDUNDANT_DEFAULT")
     val json = Json {
@@ -208,9 +223,7 @@ suspend fun RealMainWindowComponent(
     
     val openPage: (page: MainWindowComponent.Child.Kind) -> Unit = { page ->
         CoroutineScope(Dispatchers.Default).launch {
-            globalComponentContext.navigationContext.doStoringNavigation {
-                pageVariants.set(page)
-            }
+            pageVariants.set(page)
         }
     }
     

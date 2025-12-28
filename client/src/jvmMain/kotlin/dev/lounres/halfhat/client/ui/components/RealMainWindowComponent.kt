@@ -25,9 +25,7 @@ import dev.lounres.halfhat.client.components.logger.LoggerKey
 import dev.lounres.halfhat.client.components.navigation.ChildrenVariants
 import dev.lounres.halfhat.client.components.navigation.NavigationControllerSpec
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationRoot
-import dev.lounres.halfhat.client.components.navigation.controller.navigationContext
 import dev.lounres.halfhat.client.components.navigation.controller.setUpNavigationControl
-import dev.lounres.halfhat.client.components.navigation.controller.doStoringNavigation
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariantsNode
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.collections.interop.toKoneList
@@ -81,7 +79,7 @@ suspend fun RealMainWindowComponent(
     initialSelectedPage: MainWindowComponent.Child.Kind = MainWindowComponent.Child.Kind.Primary.Game /* TODO: Page.Primary.Home */,
 ): RealMainWindowComponent {
     val globalLifecycle: MutableUIComponentLifecycle = newMutableUIComponentLifecycle()
-    val navigationRoot = NavigationRoot { /* TODO */ }
+    val navigationRoot = NavigationRoot { state, path -> /* TODO */ }
     val globalComponentContext = UIComponentContext {
         UIComponentLifecycleKey correspondsTo globalLifecycle
         LoggerKey correspondsTo logger
@@ -145,9 +143,7 @@ suspend fun RealMainWindowComponent(
                         RealFAQPageComponent(
                             onFeedbackLinkClick = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    componentContext.navigationContext.doStoringNavigation {
-                                        navigation.set(MainWindowComponent.Child.Kind.Secondary.FAQ)
-                                    }
+                                    navigation.set(MainWindowComponent.Child.Kind.Secondary.FAQ)
                                 }
                             }
                         )
@@ -173,9 +169,7 @@ suspend fun RealMainWindowComponent(
     
     val openPage: (page: MainWindowComponent.Child.Kind) -> Unit = { page ->
         CoroutineScope(Dispatchers.Default).launch {
-            globalComponentContext.navigationContext.doStoringNavigation {
-                pageVariants.set(page)
-            }
+            pageVariants.set(page)
         }
     }
     

@@ -8,6 +8,8 @@ import dev.lounres.halfhat.client.components.lifecycle.newMutableUIComponentLife
 import dev.lounres.halfhat.client.components.logger.LoggerKey
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationControllerStringFormatKey
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationNodeController
+import dev.lounres.halfhat.client.components.navigation.controller.doStoringNavigation
+import dev.lounres.halfhat.client.components.navigation.controller.navigationContext
 import dev.lounres.komponentual.navigation.VariantsNavigationEvent
 import dev.lounres.komponentual.navigation.VariantsNavigationHub
 import dev.lounres.komponentual.navigation.VariantsNavigationState
@@ -19,6 +21,7 @@ import dev.lounres.kone.collections.map.associateReified
 import dev.lounres.kone.collections.map.build
 import dev.lounres.kone.collections.map.component1
 import dev.lounres.kone.collections.map.component2
+import dev.lounres.kone.collections.map.contains
 import dev.lounres.kone.collections.map.get
 import dev.lounres.kone.collections.map.mapValues
 import dev.lounres.kone.collections.map.mapsTo
@@ -39,7 +42,7 @@ public data class ChildrenVariants<Configuration, Component>(
     public val allVariants: KoneMap<Configuration, Component>,
 )
 
-public interface VariantsNode<Configuration, Component> : VariantsNavigationTarget<Configuration> {
+public interface VariantsNode<Configuration, Component> : VariantsNavigationTarget<Configuration>, WithComponentContext<UIComponentContext> {
     public val hub: KoneAsynchronousHub<ChildrenVariants<Configuration, Component>>
 }
 
@@ -51,7 +54,7 @@ public suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    navigationControllerSpec: NavigationControllerSpec<Configuration>? = null,
+    navigationControllerSpec: NavigationControllerSpec<VariantsNavigationState<Configuration>, Configuration, Component, UIComponentContext, VariantsNavigationTarget<Configuration>>? = null,
     allVariants: KoneSet<Configuration>,
     initialVariant: Configuration,
     updateLifecycle: suspend (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: VariantsNavigationState<Configuration>) -> Unit,
@@ -64,152 +67,183 @@ public suspend fun <
         else NavigationNodeController().also {
             componentNavigationNodeController.children = KoneMap.build {
                 setAllFrom(componentNavigationNodeController.children)
+                if (navigationControllerSpec.key in this) error("Navigation node controller already registered an item with the key: '${navigationControllerSpec.key}'")
                 set(navigationControllerSpec.key, it)
             }
         }
-    val navigationHub = VariantsNavigationHub<Configuration>()
-    val variantsHub = childrenVariants(
-        configurationEquality = configurationEquality,
-        configurationHashing = configurationHashing,
-        configurationOrder = configurationOrder,
-        source = navigationHub,
-        allVariants = allVariants,
-        initialVariant = initialVariant,
-        createChild = { configuration, nextState ->
-            val controllingLifecycle = newMutableUIComponentLifecycle()
-            val childNavigationNodeController = if (childrenNavigationNodeController != null) NavigationNodeController() else null
-            logger?.debug(
-                source = loggerSource,
-                items = {
-                    mapOf(
-                        "configuration" to configuration.toString(),
-                        "controllingLifecycle" to controllingLifecycle.toString(),
-                        "navigationNodeController" to childNavigationNodeController.toString(),
-                    )
-                }
-            ) { "Creating child" }
-            val component = this.buildUiChild(controllingLifecycle, childNavigationNodeController) {
-                childrenFactory(configuration, it, navigationHub)
+    return buildUiChild(
+        navigationNodeController = childrenNavigationNodeController,
+    ) { childrenComponentContext ->
+        val navigationHub = VariantsNavigationHub<Configuration>()
+        val storingNavigationTarget = VariantsNavigationTarget {
+            childrenComponentContext.navigationContext.doStoringNavigation {
+                navigationHub.navigate(it)
             }
-            logger?.debug(
-                source = loggerSource,
-                items = {
-                    mapOf(
-                        "configuration" to configuration.toString(),
-                        "controllingLifecycle" to controllingLifecycle.toString(),
-                        "navigationNodeController" to childNavigationNodeController.toString(),
-                        "component" to component.toString(),
-                    )
+        }
+        val variantsHub = childrenVariants(
+            configurationEquality = configurationEquality,
+            configurationHashing = configurationHashing,
+            configurationOrder = configurationOrder,
+            source = navigationHub,
+            allVariants = allVariants,
+            initialVariant = initialVariant,
+            createChild = { configuration, nextState ->
+                val controllingLifecycle = newMutableUIComponentLifecycle()
+                val childNavigationNodeController = if (childrenNavigationNodeController != null) NavigationNodeController() else null
+                logger?.debug(
+                    source = loggerSource,
+                    items = {
+                        mapOf(
+                            "configuration" to configuration.toString(),
+                            "controllingLifecycle" to controllingLifecycle.toString(),
+                            "navigationNodeController" to childNavigationNodeController.toString(),
+                        )
+                    }
+                ) { "Creating child" }
+                val context: UIComponentContext
+                val component = childrenComponentContext.buildUiChild(controllingLifecycle, childNavigationNodeController) {
+                    context = it
+                    childrenFactory(configuration, it, navigationHub)
                 }
-            ) { "Created child" }
-            logger?.debug(
-                source = loggerSource,
-                items = {
-                    mapOf(
-                        "configuration" to configuration.toString(),
-                        "controllingLifecycle" to controllingLifecycle.toString(),
-                        "navigationNodeController" to childNavigationNodeController.toString(),
-                        "component" to component.toString(),
-                        "nextState" to nextState.toString(),
-                    )
+                logger?.debug(
+                    source = loggerSource,
+                    items = {
+                        mapOf(
+                            "configuration" to configuration.toString(),
+                            "controllingLifecycle" to controllingLifecycle.toString(),
+                            "navigationNodeController" to childNavigationNodeController.toString(),
+                            "component" to component.toString(),
+                        )
+                    }
+                ) { "Created child" }
+                logger?.debug(
+                    source = loggerSource,
+                    items = {
+                        mapOf(
+                            "configuration" to configuration.toString(),
+                            "controllingLifecycle" to controllingLifecycle.toString(),
+                            "navigationNodeController" to childNavigationNodeController.toString(),
+                            "component" to component.toString(),
+                            "nextState" to nextState.toString(),
+                        )
+                    }
+                ) { "Updating controlling lifecycle" }
+                updateLifecycle(configuration, controllingLifecycle, nextState)
+                logger?.debug(
+                    source = loggerSource,
+                    items = {
+                        mapOf(
+                            "configuration" to configuration.toString(),
+                            "controllingLifecycle" to controllingLifecycle.toString(),
+                            "navigationNodeController" to childNavigationNodeController.toString(),
+                            "component" to component.toString(),
+                            "nextState" to nextState.toString(),
+                        )
+                    }
+                ) { "Updated controlling lifecycle" }
+                Child(
+                    component = component,
+                    controllingLifecycle = controllingLifecycle,
+                    navigationNodeController = childNavigationNodeController,
+                    context = context,
+                )
+            },
+            destroyChild = { configuration, child, nextState ->
+                logger?.debug(
+                    source = loggerSource,
+                    items = {
+                        mapOf(
+                            "configuration" to configuration.toString(),
+                            "controllingLifecycle" to child.controllingLifecycle.toString(),
+                            "navigationNodeController" to child.navigationNodeController.toString(),
+                            "component" to child.component.toString(),
+                            "nextState" to nextState.toString(),
+                        )
+                    }
+                ) { "Destroying controlling lifecycle" }
+                child.controllingLifecycle.moveTo(UIComponentLifecycleState.Destroyed)
+                logger?.debug(
+                    source = loggerSource,
+                    items = {
+                        mapOf(
+                            "configuration" to configuration.toString(),
+                            "controllingLifecycle" to child.controllingLifecycle.toString(),
+                            "navigationNodeController" to child.navigationNodeController.toString(),
+                            "component" to child.component.toString(),
+                            "nextState" to nextState.toString(),
+                        )
+                    }
+                ) { "Destroyed controlling lifecycle" }
+            },
+            updateChild = { configuration, data, nextState ->
+                updateLifecycle(configuration, data.controllingLifecycle, nextState)
+            },
+        )
+        if (childrenNavigationNodeController != null) {
+            val stringFormat = childrenComponentContext[NavigationControllerStringFormatKey]
+            val serializer = navigationControllerSpec!!.configurationSerializer
+            variantsHub.buildSubscription {
+                subscribe {
+                    childrenNavigationNodeController.configuration =
+                        stringFormat.encodeToString(serializer, it.navigationState.currentVariant)
+                    childrenNavigationNodeController.children = it.children.nodesView.associateReified { node ->
+                        stringFormat.encodeToString(serializer, node.key) mapsTo node.value.navigationNodeController!!
+                    }
                 }
-            ) { "Updating controlling lifecycle" }
-            updateLifecycle(configuration, controllingLifecycle, nextState)
-            logger?.debug(
-                source = loggerSource,
-                items = {
-                    mapOf(
-                        "configuration" to configuration.toString(),
-                        "controllingLifecycle" to controllingLifecycle.toString(),
-                        "navigationNodeController" to childNavigationNodeController.toString(),
-                        "component" to component.toString(),
-                        "nextState" to nextState.toString(),
-                    )
-                }
-            ) { "Updated controlling lifecycle" }
-            Child(
-                component = component,
-                controllingLifecycle = controllingLifecycle,
-                navigationNodeController = childNavigationNodeController,
-            )
-        },
-        destroyChild = { configuration, child, nextState ->
-            logger?.debug(
-                source = loggerSource,
-                items = {
-                    mapOf(
-                        "configuration" to configuration.toString(),
-                        "controllingLifecycle" to child.controllingLifecycle.toString(),
-                        "navigationNodeController" to child.navigationNodeController.toString(),
-                        "component" to child.component.toString(),
-                        "nextState" to nextState.toString(),
-                    )
-                }
-            ) { "Destroying controlling lifecycle" }
-            child.controllingLifecycle.moveTo(UIComponentLifecycleState.Destroyed)
-            logger?.debug(
-                source = loggerSource,
-                items = {
-                    mapOf(
-                        "configuration" to configuration.toString(),
-                        "controllingLifecycle" to child.controllingLifecycle.toString(),
-                        "navigationNodeController" to child.navigationNodeController.toString(),
-                        "component" to child.component.toString(),
-                        "nextState" to nextState.toString(),
-                    )
-                }
-            ) { "Destroyed controlling lifecycle" }
-        },
-        updateChild = { configuration, data, nextState ->
-            updateLifecycle(configuration, data.controllingLifecycle, nextState)
-        },
-    )
-    if (childrenNavigationNodeController != null) {
-        val stringFormat = this[NavigationControllerStringFormatKey]
-        val serializer = navigationControllerSpec!!.configurationSerializer
-        variantsHub.buildSubscription {
-            subscribe {
                 childrenNavigationNodeController.configuration =
                     stringFormat.encodeToString(serializer, it.navigationState.currentVariant)
                 childrenNavigationNodeController.children = it.children.nodesView.associateReified { node ->
                     stringFormat.encodeToString(serializer, node.key) mapsTo node.value.navigationNodeController!!
                 }
             }
-            childrenNavigationNodeController.configuration =
-                stringFormat.encodeToString(serializer, it.navigationState.currentVariant)
-            childrenNavigationNodeController.children = it.children.nodesView.associateReified { node ->
-                stringFormat.encodeToString(serializer, node.key) mapsTo node.value.navigationNodeController!!
+            childrenNavigationNodeController.setRestoration {
+                try {
+                    val restoredConfiguration = stringFormat.decodeFromString(serializer, it)
+                    navigationHub.set(restoredConfiguration)
+                } catch (_: SerializationException) {
+                } catch (_: IllegalArgumentException /* TODO: Remove eventually when Kone will start using correct exception types */) {
+                }
             }
-        }
-        childrenNavigationNodeController.setRestoration {
-            try {
-                val restoredConfiguration = stringFormat.decodeFromString(serializer, it)
-                navigationHub.set(restoredConfiguration)
-            } catch (_: SerializationException) {
-            } catch (_: IllegalArgumentException /* TODO: Remove eventually when Kone will start using correct exception types */) {
-            }
-        }
-    }
-    return object : VariantsNode<Configuration, Component> {
-        override val hub: KoneAsynchronousHub<ChildrenVariants<Configuration, Component>> =
-            variantsHub.map {
-                ChildrenVariants(
-                    active = it.navigationState.currentVariant.let { configuration ->
-                        ChildWithConfiguration(
-                            configuration = configuration,
-                            component = it.children[configuration].component,
+            val pathBuilder = navigationControllerSpec.pathBuilder
+            if (pathBuilder != null) childrenNavigationNodeController.setPathBuilder {
+                pathBuilder(
+                    variantsHub.value.navigationState,
+                    variantsHub.value.children.mapValues {
+                        BuiltChild(
+                            component = it.value.component,
+                            context = it.value.context,
                         )
-                    },
-                    allVariants = it.children.mapValues(
-                        keyEquality = configurationEquality,
-                        keyHashing = configurationHashing,
-                        keyOrder = configurationOrder,
-                    ) { (_, child) -> child.component },
+                    }
                 )
             }
-        
-        override suspend fun navigate(variantsTransformation: VariantsNavigationEvent<Configuration>) {
-            navigationHub.navigate(variantsTransformation)
+            val restorationByPath = navigationControllerSpec.restorationByPath
+            if (restorationByPath != null) childrenNavigationNodeController.setRestorationByPath {
+                restorationByPath(it, navigationHub)
+            }
+        }
+        object : VariantsNode<Configuration, Component> {
+            override val context: UIComponentContext = childrenComponentContext
+            
+            override val hub: KoneAsynchronousHub<ChildrenVariants<Configuration, Component>> =
+                variantsHub.map {
+                    ChildrenVariants(
+                        active = it.navigationState.currentVariant.let { configuration ->
+                            ChildWithConfiguration(
+                                configuration = configuration,
+                                component = it.children[configuration].component,
+                            )
+                        },
+                        allVariants = it.children.mapValues(
+                            keyEquality = configurationEquality,
+                            keyHashing = configurationHashing,
+                            keyOrder = configurationOrder,
+                        ) { (_, child) -> child.component },
+                    )
+                }
+            
+            override suspend fun navigate(variantsTransformation: VariantsNavigationEvent<Configuration>) {
+                storingNavigationTarget.navigate(variantsTransformation)
+            }
         }
     }
 }
@@ -222,7 +256,7 @@ public suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    navigationControllerSpec: NavigationControllerSpec<Configuration>? = null,
+    navigationControllerSpec: NavigationControllerSpec<VariantsNavigationState<Configuration>, Configuration, Component, UIComponentContext, VariantsNavigationTarget<Configuration>>? = null,
     allVariants: KoneSet<Configuration>,
     initialVariant: Configuration,
     inactiveState: UIComponentLifecycleState,
@@ -252,7 +286,7 @@ public expect suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    navigationControllerSpec: NavigationControllerSpec<Configuration>? = null,
+    navigationControllerSpec: NavigationControllerSpec<VariantsNavigationState<Configuration>, Configuration, Component, UIComponentContext, VariantsNavigationTarget<Configuration>>? = null,
     allVariants: KoneSet<Configuration>,
     initialVariant: Configuration,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: VariantsNavigationTarget<Configuration>) -> Component,

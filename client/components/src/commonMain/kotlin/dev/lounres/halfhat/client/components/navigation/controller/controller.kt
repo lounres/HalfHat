@@ -4,6 +4,7 @@ import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.kone.collections.interop.asKotlin
 import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.iterables.next
+import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.map.*
 import dev.lounres.kone.registry.Registry
 import dev.lounres.kone.registry.RegistryBuilder
@@ -46,10 +47,10 @@ private object NavigationNodeStateMapSerializer: KSerializer<KoneReifiedMap<Stri
     }
 }
 
-//public data class NavigationNodePath(
-//    public val path: KoneList<String>,
-//    public val arguments: KoneMap<String, String>,
-//)
+public data class NavigationNodePath(
+    public val path: KoneList<String>,
+    public val arguments: KoneMap<String, String>,
+)
 
 public class NavigationNodeController {
     public var configuration: String? = null
@@ -58,11 +59,18 @@ public class NavigationNodeController {
         check(this.restoration == null)
         this.restoration = restoration
     }
-//    private var restorationByPath: (suspend (path: NavigationNodePath) -> Unit)? = null
-//    public fun setRestorationByPath(restoration: suspend (path: NavigationNodePath) -> Unit) {
-//        check(this.restorationByPath == null)
-//        this.restorationByPath = restoration
-//    }
+    public var pathBuilder: (suspend () -> NavigationNodePath)? = null
+        private set
+    public fun setPathBuilder(pathBuilder: suspend () -> NavigationNodePath) {
+        check(this.pathBuilder == null)
+        this.pathBuilder = pathBuilder
+    }
+    public var restorationByPath: (suspend (path: NavigationNodePath) -> Unit)? = null
+        private set
+    public fun setRestorationByPath(restoration: suspend (path: NavigationNodePath) -> Unit) {
+        check(this.restorationByPath == null)
+        this.restorationByPath = restoration
+    }
     
     internal var children = KoneMap.of<String, NavigationNodeController>()
     
@@ -114,17 +122,23 @@ public suspend inline fun NavigationContext?.doStoringNavigation(block: () -> Un
     else block()
 }
 
-public class NavigationRoot(public val onStore: (suspend (NavigationNodeState) -> Unit)? = null) {
+public class NavigationRoot(public val onStore: (suspend (NavigationNodeState, NavigationNodePath?) -> Unit)? = null) {
     internal val controller = NavigationNodeController()
     internal val context = object : NavigationContext() {
         override suspend fun store() {
-            onStore?.invoke(controller.state)
+            onStore?.invoke(controller.state, controller.pathBuilder?.invoke())
         }
     }
     public suspend fun getState(): NavigationNodeState = context.mutex.withLock { controller.state }
+    public suspend fun getPath(): NavigationNodePath? = context.mutex.withLock { controller.pathBuilder?.invoke() }
     public suspend fun restore(state: NavigationNodeState) {
         context.mutex.withLock {
             controller.restore(state)
+        }
+    }
+    public suspend fun restoreByPath(path: NavigationNodePath) {
+        context.mutex.withLock {
+            controller.restorationByPath?.invoke(path)
         }
     }
 }

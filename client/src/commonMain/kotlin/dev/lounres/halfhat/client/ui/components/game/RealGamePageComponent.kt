@@ -9,8 +9,6 @@ import dev.lounres.halfhat.client.ui.components.game.localGame.RealLocalGamePage
 import dev.lounres.halfhat.client.ui.components.game.modeSelection.RealModeSelectionPageComponent
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
 import dev.lounres.halfhat.client.components.navigation.NavigationControllerSpec
-import dev.lounres.halfhat.client.components.navigation.controller.navigationContext
-import dev.lounres.halfhat.client.components.navigation.controller.doStoringNavigation
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotNode
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.hub.KoneAsynchronousHub
@@ -41,7 +39,7 @@ public suspend fun RealGamePageComponent(
 ): RealGamePageComponent {
     
     val currentChild =
-        componentContext.uiChildrenDefaultSlotNode<RealGamePageComponent.Configuration, _>(
+        componentContext.uiChildrenDefaultSlotNode(
             navigationControllerSpec = NavigationControllerSpec(
                 key = "mode",
                 configurationSerializer = RealGamePageComponent.Configuration.serializer(),
@@ -55,37 +53,27 @@ public suspend fun RealGamePageComponent(
                             componentContext = componentContext,
                             onOnlineGameSelect = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    componentContext.navigationContext.doStoringNavigation {
-                                        navigationTarget.set(RealGamePageComponent.Configuration.OnlineGame)
-                                    }
+                                    navigationTarget.set(RealGamePageComponent.Configuration.OnlineGame)
                                 }
                             },
                             onLocalGameSelect = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    componentContext.navigationContext.doStoringNavigation {
-                                        navigationTarget.set(RealGamePageComponent.Configuration.LocalGame)
-                                    }
+                                    navigationTarget.set(RealGamePageComponent.Configuration.LocalGame)
                                 }
                             },
                             onDeviceGameSelect = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    componentContext.navigationContext.doStoringNavigation {
-                                        navigationTarget.set(RealGamePageComponent.Configuration.DeviceGame)
-                                    }
+                                    navigationTarget.set(RealGamePageComponent.Configuration.DeviceGame)
                                 }
                             },
                             onGameControllerSelect = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    componentContext.navigationContext.doStoringNavigation {
-                                        navigationTarget.set(RealGamePageComponent.Configuration.GameController)
-                                    }
+                                    navigationTarget.set(RealGamePageComponent.Configuration.GameController)
                                 }
                             },
                             onGameTimerSelect = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    componentContext.navigationContext.doStoringNavigation {
-                                        navigationTarget.set(RealGamePageComponent.Configuration.GameTimer)
-                                    }
+                                    navigationTarget.set(RealGamePageComponent.Configuration.GameTimer)
                                 }
                             },
                         )
@@ -97,9 +85,7 @@ public suspend fun RealGamePageComponent(
                             volumeOn = volumeOn,
                             onExitOnlineGameMode = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    componentContext.navigationContext.doStoringNavigation {
-                                        navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
-                                    }
+                                    navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
                                 }
                             },
                         )
@@ -109,9 +95,7 @@ public suspend fun RealGamePageComponent(
                         RealLocalGamePageComponent(
                             onExitLocalGame = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    componentContext.navigationContext.doStoringNavigation {
-                                        navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
-                                    }
+                                    navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
                                 }
                             }
                         )
@@ -123,9 +107,7 @@ public suspend fun RealGamePageComponent(
                             volumeOn = volumeOn,
                             onExitDeviceGame = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    componentContext.navigationContext.doStoringNavigation {
-                                        navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
-                                    }
+                                    navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
                                 }
                             },
                         )
@@ -137,9 +119,7 @@ public suspend fun RealGamePageComponent(
                             volumeOn = volumeOn,
                             onExitController = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    componentContext.navigationContext.doStoringNavigation {
-                                        navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
-                                    }
+                                    navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
                                 }
                             }
                         )
@@ -150,9 +130,7 @@ public suspend fun RealGamePageComponent(
                             componentContext = componentContext,
                             onExitTimer = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    componentContext.navigationContext.doStoringNavigation {
-                                        navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
-                                    }
+                                    navigationTarget.set(RealGamePageComponent.Configuration.ModeSelection)
                                 }
                             },
                             volumeOn = volumeOn,
