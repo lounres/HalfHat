@@ -251,6 +251,12 @@ val generateClientConsts by tasks.registering {
             else -> error("Undefined value for 'halfhat.client.debug' project property: $debugFlag")
         }
         
+        val local = when (val debugFlag = rootProject.extra.getOrNull("halfhat.client.local")) {
+            "true" -> true
+            "false", null -> false
+            else -> error("Undefined value for 'halfhat.client.local' project property: $debugFlag")
+        }
+        
         val buildDirectory = project.layout.buildDirectory.get().asFile!!
         val constsDirectory = buildDirectory.resolve("generated/halfhat/client/consts").apply { mkdirs() }
         run {
@@ -284,7 +290,7 @@ val generateClientConsts by tasks.registering {
                     
                     @Suppress("RedundantNullableReturnType")
                     data object WebPageSettings {
-                        val base: String = ${if (debug) rootProject.extra["halfhat.client.consts.dev.webPage.base"] else rootProject.extra["halfhat.client.consts.prod.webPage.base"]}
+                        val base: String = ${if (local) rootProject.extra["halfhat.client.consts.dev.webPage.base"] else rootProject.extra["halfhat.client.consts.prod.webPage.base"]}
                     }
                     """.trimIndent()
                 )
