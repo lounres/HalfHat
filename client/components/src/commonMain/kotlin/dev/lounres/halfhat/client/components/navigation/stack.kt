@@ -7,6 +7,7 @@ import dev.lounres.komponentual.navigation.StackNavigationEvent
 import dev.lounres.komponentual.navigation.StackNavigationState
 import dev.lounres.komponentual.navigation.StackNavigationTarget
 import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.relations.equality
 import dev.lounres.kone.collections.map.get
 import dev.lounres.kone.collections.set.KoneMutableSet
 import dev.lounres.kone.collections.set.of
@@ -42,6 +43,7 @@ public suspend fun <
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
         configurationOrder = configurationOrder,
+        navigationStateEquality = KoneList.equality(configurationEquality),
         loggerSource = loggerSource,
         navigationControllerSpec = navigationControllerSpec,
         navigationStateSerializer = { KoneList.serializer(it) },

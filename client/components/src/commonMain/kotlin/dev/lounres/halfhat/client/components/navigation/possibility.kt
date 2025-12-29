@@ -39,6 +39,9 @@ public suspend fun <
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
         configurationOrder = configurationOrder,
+        navigationStateEquality = Equality { left, right ->
+            (left === None && right === None) || (left is Some && right is Some && configurationEquality { left.value eq right.value })
+        },
         loggerSource = loggerSource,
         navigationControllerSpec = navigationControllerSpec,
         navigationStateSerializer = { Maybe.serializer(it) },

@@ -33,6 +33,7 @@ public suspend fun <
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
         configurationOrder = configurationOrder,
+        navigationStateEquality = configurationEquality,
         loggerSource = loggerSource,
         navigationControllerSpec = navigationControllerSpec,
         navigationStateSerializer = { it },

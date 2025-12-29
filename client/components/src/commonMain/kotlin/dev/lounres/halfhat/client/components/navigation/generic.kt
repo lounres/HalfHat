@@ -67,6 +67,7 @@ public suspend fun <
     configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
+    navigationStateEquality: Equality<NavigationState> = Equality.defaultFor(),
     loggerSource: String? = null,
     navigationControllerSpec: NavigationControllerSpec<NavigationState, Configuration, Component, UIComponentContext, NavigationEvent>? = null,
     navigationStateSerializer: (KSerializer<Configuration>) -> KSerializer<NavigationState>,
@@ -102,6 +103,12 @@ public suspend fun <
             configurationEquality = configurationEquality,
             configurationHashing = configurationHashing,
             configurationOrder = configurationOrder,
+            navigationStateEquality = navigationStateEquality,
+            childEquality = Equality { left, right ->
+                left.component === right.component
+                        && left.controllingLifecycle === right.controllingLifecycle
+                        && left.navigationNodeController === right.navigationNodeController
+            },
             source = navigationHub,
             initialState = initialState,
             stateConfigurationsMapping = stateConfigurationsMapping,
