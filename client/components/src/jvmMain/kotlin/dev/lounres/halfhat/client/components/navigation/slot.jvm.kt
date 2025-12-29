@@ -2,6 +2,7 @@ package dev.lounres.halfhat.client.components.navigation
 
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
+import dev.lounres.komponentual.navigation.SlotNavigationEvent
 import dev.lounres.komponentual.navigation.SlotNavigationTarget
 import dev.lounres.kone.relations.Equality
 import dev.lounres.kone.relations.Hashing
@@ -13,7 +14,7 @@ public actual suspend fun <Configuration, Component> UIComponentContext.uiChildr
     configurationHashing: Hashing<Configuration>?,
     configurationOrder: Order<Configuration>?,
     loggerSource: String?,
-    navigationControllerSpec: NavigationControllerSpec<Configuration, Configuration, Component, UIComponentContext, SlotNavigationTarget<Configuration>>?,
+    navigationControllerSpec: NavigationControllerSpec<Configuration, Configuration, Component, UIComponentContext, SlotNavigationEvent<Configuration>>?,
     initialConfiguration: Configuration,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: SlotNavigationTarget<Configuration>) -> Component,
 ): SlotNode<Configuration, Component> =

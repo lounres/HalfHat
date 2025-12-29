@@ -2,6 +2,7 @@ package dev.lounres.halfhat.client.components.navigation
 
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
+import dev.lounres.komponentual.navigation.PossibilityNavigationEvent
 import dev.lounres.komponentual.navigation.PossibilityNavigationState
 import dev.lounres.komponentual.navigation.PossibilityNavigationTarget
 import dev.lounres.kone.maybe.Maybe
@@ -15,7 +16,7 @@ public actual suspend fun <Configuration, Component> UIComponentContext.uiChildr
     configurationHashing: Hashing<Configuration>?,
     configurationOrder: Order<Configuration>?,
     loggerSource: String?,
-    navigationControllerSpec: NavigationControllerSpec<PossibilityNavigationState<Configuration>, Configuration, Component, UIComponentContext, PossibilityNavigationTarget<Configuration>>?,
+    navigationControllerSpec: NavigationControllerSpec<PossibilityNavigationState<Configuration>, Configuration, Component, UIComponentContext, PossibilityNavigationEvent<Configuration>>?,
     initialConfiguration: Maybe<Configuration>,
     childrenFactory: (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: PossibilityNavigationTarget<Configuration>) -> Component,
 ): PossibilityNode<Configuration, Component> =
