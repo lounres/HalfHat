@@ -19,12 +19,12 @@ import dev.lounres.kone.contexts.invoke
 import dev.lounres.kone.relations.*
 
 
-public data class ChildrenStack<Configuration, Component>(
-    public val active: ChildWithConfiguration<Configuration, Component>,
-    public val backStack: KoneList<ChildWithConfiguration<Configuration, Component>>,
+public data class ChildrenStack<Configuration, Component, ComponentContext>(
+    public val active: ChildWithConfigurationAndContext<Configuration, Component, ComponentContext>,
+    public val backStack: KoneList<ChildWithConfigurationAndContext<Configuration, Component, ComponentContext>>,
 )
 
-public typealias StackNode<Configuration, Component> = ChildrenNode<Configuration, Component, ChildrenStack<Configuration, Component>, StackNavigationEvent<Configuration>>
+public typealias StackNode<Configuration, Component, ComponentContext> = ChildrenNode<ChildrenStack<Configuration, Component, ComponentContext>, StackNavigationEvent<Configuration>>
 
 public suspend fun <
     Configuration,
@@ -34,11 +34,11 @@ public suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    navigationControllerSpec: NavigationControllerSpec<StackNavigationState<Configuration>, Configuration, Component, UIComponentContext, StackNavigationEvent<Configuration>>? = null,
+    navigationControllerSpec: NavigationControllerSpec<StackNavigationState<Configuration>, Configuration, Component, UIComponentContext, ChildrenStack<Configuration, Component, UIComponentContext>, StackNavigationEvent<Configuration>>? = null,
     initialStack: KoneList<Configuration>,
     updateLifecycle: suspend (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: StackNavigationState<Configuration>) -> Unit,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: StackNavigationTarget<Configuration>) -> Component,
-): StackNode<Configuration, Component> =
+): StackNode<Configuration, Component, UIComponentContext> =
     uiChildrenNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
@@ -64,7 +64,10 @@ public suspend fun <
         updateLifecycle = updateLifecycle,
         childrenFactory = childrenFactory,
         navigationStateMapper = { navigationState, children ->
-            val stack = navigationState.map { configuration -> ChildWithConfiguration(configuration, children[configuration]) }
+            val stack = navigationState.map { configuration ->
+                val child = children[configuration]
+                ChildWithConfigurationAndContext(configuration, child.component, child.context)
+            }
             ChildrenStack(
                 active = stack.last(),
                 backStack = stack.dropLast(1u),
@@ -80,12 +83,12 @@ public suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    navigationControllerSpec: NavigationControllerSpec<StackNavigationState<Configuration>, Configuration, Component, UIComponentContext, StackNavigationEvent<Configuration>>? = null,
+    navigationControllerSpec: NavigationControllerSpec<StackNavigationState<Configuration>, Configuration, Component, UIComponentContext, ChildrenStack<Configuration, Component, UIComponentContext>, StackNavigationEvent<Configuration>>? = null,
     initialStack: KoneList<Configuration>,
     inactiveState: UIComponentLifecycleState,
     activeState: UIComponentLifecycleState,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: StackNavigationTarget<Configuration>) -> Component,
-): StackNode<Configuration, Component> =
+): StackNode<Configuration, Component, UIComponentContext> =
     uiChildrenStackNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
@@ -108,7 +111,7 @@ public expect suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    navigationControllerSpec: NavigationControllerSpec<StackNavigationState<Configuration>, Configuration, Component, UIComponentContext, StackNavigationEvent<Configuration>>? = null,
+    navigationControllerSpec: NavigationControllerSpec<StackNavigationState<Configuration>, Configuration, Component, UIComponentContext, ChildrenStack<Configuration, Component, UIComponentContext>, StackNavigationEvent<Configuration>>? = null,
     initialStack: KoneList<Configuration>,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: StackNavigationTarget<Configuration>) -> Component,
-): StackNode<Configuration, Component>
+): StackNode<Configuration, Component, UIComponentContext>

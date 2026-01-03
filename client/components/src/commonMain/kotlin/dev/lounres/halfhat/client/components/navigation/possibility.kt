@@ -18,9 +18,9 @@ import dev.lounres.kone.maybe.map
 import dev.lounres.kone.relations.*
 
 
-public typealias ChildrenPossibility<Configuration, Component> = Maybe<ChildWithConfiguration<Configuration, Component>>
+public typealias ChildrenPossibility<Configuration, Component, ComponentContext> = Maybe<ChildWithConfigurationAndContext<Configuration, Component, ComponentContext>>
 
-public typealias PossibilityNode<Configuration, Component> = ChildrenNode<Configuration, Component, ChildrenPossibility<Configuration, Component>, PossibilityNavigationEvent<Configuration>>
+public typealias PossibilityNode<Configuration, Component, ComponentContext> = ChildrenNode<ChildrenPossibility<Configuration, Component, ComponentContext>, PossibilityNavigationEvent<Configuration>>
 
 public suspend fun <
     Configuration,
@@ -30,11 +30,11 @@ public suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    navigationControllerSpec: NavigationControllerSpec<PossibilityNavigationState<Configuration>, Configuration, Component, UIComponentContext, PossibilityNavigationEvent<Configuration>>? = null,
+    navigationControllerSpec: NavigationControllerSpec<PossibilityNavigationState<Configuration>, Configuration, Component, UIComponentContext, ChildrenPossibility<Configuration, Component, UIComponentContext>, PossibilityNavigationEvent<Configuration>>? = null,
     initialConfiguration: Maybe<Configuration>,
     updateLifecycle: suspend (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: PossibilityNavigationState<Configuration>) -> Unit,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: PossibilityNavigationTarget<Configuration>) -> Component,
-): PossibilityNode<Configuration, Component> =
+): PossibilityNode<Configuration, Component, UIComponentContext> =
     uiChildrenNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
@@ -61,7 +61,12 @@ public suspend fun <
         restorationEvent = { nextState -> { nextState } },
         updateLifecycle = updateLifecycle,
         childrenFactory = childrenFactory,
-        navigationStateMapper = { navigationState, children -> navigationState.map { ChildWithConfiguration(it, children[it]) } },
+        navigationStateMapper = { navigationState, children ->
+            navigationState.map {
+                val child = children[it]
+                ChildWithConfigurationAndContext(it, child.component, child.context)
+            }
+        },
     )
 
 public suspend fun <
@@ -72,11 +77,11 @@ public suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    navigationControllerSpec: NavigationControllerSpec<PossibilityNavigationState<Configuration>, Configuration, Component, UIComponentContext, PossibilityNavigationEvent<Configuration>>? = null,
+    navigationControllerSpec: NavigationControllerSpec<PossibilityNavigationState<Configuration>, Configuration, Component, UIComponentContext, ChildrenPossibility<Configuration, Component, UIComponentContext>, PossibilityNavigationEvent<Configuration>>? = null,
     initialConfiguration: Maybe<Configuration>,
     activeState: UIComponentLifecycleState,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: PossibilityNavigationTarget<Configuration>) -> Component,
-): PossibilityNode<Configuration, Component> =
+): PossibilityNode<Configuration, Component, UIComponentContext> =
     uiChildrenPossibilityNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
@@ -99,7 +104,7 @@ public expect suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    navigationControllerSpec: NavigationControllerSpec<PossibilityNavigationState<Configuration>, Configuration, Component, UIComponentContext, PossibilityNavigationEvent<Configuration>>? = null,
+    navigationControllerSpec: NavigationControllerSpec<PossibilityNavigationState<Configuration>, Configuration, Component, UIComponentContext, ChildrenPossibility<Configuration, Component, UIComponentContext>, PossibilityNavigationEvent<Configuration>>? = null,
     initialConfiguration: Maybe<Configuration>,
     childrenFactory: (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: PossibilityNavigationTarget<Configuration>) -> Component,
-): PossibilityNode<Configuration, Component>
+): PossibilityNode<Configuration, Component, UIComponentContext>

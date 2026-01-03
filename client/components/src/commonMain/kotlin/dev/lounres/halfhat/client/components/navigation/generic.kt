@@ -25,9 +25,10 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 
 
-public data class ChildWithConfiguration<out Configuration, out Component>(
+public data class ChildWithConfigurationAndContext<out Configuration, out Component, out ComponentContext>(
     public val configuration: Configuration,
     public val component: Component,
+    public val componentContext: ComponentContext,
 )
 
 public interface WithComponentContext<out ComponentContext> {
@@ -46,14 +47,14 @@ public data class BuiltChild<Component, ComponentContext>(
     val context: ComponentContext,
 )
 
-public data class NavigationControllerSpec<NavigationState, Configuration, Component, ComponentContext, NavigationEvent>(
+public data class NavigationControllerSpec<NavigationState, Configuration, Component, ComponentContext, NavigationPublicState, NavigationEvent>(
     val key: String,
     val configurationSerializer: KSerializer<Configuration>,
     val pathBuilder: (suspend (navigationState: NavigationState, children: KoneMap<Configuration, BuiltChild<Component, ComponentContext>>) -> NavigationNodePath)? = null,
-    val restorationByPath: (suspend (path: NavigationNodePath, navigationTarget: NavigationTarget<NavigationEvent>) -> Unit)? = null
+    val restorationByPath: (suspend (path: NavigationNodePath, navigationTarget: ChildrenNode<NavigationPublicState, NavigationEvent>) -> Unit)? = null
 )
 
-public interface ChildrenNode<Configuration, Component, NavigationPublicState, NavigationEvent> : NavigationTarget<NavigationEvent>, WithComponentContext<UIComponentContext> {
+public interface ChildrenNode<NavigationPublicState, NavigationEvent> : NavigationTarget<NavigationEvent>, WithComponentContext<UIComponentContext> {
     public val hub: KoneAsynchronousHub<NavigationPublicState>
 }
 
@@ -69,7 +70,7 @@ public suspend fun <
     configurationOrder: Order<Configuration>? = null,
     navigationStateEquality: Equality<NavigationState> = Equality.defaultFor(),
     loggerSource: String? = null,
-    navigationControllerSpec: NavigationControllerSpec<NavigationState, Configuration, Component, UIComponentContext, NavigationEvent>? = null,
+    navigationControllerSpec: NavigationControllerSpec<NavigationState, Configuration, Component, UIComponentContext, NavigationPublicState, NavigationEvent>? = null,
     navigationStateSerializer: (KSerializer<Configuration>) -> KSerializer<NavigationState>,
     initialState: NavigationState,
     stateConfigurationsMapping: (NavigationState) -> KoneSet<Configuration>,
@@ -77,8 +78,8 @@ public suspend fun <
     restorationEvent: (nextState: NavigationState) -> NavigationEvent,
     updateLifecycle: suspend (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: NavigationState) -> Unit,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: NavigationTarget<NavigationEvent>) -> Component,
-    navigationStateMapper: (navigationState: NavigationState, children: KoneMap<Configuration, Component>) -> NavigationPublicState,
-): ChildrenNode<Configuration, Component, NavigationPublicState, NavigationEvent> {
+    navigationStateMapper: (navigationState: NavigationState, children: KoneMap<Configuration, BuiltChild<Component, UIComponentContext>>) -> NavigationPublicState,
+): ChildrenNode<NavigationPublicState, NavigationEvent> {
     val logger = this.getOrNull(LoggerKey)
     val componentNavigationNodeController = this.getOrNull(NavigationNodeController.Key)
     val childrenNavigationNodeController =
@@ -243,14 +244,26 @@ public suspend fun <
             }
             val restorationByPath = navigationControllerSpec.restorationByPath
             if (restorationByPath != null) childrenNavigationNodeController.setRestorationByPath {
-                restorationByPath(it, navigationHub)
+                restorationByPath(
+                    it,
+                    object : ChildrenNode<NavigationPublicState, NavigationEvent> {
+                        override val context: UIComponentContext = childrenComponentContext
+                        
+                        override val hub: KoneAsynchronousHub<NavigationPublicState> =
+                            childrenHub.map { navigationStateMapper(it.navigationState, it.children.mapValues { (_, value) -> BuiltChild(value.component, value.context) }) }
+                        
+                        override suspend fun navigate(event: NavigationEvent) {
+                            navigationHub.navigate(event)
+                        }
+                    }
+                )
             }
         }
-        object : ChildrenNode<Configuration, Component, NavigationPublicState, NavigationEvent> {
+        object : ChildrenNode<NavigationPublicState, NavigationEvent> {
             override val context: UIComponentContext = childrenComponentContext
             
             override val hub: KoneAsynchronousHub<NavigationPublicState> =
-                childrenHub.map { navigationStateMapper(it.navigationState, it.children.mapValues { (_, value) -> value.component }) }
+                childrenHub.map { navigationStateMapper(it.navigationState, it.children.mapValues { (_, value) -> BuiltChild(value.component, value.context) }) }
             
             override suspend fun navigate(event: NavigationEvent) {
                 storingNavigationTarget.navigate(event)

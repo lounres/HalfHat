@@ -1,5 +1,6 @@
 package dev.lounres.halfhat.client.ui.components.game.controller
 
+import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.ui.components.game.controller.gameScreen.GameScreenComponent
 import dev.lounres.halfhat.client.ui.components.game.controller.roomScreen.RoomScreenComponent
 import dev.lounres.halfhat.client.ui.components.game.controller.roomSettings.RoomSettingsComponent
@@ -8,7 +9,7 @@ import dev.lounres.kone.hub.KoneAsynchronousHub
 
 
 public interface ControllerPageComponent {
-    public val childStack: KoneAsynchronousHub<ChildrenStack<*, Child>>
+    public val childStack: KoneAsynchronousHub<ChildrenStack<*, Child, UIComponentContext>>
     
     public sealed interface Child {
         public data class RoomScreen(val component: RoomScreenComponent) : Child

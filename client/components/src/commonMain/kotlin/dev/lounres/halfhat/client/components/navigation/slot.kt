@@ -12,9 +12,9 @@ import dev.lounres.kone.contexts.invoke
 import dev.lounres.kone.relations.*
 
 
-public typealias ChildrenSlot<Configuration, Component> = ChildWithConfiguration<Configuration, Component>
+public typealias ChildrenSlot<Configuration, Component, ComponentContext> = ChildWithConfigurationAndContext<Configuration, Component, ComponentContext>
 
-public typealias SlotNode<Configuration, Component> = ChildrenNode<Configuration, Component, ChildrenSlot<Configuration, Component>, SlotNavigationEvent<Configuration>>
+public typealias SlotNode<Configuration, Component, ComponentContext> = ChildrenNode<ChildrenSlot<Configuration, Component, ComponentContext>, SlotNavigationEvent<Configuration>>
 
 public suspend fun <
     Configuration,
@@ -24,11 +24,11 @@ public suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    navigationControllerSpec: NavigationControllerSpec<Configuration, Configuration, Component, UIComponentContext, SlotNavigationEvent<Configuration>>? = null,
+    navigationControllerSpec: NavigationControllerSpec<Configuration, Configuration, Component, UIComponentContext, ChildrenSlot<Configuration, Component, UIComponentContext>, SlotNavigationEvent<Configuration>>? = null,
     initialConfiguration: Configuration,
     updateLifecycle: suspend (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: Configuration) -> Unit,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: SlotNavigationTarget<Configuration>) -> Component,
-): SlotNode<Configuration, Component> =
+): SlotNode<Configuration, Component, UIComponentContext> =
     uiChildrenNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
@@ -50,7 +50,10 @@ public suspend fun <
         restorationEvent = { nextState -> { nextState } },
         updateLifecycle = updateLifecycle,
         childrenFactory = childrenFactory,
-        navigationStateMapper = { navigationState, children -> ChildWithConfiguration(navigationState, children[navigationState]) },
+        navigationStateMapper = { navigationState, children ->
+            val child = children[navigationState]
+            ChildWithConfigurationAndContext(navigationState, child.component, child.context)
+        },
     )
 
 public suspend fun <
@@ -61,11 +64,11 @@ public suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    navigationControllerSpec: NavigationControllerSpec<Configuration, Configuration, Component, UIComponentContext, SlotNavigationEvent<Configuration>>? = null,
+    navigationControllerSpec: NavigationControllerSpec<Configuration, Configuration, Component, UIComponentContext, ChildrenSlot<Configuration, Component, UIComponentContext>, SlotNavigationEvent<Configuration>>? = null,
     initialConfiguration: Configuration,
     activeState: UIComponentLifecycleState,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: SlotNavigationTarget<Configuration>) -> Component,
-): SlotNode<Configuration, Component> =
+): SlotNode<Configuration, Component, UIComponentContext> =
     uiChildrenSlotNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
@@ -88,7 +91,7 @@ public expect suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    navigationControllerSpec: NavigationControllerSpec<Configuration, Configuration, Component, UIComponentContext, SlotNavigationEvent<Configuration>>? = null,
+    navigationControllerSpec: NavigationControllerSpec<Configuration, Configuration, Component, UIComponentContext, ChildrenSlot<Configuration, Component, UIComponentContext>, SlotNavigationEvent<Configuration>>? = null,
     initialConfiguration: Configuration,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: SlotNavigationTarget<Configuration>) -> Component,
-): SlotNode<Configuration, Component>
+): SlotNode<Configuration, Component, UIComponentContext>

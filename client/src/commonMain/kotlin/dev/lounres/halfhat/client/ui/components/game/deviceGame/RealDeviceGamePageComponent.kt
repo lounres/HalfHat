@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 
 
 public class RealDeviceGamePageComponent(
-    override val childStack: KoneAsynchronousHub<ChildrenStack<*, DeviceGamePageComponent.Child>>,
+    override val childStack: KoneAsynchronousHub<ChildrenStack<*, DeviceGamePageComponent.Child, UIComponentContext>>,
 ) : DeviceGamePageComponent {
     public sealed interface Configuration {
         public data object RoomScreen : Configuration

@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 public class RealOnlineGamePageComponent(
     override val onExitOnlineGameMode: () -> Unit,
     private val onlineGameComponent: OnlineGameComponent,
-    override val childStack: KoneAsynchronousHub<ChildrenStack<*, OnlineGamePageComponent.Child>>,
+    override val childStack: KoneAsynchronousHub<ChildrenStack<*, OnlineGamePageComponent.Child, UIComponentContext>>,
 ) : OnlineGamePageComponent {
     override val connectionStatus: StateFlow<ConnectionStatus> get() = onlineGameComponent.connectionStatus
     

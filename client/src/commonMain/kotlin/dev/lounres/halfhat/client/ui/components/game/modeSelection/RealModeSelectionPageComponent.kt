@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 public class RealModeSelectionPageComponent(
     private val infoPopupNavigation: PossibilityNavigationTarget<ModeSelectionPageComponent.InfoPopup>,
     
-    override val infoPopup: KoneAsynchronousHub<ChildrenPossibility<*, ModeSelectionPageComponent.InfoPopup>>,
+    override val infoPopup: KoneAsynchronousHub<ChildrenPossibility<*, ModeSelectionPageComponent.InfoPopup, UIComponentContext>>,
     
     override val onOnlineGameSelect: () -> Unit,
     override val onLocalGameSelect: () -> Unit,

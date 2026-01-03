@@ -1,5 +1,6 @@
 package dev.lounres.halfhat.client.ui.components.game.onlineGame
 
+import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.logic.components.game.onlineGame.ConnectionStatus
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.GameScreenComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.previewScreen.PreviewScreenComponent
@@ -13,7 +14,7 @@ public interface OnlineGamePageComponent {
     
     public val connectionStatus: StateFlow<ConnectionStatus>
     
-    public val childStack: KoneAsynchronousHub<ChildrenStack<*, Child>>
+    public val childStack: KoneAsynchronousHub<ChildrenStack<*, Child, UIComponentContext>>
     
     public sealed interface Child {
         public data class PreviewScreen(val component: PreviewScreenComponent) : Child

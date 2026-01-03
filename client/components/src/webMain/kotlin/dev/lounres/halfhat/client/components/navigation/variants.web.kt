@@ -16,11 +16,11 @@ public actual suspend fun <Configuration, Component> UIComponentContext.uiChildr
     configurationHashing: Hashing<Configuration>?,
     configurationOrder: Order<Configuration>?,
     loggerSource: String?,
-    navigationControllerSpec: NavigationControllerSpec<VariantsNavigationState<Configuration>, Configuration, Component, UIComponentContext, VariantsNavigationEvent<Configuration>>?,
+    navigationControllerSpec: NavigationControllerSpec<VariantsNavigationState<Configuration>, Configuration, Component, UIComponentContext, ChildrenVariants<Configuration, Component, UIComponentContext>, VariantsNavigationEvent<Configuration>>?,
     allVariants: KoneSet<Configuration>,
     initialVariant: Configuration,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: VariantsNavigationTarget<Configuration>) -> Component,
-): VariantsNode<Configuration, Component> =
+): VariantsNode<Configuration, Component, UIComponentContext> =
     uiChildrenFromToVariantsNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,

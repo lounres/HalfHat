@@ -33,7 +33,7 @@ import kotlin.random.Random
 
 public class RealGameScreenComponent(
     override val onExitGame: () -> Unit,
-    override val childSlot: KoneAsynchronousHub<ChildrenSlot<*, GameScreenComponent.Child>>,
+    override val childSlot: KoneAsynchronousHub<ChildrenSlot<*, GameScreenComponent.Child, UIComponentContext>>,
 ) : GameScreenComponent {
     public sealed interface Configuration {
         public data object GameInitialisation : Configuration

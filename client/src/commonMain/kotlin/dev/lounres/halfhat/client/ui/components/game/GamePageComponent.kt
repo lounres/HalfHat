@@ -1,5 +1,6 @@
 package dev.lounres.halfhat.client.ui.components.game
 
+import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.ui.components.PageComponent
 import dev.lounres.halfhat.client.ui.components.game.controller.ControllerPageComponent
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.DeviceGamePageComponent
@@ -13,7 +14,7 @@ import dev.lounres.kone.hub.KoneAsynchronousHub
 
 public interface GamePageComponent : PageComponent {
     override val textName: String get() = "Game"
-    public val currentChild: KoneAsynchronousHub<ChildrenSlot<*, Child>>
+    public val currentChild: KoneAsynchronousHub<ChildrenSlot<*, Child, UIComponentContext>>
     
     public sealed interface Child {
         public class ModeSelection(public val component: ModeSelectionPageComponent) : Child

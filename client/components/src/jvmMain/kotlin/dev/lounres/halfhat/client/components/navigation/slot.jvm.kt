@@ -14,10 +14,10 @@ public actual suspend fun <Configuration, Component> UIComponentContext.uiChildr
     configurationHashing: Hashing<Configuration>?,
     configurationOrder: Order<Configuration>?,
     loggerSource: String?,
-    navigationControllerSpec: NavigationControllerSpec<Configuration, Configuration, Component, UIComponentContext, SlotNavigationEvent<Configuration>>?,
+    navigationControllerSpec: NavigationControllerSpec<Configuration, Configuration, Component, UIComponentContext, ChildrenSlot<Configuration, Component, UIComponentContext>, SlotNavigationEvent<Configuration>>?,
     initialConfiguration: Configuration,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: SlotNavigationTarget<Configuration>) -> Component,
-): SlotNode<Configuration, Component> =
+): SlotNode<Configuration, Component, UIComponentContext> =
     uiChildrenToSlotNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,

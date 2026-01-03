@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 
 public class RealGameScreenComponent(
     override val onExitOnlineGame: () -> Unit,
-    override val childSlot: KoneAsynchronousHub<ChildrenSlot<*, GameScreenComponent.Child>>,
+    override val childSlot: KoneAsynchronousHub<ChildrenSlot<*, GameScreenComponent.Child, UIComponentContext>>,
     override val onCopyOnlineGameKey: () -> Unit,
     override val onCopyOnlineGameLink: () -> Unit,
 ) : GameScreenComponent {

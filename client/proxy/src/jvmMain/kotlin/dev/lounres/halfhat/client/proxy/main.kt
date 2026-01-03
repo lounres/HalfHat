@@ -24,7 +24,7 @@ fun main(args: Array<String>) {
 
     embeddedServer(Netty, port = proxyPort) {
         routing {
-            get("${proxyPrefix}/{path...}") {
+            get("${proxyPrefix}{path...}") {
                 val path = call.parameters.getAll("path")!!
 
                 println(path)

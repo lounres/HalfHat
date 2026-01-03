@@ -1,7 +1,7 @@
 package dev.lounres.halfhat.client.ui.components
 
 import dev.lounres.halfhat.Language
-import dev.lounres.halfhat.client.ui.components.PageComponent
+import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.ui.components.about.AboutPageComponent
 import dev.lounres.halfhat.client.ui.components.faq.FAQPageComponent
 import dev.lounres.halfhat.client.ui.components.feedback.FeedbackPageComponent
@@ -35,7 +35,7 @@ interface MainWindowComponent {
     val volumeOn: MutableStateFlow<Boolean>
     val language: MutableStateFlow<Language>
 
-    val pageVariants: KoneAsynchronousHub<ChildrenVariants<Child.Kind, Child>>
+    val pageVariants: KoneAsynchronousHub<ChildrenVariants<Child.Kind, Child, UIComponentContext>>
     val openPage: (page: Child.Kind) -> Unit
     val menuList: KoneAsynchronousHub<KoneList<MenuItem>>
     
@@ -51,12 +51,20 @@ interface MainWindowComponent {
         @Serializable(with = Kind.Serializer::class)
         sealed interface Kind {
             val name: String
+            val path: String
             
-            enum class Primary : Kind {
-                Home, Game
+            enum class Primary(override val path: String) : Kind {
+                Home(path = "home"),
+                Game(path = "game"),
             }
-            enum class Secondary : Kind {
-                News, Rules, FAQ, GameHistory, Settings, Feedback, About
+            enum class Secondary(override val path: String) : Kind {
+                News(path = "news"),
+                Rules(path = "rules"),
+                FAQ(path = "FAQ"),
+                GameHistory(path = "history"),
+                Settings(path = "settings"),
+                Feedback(path = "feedback"),
+                About(path = "about"),
             }
             
             private object Serializer : KSerializer<Kind> {

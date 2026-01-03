@@ -16,10 +16,10 @@ public actual suspend fun <Configuration, Component> UIComponentContext.uiChildr
     configurationHashing: Hashing<Configuration>?,
     configurationOrder: Order<Configuration>?,
     loggerSource: String?,
-    navigationControllerSpec: NavigationControllerSpec<PossibilityNavigationState<Configuration>, Configuration, Component, UIComponentContext, PossibilityNavigationEvent<Configuration>>?,
+    navigationControllerSpec: NavigationControllerSpec<PossibilityNavigationState<Configuration>, Configuration, Component, UIComponentContext, ChildrenPossibility<Configuration, Component, UIComponentContext>, PossibilityNavigationEvent<Configuration>>?,
     initialConfiguration: Maybe<Configuration>,
     childrenFactory: (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: PossibilityNavigationTarget<Configuration>) -> Component,
-): PossibilityNode<Configuration, Component> =
+): PossibilityNode<Configuration, Component, UIComponentContext> =
     uiChildrenToPossibilityNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,

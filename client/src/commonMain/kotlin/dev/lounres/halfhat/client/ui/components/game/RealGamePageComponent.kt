@@ -20,7 +20,7 @@ import kotlinx.serialization.Serializable
 
 
 public class RealGamePageComponent(
-    override val currentChild: KoneAsynchronousHub<ChildrenSlot<*, GamePageComponent.Child>>,
+    override val currentChild: KoneAsynchronousHub<ChildrenSlot<*, GamePageComponent.Child, UIComponentContext>>,
 ): GamePageComponent {
     @Serializable
     public enum class Configuration {

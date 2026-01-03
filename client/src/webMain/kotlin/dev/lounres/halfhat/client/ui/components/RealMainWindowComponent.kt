@@ -33,14 +33,22 @@ import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariant
 import dev.lounres.halfhat.client.consts.WebPageSettings
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.collections.interop.toKoneList
+import dev.lounres.kone.collections.iterables.isEmpty
 import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.addAllFrom
 import dev.lounres.kone.collections.list.build
 import dev.lounres.kone.collections.list.empty
+import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.collections.map.KoneMap
+import dev.lounres.kone.collections.map.build
 import dev.lounres.kone.collections.map.empty
 import dev.lounres.kone.collections.map.get
+import dev.lounres.kone.collections.map.isNotEmpty
 import dev.lounres.kone.collections.set.KoneSet
 import dev.lounres.kone.collections.set.build
+import dev.lounres.kone.collections.utils.allIndexed
+import dev.lounres.kone.collections.utils.drop
+import dev.lounres.kone.collections.utils.firstThatOrNull
 import dev.lounres.kone.collections.utils.joinToString
 import dev.lounres.kone.collections.utils.map
 import dev.lounres.kone.collections.utils.plusAssign
@@ -49,6 +57,11 @@ import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.hub.map
 import dev.lounres.kone.registry.correspondsTo
 import dev.lounres.kone.scope
+import js.array.component1
+import js.array.component2
+import js.core.JsPrimitives.toKotlinString
+import js.iterable.iterator
+import js.uri.encodeURIComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,12 +69,12 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
-import web.events.EventType
-import web.events.addEventListener
-import web.history.PopStateEvent
+import web.console.console
+import web.events.EventHandler
 import web.history.history
 import web.location.location
 import web.url.URL
+import web.url.URLSearchParams
 import web.window.window
 import kotlin.js.JsString
 import kotlin.js.toJsString
@@ -73,7 +86,7 @@ class RealMainWindowComponent(
     override val volumeOn: MutableStateFlow<Boolean>,
     override val language: MutableStateFlow<Language>,
     
-    override val pageVariants: KoneAsynchronousHub<ChildrenVariants<MainWindowComponent.Child.Kind, MainWindowComponent.Child>>,
+    override val pageVariants: KoneAsynchronousHub<ChildrenVariants<MainWindowComponent.Child.Kind, MainWindowComponent.Child, UIComponentContext>>,
     override val openPage: (page: MainWindowComponent.Child.Kind) -> Unit,
     
     override val menuList: KoneAsynchronousHub<KoneList<MainWindowComponent.MenuItem>>,
@@ -99,7 +112,16 @@ suspend fun RealMainWindowComponent(
         history.pushState(
             data = Json.encodeToString(state).toJsString(),
             unused = "",
-//            url = URL(WebPageSettings.base + (path?.path?.joinToString(separator = "/") ?: ""), location.origin)
+            url = path?.let { path ->
+                val url = URL(location.href)
+                url.pathname = WebPageSettings.base + path.path.joinToString(separator = "/")
+                url.search = path.arguments.let {
+                    if (it.isNotEmpty()) it.nodesView.joinToString(separator = "&") { node ->
+                        "${encodeURIComponent(node.key)}=${encodeURIComponent(node.value)}"
+                    } else ""
+                }
+                url
+            }
         )
     }
     val globalComponentContext = UIComponentContext {
@@ -134,6 +156,37 @@ suspend fun RealMainWindowComponent(
             navigationControllerSpec = NavigationControllerSpec(
                 key = "page",
                 configurationSerializer = MainWindowComponent.Child.Kind.serializer(),
+                pathBuilder = { navigationState, children ->
+                    val prefix = navigationState.currentVariant.path
+                    val subPath = children[navigationState.currentVariant].context.navigationController?.pathBuilder?.invoke()
+                    if (subPath != null)
+                        NavigationNodePath(
+                            path = KoneList.build {
+                                +prefix
+                                addAllFrom(subPath.path)
+                            },
+                            arguments = subPath.arguments
+                        )
+                    else
+                        NavigationNodePath(
+                            path = KoneList.of(prefix),
+                            arguments = KoneMap.empty(),
+                        )
+                },
+                restorationByPath = restorationByPath@ { path, childrenNode ->
+                    if (path.path.isEmpty()) return@restorationByPath
+                    childrenNode.navigate { allVariants, current ->
+                        allVariants.firstThatOrNull { it.path == path.path[0u] } ?: current
+                    }
+                    val activeChild = childrenNode.hub.value.active
+                    if (activeChild.configuration.path != path.path[0u]) return@restorationByPath
+                    activeChild.componentContext.navigationController?.restorationByPath?.invoke(
+                        NavigationNodePath(
+                            path = path.path.drop(1u),
+                            arguments = path.arguments,
+                        )
+                    )
+                },
             ),
             allVariants = KoneSet.build {
                 +MainWindowComponent.Child.Kind.Primary.entries.toKoneList()
@@ -197,6 +250,10 @@ suspend fun RealMainWindowComponent(
         )
     }
     
+    globalComponentContext.navigationController?.setRestorationByPath {
+        pageVariants.context.navigationController?.restorationByPath?.invoke(it)
+    }
+    
     @Suppress("JSON_FORMAT_REDUNDANT_DEFAULT")
     val json = Json {
         serializersModule = SerializersModule {
@@ -204,22 +261,38 @@ suspend fun RealMainWindowComponent(
         }
     }
     
+    scope {
+        val locationPath = location.pathname
+        val actualPath = locationPath.split('/').filter { it.isNotEmpty() }.toKoneList()
+        val basePath = WebPageSettings.base.split('/').filter { it.isNotEmpty() }.toKoneList()
+        if (actualPath.size >= basePath.size && basePath.allIndexed { index, value -> actualPath[index] == value })
+            navigationRoot.restoreByPath(
+                NavigationNodePath(
+                    path = actualPath.drop(basePath.size),
+                    arguments = KoneMap.build {
+                        // FIXME: kotlinx-wrappers #2824
+//                        for ((key, value) in URLSearchParams(location.search).entries()) {
+//                            set(key.toKotlinString(), value.toKotlinString())
+//                        }
+                    }
+                )
+            )
+    }
+    
     history.replaceState(
         data = Json.encodeToString(navigationRoot.getState()).toJsString(),
         unused = "",
+        url = navigationRoot.getPath()?.let { URL(WebPageSettings.base + it.path.joinToString(separator = "/"), location.origin) }
     )
     
-    window.addEventListener(
-        EventType<PopStateEvent>("popstate"),
-        { event ->
-            val state = try {
-                (event.state as? JsString)?.toString()?.let { json.decodeFromString<NavigationNodeState>(it) }
-            } catch (e: SerializationException) { null }
-            if (state != null) coroutineScope.launch {
-                navigationRoot.restore(state)
-            }
-        },
-    )
+    window.onpopstate = EventHandler { event ->
+        val state = try {
+            (event.state as? JsString)?.toKotlinString()?.let { json.decodeFromString<NavigationNodeState>(it) }
+        } catch (e: SerializationException) { null }
+        if (state != null) coroutineScope.launch {
+            navigationRoot.restore(state)
+        }
+    }
     
     val openPage: (page: MainWindowComponent.Child.Kind) -> Unit = { page ->
         CoroutineScope(Dispatchers.Default).launch {

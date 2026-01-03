@@ -65,6 +65,7 @@ kotlin {
     sourceSets {
         val buildDirectory = project.layout.buildDirectory.get().asFile!!
         val constsDirectory = buildDirectory.resolve("generated/halfhat/client/consts")
+        val resourcesDirectory = buildDirectory.resolve("generated/halfhat/client/resources")
         
         commonMain {
             val constsSrcDirectory = constsDirectory.resolve("commonMain")
@@ -142,11 +143,15 @@ kotlin {
         jsMain {
             val constsSrcDirectory = constsDirectory.resolve("jsMain")
             kotlin.srcDir(constsSrcDirectory)
+            val resourcesSrcDirectory = resourcesDirectory.resolve("jsMain")
+            resources.srcDir(resourcesSrcDirectory)
         }
         
         wasmJsMain {
             val constsSrcDirectory = constsDirectory.resolve("wasmJsMain")
             kotlin.srcDir(constsSrcDirectory)
+            val resourcesSrcDirectory = resourcesDirectory.resolve("wasmJsMain")
+            resources.srcDir(resourcesSrcDirectory)
         }
 
 //        val androidMain by getting {
@@ -268,6 +273,7 @@ val generateClientConsts by tasks.registering {
         
         val buildDirectory = project.layout.buildDirectory.get().asFile!!
         val constsDirectory = buildDirectory.resolve("generated/halfhat/client/consts").apply { mkdirs() }
+        val resourcesDirectory = buildDirectory.resolve("generated/halfhat/client/resources").apply { mkdirs() }
         run {
             val constsSrcDirectory = constsDirectory.resolve("commonMain").apply { mkdirs() }
             val constsSrcPackageDirectory = constsSrcDirectory.resolve("dev/lounres/halfhat/client/consts").apply { mkdirs() }
@@ -279,10 +285,10 @@ val generateClientConsts by tasks.registering {
                     
                     @Suppress("RedundantNullableReturnType")
                     data object OnlineGameSettings {
-                        val host: String? = ${if (debug) rootProject.extra["halfhat.client.consts.dev.onlineGame.host"] else rootProject.extra["halfhat.client.consts.prod.onlineGame.host"]}
-                        val port: Int? = ${if (debug) rootProject.extra["halfhat.client.consts.dev.onlineGame.port"] else rootProject.extra["halfhat.client.consts.prod.onlineGame.port"]}
-                        val path: String? = ${if (debug) rootProject.extra["halfhat.client.consts.dev.onlineGame.path"] else rootProject.extra["halfhat.client.consts.prod.onlineGame.path"]}
-                        val isSecure: Boolean = ${if (debug) rootProject.extra["halfhat.client.consts.dev.onlineGame.isSecure"] else rootProject.extra["halfhat.client.consts.prod.onlineGame.isSecure"]}
+                        val host: String? = ${if (local) rootProject.extra["halfhat.client.consts.dev.onlineGame.host"] else rootProject.extra["halfhat.client.consts.prod.onlineGame.host"]}
+                        val port: Int? = ${if (local) rootProject.extra["halfhat.client.consts.dev.onlineGame.port"] else rootProject.extra["halfhat.client.consts.prod.onlineGame.port"]}
+                        val path: String? = ${if (local) rootProject.extra["halfhat.client.consts.dev.onlineGame.path"] else rootProject.extra["halfhat.client.consts.prod.onlineGame.path"]}
+                        val isSecure: Boolean = ${if (local) rootProject.extra["halfhat.client.consts.dev.onlineGame.isSecure"] else rootProject.extra["halfhat.client.consts.prod.onlineGame.isSecure"]}
                     }
                     """.trimIndent()
                 )
@@ -306,6 +312,8 @@ val generateClientConsts by tasks.registering {
             }
         }
         run {
+            val base = if (debug) rootProject.extra["halfhat.client.consts.dev.webPage.base.js"] else rootProject.extra["halfhat.client.consts.prod.webPage.base.js"]
+            
             val constsSrcDirectory = constsDirectory.resolve("jsMain").apply { mkdirs() }
             val constsSrcPackageDirectory = constsSrcDirectory.resolve("dev/lounres/halfhat/client/consts").apply { mkdirs() }
             constsSrcPackageDirectory.resolve("WebPageSettings.kt").bufferedWriter().use {
@@ -316,13 +324,43 @@ val generateClientConsts by tasks.registering {
                     
                     @Suppress("RedundantNullableReturnType")
                     actual data object WebPageSettings {
-                        actual val base: String = ${if (local) rootProject.extra["halfhat.client.consts.dev.webPage.base.js"] else rootProject.extra["halfhat.client.consts.prod.webPage.base.js"]}
+                        actual val base: String = "$base"
                     }
+                    """.trimIndent()
+                )
+            }
+            val resourcesSrcDirectory = resourcesDirectory.resolve("jsMain").apply { mkdirs() }
+            resourcesSrcDirectory.resolve("index.html").bufferedWriter().use {
+                it.append(
+                    """
+                        <!DOCTYPE html>
+                        <html lang="en">
+                            <head>
+                                <meta charset="UTF-8">
+                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+                                <title>HalfHat</title>
+
+                                <style>
+                                    html, body {
+                                        width: 100%;
+                                        height: 100%;
+                                        margin: 0;
+                                        padding: 0;
+                                        overflow: hidden;
+                                    }
+                                </style>
+                            </head>
+                            <body></body>
+                            <script type="application/javascript" src="${base}HalfHat.js"></script>
+                        </html>
                     """.trimIndent()
                 )
             }
         }
         run {
+            val base = if (debug) rootProject.extra["halfhat.client.consts.dev.webPage.base.wasm"] else rootProject.extra["halfhat.client.consts.prod.webPage.base.wasm"]
+            
             val constsSrcDirectory = constsDirectory.resolve("wasmJsMain").apply { mkdirs() }
             val constsSrcPackageDirectory = constsSrcDirectory.resolve("dev/lounres/halfhat/client/consts").apply { mkdirs() }
             constsSrcPackageDirectory.resolve("WebPageSettings.kt").bufferedWriter().use {
@@ -333,8 +371,37 @@ val generateClientConsts by tasks.registering {
                     
                     @Suppress("RedundantNullableReturnType")
                     actual data object WebPageSettings {
-                        actual val base: String = ${if (local) rootProject.extra["halfhat.client.consts.dev.webPage.base.wasm"] else rootProject.extra["halfhat.client.consts.prod.webPage.base.wasm"]}
+                        actual val base: String = "$base"
                     }
+                    """.trimIndent()
+                )
+            }
+            val resourcesSrcDirectory = resourcesDirectory.resolve("wasmJsMain").apply { mkdirs() }
+            resourcesSrcDirectory.resolve("index.html").bufferedWriter().use {
+                it.append(
+                    """
+                        <!DOCTYPE html>
+                        <html lang="en">
+                            <head>
+                                <meta charset="UTF-8">
+                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+                                <title>HalfHat</title>
+
+                                <style>
+                                    html, body {
+                                        width: 100%;
+                                        height: 100%;
+                                        margin: 0;
+                                        padding: 0;
+                                        overflow: hidden;
+                                    }
+                                </style>
+                                <script src="skiko.js"> </script>
+                            </head>
+                            <body></body>
+                            <script type="application/javascript" src="${base}HalfHat.js"></script>
+                        </html>
                     """.trimIndent()
                 )
             }

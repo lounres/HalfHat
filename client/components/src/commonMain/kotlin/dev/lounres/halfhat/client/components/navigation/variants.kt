@@ -12,12 +12,12 @@ import dev.lounres.kone.contexts.invoke
 import dev.lounres.kone.relations.*
 
 
-public data class ChildrenVariants<Configuration, Component>(
-    public val active: ChildWithConfiguration<Configuration, Component>,
+public data class ChildrenVariants<Configuration, Component, ComponentContext>(
+    public val active: ChildWithConfigurationAndContext<Configuration, Component, ComponentContext>,
     public val allVariants: KoneMap<Configuration, Component>,
 )
 
-public typealias VariantsNode<Configuration, Component> = ChildrenNode<Configuration, Component, ChildrenVariants<Configuration, Component>, VariantsNavigationEvent<Configuration>>
+public typealias VariantsNode<Configuration, Component, ComponentContext> = ChildrenNode<ChildrenVariants<Configuration, Component, ComponentContext>, VariantsNavigationEvent<Configuration>>
 
 public suspend fun <
     Configuration,
@@ -27,12 +27,12 @@ public suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    navigationControllerSpec: NavigationControllerSpec<VariantsNavigationState<Configuration>, Configuration, Component, UIComponentContext, VariantsNavigationEvent<Configuration>>? = null,
+    navigationControllerSpec: NavigationControllerSpec<VariantsNavigationState<Configuration>, Configuration, Component, UIComponentContext, ChildrenVariants<Configuration, Component, UIComponentContext>, VariantsNavigationEvent<Configuration>>? = null,
     allVariants: KoneSet<Configuration>,
     initialVariant: Configuration,
     updateLifecycle: suspend (configuration: Configuration, lifecycle: MutableUIComponentLifecycle, nextState: VariantsNavigationState<Configuration>) -> Unit,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: VariantsNavigationTarget<Configuration>) -> Component,
-): VariantsNode<Configuration, Component> =
+): VariantsNode<Configuration, Component, UIComponentContext> =
     uiChildrenNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
@@ -60,16 +60,18 @@ public suspend fun <
         navigationStateMapper = { navigationState, children ->
             ChildrenVariants(
                 active = navigationState.currentVariant.let { configuration ->
-                    ChildWithConfiguration(
+                    val child = children[configuration]
+                    ChildWithConfigurationAndContext(
                         configuration = configuration,
-                        component = children[configuration],
+                        component = child.component,
+                        componentContext = child.context,
                     )
                 },
                 allVariants = children.mapValues(
                     keyEquality = configurationEquality,
                     keyHashing = configurationHashing,
                     keyOrder = configurationOrder,
-                ) { (_, child) -> child },
+                ) { (_, child) -> child.component },
             )
         },
     )
@@ -82,13 +84,13 @@ public suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    navigationControllerSpec: NavigationControllerSpec<VariantsNavigationState<Configuration>, Configuration, Component, UIComponentContext, VariantsNavigationEvent<Configuration>>? = null,
+    navigationControllerSpec: NavigationControllerSpec<VariantsNavigationState<Configuration>, Configuration, Component, UIComponentContext, ChildrenVariants<Configuration, Component, UIComponentContext>, VariantsNavigationEvent<Configuration>>? = null,
     allVariants: KoneSet<Configuration>,
     initialVariant: Configuration,
     inactiveState: UIComponentLifecycleState,
     activeState: UIComponentLifecycleState,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: VariantsNavigationTarget<Configuration>) -> Component,
-): VariantsNode<Configuration, Component> =
+): VariantsNode<Configuration, Component, UIComponentContext> =
     uiChildrenVariantsNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
@@ -112,8 +114,8 @@ public expect suspend fun <
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
     loggerSource: String? = null,
-    navigationControllerSpec: NavigationControllerSpec<VariantsNavigationState<Configuration>, Configuration, Component, UIComponentContext, VariantsNavigationEvent<Configuration>>? = null,
+    navigationControllerSpec: NavigationControllerSpec<VariantsNavigationState<Configuration>, Configuration, Component, UIComponentContext, ChildrenVariants<Configuration, Component, UIComponentContext>, VariantsNavigationEvent<Configuration>>? = null,
     allVariants: KoneSet<Configuration>,
     initialVariant: Configuration,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: VariantsNavigationTarget<Configuration>) -> Component,
-): VariantsNode<Configuration, Component>
+): VariantsNode<Configuration, Component, UIComponentContext>

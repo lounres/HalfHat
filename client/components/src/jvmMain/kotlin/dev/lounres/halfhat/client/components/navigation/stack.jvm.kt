@@ -16,10 +16,10 @@ public actual suspend fun <Configuration, Component> UIComponentContext.uiChildr
     configurationHashing: Hashing<Configuration>?,
     configurationOrder: Order<Configuration>?,
     loggerSource: String?,
-    navigationControllerSpec: NavigationControllerSpec<StackNavigationState<Configuration>, Configuration, Component, UIComponentContext, StackNavigationEvent<Configuration>>?,
+    navigationControllerSpec: NavigationControllerSpec<StackNavigationState<Configuration>, Configuration, Component, UIComponentContext, ChildrenStack<Configuration, Component, UIComponentContext>, StackNavigationEvent<Configuration>>?,
     initialStack: KoneList<Configuration>,
     childrenFactory: suspend (configuration: Configuration, componentContext: UIComponentContext, navigationTarget: StackNavigationTarget<Configuration>) -> Component,
-): StackNode<Configuration, Component> =
+): StackNode<Configuration, Component, UIComponentContext> =
     uiChildrenFromToStackNode(
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
