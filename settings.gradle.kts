@@ -46,13 +46,14 @@ stal {
         "server"("server")
         "client"("desktop", "web", "android") {
             "components"("library", "desktop", "web", "android")
+            "proxy"("kotlin jvm target")
         }
     }
     tag {
-        "kotlin" since { hasAnyOf("server", "desktop", "web", "android", "library") }
         "kotlin jvm target" since { hasAnyOf("server", "desktop") }
         "kotlin web targets" since { hasAnyOf("web") }
         "kotlin android target" since { hasAnyOf("android") }
+        "kotlin" since { hasAnyOf("kotlin jvm target", "kotlin web targets", "kotlin android target") }
     }
     action {
         gradle.allprojects {

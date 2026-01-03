@@ -15,6 +15,8 @@ plugins {
 //    alias(libs.plugins.sqldelight)
 }
 
+val webpackPort = (rootProject.extra["halfhat.client.web.devServer.webpackPort"] as String).toInt()
+
 kotlin {
     js {
         outputModuleName = "client"
@@ -22,12 +24,9 @@ kotlin {
             commonWebpackConfig {
                 outputFileName = "HalfHat.js"
                 devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-                    // Uncomment and configure this if you want to open a browser different from the system default
-                    // open = mapOf(
-                    //     "app" to mapOf(
-                    //         "name" to "google chrome"
-                    //     )
-                    // )
+                    open = false
+                    
+                    port = webpackPort
                     
                     // Serve sources to debug inside browser
                     static(rootDir.path + "/api")
@@ -42,16 +41,16 @@ kotlin {
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         outputModuleName = "client"
+        compilerOptions {
+            freeCompilerArgs.add("-Xwasm-debugger-custom-formatters")
+        }
         browser {
             commonWebpackConfig {
                 outputFileName = "HalfHat.js"
                 devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-                    // Uncomment and configure this if you want to open a browser different from the system default
-                    // open = mapOf(
-                    //     "app" to mapOf(
-                    //         "name" to "google chrome"
-                    //     )
-                    // )
+                    open = false
+                    
+                    port = webpackPort
                     
                     // Serve sources to debug inside browser
                     static(rootDir.path + "/api")
@@ -68,8 +67,8 @@ kotlin {
         val constsDirectory = buildDirectory.resolve("generated/halfhat/client/consts")
         
         commonMain {
-            val constsCommonMainDirectory = constsDirectory.resolve("commonMain")
-            kotlin.srcDir(constsCommonMainDirectory)
+            val constsSrcDirectory = constsDirectory.resolve("commonMain")
+            kotlin.srcDir(constsSrcDirectory)
             dependencies {
                 implementation(versions.kone.util.misc)
                 
@@ -132,12 +131,22 @@ kotlin {
         }
         
         webMain {
-            val constsCommonMainDirectory = constsDirectory.resolve("webMain")
-            kotlin.srcDir(constsCommonMainDirectory)
+            val constsSrcDirectory = constsDirectory.resolve("webMain")
+            kotlin.srcDir(constsSrcDirectory)
             dependencies {
                 implementation(versions.ktor.client.js)
                 implementation(versions.kotlin.wrappers.browser)
             }
+        }
+        
+        jsMain {
+            val constsSrcDirectory = constsDirectory.resolve("jsMain")
+            kotlin.srcDir(constsSrcDirectory)
+        }
+        
+        wasmJsMain {
+            val constsSrcDirectory = constsDirectory.resolve("wasmJsMain")
+            kotlin.srcDir(constsSrcDirectory)
         }
 
 //        val androidMain by getting {
@@ -260,9 +269,9 @@ val generateClientConsts by tasks.registering {
         val buildDirectory = project.layout.buildDirectory.get().asFile!!
         val constsDirectory = buildDirectory.resolve("generated/halfhat/client/consts").apply { mkdirs() }
         run {
-            val constsCommonMainDirectory = constsDirectory.resolve("commonMain").apply { mkdirs() }
-            val constsCommonMainPackageDirectory = constsCommonMainDirectory.resolve("dev/lounres/halfhat/client/consts").apply { mkdirs() }
-            constsCommonMainPackageDirectory.resolve("OnlineGameSettings.kt").bufferedWriter().use {
+            val constsSrcDirectory = constsDirectory.resolve("commonMain").apply { mkdirs() }
+            val constsSrcPackageDirectory = constsSrcDirectory.resolve("dev/lounres/halfhat/client/consts").apply { mkdirs() }
+            constsSrcPackageDirectory.resolve("OnlineGameSettings.kt").bufferedWriter().use {
                 it.append(
                     """
                     package dev.lounres.halfhat.client.consts
@@ -280,17 +289,51 @@ val generateClientConsts by tasks.registering {
             }
         }
         run {
-            val constsCommonMainDirectory = constsDirectory.resolve("webMain").apply { mkdirs() }
-            val constsCommonMainPackageDirectory = constsCommonMainDirectory.resolve("dev/lounres/halfhat/client/consts").apply { mkdirs() }
-            constsCommonMainPackageDirectory.resolve("WebPageSettings.kt").bufferedWriter().use {
+            val constsSrcDirectory = constsDirectory.resolve("webMain").apply { mkdirs() }
+            val constsSrcPackageDirectory = constsSrcDirectory.resolve("dev/lounres/halfhat/client/consts").apply { mkdirs() }
+            constsSrcPackageDirectory.resolve("WebPageSettings.kt").bufferedWriter().use {
                 it.append(
                     """
                     package dev.lounres.halfhat.client.consts
                     
                     
                     @Suppress("RedundantNullableReturnType")
-                    data object WebPageSettings {
-                        val base: String = ${if (local) rootProject.extra["halfhat.client.consts.dev.webPage.base"] else rootProject.extra["halfhat.client.consts.prod.webPage.base"]}
+                    expect object WebPageSettings {
+                        val base: String
+                    }
+                    """.trimIndent()
+                )
+            }
+        }
+        run {
+            val constsSrcDirectory = constsDirectory.resolve("jsMain").apply { mkdirs() }
+            val constsSrcPackageDirectory = constsSrcDirectory.resolve("dev/lounres/halfhat/client/consts").apply { mkdirs() }
+            constsSrcPackageDirectory.resolve("WebPageSettings.kt").bufferedWriter().use {
+                it.append(
+                    """
+                    package dev.lounres.halfhat.client.consts
+                    
+                    
+                    @Suppress("RedundantNullableReturnType")
+                    actual data object WebPageSettings {
+                        actual val base: String = ${if (local) rootProject.extra["halfhat.client.consts.dev.webPage.base.js"] else rootProject.extra["halfhat.client.consts.prod.webPage.base.js"]}
+                    }
+                    """.trimIndent()
+                )
+            }
+        }
+        run {
+            val constsSrcDirectory = constsDirectory.resolve("wasmJsMain").apply { mkdirs() }
+            val constsSrcPackageDirectory = constsSrcDirectory.resolve("dev/lounres/halfhat/client/consts").apply { mkdirs() }
+            constsSrcPackageDirectory.resolve("WebPageSettings.kt").bufferedWriter().use {
+                it.append(
+                    """
+                    package dev.lounres.halfhat.client.consts
+                    
+                    
+                    @Suppress("RedundantNullableReturnType")
+                    actual data object WebPageSettings {
+                        actual val base: String = ${if (local) rootProject.extra["halfhat.client.consts.dev.webPage.base.wasm"] else rootProject.extra["halfhat.client.consts.prod.webPage.base.wasm"]}
                     }
                     """.trimIndent()
                 )
