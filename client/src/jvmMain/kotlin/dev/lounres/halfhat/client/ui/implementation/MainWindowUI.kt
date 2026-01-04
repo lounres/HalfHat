@@ -61,6 +61,8 @@ import dev.lounres.halfhat.client.ui.utils.WorkInProgress
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
+import dev.lounres.halfhat.client.ui.theming.DarkTheme
+import dev.lounres.halfhat.client.ui.theming.HalfhatTheme
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.hub.subscribeAsState
 import kotlinx.coroutines.CoroutineScope
@@ -426,22 +428,26 @@ fun MainWindowUI(
     component: MainWindowComponent?
 ) {
     if (component != null)
-        Window(
-            title = "HalfHat — ${component.pageVariants.subscribeAsState().value.active.component.component.textName}",
-            icon = painterResource(Res.drawable.halfhat_logo),
-            state = component.windowState,
-            onCloseRequest = component.onWindowCloseRequest,
+        HalfhatTheme(
+            darkTheme = DarkTheme.Disabled,
         ) {
-            LifecycleController(
-                component.globalLifecycle,
-                component.windowState,
-                LocalWindowInfo.current,
-            )
-            
-            MainWindowContentUI(
-                component = component,
-                windowSizeClass = calculateWindowSizeClass()
-            )
+            Window(
+                title = "HalfHat — ${component.pageVariants.subscribeAsState().value.active.component.component.textName}",
+                icon = painterResource(Res.drawable.halfhat_logo),
+                state = component.windowState,
+                onCloseRequest = component.onWindowCloseRequest,
+            ) {
+                LifecycleController(
+                    component.globalLifecycle,
+                    component.windowState,
+                    LocalWindowInfo.current,
+                )
+                
+                MainWindowContentUI(
+                    component = component,
+                    windowSizeClass = calculateWindowSizeClass()
+                )
+            }
         }
     else
         Window(

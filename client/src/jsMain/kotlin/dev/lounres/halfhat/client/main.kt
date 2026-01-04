@@ -28,6 +28,8 @@ import dev.lounres.halfhat.client.ui.implementation.MainWindowContentUI
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import dev.lounres.halfhat.client.consts.WebPageSettings
 import dev.lounres.halfhat.client.ui.components.MainWindowComponent
+import dev.lounres.halfhat.client.ui.theming.DarkTheme
+import dev.lounres.halfhat.client.ui.theming.HalfhatTheme
 import kotlinx.browser.document
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -70,12 +72,16 @@ fun main() {
                 }
             }
             
-            if (allPreloaded) {
-                MainWindowContentUI(
-                    component = component!!,
-                    windowSizeClass = calculateWindowSizeClass()
-                )
-            } else {
+            if (allPreloaded)
+                HalfhatTheme(
+                    darkTheme = DarkTheme.Disabled,
+                ) {
+                    MainWindowContentUI(
+                        component = component!!,
+                        windowSizeClass = calculateWindowSizeClass()
+                    )
+                }
+            else
                 Box(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -93,7 +99,6 @@ fun main() {
                         )
                     }
                 }
-            }
         }
     }
 }
