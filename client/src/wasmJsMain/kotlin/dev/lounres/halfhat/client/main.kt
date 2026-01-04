@@ -15,6 +15,7 @@ import dev.lounres.halfhat.client.resources.Res
 import dev.lounres.halfhat.client.resources.allDrawableResources
 import dev.lounres.halfhat.client.utils.DefaultSounds
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
+import dev.lounres.halfhat.client.consts.WebPageSettings
 import dev.lounres.halfhat.client.ui.components.MainWindowComponent
 import dev.lounres.halfhat.client.ui.components.RealMainWindowComponent
 import dev.lounres.halfhat.client.ui.implementation.MainWindowContentUI
@@ -30,7 +31,7 @@ import org.jetbrains.compose.resources.preloadImageVector
 fun main() {
     configureWebResources {
         // Overrides the resource location
-        resourcePathMapping { path -> "./$path" }
+        resourcePathMapping { path -> "${WebPageSettings.base}$path" }
     }
     
     ComposeViewport(document.body!!) {

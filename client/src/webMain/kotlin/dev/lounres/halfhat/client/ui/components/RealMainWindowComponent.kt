@@ -108,7 +108,6 @@ suspend fun RealMainWindowComponent(
 ): RealMainWindowComponent {
     val globalLifecycle: MutableUIComponentLifecycle = newMutableUIComponentLifecycle()
     val navigationRoot = NavigationRoot { state, path ->
-        println(URL(WebPageSettings.base + (path?.path?.joinToString(separator = "/") ?: ""), location.origin))
         history.pushState(
             data = Json.encodeToString(state).toJsString(),
             unused = "",
