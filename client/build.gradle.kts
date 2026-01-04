@@ -350,6 +350,7 @@ val generateClientConsts by tasks.registering {
                                         overflow: hidden;
                                     }
                                 </style>
+                                <script src="skiko.js"> </script>
                             </head>
                             <body></body>
                             <script type="application/javascript" src="${base}HalfHat.js"></script>
@@ -397,7 +398,6 @@ val generateClientConsts by tasks.registering {
                                         overflow: hidden;
                                     }
                                 </style>
-                                <script src="skiko.js"> </script>
                             </head>
                             <body></body>
                             <script type="application/javascript" src="${base}HalfHat.js"></script>

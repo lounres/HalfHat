@@ -27,8 +27,6 @@ fun main(args: Array<String>) {
             get("${proxyPrefix}{path...}") {
                 val path = call.parameters.getAll("path")!!
 
-                println(path)
-
                 val webpackResponse = client.get("http://localhost:${webpackPort}/${path.joinToString(separator = "/")}")
 
                 if (webpackResponse.status.isSuccess()) {

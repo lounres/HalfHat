@@ -56,7 +56,7 @@ class RealMainWindowComponent(
     override val volumeOn: MutableStateFlow<Boolean>,
     override val language: MutableStateFlow<Language>,
     
-    override val pageVariants: KoneAsynchronousHub<ChildrenVariants<MainWindowComponent.Child.Kind, MainWindowComponent.Child>>,
+    override val pageVariants: KoneAsynchronousHub<ChildrenVariants<MainWindowComponent.Child.Kind, MainWindowComponent.Child, UIComponentContext>>,
     override val openPage: (page: MainWindowComponent.Child.Kind) -> Unit,
     
     override val menuList: KoneAsynchronousHub<KoneList<MainWindowComponent.MenuItem>>,
