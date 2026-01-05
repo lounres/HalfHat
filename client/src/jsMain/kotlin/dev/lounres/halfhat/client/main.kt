@@ -29,7 +29,6 @@ import dev.lounres.halfhat.client.ui.implementation.MainWindowContentUI
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import dev.lounres.halfhat.client.consts.WebPageSettings
 import dev.lounres.halfhat.client.ui.components.MainWindowComponent
-import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.halfhat.client.ui.theming.HalfhatTheme
 import kotlinx.browser.document
 import kotlinx.coroutines.joinAll
@@ -44,7 +43,6 @@ import org.jetbrains.skiko.wasm.onWasmReady
 fun main() {
     onWasmReady {
         configureWebResources {
-            // Overrides the resource location
             resourcePathMapping { path -> "${WebPageSettings.base}$path" }
         }
         

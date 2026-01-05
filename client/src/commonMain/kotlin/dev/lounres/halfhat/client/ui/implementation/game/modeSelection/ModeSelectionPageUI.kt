@@ -83,6 +83,9 @@ public fun ColumnScope.ModeSelectionPageUI(
             }
             IconButton(
                 onClick = component.onOnlineGameInfo,
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary,
+                ),
             ) {
                 Icon(
                     painter = painterResource(Res.drawable.gameModeDescriptionButton_dark_png_24dp),
@@ -110,6 +113,9 @@ public fun ColumnScope.ModeSelectionPageUI(
             }
             IconButton(
                 onClick = component.onLocalGameInfo,
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary,
+                ),
             ) {
                 Icon(
                     painter = painterResource(Res.drawable.gameModeDescriptionButton_dark_png_24dp),
@@ -137,6 +143,9 @@ public fun ColumnScope.ModeSelectionPageUI(
             }
             IconButton(
                 onClick = component.onDeviceGameInfo,
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary,
+                ),
             ) {
                 Icon(
                     painter = painterResource(Res.drawable.gameModeDescriptionButton_dark_png_24dp),
@@ -164,6 +173,9 @@ public fun ColumnScope.ModeSelectionPageUI(
             }
             IconButton(
                 onClick = component.onGameControllerInfo,
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary,
+                ),
             ) {
                 Icon(
                     painter = painterResource(Res.drawable.gameModeDescriptionButton_dark_png_24dp),
@@ -191,6 +203,9 @@ public fun ColumnScope.ModeSelectionPageUI(
             }
             IconButton(
                 onClick = component.onGameTimerInfo,
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary,
+                ),
             ) {
                 Icon(
                     painter = painterResource(Res.drawable.gameModeDescriptionButton_dark_png_24dp),

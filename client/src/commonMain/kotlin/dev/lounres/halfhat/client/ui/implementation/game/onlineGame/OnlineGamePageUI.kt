@@ -60,7 +60,7 @@ public fun ColumnScope.OnlineGamePageUI(
             Surface(
                 modifier = Modifier.weight(1f),
                 shape = CircleShape,
-                border = BorderStroke(1.dp, color = Color.Gray)
+                border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.outline)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp, horizontal = 16.dp),
@@ -91,7 +91,10 @@ public fun ColumnScope.OnlineGamePageUI(
             OutlinedIconButton(
                 enabled = false,
                 onClick = { /*TODO()*/ },
-                border = BorderStroke(1.dp, color = Color.Gray),
+                border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.outline),
+                colors = IconButtonDefaults.outlinedIconButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary,
+                ),
             ) {
                 Icon(
                     modifier = commonIconModifier,
