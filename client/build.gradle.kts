@@ -413,6 +413,15 @@ tasks.withType<KotlinCompilationTask<*>> {
     dependsOn(generateClientConsts)
 }
 
+listOf(
+    tasks.jsAggregateResources,
+    tasks.wasmJsProcessResources,
+).forEach {
+    it.configure {
+        dependsOn(generateClientConsts)
+    }
+}
+
 tasks.register("publishToProduction") {
     group = "publishing"
     description = "Publish the web application to production server"
