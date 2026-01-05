@@ -13,6 +13,7 @@ import dev.lounres.halfhat.client.ui.components.rules.RulesPageComponent
 import dev.lounres.halfhat.client.ui.components.settings.SettingsPageComponent
 import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.navigation.ChildrenVariants
+import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
@@ -31,7 +32,8 @@ import kotlinx.serialization.encoding.Encoder
 
 interface MainWindowComponent {
     val globalLifecycle: MutableUIComponentLifecycle
-
+    
+    val darkTheme: MutableStateFlow<DarkTheme>
     val volumeOn: MutableStateFlow<Boolean>
     val language: MutableStateFlow<Language>
 

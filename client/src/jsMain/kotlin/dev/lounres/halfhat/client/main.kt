@@ -9,6 +9,7 @@ import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,7 +75,7 @@ fun main() {
             
             if (allPreloaded)
                 HalfhatTheme(
-                    darkTheme = DarkTheme.Disabled,
+                    darkTheme = component!!.darkTheme.collectAsState().value,
                 ) {
                     MainWindowContentUI(
                         component = component!!,

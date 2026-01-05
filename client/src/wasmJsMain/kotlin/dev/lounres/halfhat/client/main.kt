@@ -62,7 +62,7 @@ fun main() {
         
         if (allPreloaded)
             HalfhatTheme(
-                darkTheme = DarkTheme.Disabled,
+                darkTheme = component!!.darkTheme.collectAsState().value,
             ) {
                 MainWindowContentUI(
                     component = component!!,

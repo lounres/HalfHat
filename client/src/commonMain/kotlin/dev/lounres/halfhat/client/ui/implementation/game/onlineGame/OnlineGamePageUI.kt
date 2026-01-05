@@ -60,7 +60,6 @@ public fun ColumnScope.OnlineGamePageUI(
             Surface(
                 modifier = Modifier.weight(1f),
                 shape = CircleShape,
-                color = Color.White,
                 border = BorderStroke(1.dp, color = Color.Gray)
             ) {
                 Row(

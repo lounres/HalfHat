@@ -1,5 +1,6 @@
 package dev.lounres.halfhat.client.ui.implementation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
@@ -44,6 +45,7 @@ import dev.lounres.halfhat.client.ui.implementation.settings.SettingsPageBadge
 import dev.lounres.halfhat.client.ui.implementation.settings.SettingsPageIcon
 import dev.lounres.halfhat.client.ui.utils.WorkInProgress
 import dev.lounres.halfhat.client.ui.components.MainWindowComponent
+import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.hub.subscribeAsState
 import kotlinx.coroutines.CoroutineScope
@@ -83,6 +85,24 @@ fun MainWindowDrawerSheetContentUI(
             },
             title = {},
             actions = {
+                val darkTheme by component.darkTheme.collectAsState()
+                IconButton(
+                    onClick = {
+                        component.darkTheme.value = DarkTheme.entries[(darkTheme.ordinal + 1) % DarkTheme.entries.size]
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            when (darkTheme) {
+                                DarkTheme.Enabled -> Res.drawable.darkThemeButton_dark_png_24dp
+                                DarkTheme.System -> Res.drawable.systemThemeButton_dark_png_24dp
+                                DarkTheme.Disabled -> Res.drawable.lightThemeButton_dark_png_24dp
+                            }
+                        ),
+                        modifier = Modifier.size(24.dp),
+                        contentDescription = "Switch dark theme mode"
+                    )
+                }
                 val volumeOn by component.volumeOn.collectAsState()
                 IconButton(
                     onClick = {
@@ -223,150 +243,154 @@ fun MainWindowContentUI(
     component: MainWindowComponent,
     windowSizeClass: WindowSizeClass,
 ) {
-    val openLanguageSelectionDialog = remember { mutableStateOf(false) }
-    if (openLanguageSelectionDialog.value)
-        Dialog(
-            onDismissRequest = {
-                openLanguageSelectionDialog.value = false
-            },
-        ) {
-            Card(
-                modifier = Modifier,
-                shape = RoundedCornerShape(16.dp),
+    Box(
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+    ) {
+        val openLanguageSelectionDialog = remember { mutableStateOf(false) }
+        if (openLanguageSelectionDialog.value)
+            Dialog(
+                onDismissRequest = {
+                    openLanguageSelectionDialog.value = false
+                },
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                Card(
+                    modifier = Modifier,
+                    shape = RoundedCornerShape(16.dp),
                 ) {
-                    Text(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        text = "Choose language",
-                        fontSize = 24.sp,
-                    )
-                    
-                    val language by component.language.collectAsState()
-                    Surface(
-                        shape = CircleShape,
-                        color = Color.Transparent,
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(IntrinsicSize.Min)
-                                .toggleable(
-                                    value = language == Language.English,
-                                    onValueChange = {
+                        Text(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            text = "Choose language",
+                            fontSize = 24.sp,
+                        )
+                        
+                        val language by component.language.collectAsState()
+                        Surface(
+                            shape = CircleShape,
+                            color = Color.Transparent,
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(IntrinsicSize.Min)
+                                    .toggleable(
+                                        value = language == Language.English,
+                                        onValueChange = {
+                                            component.language.value = Language.English
+                                            openLanguageSelectionDialog.value = false
+                                        },
+                                        role = Role.RadioButton,
+                                    )
+                                    .padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                RadioButton(
+                                    selected = language == Language.English,
+                                    onClick = {
                                         component.language.value = Language.English
                                         openLanguageSelectionDialog.value = false
                                     },
-                                    role = Role.RadioButton,
                                 )
-                                .padding(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            RadioButton(
-                                selected = language == Language.English,
-                                onClick = {
-                                    component.language.value = Language.English
-                                    openLanguageSelectionDialog.value = false
-                                },
-                            )
-                            Text(text = "English")
+                                Text(text = "English")
+                            }
                         }
-                    }
-                    Surface(
-                        shape = CircleShape,
-                        color = Color.Transparent,
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(IntrinsicSize.Min)
-                                .toggleable(
+                        Surface(
+                            shape = CircleShape,
+                            color = Color.Transparent,
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(IntrinsicSize.Min)
+                                    .toggleable(
+                                        enabled = false,
+                                        value = language == Language.Russian,
+                                        onValueChange = {
+                                            component.language.value = Language.Russian
+                                            openLanguageSelectionDialog.value = false
+                                        },
+                                        role = Role.RadioButton,
+                                    )
+                                    .padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                RadioButton(
                                     enabled = false,
-                                    value = language == Language.Russian,
-                                    onValueChange = {
+                                    selected = language == Language.Russian,
+                                    onClick = {
                                         component.language.value = Language.Russian
                                         openLanguageSelectionDialog.value = false
                                     },
-                                    role = Role.RadioButton,
                                 )
-                                .padding(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            RadioButton(
-                                enabled = false,
-                                selected = language == Language.Russian,
-                                onClick = {
-                                    component.language.value = Language.Russian
-                                    openLanguageSelectionDialog.value = false
-                                },
-                            )
-                            Text(text = "Русский")
+                                Text(text = "Русский")
+                            }
                         }
-                    }
-                    
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(
-                            onClick = { openLanguageSelectionDialog.value = false }
+                        
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
                         ) {
-                            Text(text = "Cancel")
+                            TextButton(
+                                onClick = { openLanguageSelectionDialog.value = false }
+                            ) {
+                                Text(text = "Cancel")
+                            }
                         }
                     }
                 }
             }
-        }
-    
-    val windowCoroutineScope = rememberCoroutineScope()
-    if (windowSizeClass.widthSizeClass <= permanentDrawerAfterWindowWidthSizeClass) {
-        val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-        ModalNavigationDrawer(
-            drawerState = drawerState,
-            drawerContent = {
-                ModalDrawerSheet {
-                    MainWindowDrawerSheetContentUI(
-                        component = component,
-                        windowSizeClass = windowSizeClass,
-                        openLanguageSelectionDialog = openLanguageSelectionDialog,
-                        windowCoroutineScope = windowCoroutineScope,
-                        drawerState = drawerState,
-                    )
-                }
-            }
-        ) {
-            MainWindowDrawerContentUI(
-                component = component,
-                windowSizeClass = windowSizeClass,
-                windowCoroutineScope = windowCoroutineScope,
+        
+        val windowCoroutineScope = rememberCoroutineScope()
+        if (windowSizeClass.widthSizeClass <= permanentDrawerAfterWindowWidthSizeClass) {
+            val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+            ModalNavigationDrawer(
                 drawerState = drawerState,
-            )
-        }
-    } else {
-        val drawerState = rememberDrawerState(initialValue = DrawerValue.Open)
-        PermanentNavigationDrawer(
-            drawerContent = {
-                PermanentDrawerSheet {
-                    MainWindowDrawerSheetContentUI(
-                        component = component,
-                        windowSizeClass = windowSizeClass,
-                        openLanguageSelectionDialog = openLanguageSelectionDialog,
-                        windowCoroutineScope = windowCoroutineScope,
-                        drawerState = drawerState,
-                    )
+                drawerContent = {
+                    ModalDrawerSheet {
+                        MainWindowDrawerSheetContentUI(
+                            component = component,
+                            windowSizeClass = windowSizeClass,
+                            openLanguageSelectionDialog = openLanguageSelectionDialog,
+                            windowCoroutineScope = windowCoroutineScope,
+                            drawerState = drawerState,
+                        )
+                    }
                 }
+            ) {
+                MainWindowDrawerContentUI(
+                    component = component,
+                    windowSizeClass = windowSizeClass,
+                    windowCoroutineScope = windowCoroutineScope,
+                    drawerState = drawerState,
+                )
             }
-        ) {
-            MainWindowDrawerContentUI(
-                component = component,
-                windowSizeClass = windowSizeClass,
-                windowCoroutineScope = windowCoroutineScope,
-                drawerState = drawerState,
-            )
+        } else {
+            val drawerState = rememberDrawerState(initialValue = DrawerValue.Open)
+            PermanentNavigationDrawer(
+                drawerContent = {
+                    PermanentDrawerSheet {
+                        MainWindowDrawerSheetContentUI(
+                            component = component,
+                            windowSizeClass = windowSizeClass,
+                            openLanguageSelectionDialog = openLanguageSelectionDialog,
+                            windowCoroutineScope = windowCoroutineScope,
+                            drawerState = drawerState,
+                        )
+                    }
+                }
+            ) {
+                MainWindowDrawerContentUI(
+                    component = component,
+                    windowSizeClass = windowSizeClass,
+                    windowCoroutineScope = windowCoroutineScope,
+                    drawerState = drawerState,
+                )
+            }
         }
     }
 }

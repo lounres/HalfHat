@@ -27,6 +27,7 @@ import dev.lounres.halfhat.client.components.navigation.NavigationControllerSpec
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationRoot
 import dev.lounres.halfhat.client.components.navigation.controller.setUpNavigationControl
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariantsNode
+import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.list.KoneList
@@ -53,6 +54,7 @@ class RealMainWindowComponent(
     override val windowState: WindowState = WindowState(),
     override val onWindowCloseRequest: () -> Unit = {},
     
+    override val darkTheme: MutableStateFlow<DarkTheme>,
     override val volumeOn: MutableStateFlow<Boolean>,
     override val language: MutableStateFlow<Language>,
     
@@ -194,6 +196,7 @@ suspend fun RealMainWindowComponent(
         windowState = windowState,
         onWindowCloseRequest = onWindowCloseRequest,
         
+        darkTheme = MutableStateFlow(DarkTheme.System), // TODO: Move to savable settings
         volumeOn = volumeOn,
         language = language,
         

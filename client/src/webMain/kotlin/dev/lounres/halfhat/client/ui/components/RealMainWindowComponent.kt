@@ -31,6 +31,7 @@ import dev.lounres.halfhat.client.components.navigation.controller.navigationCon
 import dev.lounres.halfhat.client.components.navigation.controller.setUpNavigationControl
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariantsNode
 import dev.lounres.halfhat.client.consts.WebPageSettings
+import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.iterables.isEmpty
@@ -83,6 +84,7 @@ import kotlin.js.toJsString
 class RealMainWindowComponent(
     override val globalLifecycle: MutableUIComponentLifecycle,
     
+    override val darkTheme: MutableStateFlow<DarkTheme>,
     override val volumeOn: MutableStateFlow<Boolean>,
     override val language: MutableStateFlow<Language>,
     
@@ -317,6 +319,7 @@ suspend fun RealMainWindowComponent(
     return RealMainWindowComponent(
         globalLifecycle = globalLifecycle,
         
+        darkTheme = MutableStateFlow(DarkTheme.System), // TODO: Move to savable settings
         volumeOn = volumeOn,
         language = language,
         

@@ -236,15 +236,16 @@ private val highContrastDarkColorScheme = darkColorScheme(
 )
 
 enum class DarkTheme {
-    Enabled {
-        override val isDark: Boolean @Composable get() = true
+    Disabled {
+        override val isDark: Boolean @Composable get() = false
     },
     System {
         override val isDark: Boolean @Composable get() = isSystemInDarkTheme()
     },
-    Disabled {
-        override val isDark: Boolean @Composable get() = false
-    };
+    Enabled {
+        override val isDark: Boolean @Composable get() = true
+    },
+    ;
     
     abstract val isDark: Boolean @Composable get
 }
