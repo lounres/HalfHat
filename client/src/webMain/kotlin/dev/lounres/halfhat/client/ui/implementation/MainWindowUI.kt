@@ -69,6 +69,9 @@ fun MainWindowDrawerSheetContentUI(
             .verticalScroll(rememberScrollState()),
     ) {
         TopAppBar(
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+            ),
             navigationIcon = {
                 if (windowSizeClass.widthSizeClass <= permanentDrawerAfterWindowWidthSizeClass)
                     IconButton(
@@ -187,53 +190,58 @@ fun MainWindowDrawerContentUI(
     windowCoroutineScope: CoroutineScope,
     drawerState: DrawerState,
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        val pageVariants by component.pageVariants.subscribeAsState()
-        val openedPage = pageVariants.active.component
-        CenterAlignedTopAppBar(
-            navigationIcon = {
-                if (windowSizeClass.widthSizeClass <= permanentDrawerAfterWindowWidthSizeClass)
-                    IconButton(
-                        onClick = {
-                            windowCoroutineScope.launch { drawerState.open() }
+    Surface {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            val pageVariants by component.pageVariants.subscribeAsState()
+            val openedPage = pageVariants.active.component
+            CenterAlignedTopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                ),
+                navigationIcon = {
+                    if (windowSizeClass.widthSizeClass <= permanentDrawerAfterWindowWidthSizeClass)
+                        IconButton(
+                            onClick = {
+                                windowCoroutineScope.launch { drawerState.open() }
+                            }
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.openMenuButton_dark_png_24dp),
+                                modifier = Modifier.size(24.dp),
+                                contentDescription = "Open menu"
+                            )
                         }
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.openMenuButton_dark_png_24dp),
-                            modifier = Modifier.size(24.dp),
-                            contentDescription = "Open menu"
-                        )
+                },
+                title = {
+                    Text(text = openedPage.component.textName)
+                },
+                actions = {
+                    when (openedPage) {
+                        is MainWindowComponent.Child.Primary.Home -> {}
+                        is MainWindowComponent.Child.Primary.Game -> GamePageActionsUI(openedPage.component)
+                        is MainWindowComponent.Child.Secondary.News -> {}
+                        is MainWindowComponent.Child.Secondary.Rules -> {}
+                        is MainWindowComponent.Child.Secondary.FAQ -> {}
+                        is MainWindowComponent.Child.Secondary.GameHistory -> {}
+                        is MainWindowComponent.Child.Secondary.Settings -> {}
+                        is MainWindowComponent.Child.Secondary.Feedback -> {}
+                        is MainWindowComponent.Child.Secondary.About -> {}
                     }
-            },
-            title = {
-                Text(text = openedPage.component.textName)
-            },
-            actions = {
-                when (openedPage) {
-                    is MainWindowComponent.Child.Primary.Home -> {}
-                    is MainWindowComponent.Child.Primary.Game -> GamePageActionsUI(openedPage.component)
-                    is MainWindowComponent.Child.Secondary.News -> {}
-                    is MainWindowComponent.Child.Secondary.Rules -> {}
-                    is MainWindowComponent.Child.Secondary.FAQ -> {}
-                    is MainWindowComponent.Child.Secondary.GameHistory -> {}
-                    is MainWindowComponent.Child.Secondary.Settings -> {}
-                    is MainWindowComponent.Child.Secondary.Feedback -> {}
-                    is MainWindowComponent.Child.Secondary.About -> {}
-                }
-            },
-        )
-        when (openedPage) {
-            is MainWindowComponent.Child.Primary.Home -> HomePageUI(openedPage.component)
-            is MainWindowComponent.Child.Primary.Game -> GamePageUI(openedPage.component)
-            is MainWindowComponent.Child.Secondary.News -> WorkInProgress()
-            is MainWindowComponent.Child.Secondary.Rules -> WorkInProgress()
-            is MainWindowComponent.Child.Secondary.FAQ -> FAQPageUI(openedPage.component)
-            is MainWindowComponent.Child.Secondary.GameHistory -> WorkInProgress()
-            is MainWindowComponent.Child.Secondary.Settings -> WorkInProgress()
-            is MainWindowComponent.Child.Secondary.Feedback -> WorkInProgress()
-            is MainWindowComponent.Child.Secondary.About -> AboutPageUI()
+                },
+            )
+            when (openedPage) {
+                is MainWindowComponent.Child.Primary.Home -> HomePageUI(openedPage.component)
+                is MainWindowComponent.Child.Primary.Game -> GamePageUI(openedPage.component)
+                is MainWindowComponent.Child.Secondary.News -> WorkInProgress()
+                is MainWindowComponent.Child.Secondary.Rules -> WorkInProgress()
+                is MainWindowComponent.Child.Secondary.FAQ -> FAQPageUI(openedPage.component)
+                is MainWindowComponent.Child.Secondary.GameHistory -> WorkInProgress()
+                is MainWindowComponent.Child.Secondary.Settings -> WorkInProgress()
+                is MainWindowComponent.Child.Secondary.Feedback -> WorkInProgress()
+                is MainWindowComponent.Child.Secondary.About -> AboutPageUI()
+            }
         }
     }
 }
@@ -351,7 +359,9 @@ fun MainWindowContentUI(
             ModalNavigationDrawer(
                 drawerState = drawerState,
                 drawerContent = {
-                    ModalDrawerSheet {
+                    ModalDrawerSheet(
+                        drawerContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ) {
                         MainWindowDrawerSheetContentUI(
                             component = component,
                             windowSizeClass = windowSizeClass,
@@ -373,7 +383,9 @@ fun MainWindowContentUI(
             val drawerState = rememberDrawerState(initialValue = DrawerValue.Open)
             PermanentNavigationDrawer(
                 drawerContent = {
-                    PermanentDrawerSheet {
+                    PermanentDrawerSheet(
+                        drawerContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ) {
                         MainWindowDrawerSheetContentUI(
                             component = component,
                             windowSizeClass = windowSizeClass,
