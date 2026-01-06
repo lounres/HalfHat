@@ -103,9 +103,9 @@ suspend fun RealMainWindowComponent(
     val navigationRoot = NavigationRoot { state, path -> /* TODO */ }
     val settings = KoneMutableAsynchronousHub(
         Settings {
-            @Suppress("UNCHECKED_CAST")
-            for ((key, value) in settingsDefaults.values) (key as RegistryKey<Any?>) correspondsTo value
 //            setFrom(...)
+            @Suppress("UNCHECKED_CAST")
+            for ((key, value) in settingsDefaults.values) if (key !in this) (key as RegistryKey<Any?>) correspondsTo value
         }
     )
     val globalComponentContext = UIComponentContext {

@@ -20,6 +20,7 @@ import dev.lounres.halfhat.client.ui.components.MainWindowComponent
 import dev.lounres.halfhat.client.ui.components.RealMainWindowComponent
 import dev.lounres.halfhat.client.ui.implementation.MainWindowContentUI
 import dev.lounres.halfhat.client.ui.theming.HalfhatTheme
+import dev.lounres.kone.hub.subscribeAsState
 import kotlinx.browser.document
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -60,7 +61,7 @@ fun main() {
         
         if (allPreloaded)
             HalfhatTheme(
-                darkTheme = component!!.darkTheme.collectAsState().value,
+                darkTheme = component!!.darkTheme.subscribeAsState().value,
             ) {
                 MainWindowContentUI(
                     component = component!!,

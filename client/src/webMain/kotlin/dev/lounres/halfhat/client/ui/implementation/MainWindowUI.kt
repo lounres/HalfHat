@@ -47,6 +47,7 @@ import dev.lounres.halfhat.client.ui.utils.WorkInProgress
 import dev.lounres.halfhat.client.ui.components.MainWindowComponent
 import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.kone.collections.iterables.next
+import dev.lounres.kone.hub.set
 import dev.lounres.kone.hub.subscribeAsState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -68,6 +69,7 @@ fun MainWindowDrawerSheetContentUI(
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
     ) {
+        val coroutineScope = rememberCoroutineScope()
         TopAppBar(
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.Transparent,
@@ -88,10 +90,12 @@ fun MainWindowDrawerSheetContentUI(
             },
             title = {},
             actions = {
-                val darkTheme by component.darkTheme.collectAsState()
+                val darkTheme by component.darkTheme.subscribeAsState()
                 IconButton(
                     onClick = {
-                        component.darkTheme.value = DarkTheme.entries[(darkTheme.ordinal + 1) % DarkTheme.entries.size]
+                        coroutineScope.launch {
+                            component.darkTheme.set(DarkTheme.entries[(darkTheme.ordinal + 1) % DarkTheme.entries.size])
+                        }
                     }
                 ) {
                     Icon(
@@ -106,10 +110,12 @@ fun MainWindowDrawerSheetContentUI(
                         contentDescription = "Switch dark theme mode"
                     )
                 }
-                val volumeOn by component.volumeOn.collectAsState()
+                val volumeOn by component.volumeOn.subscribeAsState()
                 IconButton(
                     onClick = {
-                        component.volumeOn.value = !volumeOn
+                        coroutineScope.launch {
+                            component.volumeOn.set(!volumeOn)
+                        }
                     }
                 ) {
                     Icon(
@@ -276,7 +282,8 @@ fun MainWindowContentUI(
                             fontSize = 24.sp,
                         )
                         
-                        val language by component.language.collectAsState()
+                        val coroutineScope = rememberCoroutineScope()
+                        val language by component.language.subscribeAsState()
                         Surface(
                             shape = CircleShape,
                             color = Color.Transparent,
@@ -288,8 +295,10 @@ fun MainWindowContentUI(
                                     .toggleable(
                                         value = language == Language.English,
                                         onValueChange = {
-                                            component.language.value = Language.English
-                                            openLanguageSelectionDialog.value = false
+                                            coroutineScope.launch {
+                                                component.language.set(Language.English)
+                                                openLanguageSelectionDialog.value = false
+                                            }
                                         },
                                         role = Role.RadioButton,
                                     )
@@ -299,8 +308,10 @@ fun MainWindowContentUI(
                                 RadioButton(
                                     selected = language == Language.English,
                                     onClick = {
-                                        component.language.value = Language.English
-                                        openLanguageSelectionDialog.value = false
+                                        coroutineScope.launch {
+                                            component.language.set(Language.English)
+                                            openLanguageSelectionDialog.value = false
+                                        }
                                     },
                                 )
                                 Text(text = "English")
@@ -318,8 +329,10 @@ fun MainWindowContentUI(
                                         enabled = false,
                                         value = language == Language.Russian,
                                         onValueChange = {
-                                            component.language.value = Language.Russian
-                                            openLanguageSelectionDialog.value = false
+                                            coroutineScope.launch {
+                                                component.language.set(Language.Russian)
+                                                openLanguageSelectionDialog.value = false
+                                            }
                                         },
                                         role = Role.RadioButton,
                                     )
@@ -330,8 +343,10 @@ fun MainWindowContentUI(
                                     enabled = false,
                                     selected = language == Language.Russian,
                                     onClick = {
-                                        component.language.value = Language.Russian
-                                        openLanguageSelectionDialog.value = false
+                                        coroutineScope.launch {
+                                            component.language.set(Language.Russian)
+                                            openLanguageSelectionDialog.value = false
+                                        }
                                     },
                                 )
                                 Text(text = "Русский")

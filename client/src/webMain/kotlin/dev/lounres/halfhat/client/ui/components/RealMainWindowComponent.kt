@@ -31,7 +31,14 @@ import dev.lounres.halfhat.client.components.navigation.controller.navigationCon
 import dev.lounres.halfhat.client.components.navigation.controller.setUpNavigationControl
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariantsNode
 import dev.lounres.halfhat.client.consts.WebPageSettings
+import dev.lounres.halfhat.client.logic.settings.LanguageKey
+import dev.lounres.halfhat.client.logic.settings.VolumeOnKey
+import dev.lounres.halfhat.client.logic.settings.language
+import dev.lounres.halfhat.client.logic.settings.volumeOn
+import dev.lounres.halfhat.client.storage.settings.Settings
+import dev.lounres.halfhat.client.storage.settings.SettingsSerializer
 import dev.lounres.halfhat.client.ui.theming.DarkTheme
+import dev.lounres.halfhat.client.ui.theming.darkTheme
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.iterables.isEmpty
@@ -55,8 +62,11 @@ import dev.lounres.kone.collections.utils.map
 import dev.lounres.kone.collections.utils.plusAssign
 import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
+import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
 import dev.lounres.kone.hub.map
+import dev.lounres.kone.registry.RegistryKey
 import dev.lounres.kone.registry.correspondsTo
+import dev.lounres.kone.registry.serialization.RegistrySerializableKey
 import dev.lounres.kone.scope
 import js.array.component1
 import js.array.component2
@@ -74,6 +84,7 @@ import web.console.console
 import web.events.EventHandler
 import web.history.history
 import web.location.location
+import web.storage.localStorage
 import web.url.URL
 import web.url.URLSearchParams
 import web.window.window
@@ -84,9 +95,9 @@ import kotlin.js.toJsString
 class RealMainWindowComponent(
     override val globalLifecycle: MutableUIComponentLifecycle,
     
-    override val darkTheme: MutableStateFlow<DarkTheme>,
-    override val volumeOn: MutableStateFlow<Boolean>,
-    override val language: MutableStateFlow<Language>,
+    override val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>,
+    override val volumeOn: KoneMutableAsynchronousHubView<Boolean, *>,
+    override val language: KoneMutableAsynchronousHubView<Language, *>,
     
     override val pageVariants: KoneAsynchronousHub<ChildrenVariants<MainWindowComponent.Child.Kind, MainWindowComponent.Child, UIComponentContext>>,
     override val openPage: (page: MainWindowComponent.Child.Kind) -> Unit,
@@ -99,6 +110,19 @@ class RealMainWindowComponent(
         data class Child(val child: MainWindowComponent.Child.Kind): MenuItemByKind
     }
 }
+
+data class SettingDescription<T>(
+    val key: RegistrySerializableKey<T>,
+    val value: T,
+)
+
+val settingsDefaults: Map<String, SettingDescription<*>> = mapOf(
+    "DarkTheme" to SettingDescription(DarkTheme.Key, DarkTheme.System),
+    "VolumeOn" to SettingDescription(VolumeOnKey, true),
+    "Language" to SettingDescription(LanguageKey, Language.English),
+)
+
+val settingsSerializer = SettingsSerializer(settingsDefaults.mapValues { it.value.key })
 
 suspend fun RealMainWindowComponent(
 //    localDictionariesRegistry: LocalDictionariesRegistry,
@@ -125,10 +149,25 @@ suspend fun RealMainWindowComponent(
             }
         )
     }
+    val settings = KoneMutableAsynchronousHub(
+        Settings {
+            localStorage.getItem("settings")?.let { setFrom(Json.decodeFromString(settingsSerializer, it)) }
+            @Suppress("UNCHECKED_CAST")
+            for ((key, value) in settingsDefaults.values) if (key !in this) (key as RegistryKey<Any?>) correspondsTo value
+        }
+    )
     val globalComponentContext = UIComponentContext {
         UIComponentLifecycleKey correspondsTo globalLifecycle
         LoggerKey correspondsTo logger
+        @Suppress("JSON_FORMAT_REDUNDANT_DEFAULT")
+        setUpNavigationControl(
+            navigationRoot = navigationRoot,
+            stringFormat = Json,
+        )
+        
         DeviceGameWordsProviderRegistryKey correspondsTo DeviceGameWordsProviderRegistry
+        Settings.Key correspondsTo settings
+        // TODO: Move the following to settings.
         DeviceGameDefaultSettingsKey correspondsTo KoneMutableAsynchronousHub(
             GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>(
                 preparationTimeSeconds = 3u,
@@ -141,16 +180,8 @@ suspend fun RealMainWindowComponent(
                 wordsSource = GameStateMachine.WordsSource.Custom(DeviceGameWordsProviderID.Local("medium"))
             )
         )
-        @Suppress("JSON_FORMAT_REDUNDANT_DEFAULT")
-        setUpNavigationControl(
-            navigationRoot = navigationRoot,
-            stringFormat = Json,
-        )
     }
     val coroutineScope = globalComponentContext.coroutineScope(Dispatchers.Default)
-    
-    val volumeOn: MutableStateFlow<Boolean> = MutableStateFlow(initialVolumeOn)
-    val language: MutableStateFlow<Language> = MutableStateFlow(initialLanguage)
     
     val pageVariants =
         globalComponentContext.uiChildrenDefaultVariantsNode(
@@ -204,7 +235,6 @@ suspend fun RealMainWindowComponent(
                     MainWindowComponent.Child.Primary.Game(
                         RealGamePageComponent(
                             componentContext = componentContext,
-                            volumeOn = volumeOn
                         )
                     )
                 MainWindowComponent.Child.Kind.Secondary.News ->
@@ -319,9 +349,9 @@ suspend fun RealMainWindowComponent(
     return RealMainWindowComponent(
         globalLifecycle = globalLifecycle,
         
-        darkTheme = MutableStateFlow(DarkTheme.System), // TODO: Move to savable settings
-        volumeOn = volumeOn,
-        language = language,
+        darkTheme = settings.darkTheme,
+        volumeOn = settings.volumeOn,
+        language = settings.language,
         
         pageVariants = pageVariants.hub,
         openPage = openPage,
