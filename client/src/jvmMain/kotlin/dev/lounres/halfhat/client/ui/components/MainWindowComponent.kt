@@ -21,7 +21,7 @@ import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.collections.utils.firstThat
 import dev.lounres.kone.collections.utils.flatten
 import dev.lounres.kone.hub.KoneAsynchronousHub
-import kotlinx.coroutines.flow.MutableStateFlow
+import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -37,9 +37,9 @@ interface MainWindowComponent {
     val globalLifecycle: MutableUIComponentLifecycle
     val windowState: WindowState
 
-    val darkTheme: MutableStateFlow<DarkTheme>
-    val volumeOn: MutableStateFlow<Boolean>
-    val language: MutableStateFlow<Language>
+    val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>
+    val volumeOn: KoneMutableAsynchronousHubView<Boolean, *>
+    val language: KoneMutableAsynchronousHubView<Language, *>
 
     val pageVariants: KoneAsynchronousHub<ChildrenVariants<Child.Kind, Child, UIComponentContext>>
     val openPage: (page: Child.Kind) -> Unit

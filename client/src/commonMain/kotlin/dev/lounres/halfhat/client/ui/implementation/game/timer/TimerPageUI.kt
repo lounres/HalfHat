@@ -5,6 +5,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -16,8 +17,9 @@ import dev.lounres.halfhat.client.resources.Res
 import dev.lounres.halfhat.client.resources.exitGameTimerButton_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.game.timer.TimerPageComponent
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
+import dev.lounres.kone.hub.set
 import dev.lounres.kone.hub.subscribeAsState
-import dev.lounres.kone.hub.value
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.min
 
@@ -62,6 +64,8 @@ public fun TimerPageUI(
                         val explanationTime by component.explanationTimeSetting.subscribeAsState()
                         val lastGuessTime by component.lastGuessTimeSetting.subscribeAsState()
                         
+                        val coroutineScope = rememberCoroutineScope()
+                        
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth(),
@@ -72,8 +76,10 @@ public fun TimerPageUI(
                                 modifier = Modifier.fillMaxWidth(),
                                 value = preparationTime,
                                 onValueChange = { input ->
-                                    component.preparationTimeSetting.value =
-                                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else it.dropWhile { d -> d == '0' }.ifBlank { "0" }.let { if (it.length > 3) "999" else it } }
+                                    coroutineScope.launch {
+                                        component.preparationTimeSetting
+                                            .set(input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else it.dropWhile { d -> d == '0' }.ifBlank { "0" }.let { if (it.length > 3) "999" else it } })
+                                    }
                                 },
                                 label = { Text(text = "Countdown duration") },
                                 suffix = { Text(text = " seconds") },
@@ -96,8 +102,10 @@ public fun TimerPageUI(
                                 modifier = Modifier.fillMaxWidth(),
                                 value = explanationTime,
                                 onValueChange = { input ->
-                                    component.explanationTimeSetting.value =
-                                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else it.dropWhile { d -> d == '0' }.ifBlank { "0" }.let { if (it.length > 3) "999" else it } }
+                                    coroutineScope.launch {
+                                        component.explanationTimeSetting
+                                            .set(input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else it.dropWhile { d -> d == '0' }.ifBlank { "0" }.let { if (it.length > 3) "999" else it } })
+                                    }
                                 },
                                 label = { Text(text = "Explanation duration") },
                                 suffix = { Text(text = " seconds") },
@@ -120,8 +128,10 @@ public fun TimerPageUI(
                                 modifier = Modifier.fillMaxWidth(),
                                 value = lastGuessTime,
                                 onValueChange = { input ->
-                                    component.lastGuessTimeSetting.value =
-                                        input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else it.dropWhile { d -> d == '0' }.ifBlank { "0" }.let { if (it.length > 3) "999" else it } }
+                                    coroutineScope.launch {
+                                        component.lastGuessTimeSetting
+                                            .set(input.filter { it.isDigit() }.let { if (it.isEmpty()) "" else it.dropWhile { d -> d == '0' }.ifBlank { "0" }.let { if (it.length > 3) "999" else it } })
+                                    }
                                 },
                                 label = { Text(text = "Last guess duration") },
                                 suffix = { Text(text = " seconds") },

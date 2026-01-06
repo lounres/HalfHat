@@ -9,13 +9,13 @@ import dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.round
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.roundPreparation.RoundPreparationComponent
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.roundWaiting.RoundWaitingComponent
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
-import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.KoneAsynchronousHubView
 
 
 public interface GameScreenComponent {
     public val onExitGame: () -> Unit
     
-    public val childSlot: KoneAsynchronousHub<ChildrenSlot<*, Child, UIComponentContext>>
+    public val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, Child, UIComponentContext>, *>
     
     public sealed interface Child {
         public class Loading(public val component: LoadingComponent) : Child

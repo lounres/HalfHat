@@ -6,9 +6,7 @@ import dev.lounres.halfhat.client.logic.components.game.timer.TimerState
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.buildLogicChildOnRunning
 import dev.lounres.kone.hub.KoneAsynchronousHub
-import dev.lounres.kone.hub.KoneMutableBlockingHub
-import dev.lounres.kone.hub.value
-import kotlinx.coroutines.flow.StateFlow
+import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 
 
 public class RealTimerPageComponent(
@@ -21,9 +19,9 @@ public class RealTimerPageComponent(
     
     override val timerState: KoneAsynchronousHub<TimerState> get() = timerComponent.timerState
     
-    override val preparationTimeSetting: KoneMutableBlockingHub<String> = KoneMutableBlockingHub(initialPreparationTimeSetting.toString())
-    override val explanationTimeSetting: KoneMutableBlockingHub<String> = KoneMutableBlockingHub(initialExplanationTimeSetting.toString())
-    override val lastGuessTimeSetting: KoneMutableBlockingHub<String> = KoneMutableBlockingHub(initialLastGuessTimeSetting.toString())
+    override val preparationTimeSetting: KoneMutableAsynchronousHub<String> = KoneMutableAsynchronousHub(initialPreparationTimeSetting.toString())
+    override val explanationTimeSetting: KoneMutableAsynchronousHub<String> = KoneMutableAsynchronousHub(initialExplanationTimeSetting.toString())
+    override val lastGuessTimeSetting: KoneMutableAsynchronousHub<String> = KoneMutableAsynchronousHub(initialLastGuessTimeSetting.toString())
     
     override val onStartTimer: () -> Unit = onStartTimer@{
         timerComponent.startTimer(
@@ -40,7 +38,6 @@ public class RealTimerPageComponent(
 public suspend fun RealTimerPageComponent(
     componentContext: UIComponentContext,
     onExitTimer: () -> Unit,
-    volumeOn: StateFlow<Boolean>,
     initialPreparationTimeSetting: UInt,
     initialExplanationTimeSetting: UInt,
     initialLastGuessTimeSetting: UInt,
@@ -50,7 +47,6 @@ public suspend fun RealTimerPageComponent(
         componentContext.buildLogicChildOnRunning {
             RealTimerComponent(
                 componentContext = it,
-                volumeOn = volumeOn,
             )
         }
     

@@ -6,6 +6,8 @@ import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.lifecycle.LogicComponentLifecycleState
 import dev.lounres.halfhat.client.components.lifecycle.lifecycle
+import dev.lounres.halfhat.client.logic.settings.volumeOn
+import dev.lounres.halfhat.client.storage.settings.settings
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.hub.set
 import kotlinx.atomicfu.locks.ReentrantLock
@@ -14,13 +16,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 
 public class RealTimerComponent(
     private val componentContext: LogicComponentContext,
-    public val volumeOn: StateFlow<Boolean>,
 ) : TimerComponent {
     private val coroutineScope: CoroutineScope = componentContext.coroutineScope(Dispatchers.Default)
     
@@ -45,7 +45,7 @@ public class RealTimerComponent(
                     val oldTimerState = timerState.value
                     timerState.set(newTimerState)
                     
-                    if (volumeOn.value)
+                    if (componentContext.settings.value.volumeOn)
                         when(newTimerState) {
                             is TimerState.Preparation ->
                                 if (oldTimerState !is TimerState.Preparation || oldTimerState.millisecondsLeft.let { if (it % 1000u != 0u) it / 1000u + 1u else it / 1000u } != newTimerState.millisecondsLeft.let { if (it % 1000u != 0u) it / 1000u + 1u else it / 1000u })

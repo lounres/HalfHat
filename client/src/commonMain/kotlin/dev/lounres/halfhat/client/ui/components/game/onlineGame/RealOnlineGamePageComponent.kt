@@ -12,10 +12,12 @@ import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.navigation.ChildrenStack
 import dev.lounres.halfhat.client.components.navigation.controller.navigationContext
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStackNode
+import dev.lounres.halfhat.client.logic.settings.volumeOn
+import dev.lounres.halfhat.client.storage.settings.settings
 import dev.lounres.komponentual.navigation.replaceCurrent
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
-import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.KoneAsynchronousHubView
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.hub.set
 import kotlinx.coroutines.CoroutineScope
@@ -27,7 +29,7 @@ import kotlinx.coroutines.launch
 public class RealOnlineGamePageComponent(
     override val onExitOnlineGameMode: () -> Unit,
     private val onlineGameComponent: OnlineGameComponent,
-    override val childStack: KoneAsynchronousHub<ChildrenStack<*, OnlineGamePageComponent.Child, UIComponentContext>>,
+    override val childStack: KoneAsynchronousHubView<ChildrenStack<*, OnlineGamePageComponent.Child, UIComponentContext>, *>,
 ) : OnlineGamePageComponent {
     override val connectionStatus: StateFlow<ConnectionStatus> get() = onlineGameComponent.connectionStatus
     
@@ -39,13 +41,12 @@ public class RealOnlineGamePageComponent(
 
 public suspend fun RealOnlineGamePageComponent(
     componentContext: UIComponentContext,
-    volumeOn: StateFlow<Boolean>,
     onExitOnlineGameMode: () -> Unit,
 ): RealOnlineGamePageComponent {
     val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
     val onlineGameComponent: OnlineGameComponent =
         componentContext.buildLogicChildOnRunning {
-            RealOnlineGameComponent(it, volumeOn)
+            RealOnlineGameComponent(it, componentContext.settings.volumeOn)
         }
     
     val currentRoomSearchEntry = KoneMutableAsynchronousHub("")

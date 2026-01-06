@@ -11,7 +11,7 @@ import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.round
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundPreparation.RoundPreparationComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundWaiting.RoundWaitingComponent
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
-import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.KoneAsynchronousHubView
 
 
 public interface GameScreenComponent {
@@ -19,7 +19,7 @@ public interface GameScreenComponent {
     public val onCopyOnlineGameKey: () -> Unit
     public val onCopyOnlineGameLink: () -> Unit
     
-    public val childSlot: KoneAsynchronousHub<ChildrenSlot<*, Child, UIComponentContext>>
+    public val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, Child, UIComponentContext>, *>
     
     public sealed interface Child {
         public data class Loading(val component: LoadingComponent) : Child

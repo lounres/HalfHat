@@ -23,17 +23,16 @@ import dev.lounres.kone.collections.map.KoneMap
 import dev.lounres.kone.collections.map.empty
 import dev.lounres.kone.collections.map.get
 import dev.lounres.kone.collections.utils.drop
-import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.KoneAsynchronousHubView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.nullable
 
 
 public class RealGamePageComponent(
-    override val currentChild: KoneAsynchronousHub<ChildrenSlot<*, GamePageComponent.Child, UIComponentContext>>,
+    override val currentChild: KoneAsynchronousHubView<ChildrenSlot<*, GamePageComponent.Child, UIComponentContext>, *>,
 ): GamePageComponent {
     @Serializable
     public enum class Configuration(
@@ -49,7 +48,6 @@ public class RealGamePageComponent(
 
 public suspend fun RealGamePageComponent(
     componentContext: UIComponentContext,
-    volumeOn: StateFlow<Boolean>,
 ): RealGamePageComponent {
     
     val currentChild =
@@ -133,7 +131,6 @@ public suspend fun RealGamePageComponent(
                     GamePageComponent.Child.OnlineGame(
                         RealOnlineGamePageComponent(
                             componentContext = componentContext,
-                            volumeOn = volumeOn,
                             onExitOnlineGameMode = {
                                 CoroutineScope(Dispatchers.Default).launch {
                                     navigationTarget.set(null)
@@ -155,7 +152,6 @@ public suspend fun RealGamePageComponent(
                     GamePageComponent.Child.DeviceGame(
                         RealDeviceGamePageComponent(
                             componentContext = componentContext,
-                            volumeOn = volumeOn,
                             onExitDeviceGame = {
                                 CoroutineScope(Dispatchers.Default).launch {
                                     navigationTarget.set(null)
@@ -167,7 +163,6 @@ public suspend fun RealGamePageComponent(
                     GamePageComponent.Child.GameController(
                         RealControllerPageComponent(
                             componentContext = componentContext,
-                            volumeOn = volumeOn,
                             onExitController = {
                                 CoroutineScope(Dispatchers.Default).launch {
                                     navigationTarget.set(null)
@@ -184,7 +179,6 @@ public suspend fun RealGamePageComponent(
                                     navigationTarget.set(null)
                                 }
                             },
-                            volumeOn = volumeOn,
                             // TODO: Hardcoded constants!!!
                             initialPreparationTimeSetting = 3u,
                             initialExplanationTimeSetting = 20u,

@@ -13,7 +13,7 @@ import dev.lounres.komponentual.navigation.children
 import dev.lounres.kone.collections.map.*
 import dev.lounres.kone.collections.set.KoneSet
 import dev.lounres.kone.hub.KoneAsynchronousHub
-import dev.lounres.kone.hub.buildSubscription
+import dev.lounres.kone.hub.buildSubscriptionLocking
 import dev.lounres.kone.hub.map
 import dev.lounres.kone.registry.getOrNull
 import dev.lounres.kone.relations.Equality
@@ -210,7 +210,7 @@ public suspend fun <
             val stringFormat = childrenComponentContext[NavigationControllerStringFormatKey]
             val configurationSerializer = navigationControllerSpec!!.configurationSerializer
             val navigationStateSerializer = navigationStateSerializer(configurationSerializer)
-            childrenHub.buildSubscription {
+            childrenHub.buildSubscriptionLocking {
                 subscribe {
                     childrenNavigationNodeController.configuration =
                         stringFormat.encodeToString(navigationStateSerializer, it.navigationState)

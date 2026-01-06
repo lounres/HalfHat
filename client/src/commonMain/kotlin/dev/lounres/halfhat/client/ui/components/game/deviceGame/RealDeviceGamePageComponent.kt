@@ -20,18 +20,17 @@ import dev.lounres.kone.collections.set.KoneSet
 import dev.lounres.kone.collections.set.empty
 import dev.lounres.kone.collections.set.of
 import dev.lounres.kone.collections.utils.*
-import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.KoneAsynchronousHubView
 import dev.lounres.kone.relations.Equality
 import dev.lounres.kone.relations.Hashing
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 
 public class RealDeviceGamePageComponent(
-    override val childStack: KoneAsynchronousHub<ChildrenStack<*, DeviceGamePageComponent.Child, UIComponentContext>>,
+    override val childStack: KoneAsynchronousHubView<ChildrenStack<*, DeviceGamePageComponent.Child, UIComponentContext>, *>,
 ) : DeviceGamePageComponent {
     public sealed interface Configuration {
         public data object RoomScreen : Configuration
@@ -42,7 +41,6 @@ public class RealDeviceGamePageComponent(
 
 public suspend fun RealDeviceGamePageComponent(
     componentContext: UIComponentContext,
-    volumeOn: StateFlow<Boolean>,
     onExitDeviceGame: () -> Unit,
 ): RealDeviceGamePageComponent {
     val playersList: MutableStateFlow<KoneList<Player>> = MutableStateFlow(KoneList.of(Player(""), Player(""))) // TODO: Hardcoded settings!!!
@@ -117,7 +115,6 @@ public suspend fun RealDeviceGamePageComponent(
                     DeviceGamePageComponent.Child.GameScreen(
                         RealGameScreenComponent(
                             componentContext = componentContext,
-                            volumeOn = volumeOn,
                             playersList = playersList.value.map { it.name },
                             settingsBuilder = settingsBuilderState.value,
                             onExitGame = {

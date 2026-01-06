@@ -9,9 +9,7 @@ import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.hub.map
-import dev.lounres.kone.hub.subscribe
 import dev.lounres.kone.hub.update
-import kotlinx.coroutines.flow.StateFlow
 
 
 public class RealGameScreenComponent(
@@ -32,7 +30,6 @@ private data class SpeakerAndListenerIndex(
 
 public suspend fun RealGameScreenComponent(
     componentContext: UIComponentContext,
-    volumeOn: StateFlow<Boolean>,
     playersList: KoneList<String>,
     preparationTimeSeconds: UInt,
     explanationTimeSeconds: UInt,
@@ -43,7 +40,6 @@ public suspend fun RealGameScreenComponent(
         componentContext.buildLogicChildOnRunning {
             RealTimerComponent(
                 componentContext = it,
-                volumeOn = volumeOn,
             )
         }
     

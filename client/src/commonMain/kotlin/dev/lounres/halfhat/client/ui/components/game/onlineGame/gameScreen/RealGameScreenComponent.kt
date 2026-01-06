@@ -19,7 +19,7 @@ import dev.lounres.halfhat.client.utils.copyToClipboard
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.collections.list.KoneList
-import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.KoneAsynchronousHubView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 
 public class RealGameScreenComponent(
     override val onExitOnlineGame: () -> Unit,
-    override val childSlot: KoneAsynchronousHub<ChildrenSlot<*, GameScreenComponent.Child, UIComponentContext>>,
+    override val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, GameScreenComponent.Child, UIComponentContext>, *>,
     override val onCopyOnlineGameKey: () -> Unit,
     override val onCopyOnlineGameLink: () -> Unit,
 ) : GameScreenComponent {

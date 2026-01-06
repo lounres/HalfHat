@@ -17,23 +17,24 @@ import dev.lounres.halfhat.client.utils.play
 import dev.lounres.halfhat.client.components.logger.logger
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotNode
+import dev.lounres.halfhat.client.logic.settings.volumeOn
+import dev.lounres.halfhat.client.storage.settings.settings
 import dev.lounres.halfhat.logic.gameStateMachine.*
 import dev.lounres.komponentual.navigation.SlotNavigationHub
 import dev.lounres.kone.automata.CheckResult
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.toKoneMutableList
-import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.KoneAsynchronousHubView
 import dev.lounres.logKube.core.debug
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 
 public class RealGameScreenComponent(
     override val onExitGame: () -> Unit,
-    override val childSlot: KoneAsynchronousHub<ChildrenSlot<*, GameScreenComponent.Child, UIComponentContext>>,
+    override val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, GameScreenComponent.Child, UIComponentContext>, *>,
 ) : GameScreenComponent {
     public sealed interface Configuration {
         public data object GameInitialisation : Configuration
@@ -70,7 +71,6 @@ public class RealGameScreenComponent(
 
 public suspend fun RealGameScreenComponent(
     componentContext: UIComponentContext,
-    volumeOn: StateFlow<Boolean>,
     playersList: KoneList<String>,
     settingsBuilder: GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>,
     onExitGame: () -> Unit,
@@ -98,7 +98,7 @@ public suspend fun RealGameScreenComponent(
                 )
             }
         ) { "Game state machine transition started" }
-        if (volumeOn.value) when (newState) {
+        if (componentContext.settings.value.volumeOn) when (newState) {
             is GameStateMachine.State.GameInitialisation ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation -> {}

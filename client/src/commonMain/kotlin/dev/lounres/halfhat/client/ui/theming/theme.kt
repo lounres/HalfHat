@@ -5,6 +5,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import dev.lounres.halfhat.client.storage.settings.Settings
+import dev.lounres.halfhat.client.storage.settings.get
+import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
+import dev.lounres.kone.registry.serialization.RegistrySerializableKey
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
 
 
 private val lightScheme = lightColorScheme(
@@ -235,6 +241,7 @@ private val highContrastDarkColorScheme = darkColorScheme(
     surfaceContainerHighest = surfaceContainerHighestDarkHighContrast,
 )
 
+@Serializable
 enum class DarkTheme {
     Disabled {
         override val isDark: Boolean @Composable get() = false
@@ -248,7 +255,15 @@ enum class DarkTheme {
     ;
     
     abstract val isDark: Boolean @Composable get
+    
+    data object Key : RegistrySerializableKey<DarkTheme> {
+        override val serializer: KSerializer<DarkTheme> = DarkTheme.serializer()
+    }
 }
+
+val Settings.darkTheme: DarkTheme get() = get(DarkTheme.Key)
+val KoneMutableAsynchronousHubView<Settings, *>.darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>
+    get() = get(DarkTheme.Key)
 
 @Composable
 fun HalfhatTheme(

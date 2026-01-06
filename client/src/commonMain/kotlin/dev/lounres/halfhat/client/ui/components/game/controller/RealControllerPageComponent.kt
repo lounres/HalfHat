@@ -20,18 +20,17 @@ import dev.lounres.kone.collections.utils.flatMap
 import dev.lounres.kone.collections.utils.groupBy
 import dev.lounres.kone.collections.utils.map
 import dev.lounres.kone.collections.utils.mapTo
-import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.KoneAsynchronousHubView
 import dev.lounres.kone.relations.Equality
 import dev.lounres.kone.relations.Hashing
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 
 public class RealControllerPageComponent(
-    override val childStack: KoneAsynchronousHub<ChildrenStack<*, ControllerPageComponent.Child, UIComponentContext>>,
+    override val childStack: KoneAsynchronousHubView<ChildrenStack<*, ControllerPageComponent.Child, UIComponentContext>, *>,
 ) : ControllerPageComponent {
     public sealed interface Configuration {
         public data object RoomScreen : Configuration
@@ -42,7 +41,6 @@ public class RealControllerPageComponent(
 
 public suspend fun RealControllerPageComponent(
     componentContext: UIComponentContext,
-    volumeOn: StateFlow<Boolean>,
     onExitController: () -> Unit,
 ): RealControllerPageComponent {
     val playersList: MutableStateFlow<KoneList<Player>> = MutableStateFlow(KoneList.of(Player(""), Player(""))) // TODO: Hardcoded settings!!!
@@ -122,7 +120,6 @@ public suspend fun RealControllerPageComponent(
                     ControllerPageComponent.Child.GameScreen(
                         RealGameScreenComponent(
                             componentContext = componentContext,
-                            volumeOn = volumeOn,
                             playersList = playersList.value.map { it.name },
                             preparationTimeSeconds = preparationTimeSeconds.value,
                             explanationTimeSeconds = explanationTimeSeconds.value,
