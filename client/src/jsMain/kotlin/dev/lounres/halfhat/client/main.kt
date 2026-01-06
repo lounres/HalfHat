@@ -9,7 +9,6 @@ import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +29,7 @@ import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import dev.lounres.halfhat.client.consts.WebPageSettings
 import dev.lounres.halfhat.client.ui.components.MainWindowComponent
 import dev.lounres.halfhat.client.ui.theming.HalfhatTheme
+import dev.lounres.kone.hub.subscribeAsState
 import kotlinx.browser.document
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -73,7 +73,7 @@ fun main() {
             
             if (allPreloaded)
                 HalfhatTheme(
-                    darkTheme = component!!.darkTheme.collectAsState().value,
+                    darkTheme = component!!.darkTheme.subscribeAsState().value,
                 ) {
                     MainWindowContentUI(
                         component = component!!,
