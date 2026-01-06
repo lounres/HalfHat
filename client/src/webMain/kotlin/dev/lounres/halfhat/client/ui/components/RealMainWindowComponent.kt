@@ -127,9 +127,6 @@ val settingsSerializer = SettingsSerializer(settingsDefaults.mapValues { it.valu
 suspend fun RealMainWindowComponent(
 //    localDictionariesRegistry: LocalDictionariesRegistry,
     
-    initialVolumeOn: Boolean = true,
-    initialLanguage: Language = Language.English,
-    
     initialSelectedPage: MainWindowComponent.Child.Kind = MainWindowComponent.Child.Kind.Primary.Game /* TODO: Page.Primary.Home */,
 ): RealMainWindowComponent {
     val globalLifecycle: MutableUIComponentLifecycle = newMutableUIComponentLifecycle()
@@ -156,6 +153,9 @@ suspend fun RealMainWindowComponent(
             for ((key, value) in settingsDefaults.values) if (key !in this) (key as RegistryKey<Any?>) correspondsTo value
         }
     )
+    settings.subscribe {
+        localStorage.setItem("settings", Json.encodeToString(settingsSerializer, it))
+    }
     val globalComponentContext = UIComponentContext {
         UIComponentLifecycleKey correspondsTo globalLifecycle
         LoggerKey correspondsTo logger
