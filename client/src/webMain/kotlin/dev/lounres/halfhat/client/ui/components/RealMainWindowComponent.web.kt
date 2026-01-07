@@ -78,7 +78,7 @@ suspend fun RealMainWindowComponent(
                 val url = URL(location.href)
                 url.pathname = WebPageSettings.base + path.path.joinToString(separator = "/")
                 url.search = path.arguments.let {
-                    if (it.isNotEmpty()) it.nodesView.joinToString(separator = "&") { node ->
+                    if (it.isNotEmpty()) it.nodesView.joinToString(prefix = "?", separator = "&") { node ->
                         "${encodeURIComponent(node.key)}=${encodeURIComponent(node.value)}"
                     } else ""
                 }
@@ -114,6 +114,14 @@ suspend fun RealMainWindowComponent(
     }
     
     scope {
+        val state = try {
+            (history.state as? JsString)?.toKotlinString()?.let { Json.decodeFromString<NavigationNodeState>(it) }
+        } catch (e: SerializationException) { null }
+        if (state != null) {
+            navigationRoot.restore(state)
+            return@scope
+        }
+        
         val locationPath = location.pathname
         val actualPath = locationPath.split('/').filter { it.isNotEmpty() }.toKoneList()
         val basePath = WebPageSettings.base.split('/').filter { it.isNotEmpty() }.toKoneList()

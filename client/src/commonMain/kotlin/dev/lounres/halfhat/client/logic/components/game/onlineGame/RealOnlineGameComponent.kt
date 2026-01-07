@@ -6,10 +6,11 @@ import dev.lounres.halfhat.client.utils.defaultHttpClient
 import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.consts.OnlineGameSettings
+import dev.lounres.halfhat.client.logic.settings.volumeOn
+import dev.lounres.halfhat.client.storage.settings.settings
 import dev.lounres.halfhat.client.utils.DefaultSounds
 import dev.lounres.halfhat.client.utils.logger
 import dev.lounres.halfhat.client.utils.play
-import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
 import dev.lounres.logKube.core.debug
 import dev.lounres.logKube.core.info
 import dev.lounres.logKube.core.warn
@@ -31,7 +32,6 @@ import kotlinx.io.IOException
 
 public class RealOnlineGameComponent(
     componentContext: LogicComponentContext,
-    volumeOn: KoneMutableAsynchronousHubView<Boolean, *>,
 ) : OnlineGameComponent {
     override val connectionStatus: MutableStateFlow<ConnectionStatus> = MutableStateFlow(ConnectionStatus.Disconnected)
     override val freeRoomIdFlow: MutableSharedFlow<String> = MutableSharedFlow(extraBufferCapacity = 1)
@@ -47,6 +47,8 @@ public class RealOnlineGameComponent(
     }
     
     init {
+        val volumeOn = componentContext.settings.volumeOn
+        
         componentContext.coroutineScope(Dispatchers.Default).launch {
             while (true) {
                 try {

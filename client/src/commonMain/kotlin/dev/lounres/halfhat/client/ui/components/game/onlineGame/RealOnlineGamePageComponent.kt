@@ -12,8 +12,6 @@ import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.navigation.ChildrenStack
 import dev.lounres.halfhat.client.components.navigation.controller.navigationContext
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStackNode
-import dev.lounres.halfhat.client.logic.settings.volumeOn
-import dev.lounres.halfhat.client.storage.settings.settings
 import dev.lounres.komponentual.navigation.replaceCurrent
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
@@ -45,7 +43,7 @@ public suspend fun RealOnlineGamePageComponent(
     val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
     val onlineGameComponent: OnlineGameComponent =
         componentContext.buildLogicChildOnRunning {
-            RealOnlineGameComponent(it, componentContext.settings.volumeOn)
+            RealOnlineGameComponent(it)
         }
     
     val currentRoomSearchEntry = KoneMutableAsynchronousHub("")
