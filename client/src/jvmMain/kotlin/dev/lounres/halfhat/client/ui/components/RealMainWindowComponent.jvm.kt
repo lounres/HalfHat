@@ -27,12 +27,9 @@ import dev.lounres.halfhat.client.components.navigation.NavigationControllerSpec
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationRoot
 import dev.lounres.halfhat.client.components.navigation.controller.setUpNavigationControl
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariantsNode
-import dev.lounres.halfhat.client.logic.settings.LanguageKey
-import dev.lounres.halfhat.client.logic.settings.VolumeOnKey
 import dev.lounres.halfhat.client.logic.settings.language
 import dev.lounres.halfhat.client.logic.settings.volumeOn
 import dev.lounres.halfhat.client.storage.settings.Settings
-import dev.lounres.halfhat.client.storage.settings.SettingsSerializer
 import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.halfhat.client.ui.theming.darkTheme
 import dev.lounres.komponentual.navigation.set
@@ -50,46 +47,27 @@ import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
 import dev.lounres.kone.hub.map
 import dev.lounres.kone.registry.RegistryKey
 import dev.lounres.kone.registry.correspondsTo
-import dev.lounres.kone.registry.serialization.RegistrySerializableKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
 
-class RealMainWindowComponent(
-    override val globalLifecycle: MutableUIComponentLifecycle,
+actual class RealMainWindowComponent(
+    actual override val globalLifecycle: MutableUIComponentLifecycle,
     
     override val windowState: WindowState = WindowState(),
     override val onWindowCloseRequest: () -> Unit = {},
     
-    override val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>,
-    override val volumeOn: KoneMutableAsynchronousHubView<Boolean, *>,
-    override val language: KoneMutableAsynchronousHubView<Language, *>,
+    actual override val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>,
+    actual override val volumeOn: KoneMutableAsynchronousHubView<Boolean, *>,
+    actual override val language: KoneMutableAsynchronousHubView<Language, *>,
     
-    override val pageVariants: KoneAsynchronousHub<ChildrenVariants<MainWindowComponent.Child.Kind, MainWindowComponent.Child, UIComponentContext>>,
-    override val openPage: (page: MainWindowComponent.Child.Kind) -> Unit,
+    actual override val pageVariants: KoneAsynchronousHub<ChildrenVariants<MainWindowComponentChild.Kind, MainWindowComponentChild, UIComponentContext>>,
+    actual override val openPage: (page: MainWindowComponentChild.Kind) -> Unit,
     
-    override val menuList: KoneAsynchronousHub<KoneList<MainWindowComponent.MenuItem>>,
-): MainWindowComponent {
-    sealed interface MenuItemByKind {
-        data object Separator: MenuItemByKind
-        data class Child(val child: MainWindowComponent.Child.Kind): MenuItemByKind
-    }
-}
-
-data class SettingDescription<T>(
-    val key: RegistrySerializableKey<T>,
-    val value: T,
-)
-
-val settingsDefaults: Map<String, SettingDescription<*>> = mapOf(
-    "DarkTheme" to SettingDescription(DarkTheme.Key, DarkTheme.System),
-    "VolumeOn" to SettingDescription(VolumeOnKey, true),
-    "Language" to SettingDescription(LanguageKey, Language.English),
-)
-
-val settingsSerializer = SettingsSerializer(settingsDefaults.mapValues { it.value.key })
+    actual override val menuList: KoneAsynchronousHub<KoneList<MainWindowComponentMenuItem>>,
+): MainWindowComponent
 
 suspend fun RealMainWindowComponent(
     deviceGameWordsProviderRegistry: DeviceGameWordsProviderRegistry,
@@ -97,7 +75,7 @@ suspend fun RealMainWindowComponent(
     windowState: WindowState = WindowState(),
     onWindowCloseRequest: () -> Unit = {},
     
-    initialSelectedPage: MainWindowComponent.Child.Kind = MainWindowComponent.Child.Kind.Primary.Game /* TODO: Page.Primary.Home */,
+    initialSelectedPage: MainWindowComponentChild.Kind = MainWindowComponentChild.Kind.Primary.Game /* TODO: Page.Primary.Home */,
 ): RealMainWindowComponent {
     val globalLifecycle: MutableUIComponentLifecycle = newMutableUIComponentLifecycle()
     val navigationRoot = NavigationRoot { state, path -> /* TODO */ }
@@ -138,79 +116,79 @@ suspend fun RealMainWindowComponent(
         globalComponentContext.uiChildrenDefaultVariantsNode(
             navigationControllerSpec = NavigationControllerSpec(
                 key = "page",
-                configurationSerializer = MainWindowComponent.Child.Kind.serializer(),
+                configurationSerializer = MainWindowComponentChild.Kind.serializer(),
             ),
             allVariants = KoneSet.build {
-                +MainWindowComponent.Child.Kind.Primary.entries.toKoneList()
-                +MainWindowComponent.Child.Kind.Secondary.entries.toKoneList()
+                +MainWindowComponentChild.Kind.Primary.entries.toKoneList()
+                +MainWindowComponentChild.Kind.Secondary.entries.toKoneList()
             },
             initialVariant = initialSelectedPage,
         ) { configuration, componentContext, navigation ->
             when (configuration) {
-                MainWindowComponent.Child.Kind.Primary.Home ->
-                    MainWindowComponent.Child.Primary.Home(
+                MainWindowComponentChild.Kind.Primary.Home ->
+                    MainWindowComponentChild.Primary.Home(
                         RealHomePageComponent()
                     )
-                MainWindowComponent.Child.Kind.Primary.Game ->
-                    MainWindowComponent.Child.Primary.Game(
+                MainWindowComponentChild.Kind.Primary.Game ->
+                    MainWindowComponentChild.Primary.Game(
                         RealGamePageComponent(
                             componentContext = componentContext,
                         )
                     )
-                MainWindowComponent.Child.Kind.Secondary.News ->
-                    MainWindowComponent.Child.Secondary.News(
+                MainWindowComponentChild.Kind.Secondary.News ->
+                    MainWindowComponentChild.Secondary.News(
                         RealNewsPageComponent()
                     )
-                MainWindowComponent.Child.Kind.Secondary.Rules ->
-                    MainWindowComponent.Child.Secondary.Rules(
+                MainWindowComponentChild.Kind.Secondary.Rules ->
+                    MainWindowComponentChild.Secondary.Rules(
                         RealRulesPageComponent()
                     )
-                MainWindowComponent.Child.Kind.Secondary.FAQ ->
-                    MainWindowComponent.Child.Secondary.FAQ(
+                MainWindowComponentChild.Kind.Secondary.FAQ ->
+                    MainWindowComponentChild.Secondary.FAQ(
                         RealFAQPageComponent(
                             onFeedbackLinkClick = {
                                 CoroutineScope(Dispatchers.Default).launch {
-                                    navigation.set(MainWindowComponent.Child.Kind.Secondary.FAQ)
+                                    navigation.set(MainWindowComponentChild.Kind.Secondary.FAQ)
                                 }
                             }
                         )
                     )
-                MainWindowComponent.Child.Kind.Secondary.GameHistory ->
-                    MainWindowComponent.Child.Secondary.GameHistory(
+                MainWindowComponentChild.Kind.Secondary.GameHistory ->
+                    MainWindowComponentChild.Secondary.GameHistory(
                         RealGameHistoryPageComponent()
                     )
-                MainWindowComponent.Child.Kind.Secondary.Settings ->
-                    MainWindowComponent.Child.Secondary.Settings(
+                MainWindowComponentChild.Kind.Secondary.Settings ->
+                    MainWindowComponentChild.Secondary.Settings(
                         RealSettingsPageComponent()
                     )
-                MainWindowComponent.Child.Kind.Secondary.Feedback ->
-                    MainWindowComponent.Child.Secondary.Feedback(
+                MainWindowComponentChild.Kind.Secondary.Feedback ->
+                    MainWindowComponentChild.Secondary.Feedback(
                         RealFeedbackPageComponent()
                     )
-                MainWindowComponent.Child.Kind.Secondary.About ->
-                    MainWindowComponent.Child.Secondary.About(
+                MainWindowComponentChild.Kind.Secondary.About ->
+                    MainWindowComponentChild.Secondary.About(
                         RealAboutPageComponent()
                     )
             }
         }
     
-    val openPage: (page: MainWindowComponent.Child.Kind) -> Unit = { page ->
+    val openPage: (page: MainWindowComponentChild.Kind) -> Unit = { page ->
         CoroutineScope(Dispatchers.Default).launch {
             pageVariants.set(page)
         }
     }
     
-    val menuListByKinds: KoneList<RealMainWindowComponent.MenuItemByKind> = KoneList.build {
-        this += MainWindowComponent.Child.Kind.Primary.entries.toKoneList().map { RealMainWindowComponent.MenuItemByKind.Child(it) }
-        +RealMainWindowComponent.MenuItemByKind.Separator
-        this += MainWindowComponent.Child.Kind.Secondary.entries.toKoneList().map { RealMainWindowComponent.MenuItemByKind.Child(it) }
+    val menuListByKinds: KoneList<RealMainWindowComponentMenuItemByKind> = KoneList.build {
+        this += MainWindowComponentChild.Kind.Primary.entries.toKoneList().map { RealMainWindowComponentMenuItemByKind.Child(it) }
+        +RealMainWindowComponentMenuItemByKind.Separator
+        this += MainWindowComponentChild.Kind.Secondary.entries.toKoneList().map { RealMainWindowComponentMenuItemByKind.Child(it) }
     }
-    val menuList: KoneAsynchronousHub<KoneList<MainWindowComponent.MenuItem>> =
+    val menuList: KoneAsynchronousHub<KoneList<MainWindowComponentMenuItem>> =
         pageVariants.hub.map { childrenVariants ->
             menuListByKinds.map {
                 when (it) {
-                    is RealMainWindowComponent.MenuItemByKind.Child -> MainWindowComponent.MenuItem.Child(childrenVariants.allVariants[it.child])
-                    RealMainWindowComponent.MenuItemByKind.Separator -> MainWindowComponent.MenuItem.Separator
+                    is RealMainWindowComponentMenuItemByKind.Child -> MainWindowComponentMenuItem.Child(childrenVariants.allVariants[it.child])
+                    RealMainWindowComponentMenuItemByKind.Separator -> MainWindowComponentMenuItem.Separator
                 }
             }
         }

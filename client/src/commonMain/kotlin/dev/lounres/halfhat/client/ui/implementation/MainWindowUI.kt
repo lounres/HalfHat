@@ -1,40 +1,69 @@
 package dev.lounres.halfhat.client.ui.implementation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DrawerState
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.PermanentDrawerSheet
+import androidx.compose.material3.PermanentNavigationDrawer
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.platform.WindowInfo
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowPosition
-import androidx.compose.ui.window.WindowState
-import androidx.compose.ui.window.rememberWindowState
 import dev.lounres.halfhat.Language
 import dev.lounres.halfhat.client.resources.Res
 import dev.lounres.halfhat.client.resources.changeLanguageButton_dark_png_24dp
 import dev.lounres.halfhat.client.resources.closeMenuButton_dark_png_24dp
-import dev.lounres.halfhat.client.resources.halfhat_logo
+import dev.lounres.halfhat.client.resources.darkThemeButton_dark_png_24dp
+import dev.lounres.halfhat.client.resources.lightThemeButton_dark_png_24dp
 import dev.lounres.halfhat.client.resources.openMenuButton_dark
+import dev.lounres.halfhat.client.resources.systemThemeButton_dark_png_24dp
 import dev.lounres.halfhat.client.resources.volumeOffButton_dark_png_24dp
 import dev.lounres.halfhat.client.resources.volumeOnButton_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.MainWindowComponent
+import dev.lounres.halfhat.client.ui.components.MainWindowComponentChild
+import dev.lounres.halfhat.client.ui.components.MainWindowComponentMenuItem
 import dev.lounres.halfhat.client.ui.implementation.about.AboutPageBadge
 import dev.lounres.halfhat.client.ui.implementation.about.AboutPageIcon
 import dev.lounres.halfhat.client.ui.implementation.about.AboutPageUI
@@ -58,21 +87,13 @@ import dev.lounres.halfhat.client.ui.implementation.rules.RulesPageBadge
 import dev.lounres.halfhat.client.ui.implementation.rules.RulesPageIcon
 import dev.lounres.halfhat.client.ui.implementation.settings.SettingsPageBadge
 import dev.lounres.halfhat.client.ui.implementation.settings.SettingsPageIcon
+import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.halfhat.client.ui.utils.WorkInProgress
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
-import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
-import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
-import dev.lounres.halfhat.client.resources.darkThemeButton_dark_png_24dp
-import dev.lounres.halfhat.client.resources.lightThemeButton_dark_png_24dp
-import dev.lounres.halfhat.client.resources.systemThemeButton_dark_png_24dp
-import dev.lounres.halfhat.client.ui.theming.DarkTheme
-import dev.lounres.halfhat.client.ui.theming.HalfhatTheme
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.hub.set
 import dev.lounres.kone.hub.subscribeAsState
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
@@ -162,7 +183,7 @@ fun MainWindowDrawerSheetContentUI(
         )
         for (item in component.menuList.subscribeAsState().value)
             when (item) {
-                is MainWindowComponent.MenuItem.Child -> {
+                is MainWindowComponentMenuItem.Child -> {
                     val isSelected = component.pageVariants.subscribeAsState().value.active.configuration == item.child.kind
                     NavigationDrawerItem(
                         selected = isSelected,
@@ -172,15 +193,15 @@ fun MainWindowDrawerSheetContentUI(
                         },
                         icon = {
                             when (val child = item.child) { // TODO: Maybe add child component as a parameter to `*PageIcon` functions below.
-                                is MainWindowComponent.Child.Primary.Home -> HomePageIcon(isSelected)
-                                is MainWindowComponent.Child.Primary.Game -> GamePageIcon(isSelected)
-                                is MainWindowComponent.Child.Secondary.News -> NewsPageIcon(isSelected)
-                                is MainWindowComponent.Child.Secondary.Rules -> RulesPageIcon(isSelected)
-                                is MainWindowComponent.Child.Secondary.FAQ -> FAQPageIcon(isSelected)
-                                is MainWindowComponent.Child.Secondary.GameHistory -> GameHistoryPageIcon(isSelected)
-                                is MainWindowComponent.Child.Secondary.Settings -> SettingsPageIcon(isSelected)
-                                is MainWindowComponent.Child.Secondary.Feedback -> FeedbackPageIcon(isSelected)
-                                is MainWindowComponent.Child.Secondary.About -> AboutPageIcon(isSelected)
+                                is MainWindowComponentChild.Primary.Home -> HomePageIcon(isSelected)
+                                is MainWindowComponentChild.Primary.Game -> GamePageIcon(isSelected)
+                                is MainWindowComponentChild.Secondary.News -> NewsPageIcon(isSelected)
+                                is MainWindowComponentChild.Secondary.Rules -> RulesPageIcon(isSelected)
+                                is MainWindowComponentChild.Secondary.FAQ -> FAQPageIcon(isSelected)
+                                is MainWindowComponentChild.Secondary.GameHistory -> GameHistoryPageIcon(isSelected)
+                                is MainWindowComponentChild.Secondary.Settings -> SettingsPageIcon(isSelected)
+                                is MainWindowComponentChild.Secondary.Feedback -> FeedbackPageIcon(isSelected)
+                                is MainWindowComponentChild.Secondary.About -> AboutPageIcon(isSelected)
                             }
                         },
                         label = {
@@ -190,21 +211,21 @@ fun MainWindowDrawerSheetContentUI(
                         },
                         badge = {
                             when (val child = item.child) {
-                                is MainWindowComponent.Child.Primary.Home -> HomePageBadge(child.component, isSelected)
-                                is MainWindowComponent.Child.Primary.Game -> GamePageBadge(child.component, isSelected)
-                                is MainWindowComponent.Child.Secondary.News -> NewsPageBadge(child.component, isSelected)
-                                is MainWindowComponent.Child.Secondary.Rules -> RulesPageBadge(child.component, isSelected)
-                                is MainWindowComponent.Child.Secondary.FAQ -> FAQPageBadge(child.component, isSelected)
-                                is MainWindowComponent.Child.Secondary.GameHistory -> GameHistoryPageBadge(child.component, isSelected)
-                                is MainWindowComponent.Child.Secondary.Settings -> SettingsPageBadge(child.component, isSelected)
-                                is MainWindowComponent.Child.Secondary.Feedback -> FeedbackPageBadge(child.component, isSelected)
-                                is MainWindowComponent.Child.Secondary.About -> AboutPageBadge(child.component, isSelected)
+                                is MainWindowComponentChild.Primary.Home -> HomePageBadge(child.component, isSelected)
+                                is MainWindowComponentChild.Primary.Game -> GamePageBadge(child.component, isSelected)
+                                is MainWindowComponentChild.Secondary.News -> NewsPageBadge(child.component, isSelected)
+                                is MainWindowComponentChild.Secondary.Rules -> RulesPageBadge(child.component, isSelected)
+                                is MainWindowComponentChild.Secondary.FAQ -> FAQPageBadge(child.component, isSelected)
+                                is MainWindowComponentChild.Secondary.GameHistory -> GameHistoryPageBadge(child.component, isSelected)
+                                is MainWindowComponentChild.Secondary.Settings -> SettingsPageBadge(child.component, isSelected)
+                                is MainWindowComponentChild.Secondary.Feedback -> FeedbackPageBadge(child.component, isSelected)
+                                is MainWindowComponentChild.Secondary.About -> AboutPageBadge(child.component, isSelected)
                             }
                         },
                     )
                 }
-                
-                MainWindowComponent.MenuItem.Separator ->
+
+                MainWindowComponentMenuItem.Separator ->
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                     )
@@ -247,28 +268,28 @@ fun MainWindowDrawerContentUI(
                 },
                 actions = {
                     when (openedPage) {
-                        is MainWindowComponent.Child.Primary.Home -> {}
-                        is MainWindowComponent.Child.Primary.Game -> GamePageActionsUI(openedPage.component)
-                        is MainWindowComponent.Child.Secondary.News -> {}
-                        is MainWindowComponent.Child.Secondary.Rules -> {}
-                        is MainWindowComponent.Child.Secondary.FAQ -> {}
-                        is MainWindowComponent.Child.Secondary.GameHistory -> {}
-                        is MainWindowComponent.Child.Secondary.Settings -> {}
-                        is MainWindowComponent.Child.Secondary.Feedback -> {}
-                        is MainWindowComponent.Child.Secondary.About -> {}
+                        is MainWindowComponentChild.Primary.Home -> {}
+                        is MainWindowComponentChild.Primary.Game -> GamePageActionsUI(openedPage.component)
+                        is MainWindowComponentChild.Secondary.News -> {}
+                        is MainWindowComponentChild.Secondary.Rules -> {}
+                        is MainWindowComponentChild.Secondary.FAQ -> {}
+                        is MainWindowComponentChild.Secondary.GameHistory -> {}
+                        is MainWindowComponentChild.Secondary.Settings -> {}
+                        is MainWindowComponentChild.Secondary.Feedback -> {}
+                        is MainWindowComponentChild.Secondary.About -> {}
                     }
                 },
             )
             when (openedPage) {
-                is MainWindowComponent.Child.Primary.Home -> HomePageUI(openedPage.component)
-                is MainWindowComponent.Child.Primary.Game -> GamePageUI(openedPage.component)
-                is MainWindowComponent.Child.Secondary.News -> WorkInProgress()
-                is MainWindowComponent.Child.Secondary.Rules -> WorkInProgress()
-                is MainWindowComponent.Child.Secondary.FAQ -> FAQPageUI(openedPage.component)
-                is MainWindowComponent.Child.Secondary.GameHistory -> WorkInProgress()
-                is MainWindowComponent.Child.Secondary.Settings -> WorkInProgress()
-                is MainWindowComponent.Child.Secondary.Feedback -> WorkInProgress()
-                is MainWindowComponent.Child.Secondary.About -> AboutPageUI()
+                is MainWindowComponentChild.Primary.Home -> HomePageUI(openedPage.component)
+                is MainWindowComponentChild.Primary.Game -> GamePageUI(openedPage.component)
+                is MainWindowComponentChild.Secondary.News -> WorkInProgress()
+                is MainWindowComponentChild.Secondary.Rules -> WorkInProgress()
+                is MainWindowComponentChild.Secondary.FAQ -> FAQPageUI(openedPage.component)
+                is MainWindowComponentChild.Secondary.GameHistory -> WorkInProgress()
+                is MainWindowComponentChild.Secondary.Settings -> WorkInProgress()
+                is MainWindowComponentChild.Secondary.Feedback -> WorkInProgress()
+                is MainWindowComponentChild.Secondary.About -> AboutPageUI()
             }
         }
     }
@@ -303,7 +324,7 @@ fun MainWindowContentUI(
                             text = "Choose language",
                             fontSize = 24.sp,
                         )
-                        
+
                         val coroutineScope = rememberCoroutineScope()
                         val language by component.language.subscribeAsState()
                         Surface(
@@ -374,7 +395,7 @@ fun MainWindowContentUI(
                                 Text(text = "Русский")
                             }
                         }
-                        
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth(),
@@ -389,7 +410,7 @@ fun MainWindowContentUI(
                     }
                 }
             }
-        
+
         val windowCoroutineScope = rememberCoroutineScope()
         if (windowSizeClass.widthSizeClass <= permanentDrawerAfterWindowWidthSizeClass) {
             val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -442,94 +463,4 @@ fun MainWindowContentUI(
             }
         }
     }
-}
-
-@Composable
-fun LifecycleController(
-    lifecycle: MutableUIComponentLifecycle,
-    windowState: WindowState,
-    windowInfo: WindowInfo,
-) {
-    LaunchedEffect(lifecycle, windowState, windowInfo) {
-        combine(
-            snapshotFlow(windowState::isMinimized),
-            snapshotFlow(windowInfo::isWindowFocused),
-            ::Pair,
-        ).collect { (isMinimized, isFocused) ->
-            when {
-                isMinimized -> lifecycle.moveTo(UIComponentLifecycleState.Running)
-                isFocused -> lifecycle.moveTo(UIComponentLifecycleState.Foreground)
-                else -> lifecycle.moveTo(UIComponentLifecycleState.Background)
-            }
-        }
-    }
-    
-    DisposableEffect(lifecycle) {
-        CoroutineScope(Dispatchers.Default).launch {
-            lifecycle.moveTo(UIComponentLifecycleState.Running)
-        }
-        onDispose {
-            CoroutineScope(Dispatchers.Default).launch {
-                lifecycle.moveTo(UIComponentLifecycleState.Destroyed)
-            }
-        }
-    }
-}
-
-@Composable
-fun MainWindowUI(
-    component: MainWindowComponent?
-) {
-    if (component != null)
-        HalfhatTheme(
-            darkTheme = component.darkTheme.subscribeAsState().value,
-        ) {
-            Window(
-                title = "HalfHat — ${component.pageVariants.subscribeAsState().value.active.component.component.textName}",
-                icon = painterResource(Res.drawable.halfhat_logo),
-                state = component.windowState,
-                onCloseRequest = component.onWindowCloseRequest,
-            ) {
-                LifecycleController(
-                    component.globalLifecycle,
-                    component.windowState,
-                    LocalWindowInfo.current,
-                )
-                
-                MainWindowContentUI(
-                    component = component,
-                    windowSizeClass = calculateWindowSizeClass()
-                )
-            }
-        }
-    else
-        Window(
-            title = "HalfHat",
-            icon = painterResource(Res.drawable.halfhat_logo),
-            state = rememberWindowState(
-                position = WindowPosition.Aligned(Alignment.Center),
-                size = DpSize(400.dp, 300.dp)
-            ),
-            undecorated = true,
-            resizable = false,
-            onCloseRequest = {},
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Text(
-                        text = "Loading...",
-                        fontSize = 36.sp,
-                    )
-                    ContainedLoadingIndicator(
-                        modifier = Modifier.size(48.dp)
-                    )
-                }
-            }
-        }
 }

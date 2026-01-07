@@ -1,0 +1,121 @@
+package dev.lounres.halfhat.client.ui.components
+
+import dev.lounres.halfhat.Language
+import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
+import dev.lounres.halfhat.client.components.navigation.ChildrenVariants
+import dev.lounres.halfhat.client.ui.components.about.AboutPageComponent
+import dev.lounres.halfhat.client.ui.components.faq.FAQPageComponent
+import dev.lounres.halfhat.client.ui.components.feedback.FeedbackPageComponent
+import dev.lounres.halfhat.client.ui.components.game.GamePageComponent
+import dev.lounres.halfhat.client.ui.components.gameHistory.GameHistoryPageComponent
+import dev.lounres.halfhat.client.ui.components.home.HomePageComponent
+import dev.lounres.halfhat.client.ui.components.news.NewsPageComponent
+import dev.lounres.halfhat.client.ui.components.rules.RulesPageComponent
+import dev.lounres.halfhat.client.ui.components.settings.SettingsPageComponent
+import dev.lounres.halfhat.client.ui.theming.DarkTheme
+import dev.lounres.kone.collections.interop.toKoneList
+import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.list.of
+import dev.lounres.kone.collections.utils.firstThat
+import dev.lounres.kone.collections.utils.flatten
+import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.KoneAsynchronousHubView
+import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+
+
+expect interface MainWindowComponent {
+    val globalLifecycle: MutableUIComponentLifecycle
+    
+    val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>
+    val volumeOn: KoneMutableAsynchronousHubView<Boolean, *>
+    val language: KoneMutableAsynchronousHubView<Language, *>
+    
+    val pageVariants: KoneAsynchronousHub<ChildrenVariants<MainWindowComponentChild.Kind, MainWindowComponentChild, UIComponentContext>>
+    val openPage: (page: MainWindowComponentChild.Kind) -> Unit
+    val menuList: KoneAsynchronousHubView<KoneList<MainWindowComponentMenuItem>, *>
+}
+
+sealed interface MainWindowComponentMenuItem {
+    data object Separator: MainWindowComponentMenuItem
+    data class Child(val child: MainWindowComponentChild): MainWindowComponentMenuItem
+}
+
+sealed interface MainWindowComponentChild {
+    val component: PageComponent
+    val kind: Kind
+    
+    @Serializable(with = Kind.Serializer::class)
+    sealed interface Kind {
+        val name: String
+        val path: String
+        
+        enum class Primary(override val path: String) : Kind {
+            Home(path = "home"),
+            Game(path = "game"),
+        }
+        enum class Secondary(override val path: String) : Kind {
+            News(path = "news"),
+            Rules(path = "rules"),
+            FAQ(path = "FAQ"),
+            GameHistory(path = "history"),
+            Settings(path = "settings"),
+            Feedback(path = "feedback"),
+            About(path = "about"),
+        }
+        
+        object Serializer : KSerializer<Kind> {
+            val registeredEnumInheritors = KoneList.of<KoneList<Kind>>(
+                Primary.entries.toKoneList(),
+                Secondary.entries.toKoneList(),
+            ).flatten()
+            
+            override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("kind", PrimitiveKind.STRING)
+            override fun serialize(encoder: Encoder, value: Kind) {
+                encoder.encodeString(value.toString())
+            }
+            override fun deserialize(decoder: Decoder): Kind {
+                val value = decoder.decodeString()
+                return registeredEnumInheritors.firstThat { it.name == value }
+            }
+        }
+    }
+    sealed interface Primary : MainWindowComponentChild {
+        class Home(override val component: HomePageComponent) : Primary {
+            override val kind: Kind get() = Kind.Primary.Home
+        }
+        class Game(override val component: GamePageComponent) : Primary {
+            override val kind: Kind get() = Kind.Primary.Game
+        }
+    }
+    sealed interface Secondary : MainWindowComponentChild {
+        class News(override val component: NewsPageComponent) : Secondary {
+            override val kind: Kind get() = Kind.Secondary.News
+        }
+        class Rules(override val component: RulesPageComponent) : Secondary {
+            override val kind: Kind get() = Kind.Secondary.Rules
+        }
+        class FAQ(override val component: FAQPageComponent) : Secondary {
+            override val kind: Kind get() = Kind.Secondary.FAQ
+        }
+        class GameHistory(override val component: GameHistoryPageComponent) : Secondary {
+            override val kind: Kind get() = Kind.Secondary.GameHistory
+        }
+        class Settings(override val component: SettingsPageComponent) : Secondary {
+            override val kind: Kind get() = Kind.Secondary.Settings
+        }
+        class Feedback(override val component: FeedbackPageComponent) : Secondary {
+            override val kind: Kind get() = Kind.Secondary.Feedback
+        }
+        class About(override val component: AboutPageComponent) : Secondary {
+            override val kind: Kind get() = Kind.Secondary.About
+        }
+    }
+}
