@@ -15,6 +15,7 @@ import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotNode
+import dev.lounres.halfhat.client.consts.OnlineGameSettings
 import dev.lounres.halfhat.client.utils.copyToClipboard
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.komponentual.navigation.set
@@ -310,7 +311,12 @@ public suspend fun RealGameScreenComponent(
             }
         },
         onCopyOnlineGameLink = {
-            /* TODO */
+            coroutineScope.launch {
+                val gameState = gameStateFlow.value
+                if (gameState != null) {
+                    copyToClipboard("${OnlineGameSettings.linkBase}game/online/${gameState.roomName}")
+                }
+            }
         }
     )
 }

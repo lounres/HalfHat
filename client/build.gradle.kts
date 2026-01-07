@@ -289,6 +289,7 @@ val generateClientConsts by tasks.registering {
                         val port: Int? = ${if (local) rootProject.extra["halfhat.client.consts.dev.onlineGame.port"] else rootProject.extra["halfhat.client.consts.prod.onlineGame.port"]}
                         val path: String? = ${if (local) rootProject.extra["halfhat.client.consts.dev.onlineGame.path"] else rootProject.extra["halfhat.client.consts.prod.onlineGame.path"]}
                         val isSecure: Boolean = ${if (local) rootProject.extra["halfhat.client.consts.dev.onlineGame.isSecure"] else rootProject.extra["halfhat.client.consts.prod.onlineGame.isSecure"]}
+                        val linkBase: String = ${if (debug) rootProject.extra["halfhat.client.consts.dev.onlineGame.linkBase"] else rootProject.extra["halfhat.client.consts.prod.onlineGame.linkBase"]}
                     }
                     """.trimIndent()
                 )

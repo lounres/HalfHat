@@ -114,7 +114,6 @@ public fun ColumnScope.GameScreenUI(
                 )
             }
             IconButton(
-                enabled = false,
                 onClick = component.onCopyOnlineGameLink
             ) {
                 Icon(
