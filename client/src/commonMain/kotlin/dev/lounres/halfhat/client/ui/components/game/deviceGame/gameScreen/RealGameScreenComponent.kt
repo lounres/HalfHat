@@ -3,7 +3,6 @@ package dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen
 import dev.lounres.halfhat.client.logic.wordsProviders.DeviceGameWordsProviderID
 import dev.lounres.halfhat.client.logic.wordsProviders.NoDeviceGameWordsProviderReason
 import dev.lounres.halfhat.client.logic.wordsProviders.deviceGameWordsProviderRegistry
-import dev.lounres.halfhat.client.utils.DefaultSounds
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.gameResults.RealGameResultsComponent
@@ -13,10 +12,13 @@ import dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.round
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.roundLastGuess.RealRoundLastGuessComponent
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.roundPreparation.RealRoundPreparationComponent
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.roundWaiting.RealRoundWaitingComponent
-import dev.lounres.halfhat.client.utils.play
 import dev.lounres.halfhat.client.components.logger.logger
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotNode
+import dev.lounres.halfhat.client.logic.settings.playExplanationStart
+import dev.lounres.halfhat.client.logic.settings.playFinalGuessEnd
+import dev.lounres.halfhat.client.logic.settings.playFinalGuessStart
+import dev.lounres.halfhat.client.logic.settings.playPreparationCountdown
 import dev.lounres.halfhat.client.logic.settings.volumeOn
 import dev.lounres.halfhat.client.storage.settings.settings
 import dev.lounres.halfhat.logic.gameStateMachine.*
@@ -77,6 +79,7 @@ public suspend fun RealGameScreenComponent(
 ): RealGameScreenComponent {
     val logger = componentContext.logger
     val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
+    val settings = componentContext.settings
     val intermediateNavigation = SlotNavigationHub<RealGameScreenComponent.Configuration>()
     
     // TODO: Move the logic to logic package
@@ -98,19 +101,19 @@ public suspend fun RealGameScreenComponent(
                 )
             }
         ) { "Game state machine transition started" }
-        if (componentContext.settings.value.volumeOn) when (newState) {
+        if (settings.value.volumeOn) when (newState) {
             is GameStateMachine.State.GameInitialisation ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation -> {}
                     is GameStateMachine.State.PlayersWordsCollection -> {}
                     is GameStateMachine.State.RoundWaiting -> {}
                     is GameStateMachine.State.RoundPreparation ->
-                        coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                        coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundExplanation ->
-                        coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                        coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundLastGuess ->
                         if (previousState.millisecondsLeft > 0u)
-                            coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundEditing -> {}
                     is GameStateMachine.State.GameResults -> {}
                 }
@@ -120,12 +123,12 @@ public suspend fun RealGameScreenComponent(
                     is GameStateMachine.State.PlayersWordsCollection -> {}
                     is GameStateMachine.State.RoundWaiting -> {}
                     is GameStateMachine.State.RoundPreparation ->
-                        coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                        coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundExplanation ->
-                        coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                        coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundLastGuess ->
                         if (previousState.millisecondsLeft > 0u)
-                            coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundEditing -> {}
                     is GameStateMachine.State.GameResults -> {}
                 }
@@ -135,100 +138,100 @@ public suspend fun RealGameScreenComponent(
                     is GameStateMachine.State.PlayersWordsCollection -> {}
                     is GameStateMachine.State.RoundWaiting -> {}
                     is GameStateMachine.State.RoundPreparation ->
-                        coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                        coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundExplanation ->
-                        coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                        coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundLastGuess ->
                         if (previousState.millisecondsLeft > 0u)
-                            coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundEditing -> {}
                     is GameStateMachine.State.GameResults -> {}
                 }
             is GameStateMachine.State.RoundPreparation ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation ->
-                        coroutineScope.launch { DefaultSounds.preparationCountdown.await().play() }
+                        coroutineScope.launch { settings.playPreparationCountdown() }
                     is GameStateMachine.State.PlayersWordsCollection ->
-                        coroutineScope.launch { DefaultSounds.preparationCountdown.await().play() }
+                        coroutineScope.launch { settings.playPreparationCountdown() }
                     is GameStateMachine.State.RoundWaiting ->
-                        coroutineScope.launch { DefaultSounds.preparationCountdown.await().play() }
+                        coroutineScope.launch { settings.playPreparationCountdown() }
                     is GameStateMachine.State.RoundPreparation ->
                         if (previousState.roundNumber != newState.roundNumber || (previousState.millisecondsLeft / 1000u) != (newState.millisecondsLeft / 1000u))
-                            coroutineScope.launch { DefaultSounds.preparationCountdown.await().play() }
+                            coroutineScope.launch { settings.playPreparationCountdown() }
                     is GameStateMachine.State.RoundExplanation ->
-                        coroutineScope.launch { DefaultSounds.preparationCountdown.await().play() }
+                        coroutineScope.launch { settings.playPreparationCountdown() }
                     is GameStateMachine.State.RoundLastGuess ->
-                        coroutineScope.launch { DefaultSounds.preparationCountdown.await().play() }
+                        coroutineScope.launch { settings.playPreparationCountdown() }
                     is GameStateMachine.State.RoundEditing ->
-                        coroutineScope.launch { DefaultSounds.preparationCountdown.await().play() }
+                        coroutineScope.launch { settings.playPreparationCountdown() }
                     is GameStateMachine.State.GameResults ->
-                        coroutineScope.launch { DefaultSounds.preparationCountdown.await().play() }
+                        coroutineScope.launch { settings.playPreparationCountdown() }
                 }
             is GameStateMachine.State.RoundExplanation ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation ->
-                        coroutineScope.launch { DefaultSounds.explanationStart.await().play() }
+                        coroutineScope.launch { settings.playExplanationStart() }
                     is GameStateMachine.State.PlayersWordsCollection ->
-                        coroutineScope.launch { DefaultSounds.explanationStart.await().play() }
+                        coroutineScope.launch { settings.playExplanationStart() }
                     is GameStateMachine.State.RoundWaiting ->
-                        coroutineScope.launch { DefaultSounds.explanationStart.await().play() }
+                        coroutineScope.launch { settings.playExplanationStart() }
                     is GameStateMachine.State.RoundPreparation ->
-                        coroutineScope.launch { DefaultSounds.explanationStart.await().play() }
+                        coroutineScope.launch { settings.playExplanationStart() }
                     is GameStateMachine.State.RoundExplanation ->
                         if (previousState.roundNumber != newState.roundNumber)
-                            coroutineScope.launch { DefaultSounds.explanationStart.await().play() }
+                            coroutineScope.launch { settings.playExplanationStart() }
                     is GameStateMachine.State.RoundLastGuess ->
-                        coroutineScope.launch { DefaultSounds.explanationStart.await().play() }
+                        coroutineScope.launch { settings.playExplanationStart() }
                     is GameStateMachine.State.RoundEditing ->
-                        coroutineScope.launch { DefaultSounds.explanationStart.await().play() }
+                        coroutineScope.launch { settings.playExplanationStart() }
                     is GameStateMachine.State.GameResults ->
-                        coroutineScope.launch { DefaultSounds.explanationStart.await().play() }
+                        coroutineScope.launch { settings.playExplanationStart() }
                 }
             is GameStateMachine.State.RoundLastGuess ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation ->
                         if (newState.millisecondsLeft > 0u)
-                            coroutineScope.launch { DefaultSounds.finalGuessStart.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessStart() }
                         else
-                            coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.PlayersWordsCollection ->
                         if (newState.millisecondsLeft > 0u)
-                            coroutineScope.launch { DefaultSounds.finalGuessStart.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessStart() }
                         else
-                            coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundWaiting ->
                         if (newState.millisecondsLeft > 0u)
-                            coroutineScope.launch { DefaultSounds.finalGuessStart.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessStart() }
                         else
-                            coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundPreparation ->
                         if (newState.millisecondsLeft > 0u)
-                            coroutineScope.launch { DefaultSounds.finalGuessStart.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessStart() }
                         else
-                            coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundExplanation ->
                         if (newState.millisecondsLeft > 0u)
-                            coroutineScope.launch { DefaultSounds.finalGuessStart.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessStart() }
                         else
-                            coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundLastGuess ->
                         if (newState.millisecondsLeft == 0u) {
                             if (newState.roundNumber != previousState.roundNumber)
-                                coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                                coroutineScope.launch { settings.playFinalGuessEnd() }
                         } else {
                             if (newState.roundNumber != previousState.roundNumber)
-                                coroutineScope.launch { DefaultSounds.finalGuessStart.await().play() }
+                                coroutineScope.launch { settings.playFinalGuessStart() }
                         }
                     is GameStateMachine.State.RoundEditing ->
                         if (newState.millisecondsLeft > 0u)
-                            coroutineScope.launch { DefaultSounds.finalGuessStart.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessStart() }
                         else
-                            coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.GameResults ->
                         if (newState.millisecondsLeft > 0u)
-                            coroutineScope.launch { DefaultSounds.finalGuessStart.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessStart() }
                         else
-                            coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessEnd() }
                 }
             is GameStateMachine.State.RoundEditing ->
                 when (previousState) {
@@ -236,12 +239,12 @@ public suspend fun RealGameScreenComponent(
                     is GameStateMachine.State.PlayersWordsCollection -> {}
                     is GameStateMachine.State.RoundWaiting -> {}
                     is GameStateMachine.State.RoundPreparation ->
-                        coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                        coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundExplanation ->
-                        coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                        coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundLastGuess ->
                         if (previousState.millisecondsLeft > 0u)
-                            coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundEditing -> {}
                     is GameStateMachine.State.GameResults -> {}
                 }
@@ -251,12 +254,12 @@ public suspend fun RealGameScreenComponent(
                     is GameStateMachine.State.PlayersWordsCollection -> {}
                     is GameStateMachine.State.RoundWaiting -> {}
                     is GameStateMachine.State.RoundPreparation ->
-                        coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                        coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundExplanation ->
-                        coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                        coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundLastGuess ->
                         if (previousState.millisecondsLeft > 0u)
-                            coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                            coroutineScope.launch { settings.playFinalGuessEnd() }
                     is GameStateMachine.State.RoundEditing -> {}
                     is GameStateMachine.State.GameResults -> {}
                 }

@@ -14,6 +14,7 @@ import dev.lounres.halfhat.client.components.navigation.controller.NavigationRoo
 import dev.lounres.halfhat.client.components.navigation.controller.navigationController
 import dev.lounres.halfhat.client.components.navigation.controller.setUpNavigationControl
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultVariantsNode
+import dev.lounres.halfhat.client.logic.settings.CustomSounds
 import dev.lounres.halfhat.client.logic.settings.DeviceGameDefaultSettingsKey
 import dev.lounres.halfhat.client.logic.settings.LanguageKey
 import dev.lounres.halfhat.client.logic.settings.VolumeOnKey
@@ -100,9 +101,18 @@ val settingsDefaults: Map<String, SettingDescription<*>> = mapOf(
             cachedEndConditionWordsNumber = 100u,
             cachedEndConditionCyclesNumber = 10u,
             gameEndConditionType = GameStateMachine.GameEndCondition.Type.Words,
-            wordsSource = defaultDeviceGameWordsSource
+            wordsSource = defaultDeviceGameWordsSource,
         )
-    )
+    ),
+    "CustomSounds" to SettingDescription(
+        CustomSounds.Key,
+        CustomSounds(
+            preparationCountdown = null,
+            explanationStart = null,
+            finalGuessStart = null,
+            finalGuessEnd = null,
+        )
+    ),
 )
 
 val settingsSerializer = SettingsSerializer(settingsDefaults.mapValues { it.value.key })

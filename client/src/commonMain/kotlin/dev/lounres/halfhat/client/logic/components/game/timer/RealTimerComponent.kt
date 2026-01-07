@@ -1,11 +1,13 @@
 package dev.lounres.halfhat.client.logic.components.game.timer
 
-import dev.lounres.halfhat.client.utils.DefaultSounds
-import dev.lounres.halfhat.client.utils.play
 import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.lifecycle.LogicComponentLifecycleState
 import dev.lounres.halfhat.client.components.lifecycle.lifecycle
+import dev.lounres.halfhat.client.logic.settings.playExplanationStart
+import dev.lounres.halfhat.client.logic.settings.playFinalGuessEnd
+import dev.lounres.halfhat.client.logic.settings.playFinalGuessStart
+import dev.lounres.halfhat.client.logic.settings.playPreparationCountdown
 import dev.lounres.halfhat.client.logic.settings.volumeOn
 import dev.lounres.halfhat.client.storage.settings.settings
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
@@ -22,6 +24,7 @@ import kotlinx.coroutines.launch
 public class RealTimerComponent(
     private val componentContext: LogicComponentContext,
 ) : TimerComponent {
+    private val settings = componentContext.settings
     private val coroutineScope: CoroutineScope = componentContext.coroutineScope(Dispatchers.Default)
     
     override val timerState: KoneMutableAsynchronousHub<TimerState> = KoneMutableAsynchronousHub(TimerState.Finished)
@@ -49,15 +52,15 @@ public class RealTimerComponent(
                         when(newTimerState) {
                             is TimerState.Preparation ->
                                 if (oldTimerState !is TimerState.Preparation || oldTimerState.millisecondsLeft.let { if (it % 1000u != 0u) it / 1000u + 1u else it / 1000u } != newTimerState.millisecondsLeft.let { if (it % 1000u != 0u) it / 1000u + 1u else it / 1000u })
-                                    coroutineScope.launch { DefaultSounds.preparationCountdown.await().play() }
+                                    coroutineScope.launch { settings.playPreparationCountdown() }
                             is TimerState.Explanation ->
                                 if (oldTimerState !is TimerState.Explanation)
-                                    coroutineScope.launch { DefaultSounds.explanationStart.await().play() }
+                                    coroutineScope.launch { settings.playExplanationStart() }
                             is TimerState.LastGuess ->
                                 if (oldTimerState !is TimerState.LastGuess)
-                                    coroutineScope.launch { DefaultSounds.finalGuessStart.await().play() }
+                                    coroutineScope.launch { settings.playFinalGuessStart() }
                             TimerState.Finished ->
-                                coroutineScope.launch { DefaultSounds.finalGuessEnd.await().play() }
+                                coroutineScope.launch { settings.playFinalGuessEnd() }
                         }
                 }.also { timerJob = it }
             }.start()

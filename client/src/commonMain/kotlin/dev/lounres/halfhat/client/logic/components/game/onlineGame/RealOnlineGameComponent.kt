@@ -6,11 +6,13 @@ import dev.lounres.halfhat.client.utils.defaultHttpClient
 import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.consts.OnlineGameSettings
+import dev.lounres.halfhat.client.logic.settings.playExplanationStart
+import dev.lounres.halfhat.client.logic.settings.playFinalGuessEnd
+import dev.lounres.halfhat.client.logic.settings.playFinalGuessStart
+import dev.lounres.halfhat.client.logic.settings.playPreparationCountdown
 import dev.lounres.halfhat.client.logic.settings.volumeOn
 import dev.lounres.halfhat.client.storage.settings.settings
-import dev.lounres.halfhat.client.utils.DefaultSounds
 import dev.lounres.halfhat.client.utils.logger
-import dev.lounres.halfhat.client.utils.play
 import dev.lounres.logKube.core.debug
 import dev.lounres.logKube.core.info
 import dev.lounres.logKube.core.warn
@@ -47,7 +49,8 @@ public class RealOnlineGameComponent(
     }
     
     init {
-        val volumeOn = componentContext.settings.volumeOn
+        val settings = componentContext.settings
+        val volumeOn = settings.volumeOn
         
         componentContext.coroutineScope(Dispatchers.Default).launch {
             while (true) {
@@ -104,12 +107,12 @@ public class RealOnlineGameComponent(
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection -> {}
                                                 is ServerApi.OnlineGame.State.RoundWaiting -> {}
                                                 is ServerApi.OnlineGame.State.RoundPreparation ->
-                                                    launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                    launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundExplanation ->
-                                                    launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                    launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundLastGuess ->
                                                     if (previousState.millisecondsLeft > 0u)
-                                                        launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                        launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundEditing -> {}
                                                 is ServerApi.OnlineGame.State.GameResults -> {}
                                             }
@@ -120,12 +123,12 @@ public class RealOnlineGameComponent(
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection -> {}
                                                 is ServerApi.OnlineGame.State.RoundWaiting -> {}
                                                 is ServerApi.OnlineGame.State.RoundPreparation ->
-                                                    launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                    launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundExplanation ->
-                                                    launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                    launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundLastGuess ->
                                                     if (previousState.millisecondsLeft > 0u)
-                                                        launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                        launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundEditing -> {}
                                                 is ServerApi.OnlineGame.State.GameResults -> {}
                                             }
@@ -136,12 +139,12 @@ public class RealOnlineGameComponent(
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection -> {}
                                                 is ServerApi.OnlineGame.State.RoundWaiting -> {}
                                                 is ServerApi.OnlineGame.State.RoundPreparation ->
-                                                    launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                    launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundExplanation ->
-                                                    launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                    launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundLastGuess ->
                                                     if (previousState.millisecondsLeft > 0u)
-                                                        launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                        launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundEditing -> {}
                                                 is ServerApi.OnlineGame.State.GameResults -> {}
                                             }
@@ -149,90 +152,90 @@ public class RealOnlineGameComponent(
                                             when (previousState) {
                                                 null -> {}
                                                 is ServerApi.OnlineGame.State.GameInitialisation ->
-                                                    launch { DefaultSounds.preparationCountdown.await().play() }
+                                                    launch { settings.playPreparationCountdown() }
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection ->
-                                                    launch { DefaultSounds.preparationCountdown.await().play() }
+                                                    launch { settings.playPreparationCountdown() }
                                                 is ServerApi.OnlineGame.State.RoundWaiting ->
-                                                    launch { DefaultSounds.preparationCountdown.await().play() }
+                                                    launch { settings.playPreparationCountdown() }
                                                 is ServerApi.OnlineGame.State.RoundPreparation ->
                                                     if (previousState.roundNumber != newState.roundNumber || (previousState.millisecondsLeft / 1000u) != (newState.millisecondsLeft / 1000u))
-                                                        launch { DefaultSounds.preparationCountdown.await().play() }
+                                                        launch { settings.playPreparationCountdown() }
                                                 is ServerApi.OnlineGame.State.RoundExplanation ->
-                                                    launch { DefaultSounds.preparationCountdown.await().play() }
+                                                    launch { settings.playPreparationCountdown() }
                                                 is ServerApi.OnlineGame.State.RoundLastGuess ->
-                                                    launch { DefaultSounds.preparationCountdown.await().play() }
+                                                    launch { settings.playPreparationCountdown() }
                                                 is ServerApi.OnlineGame.State.RoundEditing ->
-                                                    launch { DefaultSounds.preparationCountdown.await().play() }
+                                                    launch { settings.playPreparationCountdown() }
                                                 is ServerApi.OnlineGame.State.GameResults ->
-                                                    launch { DefaultSounds.preparationCountdown.await().play() }
+                                                    launch { settings.playPreparationCountdown() }
                                             }
                                         is ServerApi.OnlineGame.State.RoundExplanation ->
                                             when (previousState) {
                                                 null -> {}
                                                 is ServerApi.OnlineGame.State.GameInitialisation ->
-                                                    launch { DefaultSounds.explanationStart.await().play() }
+                                                    launch { settings.playExplanationStart() }
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection ->
-                                                    launch { DefaultSounds.explanationStart.await().play() }
+                                                    launch { settings.playExplanationStart() }
                                                 is ServerApi.OnlineGame.State.RoundWaiting ->
-                                                    launch { DefaultSounds.explanationStart.await().play() }
+                                                    launch { settings.playExplanationStart() }
                                                 is ServerApi.OnlineGame.State.RoundPreparation ->
-                                                    launch { DefaultSounds.explanationStart.await().play() }
+                                                    launch { settings.playExplanationStart() }
                                                 is ServerApi.OnlineGame.State.RoundExplanation ->
                                                     if (previousState.roundNumber != newState.roundNumber)
-                                                        launch { DefaultSounds.explanationStart.await().play() }
+                                                        launch { settings.playExplanationStart() }
                                                 is ServerApi.OnlineGame.State.RoundLastGuess ->
-                                                    launch { DefaultSounds.explanationStart.await().play() }
+                                                    launch { settings.playExplanationStart() }
                                                 is ServerApi.OnlineGame.State.RoundEditing ->
-                                                    launch { DefaultSounds.explanationStart.await().play() }
+                                                    launch { settings.playExplanationStart() }
                                                 is ServerApi.OnlineGame.State.GameResults ->
-                                                    launch { DefaultSounds.explanationStart.await().play() }
+                                                    launch { settings.playExplanationStart() }
                                             }
                                         is ServerApi.OnlineGame.State.RoundLastGuess ->
                                             when (previousState) {
                                                 null -> {}
                                                 is ServerApi.OnlineGame.State.GameInitialisation ->
                                                     if (newState.millisecondsLeft > 0u)
-                                                        launch { DefaultSounds.finalGuessStart.await().play() }
+                                                        launch { settings.playFinalGuessStart() }
                                                     else
-                                                        launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                        launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection ->
                                                     if (newState.millisecondsLeft > 0u)
-                                                        launch { DefaultSounds.finalGuessStart.await().play() }
+                                                        launch { settings.playFinalGuessStart() }
                                                     else
-                                                        launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                        launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundWaiting ->
                                                     if (newState.millisecondsLeft > 0u)
-                                                        launch { DefaultSounds.finalGuessStart.await().play() }
+                                                        launch { settings.playFinalGuessStart() }
                                                     else
-                                                        launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                        launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundPreparation ->
                                                     if (newState.millisecondsLeft > 0u)
-                                                        launch { DefaultSounds.finalGuessStart.await().play() }
+                                                        launch { settings.playFinalGuessStart() }
                                                     else
-                                                        launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                        launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundExplanation ->
                                                     if (newState.millisecondsLeft > 0u)
-                                                        launch { DefaultSounds.finalGuessStart.await().play() }
+                                                        launch { settings.playFinalGuessStart() }
                                                     else
-                                                        launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                        launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundLastGuess ->
                                                     if (newState.millisecondsLeft == 0u) {
                                                         if (newState.roundNumber != previousState.roundNumber)
-                                                            launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                            launch { settings.playFinalGuessEnd() }
                                                     } else {
                                                         if (newState.roundNumber != previousState.roundNumber)
-                                                            launch { DefaultSounds.finalGuessStart.await().play() }
+                                                            launch { settings.playFinalGuessStart() }
                                                     }
                                                 is ServerApi.OnlineGame.State.RoundEditing ->
                                                     if (newState.millisecondsLeft > 0u)
-                                                        launch { DefaultSounds.finalGuessStart.await().play() }
+                                                        launch { settings.playFinalGuessStart() }
                                                     else
-                                                        launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                        launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.GameResults ->
                                                     if (newState.millisecondsLeft > 0u)
-                                                        launch { DefaultSounds.finalGuessStart.await().play() }
+                                                        launch { settings.playFinalGuessStart() }
                                                     else
-                                                        launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                        launch { settings.playFinalGuessEnd() }
                                             }
                                         is ServerApi.OnlineGame.State.RoundEditing ->
                                             when (previousState) {
@@ -241,12 +244,12 @@ public class RealOnlineGameComponent(
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection -> {}
                                                 is ServerApi.OnlineGame.State.RoundWaiting -> {}
                                                 is ServerApi.OnlineGame.State.RoundPreparation ->
-                                                    launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                    launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundExplanation ->
-                                                    launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                    launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundLastGuess ->
                                                     if (previousState.millisecondsLeft > 0u)
-                                                        launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                        launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundEditing -> {}
                                                 is ServerApi.OnlineGame.State.GameResults -> {}
                                             }
@@ -257,12 +260,12 @@ public class RealOnlineGameComponent(
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection -> {}
                                                 is ServerApi.OnlineGame.State.RoundWaiting -> {}
                                                 is ServerApi.OnlineGame.State.RoundPreparation ->
-                                                    launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                    launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundExplanation ->
-                                                    launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                    launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundLastGuess ->
                                                     if (previousState.millisecondsLeft > 0u)
-                                                        launch { DefaultSounds.finalGuessEnd.await().play() }
+                                                        launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundEditing -> {}
                                                 is ServerApi.OnlineGame.State.GameResults -> {}
                                             }

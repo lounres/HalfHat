@@ -13,6 +13,8 @@ import javax.sound.sampled.SourceDataLine
 
 public actual typealias Audio = ByteArray
 
+public actual suspend inline fun ByteArray.toAudio(): Audio = this
+
 private val soundCoroutineScope = CoroutineScope(Dispatchers.IO)
 
 public actual object DefaultSounds {

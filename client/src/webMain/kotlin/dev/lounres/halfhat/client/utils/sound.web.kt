@@ -17,7 +17,7 @@ public actual typealias Audio = AudioBuffer
 
 private val context = AudioContext()
 
-private suspend fun ByteArray.toAudio(): Audio =
+public actual suspend fun ByteArray.toAudio(): Audio =
     context.decodeAudioData(
         ArrayBuffer(this.size).also {
             val view = Int8Array(it)
@@ -28,14 +28,14 @@ private suspend fun ByteArray.toAudio(): Audio =
 private val soundCoroutineScope = CoroutineScope(Dispatchers.Default)
 
 public actual object DefaultSounds {
-    public actual val preparationCountdown: Deferred<Audio> =
-        soundCoroutineScope.async(start = CoroutineStart.LAZY) { Res.readBytes("files/sounds/countdown.mp3").toAudio() }
-    public actual val explanationStart: Deferred<Audio> =
-        soundCoroutineScope.async(start = CoroutineStart.LAZY) { Res.readBytes("files/sounds/explanationStart.mp3").toAudio() }
-    public actual val finalGuessStart: Deferred<Audio> =
-        soundCoroutineScope.async(start = CoroutineStart.LAZY) { Res.readBytes("files/sounds/finalGuessStart.mp3").toAudio() }
-    public actual val finalGuessEnd: Deferred<Audio> =
-        soundCoroutineScope.async(start = CoroutineStart.LAZY) { Res.readBytes("files/sounds/finalGuessEnd.mp3").toAudio() }
+    public actual val preparationCountdown: Deferred<ByteArray> =
+        soundCoroutineScope.async(start = CoroutineStart.LAZY) { Res.readBytes("files/sounds/countdown.mp3") }
+    public actual val explanationStart: Deferred<ByteArray> =
+        soundCoroutineScope.async(start = CoroutineStart.LAZY) { Res.readBytes("files/sounds/explanationStart.mp3") }
+    public actual val finalGuessStart: Deferred<ByteArray> =
+        soundCoroutineScope.async(start = CoroutineStart.LAZY) { Res.readBytes("files/sounds/finalGuessStart.mp3") }
+    public actual val finalGuessEnd: Deferred<ByteArray> =
+        soundCoroutineScope.async(start = CoroutineStart.LAZY) { Res.readBytes("files/sounds/finalGuessEnd.mp3") }
 }
 
 public actual fun Audio.play() {
