@@ -6,7 +6,6 @@ import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecyc
 import dev.lounres.halfhat.client.components.navigation.ChildrenVariants
 import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.kone.collections.list.KoneList
-import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.hub.KoneAsynchronousHubView
 import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
 
@@ -18,7 +17,7 @@ actual interface MainWindowComponent {
     actual val volumeOn: KoneMutableAsynchronousHubView<Boolean, *>
     actual val language: KoneMutableAsynchronousHubView<Language, *>
     
-    actual val pageVariants: KoneAsynchronousHub<ChildrenVariants<MainWindowComponentChild.Kind, MainWindowComponentChild, UIComponentContext>>
+    actual val pageVariants: KoneAsynchronousHubView<ChildrenVariants<MainWindowComponentChild.Kind, MainWindowComponentChild, UIComponentContext>, *>
     actual val openPage: (page: MainWindowComponentChild.Kind) -> Unit
     actual val menuList: KoneAsynchronousHubView<KoneList<MainWindowComponentMenuItem>, *>
 }

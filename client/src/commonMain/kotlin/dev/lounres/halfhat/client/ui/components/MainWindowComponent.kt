@@ -19,9 +19,9 @@ import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.collections.utils.firstThat
 import dev.lounres.kone.collections.utils.flatten
-import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.hub.KoneAsynchronousHubView
 import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
+import dev.lounres.kone.registry.serialization.RegistrySerializableKey
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -38,7 +38,7 @@ expect interface MainWindowComponent {
     val volumeOn: KoneMutableAsynchronousHubView<Boolean, *>
     val language: KoneMutableAsynchronousHubView<Language, *>
     
-    val pageVariants: KoneAsynchronousHub<ChildrenVariants<MainWindowComponentChild.Kind, MainWindowComponentChild, UIComponentContext>>
+    val pageVariants: KoneAsynchronousHubView<ChildrenVariants<MainWindowComponentChild.Kind, MainWindowComponentChild, UIComponentContext>, *>
     val openPage: (page: MainWindowComponentChild.Kind) -> Unit
     val menuList: KoneAsynchronousHubView<KoneList<MainWindowComponentMenuItem>, *>
 }
@@ -85,6 +85,10 @@ sealed interface MainWindowComponentChild {
                 val value = decoder.decodeString()
                 return registeredEnumInheritors.firstThat { it.name == value }
             }
+        }
+        
+        data object Key : RegistrySerializableKey<Kind> {
+            override val serializer: KSerializer<Kind> get() = Serializer
         }
     }
     sealed interface Primary : MainWindowComponentChild {
