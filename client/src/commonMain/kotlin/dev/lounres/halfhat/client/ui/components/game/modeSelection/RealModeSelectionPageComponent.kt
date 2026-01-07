@@ -1,12 +1,12 @@
 package dev.lounres.halfhat.client.ui.components.game.modeSelection
 
 import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.navigation.ChildrenPossibility
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultPossibilityNode
 import dev.lounres.komponentual.navigation.PossibilityNavigationTarget
 import dev.lounres.komponentual.navigation.clear
 import dev.lounres.komponentual.navigation.set
-import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.hub.KoneAsynchronousHubView
 import dev.lounres.kone.maybe.None
 import kotlinx.coroutines.CoroutineScope
@@ -24,35 +24,37 @@ public class RealModeSelectionPageComponent(
     override val onDeviceGameSelect: () -> Unit,
     override val onGameControllerSelect: () -> Unit,
     override val onGameTimerSelect: () -> Unit,
+    
+    coroutineScope: CoroutineScope,
 ): ModeSelectionPageComponent {
     
     override val onOnlineGameInfo: () -> Unit = {
-        CoroutineScope(Dispatchers.Default).launch {
+        coroutineScope.launch {
             infoPopupNavigation.set(ModeSelectionPageComponent.InfoPopup.OnlineGame)
         }
     }
     override val onLocalGameInfo: () -> Unit = {
-        CoroutineScope(Dispatchers.Default).launch {
+        coroutineScope.launch {
             infoPopupNavigation.set(ModeSelectionPageComponent.InfoPopup.LocalGame)
         }
     }
     override val onDeviceGameInfo: () -> Unit = {
-        CoroutineScope(Dispatchers.Default).launch {
+        coroutineScope.launch {
             infoPopupNavigation.set(ModeSelectionPageComponent.InfoPopup.DeviceGame)
         }
     }
     override val onGameControllerInfo: () -> Unit = {
-        CoroutineScope(Dispatchers.Default).launch {
+        coroutineScope.launch {
             infoPopupNavigation.set(ModeSelectionPageComponent.InfoPopup.GameController)
         }
     }
     override val onGameTimerInfo: () -> Unit = {
-        CoroutineScope(Dispatchers.Default).launch {
+        coroutineScope.launch {
             infoPopupNavigation.set(ModeSelectionPageComponent.InfoPopup.GameTimer)
         }
     }
     override val onCloseInfo: () -> Unit = {
-        CoroutineScope(Dispatchers.Default).launch {
+        coroutineScope.launch {
             infoPopupNavigation.clear()
         }
     }
@@ -82,5 +84,7 @@ public suspend fun RealModeSelectionPageComponent(
         onDeviceGameSelect = onDeviceGameSelect,
         onGameControllerSelect = onGameControllerSelect,
         onGameTimerSelect = onGameTimerSelect,
+        
+        coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
     )
 }

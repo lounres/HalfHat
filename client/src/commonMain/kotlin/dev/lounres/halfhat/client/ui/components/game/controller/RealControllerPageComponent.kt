@@ -5,6 +5,7 @@ import dev.lounres.halfhat.client.ui.components.game.controller.roomScreen.Playe
 import dev.lounres.halfhat.client.ui.components.game.controller.roomScreen.RealRoomScreenComponent
 import dev.lounres.halfhat.client.ui.components.game.controller.roomSettings.RealRoomSettingsComponent
 import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.navigation.ChildrenStack
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStackNode
 import dev.lounres.komponentual.navigation.replaceCurrent
@@ -43,6 +44,8 @@ public suspend fun RealControllerPageComponent(
     componentContext: UIComponentContext,
     onExitController: () -> Unit,
 ): RealControllerPageComponent {
+    val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
+    
     val playersList: MutableStateFlow<KoneList<Player>> = MutableStateFlow(KoneList.of(Player(""), Player(""))) // TODO: Hardcoded settings!!!
     val preparationTimeSeconds: MutableStateFlow<UInt> = MutableStateFlow(3u) // TODO: Hardcoded settings!!!
     val explanationTimeSeconds: MutableStateFlow<UInt> = MutableStateFlow(20u) // TODO: Hardcoded settings!!!
@@ -59,7 +62,7 @@ public suspend fun RealControllerPageComponent(
                         RealRoomScreenComponent(
                             onExitGameController = onExitController,
                             onOpenGameSettings = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.replaceCurrent(RealControllerPageComponent.Configuration.RoomSettings)
                                 }
                             },
@@ -87,7 +90,7 @@ public suspend fun RealControllerPageComponent(
                                     error { "Cannot remove player when there are no more than two of them" }
                                 }
                                 
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.replaceCurrent(
                                         RealControllerPageComponent.Configuration.GameScreen
                                     )
@@ -110,7 +113,7 @@ public suspend fun RealControllerPageComponent(
                                 finalGuessTimeSeconds.value = finalGuessTimeSecondsValue
                             },
                             onExitSettings = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.replaceCurrent(RealControllerPageComponent.Configuration.RoomScreen)
                                 }
                             },
@@ -125,7 +128,7 @@ public suspend fun RealControllerPageComponent(
                             explanationTimeSeconds = explanationTimeSeconds.value,
                             finalGuessTimeSeconds = finalGuessTimeSeconds.value,
                             onExitGameController = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.replaceCurrent(RealControllerPageComponent.Configuration.RoomScreen)
                                 }
                             },

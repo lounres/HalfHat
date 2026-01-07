@@ -12,7 +12,6 @@ import dev.lounres.halfhat.client.logic.settings.language
 import dev.lounres.halfhat.client.logic.settings.volumeOn
 import dev.lounres.halfhat.client.logic.wordsProviders.DeviceGameWordsProviderID
 import dev.lounres.halfhat.client.logic.wordsProviders.DeviceGameWordsProviderRegistry
-import dev.lounres.halfhat.client.storage.settings.Settings
 import dev.lounres.halfhat.client.storage.settings.settings
 import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.halfhat.client.ui.theming.darkTheme
@@ -39,6 +38,9 @@ actual class RealMainWindowComponent(
     actual override val menuList: KoneAsynchronousHubView<KoneList<MainWindowComponentMenuItem>, *>,
 ): MainWindowComponent
 
+actual val defaultDeviceGameWordsSource: GameStateMachine.WordsSource<DeviceGameWordsProviderID> =
+    GameStateMachine.WordsSource.Custom(DeviceGameWordsProviderID.Local("medium"))
+
 suspend fun RealMainWindowComponent(
     deviceGameWordsProviderRegistry: DeviceGameWordsProviderRegistry,
     
@@ -52,9 +54,8 @@ suspend fun RealMainWindowComponent(
     val globalComponentContext = globalComponentContext(
         globalLifecycle = globalLifecycle,
         navigationRoot = navigationRoot,
-        savedSettings = Settings {  }, // TODO: Add loading of saved settings
+        savedSettings = null, // TODO: Add loading of saved settings
         deviceGameWordsProviderRegistry = deviceGameWordsProviderRegistry,
-        gameStateMachineWordsSource = GameStateMachine.WordsSource.Custom(DeviceGameWordsProviderID.Local("medium")),
     )
     
     globalComponentContext.settings.subscribe {

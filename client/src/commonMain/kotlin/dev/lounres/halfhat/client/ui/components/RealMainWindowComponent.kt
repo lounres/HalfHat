@@ -75,11 +75,26 @@ data class SettingDescription<T>(
     val value: T,
 )
 
+expect val defaultDeviceGameWordsSource: GameStateMachine.WordsSource<DeviceGameWordsProviderID>
+
 val settingsDefaults: Map<String, SettingDescription<*>> = mapOf(
     "DarkTheme" to SettingDescription(DarkTheme.Key, DarkTheme.System),
     "VolumeOn" to SettingDescription(VolumeOnKey, true),
     "Language" to SettingDescription(LanguageKey, Language.English),
     "InitialSelectedPage" to SettingDescription(MainWindowComponentChild.Kind.Key, MainWindowComponentChild.Kind.Primary.Game),
+    "DeviceGameDefaultSettings" to SettingDescription(
+        DeviceGameDefaultSettingsKey,
+        GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>(
+            preparationTimeSeconds = 3u,
+            explanationTimeSeconds = 20u,
+            finalGuessTimeSeconds = 3u,
+            strictMode = false,
+            cachedEndConditionWordsNumber = 100u,
+            cachedEndConditionCyclesNumber = 10u,
+            gameEndConditionType = GameStateMachine.GameEndCondition.Type.Words,
+            wordsSource = defaultDeviceGameWordsSource
+        )
+    )
 )
 
 val settingsSerializer = SettingsSerializer(settingsDefaults.mapValues { it.value.key })
@@ -87,9 +102,8 @@ val settingsSerializer = SettingsSerializer(settingsDefaults.mapValues { it.valu
 fun globalComponentContext(
     globalLifecycle: MutableUIComponentLifecycle,
     navigationRoot: NavigationRoot,
-    savedSettings: Settings,
+    savedSettings: Settings?,
     deviceGameWordsProviderRegistry: DeviceGameWordsProviderRegistry,
-    gameStateMachineWordsSource: GameStateMachine.WordsSource<DeviceGameWordsProviderID>,
 ): UIComponentContext = UIComponentContext {
     UIComponentLifecycleKey correspondsTo globalLifecycle
     
@@ -100,26 +114,12 @@ fun globalComponentContext(
         stringFormat = Json,
     )
     
-    val settings = KoneMutableAsynchronousHub(
+    Settings.Key correspondsTo KoneMutableAsynchronousHub(
         Settings {
-            setFrom(savedSettings)
+            if (savedSettings != null) setFrom(savedSettings)
             @Suppress("UNCHECKED_CAST")
             for ((key, value) in settingsDefaults.values) if (key !in this) (key as RegistryKey<Any?>) correspondsTo value
         }
-    )
-    Settings.Key correspondsTo settings
-    // TODO: Move the following to settings.
-    DeviceGameDefaultSettingsKey correspondsTo KoneMutableAsynchronousHub(
-        GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>(
-            preparationTimeSeconds = 3u,
-            explanationTimeSeconds = 20u,
-            finalGuessTimeSeconds = 3u,
-            strictMode = false,
-            cachedEndConditionWordsNumber = 100u,
-            cachedEndConditionCyclesNumber = 10u,
-            gameEndConditionType = GameStateMachine.GameEndCondition.Type.Words,
-            wordsSource = gameStateMachineWordsSource
-        )
     )
     
     DeviceGameWordsProviderRegistryKey correspondsTo deviceGameWordsProviderRegistry
@@ -132,6 +132,8 @@ data class PagesDescription(
 )
 
 suspend fun UIComponentContext.pagesDescription(): PagesDescription {
+    val coroutineScope = coroutineScope(Dispatchers.Default)
+    
     val pageVariants =
         uiChildrenDefaultVariantsNode(
             navigationControllerSpec = NavigationControllerSpec(
@@ -167,7 +169,7 @@ suspend fun UIComponentContext.pagesDescription(): PagesDescription {
                     MainWindowComponentChild.Secondary.FAQ(
                         RealFAQPageComponent(
                             onFeedbackLinkClick = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigation.set(MainWindowComponentChild.Kind.Secondary.FAQ)
                                 }
                             }
@@ -192,7 +194,6 @@ suspend fun UIComponentContext.pagesDescription(): PagesDescription {
             }
         }
     
-    val coroutineScope = this.coroutineScope(Dispatchers.Default)
     val openPage: (page: MainWindowComponentChild.Kind) -> Unit = { page ->
         coroutineScope.launch {
             pageVariants.set(page)

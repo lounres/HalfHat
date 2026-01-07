@@ -5,6 +5,7 @@ import dev.lounres.halfhat.client.ui.components.game.deviceGame.RealDeviceGamePa
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.RealOnlineGamePageComponent
 import dev.lounres.halfhat.client.ui.components.game.timer.RealTimerPageComponent
 import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.ui.components.game.localGame.RealLocalGamePageComponent
 import dev.lounres.halfhat.client.ui.components.game.modeSelection.RealModeSelectionPageComponent
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
@@ -49,6 +50,7 @@ public class RealGamePageComponent(
 public suspend fun RealGamePageComponent(
     componentContext: UIComponentContext,
 ): RealGamePageComponent {
+    val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
     
     val currentChild =
         componentContext.uiChildrenDefaultSlotNode(
@@ -101,27 +103,27 @@ public suspend fun RealGamePageComponent(
                         RealModeSelectionPageComponent(
                             componentContext = componentContext,
                             onOnlineGameSelect = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.set(RealGamePageComponent.Configuration.OnlineGame)
                                 }
                             },
                             onLocalGameSelect = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.set(RealGamePageComponent.Configuration.LocalGame)
                                 }
                             },
                             onDeviceGameSelect = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.set(RealGamePageComponent.Configuration.DeviceGame)
                                 }
                             },
                             onGameControllerSelect = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.set(RealGamePageComponent.Configuration.GameController)
                                 }
                             },
                             onGameTimerSelect = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.set(RealGamePageComponent.Configuration.GameTimer)
                                 }
                             },
@@ -132,7 +134,7 @@ public suspend fun RealGamePageComponent(
                         RealOnlineGamePageComponent(
                             componentContext = componentContext,
                             onExitOnlineGameMode = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.set(null)
                                 }
                             },
@@ -142,7 +144,7 @@ public suspend fun RealGamePageComponent(
                     GamePageComponent.Child.LocalGame(
                         RealLocalGamePageComponent(
                             onExitLocalGame = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.set(null)
                                 }
                             }
@@ -153,7 +155,7 @@ public suspend fun RealGamePageComponent(
                         RealDeviceGamePageComponent(
                             componentContext = componentContext,
                             onExitDeviceGame = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.set(null)
                                 }
                             },
@@ -164,7 +166,7 @@ public suspend fun RealGamePageComponent(
                         RealControllerPageComponent(
                             componentContext = componentContext,
                             onExitController = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.set(null)
                                 }
                             }
@@ -175,7 +177,7 @@ public suspend fun RealGamePageComponent(
                         RealTimerPageComponent(
                             componentContext = componentContext,
                             onExitTimer = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.set(null)
                                 }
                             },

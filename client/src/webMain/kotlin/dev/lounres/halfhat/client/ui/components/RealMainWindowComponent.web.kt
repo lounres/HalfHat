@@ -62,6 +62,9 @@ actual class RealMainWindowComponent(
     actual override val menuList: KoneAsynchronousHubView<KoneList<MainWindowComponentMenuItem>, *>,
 ): MainWindowComponent
 
+actual val defaultDeviceGameWordsSource: GameStateMachine.WordsSource<DeviceGameWordsProviderID> =
+    GameStateMachine.WordsSource.Custom(DeviceGameWordsProviderID.Local("medium"))
+
 suspend fun RealMainWindowComponent(
 //    localDictionariesRegistry: LocalDictionariesRegistry,
 ): RealMainWindowComponent {
@@ -87,9 +90,8 @@ suspend fun RealMainWindowComponent(
     val globalComponentContext = globalComponentContext(
         globalLifecycle = globalLifecycle,
         navigationRoot = navigationRoot,
-        savedSettings = localStorage.getItem("settings")?.let { Json.decodeFromString(settingsSerializer, it) } ?: Settings {  },
+        savedSettings = localStorage.getItem("settings")?.let { Json.decodeFromString(settingsSerializer, it) },
         deviceGameWordsProviderRegistry = DeviceGameWordsProviderRegistry,
-        gameStateMachineWordsSource = GameStateMachine.WordsSource.Custom(DeviceGameWordsProviderID.Local("medium")),
     )
     
     globalComponentContext.settings.subscribe {

@@ -35,8 +35,11 @@ public object GameStateMachine {
         }
     }
     
+    @Serializable
     public sealed interface WordsSource<out WPID> {
+        @Serializable
         public data object Players : WordsSource<Nothing>
+        @Serializable
         public data class Custom<out WPID>(val providerId: WPID) : WordsSource<WPID>
     }
     
@@ -59,6 +62,7 @@ public object GameStateMachine {
         val gameEndCondition: GameEndCondition,
         val wordsSource: WordsSource<WPID>,
     ) {
+        @Serializable
         public data class Builder<out WPID>(
             val preparationTimeSeconds: UInt,
             val explanationTimeSeconds: UInt,

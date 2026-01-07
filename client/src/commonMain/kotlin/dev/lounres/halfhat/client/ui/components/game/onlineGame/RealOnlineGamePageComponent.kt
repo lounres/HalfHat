@@ -20,7 +20,6 @@ import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.hub.KoneAsynchronousHubView
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.hub.set
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -77,7 +76,7 @@ public suspend fun RealOnlineGamePageComponent(
                                         playerName = playerName
                                     )
                                 )
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigation.replaceCurrent(RealOnlineGamePageComponent.Configuration.GameScreen)
                                 }
                             }
@@ -90,7 +89,7 @@ public suspend fun RealOnlineGamePageComponent(
                             gameStateFlow = onlineGameComponent.gameStateFlow,
                             onExitOnlineGame = {
                                 onlineGameComponent.sendSignal(ClientApi.Signal.OnlineGame.LeaveRoom)
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigation.replaceCurrent(RealOnlineGamePageComponent.Configuration.PreviewScreen)
                                 }
                             },

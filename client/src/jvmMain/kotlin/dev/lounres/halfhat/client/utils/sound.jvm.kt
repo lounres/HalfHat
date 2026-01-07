@@ -13,15 +13,17 @@ import javax.sound.sampled.SourceDataLine
 
 public actual typealias Audio = ByteArray
 
+private val soundCoroutineScope = CoroutineScope(Dispatchers.IO)
+
 public actual object DefaultSounds {
     public actual val preparationCountdown: Deferred<Audio> =
-        CoroutineScope(Dispatchers.Default).async { Res.readBytes("files/sounds/countdown.mp3") }
+        soundCoroutineScope.async { Res.readBytes("files/sounds/countdown.mp3") }
     public actual val explanationStart: Deferred<Audio> =
-        CoroutineScope(Dispatchers.Default).async { Res.readBytes("files/sounds/explanationStart.mp3") }
+        soundCoroutineScope.async { Res.readBytes("files/sounds/explanationStart.mp3") }
     public actual val finalGuessStart: Deferred<Audio> =
-        CoroutineScope(Dispatchers.Default).async { Res.readBytes("files/sounds/finalGuessStart.mp3") }
+        soundCoroutineScope.async { Res.readBytes("files/sounds/finalGuessStart.mp3") }
     public actual val finalGuessEnd: Deferred<Audio> =
-        CoroutineScope(Dispatchers.Default).async { Res.readBytes("files/sounds/finalGuessEnd.mp3") }
+        soundCoroutineScope.async { Res.readBytes("files/sounds/finalGuessEnd.mp3") }
 }
 
 public actual fun Audio.play() {

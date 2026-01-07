@@ -1,16 +1,16 @@
 package dev.lounres.halfhat.client.ui.components.game.deviceGame
 
 import dev.lounres.halfhat.client.logic.settings.deviceGameDefaultSettings
-import dev.lounres.halfhat.client.logic.wordsProviders.DeviceGameWordsProviderID
 import dev.lounres.halfhat.client.logic.wordsProviders.deviceGameWordsProviderRegistry
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.roomScreen.Player
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.roomScreen.RealRoomScreenComponent
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.roomSettings.RealRoomSettingsComponent
 import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.navigation.ChildrenStack
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStackNode
-import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
+import dev.lounres.halfhat.client.storage.settings.settings
 import dev.lounres.komponentual.navigation.replaceCurrent
 import dev.lounres.kone.collections.iterables.isNotEmpty
 import dev.lounres.kone.collections.list.KoneList
@@ -21,9 +21,10 @@ import dev.lounres.kone.collections.set.empty
 import dev.lounres.kone.collections.set.of
 import dev.lounres.kone.collections.utils.*
 import dev.lounres.kone.hub.KoneAsynchronousHubView
+import dev.lounres.kone.hub.map
+import dev.lounres.kone.hub.set
 import dev.lounres.kone.relations.Equality
 import dev.lounres.kone.relations.Hashing
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -43,8 +44,11 @@ public suspend fun RealDeviceGamePageComponent(
     componentContext: UIComponentContext,
     onExitDeviceGame: () -> Unit,
 ): RealDeviceGamePageComponent {
+    val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
+    
     val playersList: MutableStateFlow<KoneList<Player>> = MutableStateFlow(KoneList.of(Player(""), Player(""))) // TODO: Hardcoded settings!!!
-    val settingsBuilderState: MutableStateFlow<GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>> = MutableStateFlow(componentContext.deviceGameDefaultSettings.value)
+    val defaultSettingsBuilder = componentContext.settings.deviceGameDefaultSettings
+    val settingsBuilderState = defaultSettingsBuilder.map { it }
     
     val possibleWordsSources = componentContext.deviceGameWordsProviderRegistry.list()
     
@@ -59,7 +63,7 @@ public suspend fun RealDeviceGamePageComponent(
                         RealRoomScreenComponent(
                             onExitDeviceGame = onExitDeviceGame,
                             onOpenGameSettings = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.replaceCurrent(RealDeviceGamePageComponent.Configuration.RoomSettings)
                                 }
                             },
@@ -84,13 +88,16 @@ public suspend fun RealDeviceGamePageComponent(
                                 }
                                 
                                 if (playersList.value.size < 2u) {
-                                    error { "Cannot remove player when there are no more than two of them" }
+                                    error("Unreachable state: cannot start game with less than two players.")
                                 }
                                 
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.replaceCurrent(
                                         RealDeviceGamePageComponent.Configuration.GameScreen
                                     )
+                                }
+                                coroutineScope.launch {
+                                    defaultSettingsBuilder.set(settingsBuilderState.value)
                                 }
                             },
                             playersList = playersList,
@@ -103,9 +110,13 @@ public suspend fun RealDeviceGamePageComponent(
                         RealRoomSettingsComponent(
                             initialSettingsBuilder = settingsBuilderState.value,
                             possibleWordsSources = possibleWordsSources,
-                            onUpdateSettingsBuilder = { settingsBuilderState.value = it },
+                            onUpdateSettingsBuilder = {
+                                coroutineScope.launch {
+                                    settingsBuilderState.set(it)
+                                }
+                            },
                             onExitSettings = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.replaceCurrent(RealDeviceGamePageComponent.Configuration.RoomScreen)
                                 }
                             },
@@ -118,7 +129,7 @@ public suspend fun RealDeviceGamePageComponent(
                             playersList = playersList.value.map { it.name },
                             settingsBuilder = settingsBuilderState.value,
                             onExitGame = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigationTarget.replaceCurrent(RealDeviceGamePageComponent.Configuration.RoomScreen)
                                 }
                             },

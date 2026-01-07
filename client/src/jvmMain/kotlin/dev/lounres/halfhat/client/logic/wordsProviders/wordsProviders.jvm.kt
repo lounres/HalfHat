@@ -63,7 +63,7 @@ public actual object DeviceGameWordsProviderRegistry : GameStateMachine.WordsPro
             keyEquality = Equality.defaultFor(),
             keyHashing = Hashing.defaultFor(),
         ).mapValues { entry ->
-            CoroutineScope(Dispatchers.Default).async(start = CoroutineStart.LAZY) {
+            CoroutineScope(Dispatchers.IO).async(start = CoroutineStart.LAZY) {
                 Res
                     .readBytes(entry.value)
                     .toString(Charsets.UTF_8)

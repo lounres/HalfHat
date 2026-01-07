@@ -20,7 +20,6 @@ import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.hub.KoneAsynchronousHubView
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -80,6 +79,7 @@ public suspend fun RealGameScreenComponent(
     onUpdateExplanationResults: (KoneList<GameStateMachine.WordExplanation>) -> Unit,
     onConfirmExplanationResults: () -> Unit,
 ): RealGameScreenComponent {
+    val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
     
     val childSlot =
         componentContext.uiChildrenDefaultSlotNode(
@@ -107,7 +107,7 @@ public suspend fun RealGameScreenComponent(
                             gameStateFlow = configuration.stateFlow,
                             
                             onOpenGameSettings = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigation.set(
                                         RealGameScreenComponent.Configuration.RoomSettings(
                                             configuration.stateFlow
@@ -123,7 +123,7 @@ public suspend fun RealGameScreenComponent(
                         RealRoomSettingsComponent(
                             onApplySettings = {
                                 onApplySettings(it)
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigation.set(
                                         RealGameScreenComponent.Configuration.RoomScreen(
                                             configuration.stateFlow
@@ -132,7 +132,7 @@ public suspend fun RealGameScreenComponent(
                                 }
                             },
                             onDiscardSettings = {
-                                CoroutineScope(Dispatchers.Default).launch {
+                                coroutineScope.launch {
                                     navigation.set(
                                         RealGameScreenComponent.Configuration.RoomScreen(
                                             configuration.stateFlow
@@ -205,8 +205,6 @@ public suspend fun RealGameScreenComponent(
                     )
             }
         }
-    
-    val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
     
     coroutineScope.launch {
         gameStateFlow.collect { newState ->
