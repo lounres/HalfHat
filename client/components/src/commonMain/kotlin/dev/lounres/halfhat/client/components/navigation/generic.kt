@@ -50,6 +50,7 @@ public data class BuiltChild<Component, ComponentContext>(
 public data class NavigationControllerSpec<NavigationState, Configuration, Component, ComponentContext, NavigationPublicState, NavigationEvent>(
     val key: String,
     val configurationSerializer: KSerializer<Configuration>,
+    val restorationBuilder: (suspend (navigationState: NavigationState, childrenRestorationBlock: suspend () -> Unit) -> Unit)? = null,
     val pathBuilder: (suspend (navigationState: NavigationState, children: KoneMap<Configuration, BuiltChild<Component, ComponentContext>>) -> NavigationNodePath)? = null,
     val restorationByPath: (suspend (path: NavigationNodePath, navigationTarget: ChildrenNode<NavigationPublicState, NavigationEvent>) -> Unit)? = null
 )
@@ -224,12 +225,21 @@ public suspend fun <
                     stringFormat.encodeToString(configurationSerializer, node.key) mapsTo node.value.navigationNodeController!!
                 }
             }
-            childrenNavigationNodeController.setRestoration {
-                try {
-                    val restoredState = stringFormat.decodeFromString(navigationStateSerializer, it)
-                    navigationHub.navigate(restorationEvent(restoredState))
-                } catch (_: SerializationException) {} catch (_: IllegalArgumentException /* TODO: Remove eventually when Kone will start using correct exception types */) {}
-            }
+            val restorationBuilder = navigationControllerSpec.restorationBuilder
+            if (restorationBuilder == null)
+                childrenNavigationNodeController.setRestoration {
+                    val restoredState = try {
+                        stringFormat.decodeFromString(navigationStateSerializer, it)
+                    } catch (_: SerializationException) { null } catch (_: IllegalArgumentException /* TODO: Remove eventually when Kone will start using correct exception types */) { null }
+                    if (restoredState != null) navigationHub.navigate(restorationEvent(restoredState))
+                }
+            else
+                childrenNavigationNodeController.setRestoration {
+                    val restoredState = try {
+                        stringFormat.decodeFromString(navigationStateSerializer, it)
+                    } catch (_: SerializationException) { null } catch (_: IllegalArgumentException /* TODO: Remove eventually when Kone will start using correct exception types */) { null }
+                    if (restoredState != null) restorationBuilder(restoredState) { navigationHub.navigate(restorationEvent(restoredState)) }
+                }
             val pathBuilder = navigationControllerSpec.pathBuilder
             if (pathBuilder != null) childrenNavigationNodeController.setPathBuilder {
                 pathBuilder(

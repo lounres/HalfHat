@@ -15,7 +15,6 @@ import dev.lounres.halfhat.client.logic.settings.language
 import dev.lounres.halfhat.client.logic.settings.volumeOn
 import dev.lounres.halfhat.client.logic.wordsProviders.DeviceGameWordsProviderID
 import dev.lounres.halfhat.client.logic.wordsProviders.DeviceGameWordsProviderRegistry
-import dev.lounres.halfhat.client.storage.settings.Settings
 import dev.lounres.halfhat.client.storage.settings.settings
 import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.halfhat.client.ui.theming.darkTheme
@@ -33,7 +32,11 @@ import dev.lounres.kone.collections.utils.joinToString
 import dev.lounres.kone.hub.KoneAsynchronousHubView
 import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
 import dev.lounres.kone.scope
+import js.array.component1
+import js.array.component2
 import js.core.JsPrimitives.toKotlinString
+import js.iterable.iterator
+import js.uri.decodeURIComponent
 import js.uri.encodeURIComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -44,6 +47,7 @@ import web.history.history
 import web.location.location
 import web.storage.localStorage
 import web.url.URL
+import web.url.URLSearchParams
 import web.window.window
 import kotlin.js.JsString
 import kotlin.js.toJsString
@@ -76,10 +80,12 @@ suspend fun RealMainWindowComponent(
             unused = "",
             url = path?.let { path ->
                 val url = URL(location.href)
-                url.pathname = WebPageSettings.base + path.path.joinToString(separator = "/")
+                url.pathname = WebPageSettings.base + path.path.joinToString(separator = "/") { encodeURIComponent(it) }
                 url.search = path.arguments.let {
                     if (it.isNotEmpty()) it.nodesView.joinToString(prefix = "?", separator = "&") { node ->
-                        "${encodeURIComponent(node.key)}=${encodeURIComponent(node.value)}"
+                        val key = encodeURIComponent(node.key)
+                        val value = encodeURIComponent(node.value)
+                        if (value.isEmpty()) key else "$key=$value"
                     } else ""
                 }
                 url
@@ -124,16 +130,16 @@ suspend fun RealMainWindowComponent(
         
         val locationPath = location.pathname
         val actualPath = locationPath.split('/').filter { it.isNotEmpty() }.toKoneList()
-        val basePath = WebPageSettings.base.split('/').filter { it.isNotEmpty() }.toKoneList()
+        val basePath = WebPageSettings.base.split('/').filter { it.isNotEmpty() }.map { decodeURIComponent(it) }.toKoneList()
         if (actualPath.size >= basePath.size && basePath.allIndexed { index, value -> actualPath[index] == value })
             navigationRoot.restoreByPath(
                 NavigationNodePath(
                     path = actualPath.drop(basePath.size),
                     arguments = KoneMap.build {
                         // FIXME: kotlinx-wrappers #2824
-//                        for ((key, value) in URLSearchParams(location.search).entries()) {
-//                            set(key.toKotlinString(), value.toKotlinString())
-//                        }
+                        for ((key, value) in URLSearchParams(location.search).entries()) {
+                            set(decodeURIComponent(key.toKotlinString()), decodeURIComponent(value.toKotlinString()))
+                        }
                     }
                 )
             )
@@ -142,7 +148,18 @@ suspend fun RealMainWindowComponent(
     history.replaceState(
         data = Json.encodeToString(navigationRoot.getState()).toJsString(),
         unused = "",
-        url = navigationRoot.getPath()?.let { URL(WebPageSettings.base + it.path.joinToString(separator = "/"), location.origin) }
+        url = navigationRoot.getPath()?.let { path ->
+            val url = URL(location.href)
+            url.pathname = WebPageSettings.base + path.path.joinToString(separator = "/") { encodeURIComponent(it) }
+            url.search = path.arguments.let {
+                if (it.isNotEmpty()) it.nodesView.joinToString(prefix = "?", separator = "&") { node ->
+                    val key = encodeURIComponent(node.key)
+                    val value = encodeURIComponent(node.value)
+                    if (value.isEmpty()) key else "$key=$value"
+                } else ""
+            }
+            url
+        }
     )
     
     window.onpopstate = EventHandler { event ->

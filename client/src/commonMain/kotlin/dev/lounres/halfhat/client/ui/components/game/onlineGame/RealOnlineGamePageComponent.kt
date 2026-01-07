@@ -9,31 +9,56 @@ import dev.lounres.halfhat.client.ui.components.game.onlineGame.previewScreen.Re
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.buildLogicChildOnRunning
 import dev.lounres.halfhat.client.components.coroutineScope
-import dev.lounres.halfhat.client.components.navigation.ChildrenStack
+import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
+import dev.lounres.halfhat.client.components.navigation.NavigationControllerSpec
+import dev.lounres.halfhat.client.components.navigation.controller.NavigationNodePath
+import dev.lounres.halfhat.client.components.navigation.controller.doStoringNavigation
 import dev.lounres.halfhat.client.components.navigation.controller.navigationContext
-import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultStackNode
-import dev.lounres.komponentual.navigation.replaceCurrent
+import dev.lounres.halfhat.client.components.navigation.controller.navigationController
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotNode
+import dev.lounres.komponentual.navigation.set
+import dev.lounres.kone.collections.iterables.isNotEmpty
 import dev.lounres.kone.collections.list.KoneList
-import dev.lounres.kone.collections.list.of
+import dev.lounres.kone.collections.list.addAllFrom
+import dev.lounres.kone.collections.list.build
+import dev.lounres.kone.collections.list.empty
+import dev.lounres.kone.collections.map.KoneMap
+import dev.lounres.kone.collections.map.build
+import dev.lounres.kone.collections.map.contains
+import dev.lounres.kone.collections.map.getOrNull
+import dev.lounres.kone.collections.map.setAllFrom
+import dev.lounres.kone.collections.utils.drop
 import dev.lounres.kone.hub.KoneAsynchronousHubView
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.hub.set
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
 
 
 public class RealOnlineGamePageComponent(
     override val onExitOnlineGameMode: () -> Unit,
     private val onlineGameComponent: OnlineGameComponent,
-    override val childStack: KoneAsynchronousHubView<ChildrenStack<*, OnlineGamePageComponent.Child, UIComponentContext>, *>,
+    override val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, OnlineGamePageComponent.Child, UIComponentContext>, *>,
 ) : OnlineGamePageComponent {
     override val connectionStatus: StateFlow<ConnectionStatus> get() = onlineGameComponent.connectionStatus
     
+    @Serializable
     public sealed interface Configuration {
+        @Serializable
         public data object PreviewScreen : Configuration
+        @Serializable
         public data object GameScreen : Configuration
     }
+    
+    @Serializable
+    public data class State(
+        val currentRoomSearchEntry: String,
+        val currentEnterName: String,
+    )
 }
 
 public suspend fun RealOnlineGamePageComponent(
@@ -49,13 +74,89 @@ public suspend fun RealOnlineGamePageComponent(
     val currentRoomSearchEntry = KoneMutableAsynchronousHub("")
     coroutineScope.launch {
         onlineGameComponent.freeRoomIdFlow.collect {
-            currentRoomSearchEntry.set(it)
+            componentContext.navigationContext.doStoringNavigation {
+                currentRoomSearchEntry.set(it)
+            }
+        }
+    }
+    val currentEnterName = KoneMutableAsynchronousHub("")
+    
+    currentRoomSearchEntry.subscribe {
+        componentContext.navigationController?.configuration =
+            Json.encodeToString(
+                RealOnlineGamePageComponent.State(
+                    currentRoomSearchEntry = it,
+                    currentEnterName = currentEnterName.value,
+                )
+            )
+    }
+    currentEnterName.subscribe {
+        componentContext.navigationController?.configuration =
+            Json.encodeToString(
+                RealOnlineGamePageComponent.State(
+                    currentRoomSearchEntry = currentRoomSearchEntry.value,
+                    currentEnterName = it,
+                )
+            )
+    }
+    componentContext.navigationController?.setRestoration {
+        val state = try {
+            Json.decodeFromString<RealOnlineGamePageComponent.State>(it)
+        } catch (e: SerializationException) { null }
+        if (state != null) {
+            currentRoomSearchEntry.set(state.currentRoomSearchEntry)
+            currentEnterName.set(state.currentEnterName)
+            onlineGameComponent.sendSignal(ClientApi.Signal.FetchRoomInfo(state.currentRoomSearchEntry))
         }
     }
     
-    val childStack =
-        componentContext.uiChildrenDefaultStackNode<RealOnlineGamePageComponent.Configuration, _>(
-            initialStack = KoneList.of(RealOnlineGamePageComponent.Configuration.PreviewScreen),
+    val childSlot =
+        componentContext.uiChildrenDefaultSlotNode<RealOnlineGamePageComponent.Configuration, _>(
+            navigationControllerSpec = NavigationControllerSpec(
+                key = "screen",
+                configurationSerializer = RealOnlineGamePageComponent.Configuration.serializer(),
+                pathBuilder = { navigationState, _ ->
+                    NavigationNodePath(
+                        path = KoneList.empty(),
+                        arguments = KoneMap.build {
+                            when (navigationState) {
+                                RealOnlineGamePageComponent.Configuration.GameScreen -> set("open", "")
+                                RealOnlineGamePageComponent.Configuration.PreviewScreen -> {}
+                            }
+                        }
+                    )
+                },
+                restorationBuilder = { navigationState, childrenRestorationBlock ->
+                    childrenRestorationBlock()
+                    when (navigationState) {
+                        RealOnlineGamePageComponent.Configuration.PreviewScreen -> {}
+                        RealOnlineGamePageComponent.Configuration.GameScreen -> {
+                            onlineGameComponent.resetGameState()
+                            onlineGameComponent.sendSignal(
+                                ClientApi.Signal.OnlineGame.JoinRoom(
+                                    roomId = currentRoomSearchEntry.value,
+                                    playerName = currentEnterName.value,
+                                )
+                            )
+                        }
+                    }
+                },
+                restorationByPath = { path, navigationTarget ->
+                    navigationTarget.set(
+                        if ("open" in path.arguments) {
+                            onlineGameComponent.resetGameState()
+                            onlineGameComponent.sendSignal(
+                                ClientApi.Signal.OnlineGame.JoinRoom(
+                                    roomId = currentRoomSearchEntry.value,
+                                    playerName = currentEnterName.value,
+                                )
+                            )
+                            RealOnlineGamePageComponent.Configuration.GameScreen
+                        } else RealOnlineGamePageComponent.Configuration.PreviewScreen
+                    )
+                }
+            ),
+            initialConfiguration = RealOnlineGamePageComponent.Configuration.PreviewScreen,
         ) { configuration, componentContext, navigation ->
             when (configuration) {
                 RealOnlineGamePageComponent.Configuration.PreviewScreen ->
@@ -63,19 +164,20 @@ public suspend fun RealOnlineGamePageComponent(
                         RealPreviewScreenComponent(
                             componentContext = componentContext,
                             currentRoomSearchEntry = currentRoomSearchEntry,
+                            currentEnterName = currentEnterName,
                             onFetchFreeRoomId = { onlineGameComponent.sendSignal(ClientApi.Signal.FetchFreeRoomId) },
                             onFetchRoomInfo = { onlineGameComponent.sendSignal(ClientApi.Signal.FetchRoomInfo(it)) },
                             roomDescriptionFlow = onlineGameComponent.roomDescriptionFlow,
-                            onEnterRoom = { roomId, playerName ->
+                            onJoinRoom = {
                                 onlineGameComponent.resetGameState()
                                 onlineGameComponent.sendSignal(
                                     ClientApi.Signal.OnlineGame.JoinRoom(
-                                        roomId = roomId,
-                                        playerName = playerName
+                                        roomId = currentRoomSearchEntry.value,
+                                        playerName = currentEnterName.value,
                                     )
                                 )
                                 coroutineScope.launch {
-                                    navigation.replaceCurrent(RealOnlineGamePageComponent.Configuration.GameScreen)
+                                    navigation.set(RealOnlineGamePageComponent.Configuration.GameScreen)
                                 }
                             }
                         )
@@ -87,8 +189,9 @@ public suspend fun RealOnlineGamePageComponent(
                             gameStateFlow = onlineGameComponent.gameStateFlow,
                             onExitOnlineGame = {
                                 onlineGameComponent.sendSignal(ClientApi.Signal.OnlineGame.LeaveRoom)
+                                onlineGameComponent.sendSignal(ClientApi.Signal.FetchRoomInfo(currentRoomSearchEntry.value))
                                 coroutineScope.launch {
-                                    navigation.replaceCurrent(RealOnlineGamePageComponent.Configuration.PreviewScreen)
+                                    navigation.set(RealOnlineGamePageComponent.Configuration.PreviewScreen)
                                 }
                             },
                             onApplySettings = {
@@ -124,11 +227,39 @@ public suspend fun RealOnlineGamePageComponent(
             }
         }
     
-    componentContext.navigationContext
+    componentContext.navigationController?.setPathBuilder {
+        val subpath = childSlot.context.navigationController?.pathBuilder?.invoke()
+        NavigationNodePath(
+            path = KoneList.build {
+                add(currentRoomSearchEntry.value)
+                if (subpath != null) addAllFrom(subpath.path)
+            },
+            arguments = KoneMap.build {
+                set("name", currentEnterName.value)
+                if (subpath != null) setAllFrom(subpath.arguments)
+            },
+        )
+    }
+    
+    componentContext.navigationController?.setRestorationByPath {
+        val name = it.arguments.getOrNull("name")
+        if (name != null) currentEnterName.set(name)
+        
+        if (it.path.isNotEmpty()) {
+            currentRoomSearchEntry.set(it.path[0u])
+            onlineGameComponent.sendSignal(ClientApi.Signal.FetchRoomInfo(it.path[0u]))
+            childSlot.context.navigationController?.restorationByPath?.invoke(
+                NavigationNodePath(
+                    path = it.path.drop(1u),
+                    arguments = it.arguments,
+                )
+            )
+        }
+    }
     
     return RealOnlineGamePageComponent(
         onExitOnlineGameMode = onExitOnlineGameMode,
         onlineGameComponent = onlineGameComponent,
-        childStack = childStack.hub,
+        childSlot = childSlot.hub,
     )
 }

@@ -176,15 +176,9 @@ suspend fun UIComponentContext.pagesDescription(): PagesDescription {
                 },
                 restorationByPath = restorationByPath@ { path, childrenNode ->
                     if (path.path.isEmpty()) return@restorationByPath
-                    println("navigation start")
                     childrenNode.navigate { allVariants, current ->
-                        val variant = allVariants.firstThatOrNull { it.path == path.path[0u] }
-                        println(
-                            "navigating to: variant = $variant, current = $current"
-                        )
-                        variant ?: current
+                        allVariants.firstThatOrNull { it.path == path.path[0u] } ?: current
                     }
-                    println("navigation end")
                     val activeChild = childrenNode.hub.value.active
                     if (activeChild.configuration.path != path.path[0u]) return@restorationByPath
                     activeChild.componentContext.navigationController?.restorationByPath?.invoke(

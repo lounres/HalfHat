@@ -31,7 +31,7 @@ import org.jetbrains.compose.resources.painterResource
 public fun RowScope.OnlineGamePageActionsUI(
     component: OnlineGamePageComponent,
 ) {
-    when (val child = component.childStack.subscribeAsState().value.active.component) {
+    when (val child = component.childSlot.subscribeAsState().value.component) {
         is OnlineGamePageComponent.Child.PreviewScreen -> PreviewScreenActionsUI(child.component)
         is OnlineGamePageComponent.Child.GameScreen -> GameScreenActionsUI(child.component)
     }
@@ -103,7 +103,7 @@ public fun ColumnScope.OnlineGamePageUI(
                 )
             }
         }
-        when (val child = component.childStack.subscribeAsState().value.active.component) {
+        when (val child = component.childSlot.subscribeAsState().value.component) {
             is OnlineGamePageComponent.Child.PreviewScreen -> PreviewScreenUI(child.component)
             is OnlineGamePageComponent.Child.GameScreen -> GameScreenUI(child.component)
         }

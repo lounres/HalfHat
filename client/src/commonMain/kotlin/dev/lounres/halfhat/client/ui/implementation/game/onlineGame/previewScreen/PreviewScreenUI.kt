@@ -126,8 +126,8 @@ public fun ColumnScope.PreviewScreenUI(
                                 ) {
                                     OutlinedTextField(
                                         modifier = Modifier.weight(1f),
-                                        value = component.currentEnterName.collectAsState().value,
-                                        onValueChange = { component.currentEnterName.value = it },
+                                        value = component.currentEnterName.subscribeAsState().value,
+                                        onValueChange = component.onSetEnterName,
                                         label = {
                                             Text(
                                                 text = "Your nickname"
