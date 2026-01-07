@@ -78,14 +78,16 @@ public class NavigationNodeController {
         get() = NavigationNodeState(configuration, children.mapValuesReified { it.value.state })
     
     internal suspend fun restore(state: NavigationNodeState) {
-        val children = this.children
-        
         val newConfiguration = state.configuration
         if (newConfiguration != null) this.restoration?.invoke(newConfiguration)
         
+        val children = this.children
         coroutineScope {
-            for ((configuration, navigationItem) in state.children) launch {
-                children.getOrNull(configuration)?.restore(navigationItem)
+            for ((configuration, navigationNodeState) in state.children) {
+                val child = children.getOrNull(configuration)
+                if (child != null) launch {
+                    child.restore(navigationNodeState)
+                }
             }
         }
     }
