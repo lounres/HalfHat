@@ -14,7 +14,6 @@ import dev.lounres.kone.registry.serialization.RegistrySerializableKey
 import dev.lounres.kone.registry.serialization.RegistrySerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlin.contracts.InvocationKind
@@ -25,7 +24,6 @@ import kotlin.jvm.JvmInline
 @JvmInline
 value class Settings(val elements: Registry) : Registry by elements {
     data object Key : RegistryKey<KoneMutableAsynchronousHub<Settings>>
-    
 }
 
 inline fun Settings(builder: RegistryBuilder<Settings>.() -> Unit): Settings {

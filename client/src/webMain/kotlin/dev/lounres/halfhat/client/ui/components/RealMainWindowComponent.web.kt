@@ -15,6 +15,7 @@ import dev.lounres.halfhat.client.logic.settings.language
 import dev.lounres.halfhat.client.logic.settings.volumeOn
 import dev.lounres.halfhat.client.logic.wordsProviders.DeviceGameWordsProviderID
 import dev.lounres.halfhat.client.logic.wordsProviders.DeviceGameWordsProviderRegistry
+import dev.lounres.halfhat.client.storage.settings.Settings
 import dev.lounres.halfhat.client.storage.settings.settings
 import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.halfhat.client.ui.theming.darkTheme
@@ -86,6 +87,7 @@ suspend fun RealMainWindowComponent(
     val globalComponentContext = globalComponentContext(
         globalLifecycle = globalLifecycle,
         navigationRoot = navigationRoot,
+        savedSettings = localStorage.getItem("settings")?.let { Json.decodeFromString(settingsSerializer, it) } ?: Settings {  },
         deviceGameWordsProviderRegistry = DeviceGameWordsProviderRegistry,
         gameStateMachineWordsSource = GameStateMachine.WordsSource.Custom(DeviceGameWordsProviderID.Local("medium")),
     )

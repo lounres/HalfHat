@@ -87,6 +87,7 @@ val settingsSerializer = SettingsSerializer(settingsDefaults.mapValues { it.valu
 fun globalComponentContext(
     globalLifecycle: MutableUIComponentLifecycle,
     navigationRoot: NavigationRoot,
+    savedSettings: Settings,
     deviceGameWordsProviderRegistry: DeviceGameWordsProviderRegistry,
     gameStateMachineWordsSource: GameStateMachine.WordsSource<DeviceGameWordsProviderID>,
 ): UIComponentContext = UIComponentContext {
@@ -101,7 +102,7 @@ fun globalComponentContext(
     
     val settings = KoneMutableAsynchronousHub(
         Settings {
-//            setFrom(...)
+            setFrom(savedSettings)
             @Suppress("UNCHECKED_CAST")
             for ((key, value) in settingsDefaults.values) if (key !in this) (key as RegistryKey<Any?>) correspondsTo value
         }

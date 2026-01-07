@@ -7,10 +7,12 @@ import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecyc
 import dev.lounres.halfhat.client.components.lifecycle.newMutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.navigation.ChildrenVariants
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationRoot
+import dev.lounres.halfhat.client.components.navigation.controller.navigationController
 import dev.lounres.halfhat.client.logic.settings.language
 import dev.lounres.halfhat.client.logic.settings.volumeOn
 import dev.lounres.halfhat.client.logic.wordsProviders.DeviceGameWordsProviderID
 import dev.lounres.halfhat.client.logic.wordsProviders.DeviceGameWordsProviderRegistry
+import dev.lounres.halfhat.client.storage.settings.Settings
 import dev.lounres.halfhat.client.storage.settings.settings
 import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.halfhat.client.ui.theming.darkTheme
@@ -18,6 +20,7 @@ import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.hub.KoneAsynchronousHubView
 import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
+import dev.lounres.kone.scope
 
 
 actual class RealMainWindowComponent(
@@ -49,11 +52,30 @@ suspend fun RealMainWindowComponent(
     val globalComponentContext = globalComponentContext(
         globalLifecycle = globalLifecycle,
         navigationRoot = navigationRoot,
+        savedSettings = Settings {  }, // TODO: Add loading of saved settings
         deviceGameWordsProviderRegistry = deviceGameWordsProviderRegistry,
         gameStateMachineWordsSource = GameStateMachine.WordsSource.Custom(DeviceGameWordsProviderID.Local("medium")),
     )
     
+    globalComponentContext.settings.subscribe {
+        // TODO
+    }
+    
+//    val coroutineScope = globalComponentContext.coroutineScope(Dispatchers.Default)
+    
     val (pageVariants, openPage, menuList) = globalComponentContext.pagesDescription()
+    
+//    globalComponentContext.navigationController?.setPathBuilder {
+//        // TODO
+//    }
+    
+    globalComponentContext.navigationController?.setRestorationByPath {
+        pageVariants.context.navigationController?.restorationByPath?.invoke(it)
+    }
+    
+    scope {
+        // TODO: Add restoration by initial path and outer URI calls
+    }
     
     return RealMainWindowComponent(
         globalLifecycle = globalLifecycle,
