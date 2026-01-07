@@ -31,6 +31,7 @@ import dev.lounres.kone.collections.utils.drop
 import dev.lounres.kone.collections.utils.joinToString
 import dev.lounres.kone.hub.KoneAsynchronousHubView
 import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
+import dev.lounres.kone.hub.set
 import dev.lounres.kone.scope
 import js.array.component1
 import js.array.component2
@@ -100,11 +101,20 @@ suspend fun RealMainWindowComponent(
         deviceGameWordsProviderRegistry = DeviceGameWordsProviderRegistry,
     )
     
+    val coroutineScope = globalComponentContext.coroutineScope(Dispatchers.Default)
+    
     globalComponentContext.settings.subscribe {
         localStorage.setItem("settings", Json.encodeToString(settingsSerializer, it))
     }
     
-    val coroutineScope = globalComponentContext.coroutineScope(Dispatchers.Default)
+    window.onstorage = EventHandler { event ->
+        if (event.key != "settings") return@EventHandler
+        val newSettingsString = event.newValue ?: return@EventHandler
+        val newSettings = Json.decodeFromString(settingsSerializer, newSettingsString)
+        coroutineScope.launch {
+            globalComponentContext.settings.set(newSettings)
+        }
+    }
     
     val (pageVariants, openPage, menuList) = globalComponentContext.pagesDescription()
     

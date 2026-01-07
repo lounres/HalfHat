@@ -57,7 +57,7 @@ import dev.lounres.halfhat.client.resources.changeLanguageButton_dark_png_24dp
 import dev.lounres.halfhat.client.resources.closeMenuButton_dark_png_24dp
 import dev.lounres.halfhat.client.resources.darkThemeButton_dark_png_24dp
 import dev.lounres.halfhat.client.resources.lightThemeButton_dark_png_24dp
-import dev.lounres.halfhat.client.resources.openMenuButton_dark
+import dev.lounres.halfhat.client.resources.openMenuButton_dark_png_24dp
 import dev.lounres.halfhat.client.resources.systemThemeButton_dark_png_24dp
 import dev.lounres.halfhat.client.resources.volumeOffButton_dark_png_24dp
 import dev.lounres.halfhat.client.resources.volumeOnButton_dark_png_24dp
@@ -257,7 +257,7 @@ fun MainWindowDrawerContentUI(
                         }
                     ) {
                         Icon(
-                            painter = painterResource(Res.drawable.openMenuButton_dark),
+                            painter = painterResource(Res.drawable.openMenuButton_dark_png_24dp),
                             modifier = commonIconModifier,
                             contentDescription = "Open menu"
                         )
