@@ -6,6 +6,8 @@ import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.lifecycle.newMutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.navigation.ChildrenVariants
+import dev.lounres.halfhat.client.components.navigation.controller.NavigationAction
+import dev.lounres.halfhat.client.components.navigation.controller.NavigationLoggerSpec
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationNodePath
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationNodeState
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationRoot
@@ -33,6 +35,9 @@ import dev.lounres.kone.hub.KoneAsynchronousHubView
 import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
 import dev.lounres.kone.hub.set
 import dev.lounres.kone.scope
+import dev.lounres.logKube.core.DefaultCurrentPlatformLogWriter
+import dev.lounres.logKube.core.LogAcceptor
+import dev.lounres.logKube.core.Logger
 import js.array.component1
 import js.array.component2
 import js.core.JsPrimitives.toKotlinString
@@ -75,29 +80,49 @@ suspend fun RealMainWindowComponent(
 ): RealMainWindowComponent {
     val globalLifecycle: MutableUIComponentLifecycle = newMutableUIComponentLifecycle()
     
-    val navigationRoot = NavigationRoot { state, path ->
-        history.pushState(
-            data = Json.encodeToString(state).toJsString(),
-            unused = "",
-            url = path?.let { path ->
-                val url = URL(location.href)
-                url.pathname = WebPageSettings.base + path.path.joinToString(separator = "/") { encodeURIComponent(it) }
-                url.search = path.arguments.let {
-                    if (it.isNotEmpty()) it.nodesView.joinToString(prefix = "?", separator = "&") { node ->
-                        val key = encodeURIComponent(node.key)
-                        val value = encodeURIComponent(node.value)
-                        if (value.isEmpty()) key else "$key=$value"
-                    } else ""
-                }
-                url
-            }
+    val logger = Logger(
+        name = "Web HalfHat application logger",
+        LogAcceptor(DefaultCurrentPlatformLogWriter) { true },
+    )
+    
+    val navigationRoot = NavigationRoot(
+        loggerSpec = NavigationLoggerSpec(
+            logger = logger,
+            loggerSource = "navigationRoot at dev.lounres.halfhat.client.ui.components.RealMainWindowComponent"
         )
+    ) { action, state, path ->
+        val data = Json.encodeToString(state).toJsString()
+        val url = if (path == null) null else URL(location.href).apply {
+            pathname = WebPageSettings.base + path.path.joinToString(separator = "/") { encodeURIComponent(it) }
+            search = path.arguments.let {
+                if (it.isNotEmpty()) it.nodesView.joinToString(prefix = "?", separator = "&") { node ->
+                    val key = encodeURIComponent(node.key)
+                    val value = encodeURIComponent(node.value)
+                    if (value.isEmpty()) key else "$key=$value"
+                } else ""
+            }
+        }
+        when (action) {
+            NavigationAction.PushState ->
+                history.pushState(
+                    data = data,
+                    unused = "",
+                    url = url
+                )
+            NavigationAction.ReplaceState ->
+                history.replaceState(
+                    data = data,
+                    unused = "",
+                    url = url
+                )
+        }
     }
     
     val globalComponentContext = globalComponentContext(
         globalLifecycle = globalLifecycle,
-        navigationRoot = navigationRoot,
         savedSettings = localStorage.getItem("settings")?.let { Json.decodeFromString(settingsSerializer, it) },
+        logger = logger,
+        navigationRoot = navigationRoot,
         deviceGameWordsProviderRegistry = DeviceGameWordsProviderRegistry,
     )
     

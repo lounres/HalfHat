@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -59,7 +60,7 @@ public fun AboutPageUI() {
                 withStyle(SpanStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold)) {
                     append("HalfHat ")
                 }
-                withStyle(SpanStyle(color = Color.Gray)) {
+                withStyle(SpanStyle(color = MaterialTheme.colorScheme.outline)) {
                     append("v 0.0.0") // TODO: Add automatic substitution of version
                 }
             }
@@ -70,13 +71,13 @@ public fun AboutPageUI() {
         val annotatedString = buildAnnotatedString {
             append("The project is developed by Gleb Minaev a.k.a. ")
             withLink(link = LinkAnnotation.Url("https://github.com/lounres/")) {
-                withStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)) {
+                withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)) {
                     append("@lounres")
                 }
             }
             append(". The project's sources are available ")
             withLink(link = LinkAnnotation.Url("https://github.com/lounres/HalfHat")) {
-                withStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)) {
+                withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)) {
                     append("on GitHub")
                 }
             }

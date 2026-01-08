@@ -53,6 +53,7 @@ public suspend fun RealGamePageComponent(
     
     val currentChild =
         componentContext.uiChildrenDefaultSlotNode(
+            loggerSource = "currentChild at dev.lounres.halfhat.client.ui.components.game.RealGamePageComponent",
             navigationControllerSpec = NavigationControllerSpec(
                 key = "mode",
                 configurationSerializer = RealGamePageComponent.Configuration.serializer().nullable,

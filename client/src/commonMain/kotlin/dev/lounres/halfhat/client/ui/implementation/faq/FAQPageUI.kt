@@ -8,10 +8,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -85,7 +85,7 @@ public fun FAQPageUI(
         val improveTheGameAnnotatedString = buildAnnotatedString {
             append("Please tell me how to improve the game – I will consider all your comments and suggestions! To do this, go to ")
             withLink(link = LinkAnnotation.Clickable(tag = "feedbackLink") { component.onFeedbackLinkClick() }) {
-                withStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)) {
+                withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)) {
                     append("Feedback page")
                 }
             }
@@ -102,7 +102,7 @@ public fun FAQPageUI(
             }
             append("Ask them ")
             withLink(link = LinkAnnotation.Clickable(tag = "feedbackLink") { component.onFeedbackLinkClick() }) {
-                withStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)) {
+                withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)) {
                     append("here")
                 }
             }

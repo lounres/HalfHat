@@ -34,7 +34,6 @@ import dev.lounres.halfhat.client.ui.components.news.RealNewsPageComponent
 import dev.lounres.halfhat.client.ui.components.rules.RealRulesPageComponent
 import dev.lounres.halfhat.client.ui.components.settings.RealSettingsPageComponent
 import dev.lounres.halfhat.client.ui.theming.DarkTheme
-import dev.lounres.halfhat.client.utils.logger
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.collections.interop.toKoneList
@@ -56,6 +55,8 @@ import dev.lounres.kone.hub.*
 import dev.lounres.kone.registry.RegistryKey
 import dev.lounres.kone.registry.correspondsTo
 import dev.lounres.kone.registry.serialization.RegistrySerializableKey
+import dev.lounres.logKube.core.CurrentPlatformLogger
+import dev.lounres.logKube.core.LogLevel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -119,18 +120,12 @@ val settingsSerializer = SettingsSerializer(settingsDefaults.mapValues { it.valu
 
 fun globalComponentContext(
     globalLifecycle: MutableUIComponentLifecycle,
-    navigationRoot: NavigationRoot,
     savedSettings: Settings?,
+    logger: CurrentPlatformLogger<LogLevel>,
+    navigationRoot: NavigationRoot,
     deviceGameWordsProviderRegistry: DeviceGameWordsProviderRegistry,
 ): UIComponentContext = UIComponentContext {
     UIComponentLifecycleKey correspondsTo globalLifecycle
-    
-    LoggerKey correspondsTo logger
-    
-    setUpNavigationControl(
-        navigationRoot = navigationRoot,
-        stringFormat = Json,
-    )
     
     Settings.Key correspondsTo KoneMutableAsynchronousHub(
         Settings {
@@ -138,6 +133,13 @@ fun globalComponentContext(
             @Suppress("UNCHECKED_CAST")
             for ((key, value) in settingsDefaults.values) if (key !in this) (key as RegistryKey<Any?>) correspondsTo value
         }
+    )
+    
+    LoggerKey correspondsTo logger
+    
+    setUpNavigationControl(
+        navigationRoot = navigationRoot,
+        stringFormat = Json,
     )
     
     DeviceGameWordsProviderRegistryKey correspondsTo deviceGameWordsProviderRegistry
@@ -154,6 +156,7 @@ suspend fun UIComponentContext.pagesDescription(): PagesDescription {
     
     val pageVariants =
         uiChildrenDefaultVariantsNode(
+            loggerSource = "pagesDescription at dev.lounres.halfhat.client.ui.components.RealMainWindowComponent",
             navigationControllerSpec = NavigationControllerSpec(
                 key = "page",
                 configurationSerializer = MainWindowComponentChild.Kind.serializer(),
@@ -219,7 +222,7 @@ suspend fun UIComponentContext.pagesDescription(): PagesDescription {
                         RealFAQPageComponent(
                             onFeedbackLinkClick = {
                                 coroutineScope.launch {
-                                    navigation.set(MainWindowComponentChild.Kind.Secondary.FAQ)
+                                    navigation.set(MainWindowComponentChild.Kind.Secondary.Feedback)
                                 }
                             }
                         )

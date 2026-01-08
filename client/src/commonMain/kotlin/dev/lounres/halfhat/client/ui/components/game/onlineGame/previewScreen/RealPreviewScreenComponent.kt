@@ -3,6 +3,7 @@ package dev.lounres.halfhat.client.ui.components.game.onlineGame.previewScreen
 import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
+import dev.lounres.halfhat.client.components.navigation.controller.NavigationAction
 import dev.lounres.halfhat.client.components.navigation.controller.doStoringNavigation
 import dev.lounres.halfhat.client.components.navigation.controller.navigationContext
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
@@ -25,7 +26,7 @@ public class RealPreviewScreenComponent(
     private val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
     override val onChangeRoomSearchEntry: (String) -> Unit = {
         coroutineScope.launch {
-            componentContext.navigationContext.doStoringNavigation {
+            componentContext.navigationContext.doStoringNavigation(action = NavigationAction.ReplaceState) {
                 currentRoomSearchEntry.set(it)
             }
             currentRoomPreview.value = PreviewScreenComponent.RoomPreview.Loading
@@ -38,7 +39,7 @@ public class RealPreviewScreenComponent(
         MutableStateFlow(PreviewScreenComponent.RoomPreview.Empty)
     override val onSetEnterName: (String) -> Unit = {
         coroutineScope.launch {
-            componentContext.navigationContext.doStoringNavigation {
+            componentContext.navigationContext.doStoringNavigation(action = NavigationAction.ReplaceState) {
                 currentEnterName.set(it)
             }
         }

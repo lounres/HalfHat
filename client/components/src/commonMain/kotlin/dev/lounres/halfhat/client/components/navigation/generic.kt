@@ -82,10 +82,16 @@ public suspend fun <
     navigationStateMapper: (navigationState: NavigationState, children: KoneMap<Configuration, BuiltChild<Component, UIComponentContext>>) -> NavigationPublicState,
 ): ChildrenNode<NavigationPublicState, NavigationEvent> {
     val logger = this.getOrNull(LoggerKey)
+    val childrenNodeLoggerSource = "dev.lounres.halfhat.client.components.navigation.uiChildrenNode at $loggerSource"
     val componentNavigationNodeController = this.getOrNull(NavigationNodeController.Key)
     val childrenNavigationNodeController =
         if (componentNavigationNodeController == null || navigationControllerSpec == null) null
-        else NavigationNodeController().also {
+        else NavigationNodeController(
+            loggerSpec = if (logger == null) null else NavigationLoggerSpec(
+                logger = logger,
+                loggerSource = loggerSource,
+            ),
+        ).also {
             componentNavigationNodeController.children = KoneMap.build {
                 setAllFrom(componentNavigationNodeController.children)
                 if (navigationControllerSpec.key in this) error("Navigation node controller already registered an item with the key: '${navigationControllerSpec.key}'")
@@ -117,9 +123,11 @@ public suspend fun <
             navigationTransition = navigationTransition,
             createChild = { configuration, nextState ->
                 val controllingLifecycle = newMutableUIComponentLifecycle()
-                val childNavigationNodeController = if (childrenNavigationNodeController != null) NavigationNodeController() else null
+                val childNavigationNodeController =
+                    if (childrenNavigationNodeController != null) NavigationNodeController()
+                    else null
                 logger?.debug(
-                    source = loggerSource,
+                    source = childrenNodeLoggerSource,
                     items = {
                         mapOf(
                             "configuration" to configuration.toString(),
@@ -134,7 +142,7 @@ public suspend fun <
                     childrenFactory(configuration, it, storingNavigationTarget)
                 }
                 logger?.debug(
-                    source = loggerSource,
+                    source = childrenNodeLoggerSource,
                     items = {
                         mapOf(
                             "configuration" to configuration.toString(),
@@ -145,7 +153,7 @@ public suspend fun <
                     }
                 ) { "Created child" }
                 logger?.debug(
-                    source = loggerSource,
+                    source = childrenNodeLoggerSource,
                     items = {
                         mapOf(
                             "configuration" to configuration.toString(),
@@ -158,7 +166,7 @@ public suspend fun <
                 ) { "Updating controlling lifecycle" }
                 updateLifecycle(configuration, controllingLifecycle, nextState)
                 logger?.debug(
-                    source = loggerSource,
+                    source = childrenNodeLoggerSource,
                     items = {
                         mapOf(
                             "configuration" to configuration.toString(),
@@ -178,7 +186,7 @@ public suspend fun <
             },
             destroyChild = { configuration, child, nextState ->
                 logger?.debug(
-                    source = loggerSource,
+                    source = childrenNodeLoggerSource,
                     items = {
                         mapOf(
                             "configuration" to configuration.toString(),
@@ -191,7 +199,7 @@ public suspend fun <
                 ) { "Destroying controlling lifecycle" }
                 child.controllingLifecycle.moveTo(UIComponentLifecycleState.Destroyed)
                 logger?.debug(
-                    source = loggerSource,
+                    source = childrenNodeLoggerSource,
                     items = {
                         mapOf(
                             "configuration" to configuration.toString(),
@@ -228,17 +236,155 @@ public suspend fun <
             val restorationBuilder = navigationControllerSpec.restorationBuilder
             if (restorationBuilder == null)
                 childrenNavigationNodeController.setRestoration {
-                    val restoredState = try {
-                        stringFormat.decodeFromString(navigationStateSerializer, it)
-                    } catch (_: SerializationException) { null } catch (_: IllegalArgumentException /* TODO: Remove eventually when Kone will start using correct exception types */) { null }
-                    if (restoredState != null) navigationHub.navigate(restorationEvent(restoredState))
+                    logger?.debug(
+                        source = childrenNodeLoggerSource,
+                        items = {
+                            mapOf(
+                                "node controller" to childrenNavigationNodeController.toString(),
+                                "encoded new configuration" to it,
+                            )
+                        }
+                    ) { "Restoring configuration of children node without restoration builder" }
+                    try {
+                        val restoredState = stringFormat.decodeFromString(navigationStateSerializer, it)
+                        val event = restorationEvent(restoredState)
+                        logger?.debug(
+                            source = childrenNodeLoggerSource,
+                            items = {
+                                mapOf(
+                                    "node controller" to childrenNavigationNodeController.toString(),
+                                    "new configuration" to restoredState.toString(),
+                                    "event for the navigation" to event.toString(),
+                                )
+                            }
+                        ) { "Navigating to new state" }
+                        navigationHub.navigate(event)
+                        logger?.debug(
+                            source = childrenNodeLoggerSource,
+                            items = {
+                                mapOf(
+                                    "node controller" to childrenNavigationNodeController.toString(),
+                                    "new configuration" to restoredState.toString(),
+                                    "event for the navigation" to event.toString(),
+                                )
+                            }
+                        ) { "Navigated to new state" }
+                    } catch (_: SerializationException) {
+                        logger?.debug(
+                            source = childrenNodeLoggerSource,
+                            items = {
+                                mapOf(
+                                    "node controller" to childrenNavigationNodeController.toString(),
+                                    "encoded new configuration" to it,
+                                )
+                            }
+                        ) { "Could not decode new configuration from string" }
+                    } catch (_: IllegalArgumentException /* TODO: Remove eventually when Kone will start using correct exception types */) {
+                        logger?.debug(
+                            source = childrenNodeLoggerSource,
+                            items = {
+                                mapOf(
+                                    "node controller" to childrenNavigationNodeController.toString(),
+                                    "encoded new configuration" to it,
+                                )
+                            }
+                        ) { "Could not decode new configuration from string" }
+                    }
+                    logger?.debug(
+                        source = childrenNodeLoggerSource,
+                        items = {
+                            mapOf(
+                                "node controller" to childrenNavigationNodeController.toString(),
+                                "encoded new configuration" to it,
+                            )
+                        }
+                    ) { "Restored configuration of children node without restoration builder" }
                 }
             else
                 childrenNavigationNodeController.setRestoration {
-                    val restoredState = try {
-                        stringFormat.decodeFromString(navigationStateSerializer, it)
-                    } catch (_: SerializationException) { null } catch (_: IllegalArgumentException /* TODO: Remove eventually when Kone will start using correct exception types */) { null }
-                    if (restoredState != null) restorationBuilder(restoredState) { navigationHub.navigate(restorationEvent(restoredState)) }
+                    logger?.debug(
+                        source = childrenNodeLoggerSource,
+                        items = {
+                            mapOf(
+                                "node controller" to childrenNavigationNodeController.toString(),
+                                "encoded new configuration" to it,
+                            )
+                        }
+                    ) { "Restoring configuration of children node with restoration builder" }
+                    try {
+                        val restoredState = stringFormat.decodeFromString(navigationStateSerializer, it)
+                        logger?.debug(
+                            source = childrenNodeLoggerSource,
+                            items = {
+                                mapOf(
+                                    "node controller" to childrenNavigationNodeController.toString(),
+                                    "new configuration" to restoredState.toString(),
+                                )
+                            }
+                        ) { "Using restoration builder" }
+                        restorationBuilder(restoredState) {
+                            val event = restorationEvent(restoredState)
+                            logger?.debug(
+                                source = childrenNodeLoggerSource,
+                                items = {
+                                    mapOf(
+                                        "node controller" to childrenNavigationNodeController.toString(),
+                                        "new configuration" to restoredState.toString(),
+                                        "event for the navigation" to event.toString(),
+                                    )
+                                }
+                            ) { "Navigating to new state" }
+                            navigationHub.navigate(event)
+                            logger?.debug(
+                                source = childrenNodeLoggerSource,
+                                items = {
+                                    mapOf(
+                                        "node controller" to childrenNavigationNodeController.toString(),
+                                        "new configuration" to restoredState.toString(),
+                                        "event for the navigation" to event.toString(),
+                                    )
+                                }
+                            ) { "Navigated to new state" }
+                        }
+                        logger?.debug(
+                            source = childrenNodeLoggerSource,
+                            items = {
+                                mapOf(
+                                    "node controller" to childrenNavigationNodeController.toString(),
+                                    "new configuration" to restoredState.toString(),
+                                )
+                            }
+                        ) { "Used restoration builder" }
+                    } catch (_: SerializationException) {
+                        logger?.debug(
+                            source = childrenNodeLoggerSource,
+                            items = {
+                                mapOf(
+                                    "node controller" to childrenNavigationNodeController.toString(),
+                                    "encoded new configuration" to it,
+                                )
+                            }
+                        ) { "Could not decode new configuration from string" }
+                    } catch (_: IllegalArgumentException /* TODO: Remove eventually when Kone will start using correct exception types */) {
+                        logger?.debug(
+                            source = childrenNodeLoggerSource,
+                            items = {
+                                mapOf(
+                                    "node controller" to childrenNavigationNodeController.toString(),
+                                    "encoded new configuration" to it,
+                                )
+                            }
+                        ) { "Could not decode new configuration from string" }
+                    }
+                    logger?.debug(
+                        source = childrenNodeLoggerSource,
+                        items = {
+                            mapOf(
+                                "node controller" to childrenNavigationNodeController.toString(),
+                                "encoded new configuration" to it,
+                            )
+                        }
+                    ) { "Restored configuration of children node with restoration builder" }
                 }
             val pathBuilder = navigationControllerSpec.pathBuilder
             if (pathBuilder != null) childrenNavigationNodeController.setPathBuilder {

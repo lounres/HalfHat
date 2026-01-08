@@ -14,6 +14,7 @@ import dev.lounres.halfhat.client.components.lifecycle.logicChildDeferringOnRunn
 import dev.lounres.halfhat.client.components.lifecycle.mergeLogicAndUILifecyclesDeferringOnRunning
 import dev.lounres.halfhat.client.components.lifecycle.mergeUIComponentLifecyclesDeferring
 import dev.lounres.halfhat.client.components.logger.logger
+import dev.lounres.halfhat.client.components.navigation.controller.NavigationContext
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationNodeController
 import dev.lounres.komponentual.lifecycle.subscribe
 import dev.lounres.kone.registry.Registry
@@ -70,7 +71,10 @@ internal fun UIComponentContext.uiChildDeferring(
         }
         
         if (navigationNodeController != null) NavigationNodeController.Key correspondsTo navigationNodeController
-        else remove(NavigationNodeController.Key)
+        else {
+            remove(NavigationNodeController.Key)
+            remove(NavigationContext.Key)
+        }
     }
 
 //@OptIn(DelicateLifecycleAPI::class)

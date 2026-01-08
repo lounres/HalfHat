@@ -5,6 +5,7 @@ import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.utils.defaultHttpClient
 import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
+import dev.lounres.halfhat.client.components.logger.logger
 import dev.lounres.halfhat.client.consts.OnlineGameSettings
 import dev.lounres.halfhat.client.logic.settings.playExplanationStart
 import dev.lounres.halfhat.client.logic.settings.playFinalGuessEnd
@@ -12,7 +13,6 @@ import dev.lounres.halfhat.client.logic.settings.playFinalGuessStart
 import dev.lounres.halfhat.client.logic.settings.playPreparationCountdown
 import dev.lounres.halfhat.client.logic.settings.volumeOn
 import dev.lounres.halfhat.client.storage.settings.settings
-import dev.lounres.halfhat.client.utils.logger
 import dev.lounres.logKube.core.debug
 import dev.lounres.logKube.core.info
 import dev.lounres.logKube.core.warn
@@ -49,6 +49,8 @@ public class RealOnlineGameComponent(
     }
     
     init {
+        val logger = componentContext.logger
+        
         val settings = componentContext.settings
         val volumeOn = settings.volumeOn
         
@@ -69,6 +71,13 @@ public class RealOnlineGameComponent(
                         val converter = converter!!
                         launch {
                             for (signal in outgoingSignals) {
+                                logger.debug(
+                                    items = {
+                                        mapOf(
+                                            "signal" to signal.toString(),
+                                        )
+                                    }
+                                ) { "Sending signal" }
                                 sendSerialized<ClientApi.Signal>(signal)
                             }
                         }
@@ -92,7 +101,7 @@ public class RealOnlineGameComponent(
                                         "signal" to signal.toString(),
                                     )
                                 }
-                            ) { "Received signal: $signal" }
+                            ) { "Received signal" }
                             
                             when (signal) {
                                 is ServerApi.Signal.RoomInfo -> roomDescriptionFlow.emit(signal.info)

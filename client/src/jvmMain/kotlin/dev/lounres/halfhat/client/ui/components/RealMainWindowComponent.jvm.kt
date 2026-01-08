@@ -6,6 +6,7 @@ import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.lifecycle.newMutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.navigation.ChildrenVariants
+import dev.lounres.halfhat.client.components.navigation.controller.NavigationLoggerSpec
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationRoot
 import dev.lounres.halfhat.client.components.navigation.controller.navigationController
 import dev.lounres.halfhat.client.logic.settings.language
@@ -20,6 +21,9 @@ import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.hub.KoneAsynchronousHubView
 import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
 import dev.lounres.kone.scope
+import dev.lounres.logKube.core.DefaultCurrentPlatformLogWriter
+import dev.lounres.logKube.core.LogAcceptor
+import dev.lounres.logKube.core.Logger
 
 
 actual class RealMainWindowComponent(
@@ -49,12 +53,23 @@ suspend fun RealMainWindowComponent(
 ): RealMainWindowComponent {
     val globalLifecycle: MutableUIComponentLifecycle = newMutableUIComponentLifecycle()
     
-    val navigationRoot = NavigationRoot { state, path -> /* TODO */ }
+    val logger = Logger(
+        name = "Desktop HalfHat application logger",
+        LogAcceptor(DefaultCurrentPlatformLogWriter) { false },
+    )
+    
+    val navigationRoot = NavigationRoot(
+        loggerSpec = NavigationLoggerSpec(
+            logger = logger,
+            loggerSource = "dev.lounres.halfhat.client.ui.components.RealMainWindowComponent"
+        )
+    ) { action, state, path -> /* TODO */ }
     
     val globalComponentContext = globalComponentContext(
         globalLifecycle = globalLifecycle,
-        navigationRoot = navigationRoot,
         savedSettings = null, // TODO: Add loading of saved settings
+        logger = logger,
+        navigationRoot = navigationRoot,
         deviceGameWordsProviderRegistry = deviceGameWordsProviderRegistry,
     )
     
