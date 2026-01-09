@@ -8,7 +8,7 @@ import dev.lounres.halfhat.client.utils.play
 import dev.lounres.halfhat.client.utils.toAudio
 import dev.lounres.kone.hub.KoneAsynchronousHubView
 import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
-import dev.lounres.kone.hub.view
+import dev.lounres.kone.hub.value
 import dev.lounres.kone.registry.serialization.RegistrySerializableKey
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable

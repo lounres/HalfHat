@@ -7,6 +7,7 @@ import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.buildLogicChildOnRunning
 import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
+import dev.lounres.kone.hub.value
 
 
 public class RealTimerPageComponent(

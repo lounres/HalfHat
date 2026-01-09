@@ -12,6 +12,7 @@ import dev.lounres.halfhat.client.logic.settings.volumeOn
 import dev.lounres.halfhat.client.storage.settings.settings
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.hub.set
+import dev.lounres.kone.hub.value
 import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.atomicfu.locks.withLock
 import kotlinx.coroutines.CoroutineScope

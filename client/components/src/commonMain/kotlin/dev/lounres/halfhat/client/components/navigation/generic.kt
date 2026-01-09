@@ -15,6 +15,7 @@ import dev.lounres.kone.collections.set.KoneSet
 import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.hub.buildSubscriptionLocking
 import dev.lounres.kone.hub.map
+import dev.lounres.kone.hub.value
 import dev.lounres.kone.registry.getOrNull
 import dev.lounres.kone.relations.Equality
 import dev.lounres.kone.relations.Hashing

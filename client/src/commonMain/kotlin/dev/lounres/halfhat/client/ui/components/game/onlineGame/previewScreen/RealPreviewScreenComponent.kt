@@ -19,18 +19,16 @@ public class RealPreviewScreenComponent(
     override val currentRoomSearchEntry: KoneMutableAsynchronousHub<String>,
     override val currentEnterName: KoneMutableAsynchronousHub<String>,
     onFetchFreeRoomId: () -> Unit,
-    onFetchRoomInfo: (roomId: String) -> Unit,
     roomDescriptionFlow: Flow<ServerApi.RoomDescription>,
     override val onJoinRoom: () -> Unit,
 ) : PreviewScreenComponent {
     private val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
     override val onChangeRoomSearchEntry: (String) -> Unit = {
         coroutineScope.launch {
+            currentRoomPreview.value = PreviewScreenComponent.RoomPreview.Loading
             componentContext.navigationContext.doStoringNavigation(action = NavigationAction.ReplaceState) {
                 currentRoomSearchEntry.set(it)
             }
-            currentRoomPreview.value = PreviewScreenComponent.RoomPreview.Loading
-            onFetchRoomInfo(it)
         }
     }
     override val generateRoomSearchEntry: () -> Unit = onFetchFreeRoomId

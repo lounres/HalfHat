@@ -23,6 +23,7 @@ import dev.lounres.kone.collections.utils.*
 import dev.lounres.kone.hub.KoneAsynchronousHubView
 import dev.lounres.kone.hub.map
 import dev.lounres.kone.hub.set
+import dev.lounres.kone.hub.value
 import dev.lounres.kone.relations.Equality
 import dev.lounres.kone.relations.Hashing
 import kotlinx.coroutines.Dispatchers

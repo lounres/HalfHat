@@ -25,6 +25,7 @@ import dev.lounres.kone.collections.map.empty
 import dev.lounres.kone.collections.map.get
 import dev.lounres.kone.collections.utils.drop
 import dev.lounres.kone.hub.KoneAsynchronousHubView
+import dev.lounres.kone.hub.value
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
