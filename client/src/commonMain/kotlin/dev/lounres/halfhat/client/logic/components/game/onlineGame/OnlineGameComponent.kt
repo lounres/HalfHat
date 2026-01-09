@@ -11,7 +11,7 @@ public enum class ConnectionStatus {
 }
 
 public interface OnlineGameComponent {
-    public val connectionStatus: StateFlow<dev.lounres.halfhat.client.logic.components.game.onlineGame.ConnectionStatus>
+    public val connectionStatus: StateFlow<ConnectionStatus>
     public val freeRoomIdFlow: SharedFlow<String>
     public val roomDescriptionFlow: SharedFlow<ServerApi.RoomDescription>
     public val gameStateFlow: StateFlow<ServerApi.OnlineGame.State?>
