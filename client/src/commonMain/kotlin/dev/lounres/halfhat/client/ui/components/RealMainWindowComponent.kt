@@ -52,7 +52,6 @@ import dev.lounres.kone.collections.utils.firstThatOrNull
 import dev.lounres.kone.collections.utils.map
 import dev.lounres.kone.collections.utils.plusAssign
 import dev.lounres.kone.hub.*
-import dev.lounres.kone.registry.RegistryKey
 import dev.lounres.kone.registry.correspondsTo
 import dev.lounres.kone.registry.serialization.RegistrySerializableKey
 import dev.lounres.logKube.core.CurrentPlatformLogger
@@ -87,6 +86,8 @@ data class SettingDescription<T>(
 
 expect val defaultDeviceGameWordsSource: GameStateMachine.WordsSource<DeviceGameWordsProviderID>
 
+val defaultDarkThemeMode: DarkTheme = DarkTheme.System
+
 val settingsDefaults: Map<String, SettingDescription<*>> = mapOf(
     "DarkTheme" to SettingDescription(DarkTheme.Key, DarkTheme.System),
     "VolumeOn" to SettingDescription(VolumeOnKey, true),
@@ -120,20 +121,14 @@ val settingsSerializer = SettingsSerializer(settingsDefaults.mapValues { it.valu
 
 fun globalComponentContext(
     globalLifecycle: MutableUIComponentLifecycle,
-    savedSettings: Settings?,
+    initialSettings: Settings,
     logger: CurrentPlatformLogger<LogLevel>,
     navigationRoot: NavigationRoot,
     deviceGameWordsProviderRegistry: DeviceGameWordsProviderRegistry,
 ): UIComponentContext = UIComponentContext {
     UIComponentLifecycleKey correspondsTo globalLifecycle
     
-    Settings.Key correspondsTo KoneMutableAsynchronousHub(
-        Settings {
-            if (savedSettings != null) setFrom(savedSettings)
-            @Suppress("UNCHECKED_CAST")
-            for ((key, value) in settingsDefaults.values) if (key !in this) (key as RegistryKey<Any?>) correspondsTo value
-        }
-    )
+    Settings.Key correspondsTo KoneMutableAsynchronousHub(initialSettings)
     
     LoggerKey correspondsTo logger
     

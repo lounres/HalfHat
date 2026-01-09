@@ -200,7 +200,6 @@ public suspend fun RealOnlineGamePageComponent(
                 onlineGameComponent.sendSignal(ClientApi.Signal.FetchRoomInfo(currentRoomSearchEntry.value))
             }
             RealOnlineGamePageComponent.Configuration.GameScreen -> {
-                // TODO: Think about replacing with single signal like "ChangeRoom"
                 onlineGameComponent.sendSignal(
                     ClientApi.Signal.OnlineGame.JoinRoom(
                         roomId = currentRoomSearchEntry.value,

@@ -1,5 +1,6 @@
 package dev.lounres.halfhat.client.ui.implementation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
@@ -9,8 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lounres.halfhat.client.ui.components.MainWindowComponent
-import dev.lounres.halfhat.client.ui.theming.HalfhatTheme
-import dev.lounres.kone.hub.subscribeAsState
 
 
 //@Composable
@@ -46,17 +45,13 @@ fun MainWindowUI(
     component: MainWindowComponent?
 ) {
     if (component != null)
-        HalfhatTheme(
-            darkTheme = component.darkTheme.subscribeAsState().value,
-        ) {
-            MainWindowContentUI(
-                component = component,
-                windowSizeClass = calculateWindowSizeClass()
-            )
-        }
+        MainWindowContentUI(
+            component = component,
+            windowSizeClass = calculateWindowSizeClass()
+        )
     else
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         ) {
             Column(
                 modifier = Modifier.align(Alignment.Center),
@@ -66,6 +61,7 @@ fun MainWindowUI(
                 Text(
                     text = "Loading...",
                     fontSize = 36.sp,
+                    color = MaterialTheme.colorScheme.onBackground,
                 )
                 ContainedLoadingIndicator(
                     modifier = Modifier.size(48.dp)
