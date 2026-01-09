@@ -139,8 +139,13 @@ public fun ColumnScope.RoundPreparationUI(
 }
 
 @Composable
-public fun RowScope.RoundPreparationButtonsUI(
+public fun RowScope.RoundPreparationToolbarUI(
     component: RoundPreparationComponent,
 ) {
 
 }
+
+@Composable
+public fun RoundPreparationFloatingActionButtonUI(
+    component: RoundPreparationComponent,
+): @Composable (() -> Unit)? = null

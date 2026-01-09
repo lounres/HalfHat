@@ -172,7 +172,7 @@ public fun ColumnScope.RoomSettingsUI(
 }
 
 @Composable
-public fun RowScope.RoomSettingsButtonsUI(
+public fun RowScope.RoomSettingsToolbarUI(
     component: RoomSettingsComponent
 ) {
     IconButton(
@@ -194,3 +194,8 @@ public fun RowScope.RoomSettingsButtonsUI(
         )
     }
 }
+
+@Composable
+public fun RoomSettingsFloatingActionButtonUI(
+    component: RoomSettingsComponent,
+): @Composable (() -> Unit)? = null

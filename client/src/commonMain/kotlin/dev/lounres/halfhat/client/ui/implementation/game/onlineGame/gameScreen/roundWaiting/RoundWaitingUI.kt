@@ -3,8 +3,9 @@ package dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -142,17 +143,28 @@ public fun ColumnScope.RoundWaitingUI(
 }
 
 @Composable
-public fun RowScope.RoundWaitingButtonsUI(
+public fun RowScope.RoundWaitingToolbarUI(
     component: RoundWaitingComponent,
 ) {
-    if (component.gameState.collectAsState().value.role.isHost)
-        IconButton(
-            onClick = component.onFinishGame
-        ) {
-            Icon(
-                modifier = commonIconModifier,
-                imageVector = HalfHatIcon.OnlineGameFinishGameButton,
-                contentDescription = "Finish online game"
-            )
-        }
+
 }
+
+@Composable
+public fun RoundWaitingFloatingActionButtonUI(
+    component: RoundWaitingComponent,
+): @Composable (() -> Unit)? =
+    if (component.gameState.collectAsState().value.role.isHost)
+        @Composable fun () {
+            FloatingActionButton(
+                onClick = component.onFinishGame,
+                shape = CircleShape,
+                containerColor = MaterialTheme.colorScheme.primary,
+            ) {
+                Icon(
+                    modifier = commonIconModifier,
+                    imageVector = HalfHatIcon.OnlineGameFinishGameButton,
+                    contentDescription = "Finish online game"
+                )
+            }
+        }
+    else null

@@ -146,8 +146,13 @@ public fun ColumnScope.RoundExplanationUI(
 }
 
 @Composable
-public fun RowScope.RoundExplanationButtonsUI(
+public fun RowScope.RoundExplanationToolbarUI(
     component: RoundExplanationComponent,
 ) {
 
 }
+
+@Composable
+public fun RoundExplanationFloatingActionButtonUI(
+    component: RoundExplanationComponent,
+): @Composable (() -> Unit)? = null

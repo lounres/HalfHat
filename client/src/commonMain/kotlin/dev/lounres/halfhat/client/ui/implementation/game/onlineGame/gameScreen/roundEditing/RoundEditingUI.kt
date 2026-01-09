@@ -157,8 +157,13 @@ public fun ColumnScope.RoundEditingUI(
 }
 
 @Composable
-public fun RowScope.RoundEditingButtonsUI(
+public fun RowScope.RoundEditingToolbarUI(
     component: RoundEditingComponent,
 ) {
 
 }
+
+@Composable
+public fun RoundEditingFloatingActionButtonUI(
+    component: RoundEditingComponent,
+): @Composable (() -> Unit)? = null

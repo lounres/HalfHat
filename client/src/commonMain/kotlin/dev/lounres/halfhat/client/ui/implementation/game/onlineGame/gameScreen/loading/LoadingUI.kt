@@ -45,8 +45,13 @@ public fun ColumnScope.LoadingUI(
 }
 
 @Composable
-public fun RowScope.LoadingButtonsUI(
+public fun RowScope.LoadingToolbarUI(
     component: LoadingComponent
 ) {
 
 }
+
+@Composable
+public fun LoadingFloatingActionButtonUI(
+    component: LoadingComponent,
+): @Composable (() -> Unit)? = null

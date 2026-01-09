@@ -51,6 +51,7 @@ public fun ColumnScope.OnlineGamePageUI(
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),

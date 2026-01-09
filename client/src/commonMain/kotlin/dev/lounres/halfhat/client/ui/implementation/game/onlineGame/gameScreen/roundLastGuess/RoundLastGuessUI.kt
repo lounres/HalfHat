@@ -148,8 +148,13 @@ public fun ColumnScope.RoundLastGuessUI(
 }
 
 @Composable
-public fun RowScope.RoundLastGuessButtonsUI(
+public fun RowScope.RoundLastGuessToolbarUI(
     component: RoundLastGuessComponent,
 ) {
 
 }
+
+@Composable
+public fun RoundLastGuessFloatingActionButtonUI(
+    component: RoundLastGuessComponent,
+): @Composable (() -> Unit)? = null

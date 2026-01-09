@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -22,6 +23,7 @@ import dev.lounres.halfhat.client.ui.icons.OnlineGameHostMarkIcon
 import dev.lounres.halfhat.client.ui.icons.OnlineGamePlayerIcon
 import dev.lounres.halfhat.client.ui.icons.OnlineGameSettingsButton
 import dev.lounres.halfhat.client.ui.icons.OnlineGameStartGameButton
+import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.utils.withIndex
 
@@ -77,7 +79,7 @@ public fun ColumnScope.RoomScreenUI(
 }
 
 @Composable
-public fun RowScope.RoomScreenButtonsUI(
+public fun RowScope.RoomScreenToolbarUI(
     component: RoomScreenComponent,
 ) {
     IconButton(
@@ -85,20 +87,28 @@ public fun RowScope.RoomScreenButtonsUI(
     ) {
         Icon(
             imageVector = HalfHatIcon.OnlineGameSettingsButton,
-            modifier = Modifier.size(24.dp),
+            modifier = commonIconModifier,
             contentDescription = "Game settings",
         )
     }
-    Spacer(Modifier.weight(1f))
-    if (component.gameStateFlow.collectAsState().value.role.isHost)
-        FloatingActionButton(
-            onClick = component.onStartGame,
-            shape = CircleShape,
-        ) {
-            Icon(
-                imageVector = HalfHatIcon.OnlineGameStartGameButton,
-                modifier = Modifier.size(24.dp),
-                contentDescription = "Start game",
-            )
-        }
 }
+
+@Composable
+public fun RoomScreenFloatingActionButtonUI(
+    component: RoomScreenComponent,
+): @Composable (() -> Unit)? =
+    if (component.gameStateFlow.collectAsState().value.role.isHost)
+        @Composable fun () {
+            FloatingActionButton(
+                onClick = component.onStartGame,
+                shape = CircleShape,
+                containerColor = MaterialTheme.colorScheme.primary,
+            ) {
+                Icon(
+                    imageVector = HalfHatIcon.OnlineGameStartGameButton,
+                    modifier = commonIconModifier,
+                    contentDescription = "Start game",
+                )
+            }
+        }
+    else null

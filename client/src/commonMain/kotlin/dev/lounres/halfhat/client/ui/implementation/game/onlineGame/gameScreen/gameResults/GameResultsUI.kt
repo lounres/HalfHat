@@ -112,8 +112,13 @@ public fun ColumnScope.GameResultsUI(
 }
 
 @Composable
-public fun RowScope.GameResultsButtonsUI(
+public fun RowScope.GameResultsToolbarUI(
     component: GameResultsComponent
 ) {
 
 }
+
+@Composable
+public fun GameResultsFloatingActionButtonUI(
+    component: GameResultsComponent,
+): @Composable (() -> Unit)? = null
