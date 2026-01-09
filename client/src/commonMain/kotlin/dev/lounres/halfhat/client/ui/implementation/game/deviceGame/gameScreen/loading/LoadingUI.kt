@@ -15,11 +15,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.exitDeviceGameButton_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.loading.LoadingComponent
+import dev.lounres.halfhat.client.ui.icons.DeviceGameExitModeButton
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
-import org.jetbrains.compose.resources.painterResource
 
 
 @Composable
@@ -31,7 +30,7 @@ public fun RowScope.LoadingActionsUI(
     ) {
         Icon(
             modifier = commonIconModifier,
-            painter = painterResource(Res.drawable.exitDeviceGameButton_dark_png_24dp),
+            imageVector = HalfHatIcon.DeviceGameExitModeButton,
             contentDescription = "Exit device game"
         )
     }

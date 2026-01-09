@@ -7,13 +7,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.applyDeviceGameSettingsButton_dark_png_24dp
-import dev.lounres.halfhat.client.resources.discardDeviceGameSettingsButton_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomSettings.RoomSettingsComponent
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
+import dev.lounres.halfhat.client.ui.icons.OnlineGameSettingsApplyButton
+import dev.lounres.halfhat.client.ui.icons.OnlineGameSettingsDiscardButton
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import org.jetbrains.compose.resources.painterResource
 
 
 @Composable
@@ -181,7 +180,7 @@ public fun RowScope.RoomSettingsButtonsUI(
     ) {
         Icon(
             modifier = commonIconModifier,
-            painter = painterResource(Res.drawable.applyDeviceGameSettingsButton_dark_png_24dp), // TODO: Copy the icons
+            imageVector = HalfHatIcon.OnlineGameSettingsApplyButton,
             contentDescription = "Apply settings"
         )
     }
@@ -190,7 +189,7 @@ public fun RowScope.RoomSettingsButtonsUI(
     ) {
         Icon(
             modifier = commonIconModifier,
-            painter = painterResource(Res.drawable.discardDeviceGameSettingsButton_dark_png_24dp), // TODO: Copy the icons
+            imageVector = HalfHatIcon.OnlineGameSettingsDiscardButton,
             contentDescription = "Discard settings"
         )
     }

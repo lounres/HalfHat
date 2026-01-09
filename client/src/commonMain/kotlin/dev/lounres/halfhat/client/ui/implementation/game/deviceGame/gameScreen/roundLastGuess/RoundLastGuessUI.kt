@@ -8,12 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.exitDeviceGameButton_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.roundLastGuess.RoundLastGuessComponent
-import dev.lounres.halfhat.client.ui.utils.GameInProcessTemplate
+import dev.lounres.halfhat.client.ui.icons.DeviceGameExitModeButton
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
+import dev.lounres.halfhat.client.ui.utils.DeviceGameInProcessTemplate
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
-import org.jetbrains.compose.resources.painterResource
 
 
 @Composable
@@ -25,7 +24,7 @@ public fun RowScope.RoundLastGuessActionsUI(
     ) {
         Icon(
             modifier = commonIconModifier,
-            painter = painterResource(Res.drawable.exitDeviceGameButton_dark_png_24dp),
+            imageVector = HalfHatIcon.DeviceGameExitModeButton,
             contentDescription = "Exit device game"
         )
     }
@@ -35,7 +34,7 @@ public fun RowScope.RoundLastGuessActionsUI(
 public fun RoundLastGuessUI(
     component: RoundLastGuessComponent,
 ) {
-    GameInProcessTemplate(
+    DeviceGameInProcessTemplate(
         speaker = component.speaker.collectAsState().value,
         listener = component.listener.collectAsState().value,
         timer = {

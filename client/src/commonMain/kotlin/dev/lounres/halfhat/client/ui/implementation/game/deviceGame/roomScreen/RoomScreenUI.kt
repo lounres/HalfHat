@@ -15,6 +15,14 @@ import androidx.compose.ui.unit.dp
 import dev.lounres.halfhat.client.resources.*
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.roomScreen.RoomScreenComponent
+import dev.lounres.halfhat.client.ui.icons.DeviceGameAddPlayerButton
+import dev.lounres.halfhat.client.ui.icons.DeviceGameExitModeButton
+import dev.lounres.halfhat.client.ui.icons.DeviceGamePlayerIcon
+import dev.lounres.halfhat.client.ui.icons.DeviceGameRemovePlayer
+import dev.lounres.halfhat.client.ui.icons.DeviceGameSettingsButton
+import dev.lounres.halfhat.client.ui.icons.DeviceGameShufflePlayersButton
+import dev.lounres.halfhat.client.ui.icons.DeviceGameStartGameButton
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.utils.withIndex
 import org.jetbrains.compose.resources.painterResource
@@ -29,7 +37,7 @@ public fun RowScope.RoomScreenActionsUI(
     ) {
         Icon(
             modifier = commonIconModifier,
-            painter = painterResource(Res.drawable.exitDeviceGameButton_dark_png_24dp),
+            imageVector = HalfHatIcon.DeviceGameExitModeButton,
             contentDescription = "Exit device game"
         )
     }
@@ -60,7 +68,7 @@ public fun RoomScreenUI(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            painter = painterResource(Res.drawable.deviceGamePlayerIcon_dark_png_24dp),
+                            imageVector = HalfHatIcon.DeviceGamePlayerIcon,
                             modifier = Modifier.size(24.dp),
                             contentDescription = null,
                         )
@@ -78,7 +86,7 @@ public fun RoomScreenUI(
                             onClick = { component.onRemovePLayer(index) },
                         ) {
                             Icon(
-                                painter = painterResource(Res.drawable.removePlayerButton_dark_png_24dp),
+                                imageVector = HalfHatIcon.DeviceGameRemovePlayer,
                                 modifier = Modifier.size(24.dp),
                                 contentDescription = null,
                             )
@@ -92,7 +100,7 @@ public fun RoomScreenUI(
                 onClick = component.onAddPLayer,
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.addPlayerButton_dark_png_24dp),
+                    imageVector = HalfHatIcon.DeviceGameAddPlayerButton,
                     modifier = Modifier.size(24.dp),
                     contentDescription = null,
                 )
@@ -109,7 +117,7 @@ public fun RoomScreenUI(
                     onClick = component.onShufflePlayersList
                 ) {
                     Icon(
-                        painter = painterResource(Res.drawable.shufflePlayersButton_dark_png_24dp),
+                        imageVector = HalfHatIcon.DeviceGameShufflePlayersButton,
                         modifier = Modifier.size(24.dp),
                         contentDescription = "Shuffle players",
                     )
@@ -118,7 +126,7 @@ public fun RoomScreenUI(
                     onClick = component.onOpenGameSettings
                 ) {
                     Icon(
-                        painter = painterResource(Res.drawable.gameSettingsaButton_dark_png_24dp),
+                        imageVector = HalfHatIcon.DeviceGameSettingsButton,
                         modifier = Modifier.size(24.dp),
                         contentDescription = "Game settings",
                     )
@@ -129,7 +137,7 @@ public fun RoomScreenUI(
                     onClick = component.onStartGame,
                 ) {
                     Icon(
-                        painter = painterResource(Res.drawable.startDeviceGameButton_dark_png_24dp),
+                        imageVector = HalfHatIcon.DeviceGameStartGameButton,
                         modifier = Modifier.size(24.dp),
                         contentDescription = "Start game",
                     )

@@ -11,13 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.deviceGameListenerIcon_dark_png_24dp
-import dev.lounres.halfhat.client.resources.deviceGameSpeakerIcon_dark_png_24dp
-import dev.lounres.halfhat.client.resources.exitDeviceGameButton_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.roundPreparation.RoundPreparationComponent
+import dev.lounres.halfhat.client.ui.icons.DeviceGameExitModeButton
+import dev.lounres.halfhat.client.ui.icons.DeviceGameListenerIcon
+import dev.lounres.halfhat.client.ui.icons.DeviceGameSpeakerIcon
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
-import org.jetbrains.compose.resources.painterResource
 import kotlin.math.min
 
 
@@ -30,7 +29,7 @@ public fun RowScope.RoundPreparationActionsUI(
     ) {
         Icon(
             modifier = commonIconModifier,
-            painter = painterResource(Res.drawable.exitDeviceGameButton_dark_png_24dp),
+            imageVector = HalfHatIcon.DeviceGameExitModeButton,
             contentDescription = "Exit device game"
         )
     }
@@ -58,7 +57,7 @@ public fun RoundPreparationUI(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
-                            painter = painterResource(Res.drawable.deviceGameSpeakerIcon_dark_png_24dp),
+                            imageVector = HalfHatIcon.DeviceGameSpeakerIcon,
                             modifier = Modifier.size(24.dp),
                             contentDescription = null
                         )
@@ -77,7 +76,7 @@ public fun RoundPreparationUI(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Icon(
-                            painter = painterResource(Res.drawable.deviceGameListenerIcon_dark_png_24dp),
+                            imageVector = HalfHatIcon.DeviceGameListenerIcon,
                             modifier = Modifier.size(24.dp),
                             contentDescription = null
                         )

@@ -11,7 +11,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -21,11 +20,11 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.aboutPage_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.about.AboutPageComponent
+import dev.lounres.halfhat.client.ui.icons.AboutPageIcon
+import dev.lounres.halfhat.client.ui.icons.AboutPageSelectedIcon
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
-import org.jetbrains.compose.resources.painterResource
 
 
 @Composable
@@ -33,7 +32,7 @@ public fun AboutPageIcon(
     isSelected: Boolean,
 ) {
     Icon(
-        painter = painterResource(Res.drawable.aboutPage_dark_png_24dp),
+        imageVector = if (isSelected) HalfHatIcon.AboutPageSelectedIcon else HalfHatIcon.AboutPageIcon,
         modifier = commonIconModifier,
         contentDescription = "About page",
     )

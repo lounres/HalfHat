@@ -16,11 +16,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import dev.lounres.halfhat.client.resources.*
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomScreen.RoomScreenComponent
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
+import dev.lounres.halfhat.client.ui.icons.OnlineGameHostMarkIcon
+import dev.lounres.halfhat.client.ui.icons.OnlineGamePlayerIcon
+import dev.lounres.halfhat.client.ui.icons.OnlineGameSettingsButton
+import dev.lounres.halfhat.client.ui.icons.OnlineGameStartGameButton
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.utils.withIndex
-import org.jetbrains.compose.resources.painterResource
 
 
 @Composable
@@ -51,7 +54,7 @@ public fun ColumnScope.RoomScreenUI(
             ) {
                 if (index == 0u)
                     Icon(
-                        painter = painterResource(Res.drawable.onlineGameHostMark_dark_png_24dp),
+                        imageVector = HalfHatIcon.OnlineGameHostMarkIcon,
                         modifier = Modifier.size(24.dp),
                         contentDescription = null,
                     )
@@ -59,7 +62,7 @@ public fun ColumnScope.RoomScreenUI(
                     Spacer(Modifier.width(24.dp))
                 Spacer(Modifier.width(4.dp))
                 Icon(
-                    painter = painterResource(Res.drawable.deviceGamePlayerIcon_dark_png_24dp),
+                    imageVector = HalfHatIcon.OnlineGamePlayerIcon,
                     modifier = Modifier.size(24.dp),
                     contentDescription = null,
                 )
@@ -81,7 +84,7 @@ public fun RowScope.RoomScreenButtonsUI(
         onClick = component.onOpenGameSettings
     ) {
         Icon(
-            painter = painterResource(Res.drawable.gameSettingsaButton_dark_png_24dp),
+            imageVector = HalfHatIcon.OnlineGameSettingsButton,
             modifier = Modifier.size(24.dp),
             contentDescription = "Game settings",
         )
@@ -93,7 +96,7 @@ public fun RowScope.RoomScreenButtonsUI(
             shape = CircleShape,
         ) {
             Icon(
-                painter = painterResource(Res.drawable.startDeviceGameButton_dark_png_24dp),
+                imageVector = HalfHatIcon.OnlineGameStartGameButton,
                 modifier = Modifier.size(24.dp),
                 contentDescription = "Start game",
             )

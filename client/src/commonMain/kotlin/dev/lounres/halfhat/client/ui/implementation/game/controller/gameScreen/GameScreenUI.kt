@@ -21,22 +21,19 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lounres.halfhat.client.logic.components.game.timer.TimerState
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.deviceGameListenerIcon_dark_png_24dp
-import dev.lounres.halfhat.client.resources.deviceGameSpeakerIcon_dark_png_24dp
-import dev.lounres.halfhat.client.resources.exitGameTimerButton_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.game.controller.gameScreen.GameScreenComponent
-import dev.lounres.halfhat.client.ui.utils.AutoScalingText
+import dev.lounres.halfhat.client.ui.icons.GameControllerExitModeButton
+import dev.lounres.halfhat.client.ui.icons.GameControllerListenerIcon
+import dev.lounres.halfhat.client.ui.icons.GameControllerSpeakerIcon
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.kone.hub.subscribeAsState
-import org.jetbrains.compose.resources.painterResource
 import kotlin.math.min
 
 
@@ -49,7 +46,7 @@ public fun RowScope.GameScreenActionsUI(
     ) {
         Icon(
             modifier = commonIconModifier,
-            painter = painterResource(Res.drawable.exitGameTimerButton_dark_png_24dp),
+            imageVector = HalfHatIcon.GameControllerExitModeButton,
             contentDescription = "Exit game controller"
         )
     }
@@ -79,7 +76,7 @@ public fun GameScreenUI(
                             horizontalArrangement = Arrangement.Start,
                         ) {
                             Icon(
-                                painter = painterResource(Res.drawable.deviceGameSpeakerIcon_dark_png_24dp),
+                                imageVector = HalfHatIcon.GameControllerSpeakerIcon,
                                 modifier = Modifier.size(24.dp),
                                 contentDescription = null
                             )
@@ -101,7 +98,7 @@ public fun GameScreenUI(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
-                                painter = painterResource(Res.drawable.deviceGameListenerIcon_dark_png_24dp),
+                                imageVector = HalfHatIcon.GameControllerListenerIcon,
                                 modifier = Modifier.size(24.dp),
                                 contentDescription = null
                             )
@@ -139,7 +136,7 @@ public fun GameScreenUI(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Icon(
-                                    painter = painterResource(Res.drawable.deviceGameSpeakerIcon_dark_png_24dp),
+                                    imageVector = HalfHatIcon.GameControllerSpeakerIcon,
                                     modifier = Modifier.size(24.dp),
                                     contentDescription = null
                                 )
@@ -158,7 +155,7 @@ public fun GameScreenUI(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Icon(
-                                    painter = painterResource(Res.drawable.deviceGameListenerIcon_dark_png_24dp),
+                                    imageVector = HalfHatIcon.GameControllerListenerIcon,
                                     modifier = Modifier.size(24.dp),
                                     contentDescription = null
                                 )
@@ -212,7 +209,7 @@ public fun GameScreenUI(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
-                                painter = painterResource(Res.drawable.deviceGameSpeakerIcon_dark_png_24dp),
+                                imageVector = HalfHatIcon.GameControllerSpeakerIcon,
                                 modifier = Modifier.size(24.dp),
                                 contentDescription = null
                             )
@@ -231,7 +228,7 @@ public fun GameScreenUI(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
-                                painter = painterResource(Res.drawable.deviceGameListenerIcon_dark_png_24dp),
+                                imageVector = HalfHatIcon.GameControllerListenerIcon,
                                 modifier = Modifier.size(24.dp),
                                 contentDescription = null
                             )
@@ -281,7 +278,7 @@ public fun GameScreenUI(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
-                                painter = painterResource(Res.drawable.deviceGameSpeakerIcon_dark_png_24dp),
+                                imageVector = HalfHatIcon.GameControllerSpeakerIcon,
                                 modifier = Modifier.size(24.dp),
                                 contentDescription = null
                             )
@@ -300,7 +297,7 @@ public fun GameScreenUI(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
-                                painter = painterResource(Res.drawable.deviceGameListenerIcon_dark_png_24dp),
+                                imageVector = HalfHatIcon.GameControllerListenerIcon,
                                 modifier = Modifier.size(24.dp),
                                 contentDescription = null
                             )

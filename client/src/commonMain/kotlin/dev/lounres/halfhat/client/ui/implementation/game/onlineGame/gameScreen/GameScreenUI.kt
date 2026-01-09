@@ -10,11 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.exitDeviceGameButton_dark_png_24dp
-import dev.lounres.halfhat.client.resources.onlineGameKey_dark_png_24dp
-import dev.lounres.halfhat.client.resources.onlineGameLink_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.GameScreenComponent
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
+import dev.lounres.halfhat.client.ui.icons.OnlineGameCopyKeyButton
+import dev.lounres.halfhat.client.ui.icons.OnlineGameCopyLinkButton
+import dev.lounres.halfhat.client.ui.icons.OnlineGameExitRoomButton
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.gameResults.GameResultsActionsUI
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.gameResults.GameResultsButtonsUI
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.gameResults.GameResultsUI
@@ -44,7 +44,6 @@ import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.r
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundWaiting.RoundWaitingUI
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.kone.hub.subscribeAsState
-import org.jetbrains.compose.resources.painterResource
 
 
 @Composable
@@ -100,8 +99,8 @@ public fun ColumnScope.GameScreenUI(
             ) {
                 Icon(
                     modifier = commonIconModifier,
-                    painter = painterResource(Res.drawable.exitDeviceGameButton_dark_png_24dp), // TODO: Copy the icons
-                    contentDescription = "Exit online game"
+                    imageVector = HalfHatIcon.OnlineGameExitRoomButton,
+                    contentDescription = "Exit online game room"
                 )
             }
             IconButton(
@@ -109,8 +108,8 @@ public fun ColumnScope.GameScreenUI(
             ) {
                 Icon(
                     modifier = commonIconModifier,
-                    painter = painterResource(Res.drawable.onlineGameKey_dark_png_24dp),
-                    contentDescription = "Copy online game key"
+                    imageVector = HalfHatIcon.OnlineGameCopyKeyButton,
+                    contentDescription = "Copy online game room key"
                 )
             }
             IconButton(
@@ -118,8 +117,8 @@ public fun ColumnScope.GameScreenUI(
             ) {
                 Icon(
                     modifier = commonIconModifier,
-                    painter = painterResource(Res.drawable.onlineGameLink_dark_png_24dp),
-                    contentDescription = "Copy online game link"
+                    imageVector = HalfHatIcon.OnlineGameCopyLinkButton,
+                    contentDescription = "Copy online game room link"
                 )
             }
             when (child) {

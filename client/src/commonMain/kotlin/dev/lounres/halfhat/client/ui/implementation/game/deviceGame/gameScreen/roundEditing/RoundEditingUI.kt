@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -28,15 +29,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.exitDeviceGameButton_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.roundEditing.RoundEditingComponent
-import dev.lounres.halfhat.client.ui.utils.AutoScalingText
+import dev.lounres.halfhat.client.ui.icons.DeviceGameExitModeButton
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.utils.withIndex
-import org.jetbrains.compose.resources.painterResource
 
 
 @Composable
@@ -48,7 +47,7 @@ public fun RowScope.RoundEditingActionsUI(
     ) {
         Icon(
             modifier = commonIconModifier,
-            painter = painterResource(Res.drawable.exitDeviceGameButton_dark_png_24dp),
+            imageVector = HalfHatIcon.DeviceGameExitModeButton,
             contentDescription = "Exit device game"
         )
     }
@@ -97,9 +96,9 @@ public fun RoundEditingUI(
                                 modifier = Modifier.fillMaxWidth().padding(8.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
-                                AutoScalingText(
-                                    modifier = Modifier.height(128.dp),
+                                Text(
                                     text = word,
+                                    autoSize = TextAutoSize.StepBased(),
                                     softWrap = false,
                                     maxLines = 1,
                                 )

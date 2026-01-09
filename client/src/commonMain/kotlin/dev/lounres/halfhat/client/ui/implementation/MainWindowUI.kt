@@ -52,18 +52,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import dev.lounres.halfhat.Language
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.changeLanguageButton_dark_png_24dp
-import dev.lounres.halfhat.client.resources.closeMenuButton_dark_png_24dp
-import dev.lounres.halfhat.client.resources.darkThemeButton_dark_png_24dp
-import dev.lounres.halfhat.client.resources.lightThemeButton_dark_png_24dp
-import dev.lounres.halfhat.client.resources.openMenuButton_dark_png_24dp
-import dev.lounres.halfhat.client.resources.systemThemeButton_dark_png_24dp
-import dev.lounres.halfhat.client.resources.volumeOffButton_dark_png_24dp
-import dev.lounres.halfhat.client.resources.volumeOnButton_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.MainWindowComponent
 import dev.lounres.halfhat.client.ui.components.MainWindowComponentChild
 import dev.lounres.halfhat.client.ui.components.MainWindowComponentMenuItem
+import dev.lounres.halfhat.client.ui.icons.ChangeLanguageButton
+import dev.lounres.halfhat.client.ui.icons.DrawerSheetClose
+import dev.lounres.halfhat.client.ui.icons.DrawerSheetOpen
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
+import dev.lounres.halfhat.client.ui.icons.ThemeAutoButton
+import dev.lounres.halfhat.client.ui.icons.ThemeDarkButton
+import dev.lounres.halfhat.client.ui.icons.ThemeLightButton
+import dev.lounres.halfhat.client.ui.icons.VolumeOffButton
+import dev.lounres.halfhat.client.ui.icons.VolumeOnButton
 import dev.lounres.halfhat.client.ui.implementation.about.AboutPageBadge
 import dev.lounres.halfhat.client.ui.implementation.about.AboutPageIcon
 import dev.lounres.halfhat.client.ui.implementation.about.AboutPageUI
@@ -95,7 +95,6 @@ import dev.lounres.kone.hub.set
 import dev.lounres.kone.hub.subscribeAsState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.painterResource
 
 
 val permanentDrawerAfterWindowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Medium
@@ -127,8 +126,8 @@ fun MainWindowDrawerSheetContentUI(
                     ) {
                         Icon(
                             modifier = Modifier.size(24.dp),
-                            painter = painterResource(Res.drawable.closeMenuButton_dark_png_24dp),
-                            contentDescription = "Close menu"
+                            imageVector = HalfHatIcon.DrawerSheetClose,
+                            contentDescription = "Close drawer"
                         )
                     }
             },
@@ -143,13 +142,11 @@ fun MainWindowDrawerSheetContentUI(
                     }
                 ) {
                     Icon(
-                        painter = painterResource(
-                            when (darkTheme) {
-                                DarkTheme.Enabled -> Res.drawable.darkThemeButton_dark_png_24dp
-                                DarkTheme.System -> Res.drawable.systemThemeButton_dark_png_24dp
-                                DarkTheme.Disabled -> Res.drawable.lightThemeButton_dark_png_24dp
-                            }
-                        ),
+                        imageVector = when (darkTheme) {
+                            DarkTheme.Enabled -> HalfHatIcon.ThemeDarkButton
+                            DarkTheme.System -> HalfHatIcon.ThemeAutoButton
+                            DarkTheme.Disabled -> HalfHatIcon.ThemeLightButton
+                        },
                         modifier = Modifier.size(24.dp),
                         contentDescription = "Switch dark theme mode"
                     )
@@ -163,7 +160,7 @@ fun MainWindowDrawerSheetContentUI(
                     }
                 ) {
                     Icon(
-                        painter = painterResource(if (volumeOn) Res.drawable.volumeOnButton_dark_png_24dp else Res.drawable.volumeOffButton_dark_png_24dp),
+                        imageVector = if (volumeOn) HalfHatIcon.VolumeOnButton else HalfHatIcon.VolumeOffButton,
                         modifier = Modifier.size(24.dp),
                         contentDescription = if (volumeOn) "Volume is on" else "Volume is off"
                     )
@@ -174,7 +171,7 @@ fun MainWindowDrawerSheetContentUI(
                     }
                 ) {
                     Icon(
-                        painter = painterResource(Res.drawable.changeLanguageButton_dark_png_24dp),
+                        imageVector = HalfHatIcon.ChangeLanguageButton,
                         modifier = Modifier.size(24.dp),
                         contentDescription = "Choose language of the interface"
                     )
@@ -257,9 +254,9 @@ fun MainWindowDrawerContentUI(
                         }
                     ) {
                         Icon(
-                            painter = painterResource(Res.drawable.openMenuButton_dark_png_24dp),
+                            imageVector = HalfHatIcon.DrawerSheetOpen,
                             modifier = commonIconModifier,
-                            contentDescription = "Open menu"
+                            contentDescription = "Open drawer"
                         )
                     }
                 },

@@ -4,12 +4,11 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.exitOnlineGameButton_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.game.localGame.LocalGamePageComponent
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
+import dev.lounres.halfhat.client.ui.icons.LocalGameExitModeButton
 import dev.lounres.halfhat.client.ui.utils.WorkInProgress
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
-import org.jetbrains.compose.resources.painterResource
 
 
 @Composable
@@ -21,7 +20,7 @@ public fun RowScope.LocalGamePageActionsUI(
     ) {
         Icon(
             modifier = commonIconModifier,
-            painter = painterResource(Res.drawable.exitOnlineGameButton_dark_png_24dp),
+            imageVector = HalfHatIcon.LocalGameExitModeButton,
             contentDescription = "Exit device game"
         )
     }

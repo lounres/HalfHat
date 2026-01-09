@@ -11,7 +11,7 @@ import androidx.compose.ui.window.ComposeViewport
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import dev.lounres.halfhat.client.consts.WebPageSettings
 import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.allDrawableResources
+import dev.lounres.halfhat.client.resources.allFontResources
 import dev.lounres.halfhat.client.storage.settings.Settings
 import dev.lounres.halfhat.client.ui.components.MainWindowComponent
 import dev.lounres.halfhat.client.ui.components.RealMainWindowComponent
@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.configureWebResources
-import org.jetbrains.compose.resources.preloadImageVector
+import org.jetbrains.compose.resources.preloadFont
 import web.storage.localStorage
 
 
@@ -42,14 +42,14 @@ fun application() {
     }
     
     ComposeViewport(document.body!!) {
-        val preloadedDrawables = Res.allDrawableResources.mapValues { (_, resource) -> preloadImageVector(resource) }
+        val preloadedFonts = Res.allFontResources.mapValues { (_, resource) -> preloadFont(resource) }
         var soundsAreReady by remember { mutableStateOf(false) }
         var darkTheme by remember { mutableStateOf(defaultDarkThemeMode) }
         var component by remember { mutableStateOf<MainWindowComponent?>(null) }
         
         val allPreloaded by remember {
             derivedStateOf {
-                preloadedDrawables.all { it.value.value != null } && soundsAreReady && component != null
+                preloadedFonts.all { it.value.value != null } && soundsAreReady && component != null
             }
         }
         

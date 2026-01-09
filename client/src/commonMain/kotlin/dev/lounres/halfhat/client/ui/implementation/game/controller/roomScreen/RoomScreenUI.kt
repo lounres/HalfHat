@@ -14,6 +14,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import dev.lounres.halfhat.client.resources.*
 import dev.lounres.halfhat.client.ui.components.game.controller.roomScreen.RoomScreenComponent
+import dev.lounres.halfhat.client.ui.icons.GameControllerAddPlayerButton
+import dev.lounres.halfhat.client.ui.icons.GameControllerExitModeButton
+import dev.lounres.halfhat.client.ui.icons.GameControllerPlayerIcon
+import dev.lounres.halfhat.client.ui.icons.GameControllerRemovePlayer
+import dev.lounres.halfhat.client.ui.icons.GameControllerSettingsButton
+import dev.lounres.halfhat.client.ui.icons.GameControllerShufflePlayersButton
+import dev.lounres.halfhat.client.ui.icons.GameControllerStartGameButton
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.utils.withIndex
@@ -29,7 +37,7 @@ public fun RowScope.RoomScreenActionsUI(
     ) {
         Icon(
             modifier = commonIconModifier,
-            painter = painterResource(Res.drawable.exitDeviceGameButton_dark_png_24dp),
+            imageVector = HalfHatIcon.GameControllerExitModeButton,
             contentDescription = "Exit game controller"
         )
     }
@@ -60,7 +68,7 @@ public fun RoomScreenUI(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            painter = painterResource(Res.drawable.deviceGamePlayerIcon_dark_png_24dp),
+                            imageVector = HalfHatIcon.GameControllerPlayerIcon,
                             modifier = Modifier.size(24.dp),
                             contentDescription = null,
                         )
@@ -78,7 +86,7 @@ public fun RoomScreenUI(
                             onClick = { component.onRemovePLayer(index) },
                         ) {
                             Icon(
-                                painter = painterResource(Res.drawable.removePlayerButton_dark_png_24dp),
+                                imageVector = HalfHatIcon.GameControllerRemovePlayer,
                                 modifier = Modifier.size(24.dp),
                                 contentDescription = null,
                             )
@@ -92,7 +100,7 @@ public fun RoomScreenUI(
                 onClick = component.onAddPLayer,
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.addPlayerButton_dark_png_24dp),
+                    imageVector = HalfHatIcon.GameControllerAddPlayerButton,
                     modifier = Modifier.size(24.dp),
                     contentDescription = null,
                 )
@@ -109,7 +117,7 @@ public fun RoomScreenUI(
                     onClick = component.onShufflePlayersList
                 ) {
                     Icon(
-                        painter = painterResource(Res.drawable.shufflePlayersButton_dark_png_24dp),
+                        imageVector = HalfHatIcon.GameControllerShufflePlayersButton,
                         modifier = Modifier.size(24.dp),
                         contentDescription = "Shuffle players",
                     )
@@ -118,7 +126,7 @@ public fun RoomScreenUI(
                     onClick = component.onOpenGameSettings
                 ) {
                     Icon(
-                        painter = painterResource(Res.drawable.gameSettingsaButton_dark_png_24dp),
+                        imageVector = HalfHatIcon.GameControllerSettingsButton,
                         modifier = Modifier.size(24.dp),
                         contentDescription = "Game settings",
                     )
@@ -129,7 +137,7 @@ public fun RoomScreenUI(
                     onClick = component.onStartGame,
                 ) {
                     Icon(
-                        painter = painterResource(Res.drawable.startDeviceGameButton_dark_png_24dp),
+                        imageVector = HalfHatIcon.GameControllerStartGameButton,
                         modifier = Modifier.size(24.dp),
                         contentDescription = "Start game",
                     )

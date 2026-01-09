@@ -14,17 +14,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lounres.halfhat.client.logic.components.game.onlineGame.ConnectionStatus
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.exitDeviceGameButton_dark_png_24dp
-import dev.lounres.halfhat.client.resources.gameSettingsaButton_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.OnlineGamePageComponent
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
+import dev.lounres.halfhat.client.ui.icons.OnlineGameConnectionSettingsButton
+import dev.lounres.halfhat.client.ui.icons.OnlineGameExitModeButton
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.GameScreenActionsUI
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.GameScreenUI
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.previewScreen.PreviewScreenActionsUI
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.previewScreen.PreviewScreenUI
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.kone.hub.subscribeAsState
-import org.jetbrains.compose.resources.painterResource
 
 
 @Composable
@@ -40,7 +39,7 @@ public fun RowScope.OnlineGamePageActionsUI(
     ) {
         Icon(
             modifier = commonIconModifier,
-            painter = painterResource(Res.drawable.exitDeviceGameButton_dark_png_24dp), // TODO: Copy the icons
+            imageVector = HalfHatIcon.OnlineGameExitModeButton,
             contentDescription = "Exit online game"
         )
     }
@@ -98,7 +97,7 @@ public fun ColumnScope.OnlineGamePageUI(
             ) {
                 Icon(
                     modifier = commonIconModifier,
-                    painter = painterResource(Res.drawable.gameSettingsaButton_dark_png_24dp), // TODO: Replace in future
+                    imageVector = HalfHatIcon.OnlineGameConnectionSettingsButton,
                     contentDescription = "Connection settings",
                 )
             }

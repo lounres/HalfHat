@@ -3,6 +3,7 @@ package dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -16,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundEditing.RoundEditingComponent
-import dev.lounres.halfhat.client.ui.utils.AutoScalingText
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.utils.withIndex
@@ -75,9 +75,9 @@ public fun ColumnScope.RoundEditingUI(
                                     modifier = Modifier.fillMaxWidth().padding(8.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
-                                    AutoScalingText(
-                                        modifier = Modifier.height(128.dp),
+                                    Text(
                                         text = word,
+                                        autoSize = TextAutoSize.StepBased(),
                                         softWrap = false,
                                         maxLines = 1,
                                     )

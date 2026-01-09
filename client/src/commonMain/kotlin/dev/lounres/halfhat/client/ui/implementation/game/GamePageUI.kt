@@ -7,8 +7,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.gamePage_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.game.GamePageComponent
+import dev.lounres.halfhat.client.ui.icons.GameModeIcon
+import dev.lounres.halfhat.client.ui.icons.GameModeSelectedIcon
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.implementation.game.controller.ControllerPageActionsUI
 import dev.lounres.halfhat.client.ui.implementation.game.controller.ControllerPageUI
 import dev.lounres.halfhat.client.ui.implementation.game.deviceGame.DeviceGamePageActionsUI
@@ -30,7 +32,7 @@ public fun GamePageIcon(
     isSelected: Boolean,
 ) {
     Icon(
-        painter = painterResource(Res.drawable.gamePage_dark_png_24dp),
+        imageVector = if (isSelected) HalfHatIcon.GameModeSelectedIcon else HalfHatIcon.GameModeIcon,
         modifier = commonIconModifier,
         contentDescription = "Game page",
     )

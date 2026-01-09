@@ -2,6 +2,7 @@ package dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -14,12 +15,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lounres.halfhat.api.onlineGame.ServerApi
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.deviceGameListenerIcon_dark_png_24dp
-import dev.lounres.halfhat.client.resources.deviceGameSpeakerIcon_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundLastGuess.RoundLastGuessComponent
-import dev.lounres.halfhat.client.ui.utils.AutoScalingText
-import org.jetbrains.compose.resources.painterResource
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
+import dev.lounres.halfhat.client.ui.icons.OnlineGameListenerIcon
+import dev.lounres.halfhat.client.ui.icons.OnlineGameSpeakerIcon
 
 
 @Composable
@@ -49,7 +48,7 @@ public fun ColumnScope.RoundLastGuessUI(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
-                        painter = painterResource(Res.drawable.deviceGameSpeakerIcon_dark_png_24dp),
+                        imageVector = HalfHatIcon.OnlineGameSpeakerIcon,
                         modifier = Modifier.size(24.dp),
                         contentDescription = null
                     )
@@ -68,7 +67,7 @@ public fun ColumnScope.RoundLastGuessUI(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(
-                        painter = painterResource(Res.drawable.deviceGameListenerIcon_dark_png_24dp),
+                        imageVector = HalfHatIcon.OnlineGameListenerIcon,
                         modifier = Modifier.size(24.dp),
                         contentDescription = null
                     )
@@ -94,8 +93,9 @@ public fun ColumnScope.RoundLastGuessUI(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    AutoScalingText(
+                    Text(
                         text = roundRole.currentWord,
+                        autoSize = TextAutoSize.StepBased(),
                         softWrap = false,
                         maxLines = 1,
                     )

@@ -21,12 +21,12 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.faqPage_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.faq.FAQPageComponent
 import dev.lounres.halfhat.client.ui.components.faq.questionsAndAnswers
+import dev.lounres.halfhat.client.ui.icons.FaqPageIcon
+import dev.lounres.halfhat.client.ui.icons.FaqPageSelectedIcon
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
-import org.jetbrains.compose.resources.painterResource
 
 
 @Composable
@@ -34,7 +34,7 @@ public fun FAQPageIcon(
     isSelected: Boolean,
 ) {
     Icon(
-        painter = painterResource(Res.drawable.faqPage_dark_png_24dp),
+        imageVector = if (isSelected) HalfHatIcon.FaqPageSelectedIcon else HalfHatIcon.FaqPageIcon,
         modifier = commonIconModifier,
         contentDescription = "FAQ page",
     )

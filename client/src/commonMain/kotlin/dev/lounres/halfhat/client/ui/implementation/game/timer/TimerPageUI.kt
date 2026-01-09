@@ -13,14 +13,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lounres.halfhat.client.logic.components.game.timer.TimerState
 import dev.lounres.halfhat.client.logic.components.game.timer.represent
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.exitGameTimerButton_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.game.timer.TimerPageComponent
+import dev.lounres.halfhat.client.ui.icons.GameTimerExitModeButton
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.kone.hub.set
 import dev.lounres.kone.hub.subscribeAsState
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.painterResource
 import kotlin.math.min
 
 
@@ -33,8 +32,8 @@ public fun RowScope.TimerPageActionsUI(
     ) {
         Icon(
             modifier = commonIconModifier,
-            painter = painterResource(Res.drawable.exitGameTimerButton_dark_png_24dp),
-            contentDescription = "Exit device game"
+            imageVector = HalfHatIcon.GameTimerExitModeButton,
+            contentDescription = "Exit game timer"
         )
     }
 }

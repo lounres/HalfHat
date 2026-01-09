@@ -12,12 +12,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.enterOnlineRoomButton_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.previewScreen.PreviewScreenComponent
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
+import dev.lounres.halfhat.client.ui.icons.OnlineGameEnterRoomButton
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.hub.subscribeAsState
-import org.jetbrains.compose.resources.painterResource
 
 
 @Composable
@@ -138,7 +137,7 @@ public fun ColumnScope.PreviewScreenUI(
                                         onClick = component.onJoinRoom
                                     ) {
                                         Icon(
-                                            painter = painterResource(Res.drawable.enterOnlineRoomButton_dark_png_24dp),
+                                            imageVector = HalfHatIcon.OnlineGameEnterRoomButton,
                                             contentDescription = "Join the room",
                                         )
                                     }

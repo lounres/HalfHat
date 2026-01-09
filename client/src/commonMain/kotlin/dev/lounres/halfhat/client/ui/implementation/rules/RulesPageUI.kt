@@ -2,11 +2,10 @@ package dev.lounres.halfhat.client.ui.implementation.rules
 
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.rulesPage_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.rules.RulesPageComponent
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
+import dev.lounres.halfhat.client.ui.icons.RulesPageIcon
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
-import org.jetbrains.compose.resources.painterResource
 
 
 @Composable
@@ -14,7 +13,7 @@ public fun RulesPageIcon(
     isSelected: Boolean,
 ) {
     Icon(
-        painter = painterResource(Res.drawable.rulesPage_dark_png_24dp),
+        imageVector = HalfHatIcon.RulesPageIcon,
         modifier = commonIconModifier,
         contentDescription = "Rules page",
     )

@@ -10,6 +10,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import dev.lounres.halfhat.client.resources.*
 import dev.lounres.halfhat.client.ui.components.game.modeSelection.ModeSelectionPageComponent
+import dev.lounres.halfhat.client.ui.icons.GameModeDescriptionButton
+import dev.lounres.halfhat.client.ui.icons.GameModeDeviceGameIcon
+import dev.lounres.halfhat.client.ui.icons.GameModeGameControllerIcon
+import dev.lounres.halfhat.client.ui.icons.GameModeGameTimerIcon
+import dev.lounres.halfhat.client.ui.icons.GameModeLocalGameIcon
+import dev.lounres.halfhat.client.ui.icons.GameModeOnlineGameIcon
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.kone.hub.subscribeAsState
 import dev.lounres.kone.maybe.ifSome
@@ -72,7 +79,7 @@ public fun ColumnScope.ModeSelectionPageUI(
                 onClick = component.onOnlineGameSelect,
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.onlineGamePage_dark_png_24dp),
+                    imageVector = HalfHatIcon.GameModeOnlineGameIcon,
                     modifier = commonIconModifier,
                     contentDescription = null,
                 )
@@ -88,7 +95,7 @@ public fun ColumnScope.ModeSelectionPageUI(
                 ),
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.gameModeDescriptionButton_dark_png_24dp),
+                    imageVector = HalfHatIcon.GameModeDescriptionButton,
                     modifier = commonIconModifier,
                     contentDescription = "Online game description",
                 )
@@ -102,7 +109,7 @@ public fun ColumnScope.ModeSelectionPageUI(
                 onClick = component.onLocalGameSelect,
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.localGamePage_dark_png_24dp),
+                    imageVector = HalfHatIcon.GameModeLocalGameIcon,
                     modifier = commonIconModifier,
                     contentDescription = null,
                 )
@@ -118,7 +125,7 @@ public fun ColumnScope.ModeSelectionPageUI(
                 ),
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.gameModeDescriptionButton_dark_png_24dp),
+                    imageVector = HalfHatIcon.GameModeDescriptionButton,
                     modifier = commonIconModifier,
                     contentDescription = "Local game description",
                 )
@@ -132,7 +139,7 @@ public fun ColumnScope.ModeSelectionPageUI(
                 onClick = component.onDeviceGameSelect,
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.deviceGamePage_dark_png_24dp),
+                    imageVector = HalfHatIcon.GameModeDeviceGameIcon,
                     modifier = commonIconModifier,
                     contentDescription = null,
                 )
@@ -148,7 +155,7 @@ public fun ColumnScope.ModeSelectionPageUI(
                 ),
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.gameModeDescriptionButton_dark_png_24dp),
+                    imageVector = HalfHatIcon.GameModeDescriptionButton,
                     modifier = commonIconModifier,
                     contentDescription = "Device game description",
                 )
@@ -162,7 +169,7 @@ public fun ColumnScope.ModeSelectionPageUI(
                 onClick = component.onGameControllerSelect,
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.timerPage_dark_png_24dp),
+                    imageVector = HalfHatIcon.GameModeGameControllerIcon,
                     modifier = commonIconModifier,
                     contentDescription = null,
                 )
@@ -178,7 +185,7 @@ public fun ColumnScope.ModeSelectionPageUI(
                 ),
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.gameModeDescriptionButton_dark_png_24dp),
+                    imageVector = HalfHatIcon.GameModeDescriptionButton,
                     modifier = commonIconModifier,
                     contentDescription = "Game controller description",
                 )
@@ -192,7 +199,7 @@ public fun ColumnScope.ModeSelectionPageUI(
                 onClick = component.onGameTimerSelect,
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.timerPage_dark_png_24dp),
+                    imageVector = HalfHatIcon.GameModeGameTimerIcon,
                     modifier = commonIconModifier,
                     contentDescription = null,
                 )
@@ -208,7 +215,7 @@ public fun ColumnScope.ModeSelectionPageUI(
                 ),
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.gameModeDescriptionButton_dark_png_24dp),
+                    imageVector = HalfHatIcon.GameModeDescriptionButton,
                     modifier = commonIconModifier,
                     contentDescription = "Game timer description",
                 )

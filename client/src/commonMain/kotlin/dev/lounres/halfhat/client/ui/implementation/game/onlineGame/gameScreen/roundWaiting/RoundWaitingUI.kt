@@ -13,13 +13,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.deviceGameListenerIcon_dark_png_24dp
-import dev.lounres.halfhat.client.resources.deviceGameSpeakerIcon_dark_png_24dp
-import dev.lounres.halfhat.client.resources.finishDeviceGameButton_dark_png_24dp
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundWaiting.RoundWaitingComponent
+import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
+import dev.lounres.halfhat.client.ui.icons.OnlineGameFinishGameButton
+import dev.lounres.halfhat.client.ui.icons.OnlineGameListenerIcon
+import dev.lounres.halfhat.client.ui.icons.OnlineGameSpeakerIcon
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
-import org.jetbrains.compose.resources.painterResource
 
 
 @Composable
@@ -56,7 +55,7 @@ public fun ColumnScope.RoundWaitingUI(
                 horizontalArrangement = Arrangement.Start,
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.deviceGameSpeakerIcon_dark_png_24dp),
+                    imageVector = HalfHatIcon.OnlineGameSpeakerIcon,
                     modifier = Modifier.size(24.dp),
                     contentDescription = null
                 )
@@ -78,7 +77,7 @@ public fun ColumnScope.RoundWaitingUI(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(
-                    painter = painterResource(Res.drawable.deviceGameListenerIcon_dark_png_24dp),
+                    imageVector = HalfHatIcon.OnlineGameListenerIcon,
                     modifier = Modifier.size(24.dp),
                     contentDescription = null
                 )
@@ -146,13 +145,13 @@ public fun ColumnScope.RoundWaitingUI(
 public fun RowScope.RoundWaitingButtonsUI(
     component: RoundWaitingComponent,
 ) {
-    if (component.gameState.collectAsState().value.role.userIndex == 0u) // TODO: Replace with server-sent flag
+    if (component.gameState.collectAsState().value.role.isHost)
         IconButton(
             onClick = component.onFinishGame
         ) {
             Icon(
                 modifier = commonIconModifier,
-                painter = painterResource(Res.drawable.finishDeviceGameButton_dark_png_24dp), // TODO: Copy the icons
+                imageVector = HalfHatIcon.OnlineGameFinishGameButton,
                 contentDescription = "Finish online game"
             )
         }
