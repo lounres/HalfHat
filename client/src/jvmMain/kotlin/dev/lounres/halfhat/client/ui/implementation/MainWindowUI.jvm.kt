@@ -21,16 +21,12 @@ import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberWindowState
 import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
-import dev.lounres.halfhat.client.resources.Res
-import dev.lounres.halfhat.client.resources.halfhat_logo
 import dev.lounres.halfhat.client.ui.components.MainWindowComponent
-import dev.lounres.halfhat.client.ui.theming.HalfhatTheme
 import dev.lounres.kone.hub.subscribeAsState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.painterResource
 
 
 @Composable
@@ -70,31 +66,27 @@ fun MainWindowUI(
     component: MainWindowComponent?
 ) {
     if (component != null)
-        HalfhatTheme(
-            darkTheme = component.darkTheme.subscribeAsState().value,
+        Window(
+            title = "HalfHat — ${component.pageVariants.subscribeAsState().value.active.component.component.textName}",
+//            icon = painterResource(Res.drawable.halfhat_logo), // TODO: Add window icon
+            state = component.windowState,
+            onCloseRequest = component.onWindowCloseRequest,
         ) {
-            Window(
-                title = "HalfHat — ${component.pageVariants.subscribeAsState().value.active.component.component.textName}",
-                icon = painterResource(Res.drawable.halfhat_logo),
-                state = component.windowState,
-                onCloseRequest = component.onWindowCloseRequest,
-            ) {
-                LifecycleController(
-                    component.globalLifecycle,
-                    component.windowState,
-                    LocalWindowInfo.current,
-                )
-                
-                MainWindowContentUI(
-                    component = component,
-                    windowSizeClass = calculateWindowSizeClass()
-                )
-            }
+            LifecycleController(
+                component.globalLifecycle,
+                component.windowState,
+                LocalWindowInfo.current,
+            )
+            
+            MainWindowContentUI(
+                component = component,
+                windowSizeClass = calculateWindowSizeClass()
+            )
         }
     else
         Window(
             title = "HalfHat",
-            icon = painterResource(Res.drawable.halfhat_logo),
+//            icon = painterResource(Res.drawable.halfhat_logo), // TODO: Add window icon
             state = rememberWindowState(
                 position = WindowPosition.Aligned(Alignment.Center),
                 size = DpSize(400.dp, 300.dp)

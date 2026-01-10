@@ -172,7 +172,6 @@ suspend fun RealMainWindowComponent(
                 NavigationNodePath(
                     path = actualPath.drop(basePath.size),
                     arguments = KoneMap.build {
-                        // FIXME: kotlinx-wrappers #2824
                         for ((key, value) in URLSearchParams(location.search).entries()) {
                             set(decodeURIComponent(key.toKotlinString()), decodeURIComponent(value.toKotlinString()))
                         }
