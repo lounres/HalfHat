@@ -1,12 +1,15 @@
 package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundEditing
 
 import dev.lounres.halfhat.api.onlineGame.ServerApi
+import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
 import kotlinx.coroutines.flow.StateFlow
 
 
 public interface RoundEditingComponent {
+    public val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>
     public val gameState: StateFlow<ServerApi.OnlineGame.State.RoundEditing>
     
     // TODO: Make UI NOT to serve logic again: UI should not provide list of the words manually

@@ -165,7 +165,7 @@ suspend fun RealMainWindowComponent(
         }
         
         val locationPath = location.pathname
-        val actualPath = locationPath.split('/').filter { it.isNotEmpty() }.toKoneList()
+        val actualPath = locationPath.split('/').filter { it.isNotEmpty() }.map { decodeURIComponent(it) }.toKoneList()
         val basePath = WebPageSettings.base.split('/').filter { it.isNotEmpty() }.map { decodeURIComponent(it) }.toKoneList()
         if (actualPath.size >= basePath.size && basePath.allIndexed { index, value -> actualPath[index] == value })
             navigationRoot.restoreByPath(

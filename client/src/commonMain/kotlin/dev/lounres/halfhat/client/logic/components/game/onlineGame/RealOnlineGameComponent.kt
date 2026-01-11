@@ -230,8 +230,7 @@ public class RealOnlineGameComponent(
                                                         launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.RoundLastGuess ->
                                                     if (newState.millisecondsLeft == 0u) {
-                                                        if (newState.roundNumber != previousState.roundNumber)
-                                                            launch { settings.playFinalGuessEnd() }
+                                                        launch { settings.playFinalGuessEnd() }
                                                     } else {
                                                         if (newState.roundNumber != previousState.roundNumber)
                                                             launch { settings.playFinalGuessStart() }

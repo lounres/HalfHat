@@ -16,6 +16,8 @@ import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotNode
 import dev.lounres.halfhat.client.consts.OnlineGameSettings
+import dev.lounres.halfhat.client.storage.settings.settings
+import dev.lounres.halfhat.client.ui.theming.darkTheme
 import dev.lounres.halfhat.client.utils.copyToClipboard
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.komponentual.navigation.set
@@ -25,6 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import net.thauvin.erik.urlencoder.UrlEncoderUtil
 
 
 public class RealGameScreenComponent(
@@ -191,6 +194,7 @@ public suspend fun RealGameScreenComponent(
                 is RealGameScreenComponent.Configuration.RoundEditing ->
                     GameScreenComponent.Child.RoundEditing(
                         RealRoundEditingComponent(
+                            darkTheme = componentContext.settings.darkTheme,
                             gameState = configuration.stateFlow,
                             
                             onUpdateExplanationResults = onUpdateExplanationResults,
@@ -314,7 +318,7 @@ public suspend fun RealGameScreenComponent(
             coroutineScope.launch {
                 val gameState = gameStateFlow.value
                 if (gameState != null) {
-                    copyToClipboard("${OnlineGameSettings.linkBase}game/online/${gameState.roomName}")
+                    copyToClipboard("${OnlineGameSettings.linkBase}game/online/${UrlEncoderUtil.encode(gameState.roomName)}")
                 }
             }
         }

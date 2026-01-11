@@ -1,13 +1,16 @@
 package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundEditing
 
 import dev.lounres.halfhat.api.onlineGame.ServerApi
+import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.toKoneMutableList
+import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
 import kotlinx.coroutines.flow.StateFlow
 
 
 public class RealRoundEditingComponent(
+    override val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>,
     override val gameState: StateFlow<ServerApi.OnlineGame.State.RoundEditing>,
     
     onUpdateExplanationResults: (KoneList<GameStateMachine.WordExplanation>) -> Unit,

@@ -79,7 +79,7 @@ public fun ColumnScope.RoundLastGuessUI(
                 horizontalArrangement = Arrangement.Center,
             ) {
                 Text(
-                    text = (gameState.millisecondsLeft / 100u + 1u).let { "${it / 10u}.${it % 10u}" },
+                    text = (gameState.millisecondsLeft / 100u).let { "${it / 10u}.${it % 10u}" },
                     fontSize = 64.sp,
                     color = Color.Red
                 )

@@ -80,7 +80,7 @@ public fun ColumnScope.RoundPreparationUI(
         ) {
             val millisecondsLeft = gameState.millisecondsLeft
             Text(
-                text = (millisecondsLeft / 1_000u + 1u).toString(),
+                text = ((millisecondsLeft + 999u) / 1_000u).toString(),
                 fontSize = 256.sp,
                 color = Color.hsv(
                     hue = min(millisecondsLeft, 3_000u).toInt() * 0.04f,

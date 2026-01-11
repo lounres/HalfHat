@@ -97,6 +97,9 @@ kotlin {
 
                 // Koin
 //                api(versions.koin.core)
+                
+                // Utils
+                implementation("net.thauvin.erik.urlencoder:urlencoder-lib:1.6.0")
             }
         }
 

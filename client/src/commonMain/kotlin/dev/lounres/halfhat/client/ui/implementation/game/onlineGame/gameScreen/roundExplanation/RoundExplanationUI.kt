@@ -78,7 +78,7 @@ public fun ColumnScope.RoundExplanationUI(
                 horizontalArrangement = Arrangement.Center,
             ) {
                 Text(
-                    text = (gameState.millisecondsLeft / 1_000u + 1u).let { "${it / 60u}:${it % 60u}" },
+                    text = (gameState.millisecondsLeft / 1_000u).let { "${it / 60u}:${(it % 60u).toString().padStart(2, '0')}" },
                     fontSize = 32.sp,
                 )
             }
