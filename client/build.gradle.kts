@@ -437,6 +437,7 @@ tasks.register("publishToProduction") {
     
     doLast {
         val hostname = project.properties["halfhat.publishing.hostname"] as String
+        val port = (project.properties["halfhat.publishing.ssh.port"] as String).toInt()
         val username = project.properties["halfhat.publishing.ssh.username"] as String
         val password = project.properties["halfhat.publishing.ssh.password"] as String
         val destinationSite = project.properties["halfhat.publishing.destination.site"] as String
@@ -444,7 +445,7 @@ tasks.register("publishToProduction") {
         val ssh = SSHClient()
         ssh.addHostKeyVerifier(PromiscuousVerifier())
         ssh.use {
-            ssh.connect(hostname)
+            ssh.connect(hostname, port)
             ssh.authPassword(username, password)
             ssh.use {
                 run {
