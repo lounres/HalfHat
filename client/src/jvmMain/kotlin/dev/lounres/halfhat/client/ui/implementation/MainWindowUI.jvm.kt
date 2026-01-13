@@ -3,7 +3,7 @@ package dev.lounres.halfhat.client.ui.implementation
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -80,7 +80,7 @@ fun MainWindowUI(
             
             MainWindowContentUI(
                 component = component,
-                windowSizeClass = calculateWindowSizeClass()
+                windowSizeClass = currentWindowAdaptiveInfo(supportLargeAndXLargeWidth = true).windowSizeClass
             )
         }
     else

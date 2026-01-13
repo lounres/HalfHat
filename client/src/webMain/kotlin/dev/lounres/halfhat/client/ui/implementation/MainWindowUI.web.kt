@@ -3,7 +3,7 @@ package dev.lounres.halfhat.client.ui.implementation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,7 +47,7 @@ fun MainWindowUI(
     if (component != null)
         MainWindowContentUI(
             component = component,
-            windowSizeClass = calculateWindowSizeClass()
+            windowSizeClass = currentWindowAdaptiveInfo(supportLargeAndXLargeWidth = true).windowSizeClass
         )
     else
         Box(

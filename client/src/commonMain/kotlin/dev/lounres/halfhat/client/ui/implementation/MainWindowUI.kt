@@ -36,8 +36,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -51,6 +49,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.window.core.layout.WindowSizeClass
 import dev.lounres.halfhat.Language
 import dev.lounres.halfhat.client.ui.components.MainWindowComponent
 import dev.lounres.halfhat.client.ui.components.MainWindowComponentChild
@@ -97,7 +96,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 
-val permanentDrawerAfterWindowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Medium
+const val permanentDrawerAfterWindowWidthSizeClass = WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND
 
 @Composable
 fun MainWindowDrawerSheetContentUI(
@@ -118,7 +117,7 @@ fun MainWindowDrawerSheetContentUI(
                 containerColor = Color.Transparent,
             ),
             navigationIcon = {
-                if (windowSizeClass.widthSizeClass <= permanentDrawerAfterWindowWidthSizeClass)
+                if (!windowSizeClass.isWidthAtLeastBreakpoint(permanentDrawerAfterWindowWidthSizeClass))
                     IconButton(
                         onClick = {
                             windowCoroutineScope.launch { drawerState.close() }
@@ -248,7 +247,7 @@ fun MainWindowDrawerContentUI(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ),
                 navigationIcon = {
-                    if (windowSizeClass.widthSizeClass <= permanentDrawerAfterWindowWidthSizeClass) IconButton(
+                    if (!windowSizeClass.isWidthAtLeastBreakpoint(permanentDrawerAfterWindowWidthSizeClass)) IconButton(
                         onClick = {
                             windowCoroutineScope.launch { drawerState.open() }
                         }
@@ -409,7 +408,7 @@ fun MainWindowContentUI(
             }
 
         val windowCoroutineScope = rememberCoroutineScope()
-        if (windowSizeClass.widthSizeClass <= permanentDrawerAfterWindowWidthSizeClass) {
+        if (!windowSizeClass.isWidthAtLeastBreakpoint(permanentDrawerAfterWindowWidthSizeClass)) {
             val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
             ModalNavigationDrawer(
                 drawerState = drawerState,

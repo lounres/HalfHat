@@ -86,7 +86,7 @@ kotlin {
                 api(versions.compose.multiplatform.ui)
                 api(versions.compose.multiplatform.foundation)
                 api(versions.compose.multiplatform.material3)
-                api(versions.compose.multiplatform.material3.windowSizeClass)
+                api(versions.compose.multiplatform.material3.adaptive)
                 api(versions.compose.multiplatform.components.resources)
 
                 // Ktor
