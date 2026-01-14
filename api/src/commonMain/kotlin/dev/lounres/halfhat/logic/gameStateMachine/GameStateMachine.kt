@@ -124,6 +124,7 @@ public object GameStateMachine {
             override val metadata: Metadata,
             override val playersList: KoneList<P>,
             val settings: GameSettings<WPID>,
+            val initialWordsNumber: UInt,
             val roundNumber: UInt,
             val cycleNumber: UInt,
             val speakerIndex: UInt,
@@ -139,6 +140,7 @@ public object GameStateMachine {
             override val metadata: Metadata,
             override val playersList: KoneList<P>,
             val settings: GameSettings<WPID>,
+            val initialWordsNumber: UInt,
             val roundNumber: UInt,
             val cycleNumber: UInt,
             val speakerIndex: UInt,
@@ -155,6 +157,7 @@ public object GameStateMachine {
             override val metadata: Metadata,
             override val playersList: KoneList<P>,
             val settings: GameSettings<WPID>,
+            val initialWordsNumber: UInt,
             val roundNumber: UInt,
             val cycleNumber: UInt,
             val speakerIndex: UInt,
@@ -172,6 +175,7 @@ public object GameStateMachine {
             override val metadata: Metadata,
             override val playersList: KoneList<P>,
             val settings: GameSettings<WPID>,
+            val initialWordsNumber: UInt,
             val roundNumber: UInt,
             val cycleNumber: UInt,
             val speakerIndex: UInt,
@@ -189,6 +193,7 @@ public object GameStateMachine {
             override val metadata: Metadata,
             override val playersList: KoneList<P>,
             val settings: GameSettings<WPID>,
+            val initialWordsNumber: UInt,
             val roundNumber: UInt,
             val cycleNumber: UInt,
             val speakerIndex: UInt,
@@ -206,38 +211,54 @@ public object GameStateMachine {
         ) : State<P, Nothing, Metadata>
     }
     
-    public sealed interface Transition<out P, out WPID, out NoWordsProviderReason, out MetadataTransition> {
-        public data class UpdateMetadata<out MetadataTransition>(
-            public val metadataTransition: MetadataTransition,
+    public sealed interface Transition<out P, out WPID, out NoWordsProviderReason, out MetadataTransition: Any> {
+        public val metadataTransition: MetadataTransition?
+        
+        public data class NoOperation<out MetadataTransition: Any>(
+            override val metadataTransition: MetadataTransition? = null,
         ) : Transition<Nothing, Nothing, Nothing, MetadataTransition>
-        public sealed interface UpdateGame<out P, out WPID, out NoWordsProviderReason> : Transition<P, WPID, NoWordsProviderReason, Nothing> {
-            public data class UpdateGameSettings<out P, out WPID>(
-                public val playersList: KoneList<P>,
-                public val settingsBuilder: GameSettings.Builder<WPID>,
-            ) : UpdateGame<P, WPID, Nothing>
-            public data class InitialiseGame<WPID, out NoWordsProviderReason>(
-                val wordsProviderRegistry: WordsProviderRegistry<WPID, NoWordsProviderReason>
-            ) : UpdateGame<Nothing, WPID, NoWordsProviderReason>
-            public data class SubmitPlayerWords(
-                public val playerIndex: UInt,
-                public val playerWords: KoneSet<String>,
-            ) : UpdateGame<Nothing, Nothing, Nothing>
-            public data object SpeakerReady : UpdateGame<Nothing, Nothing, Nothing>
-            public data object ListenerReady : UpdateGame<Nothing, Nothing, Nothing>
-            public data object SpeakerAndListenerReady : UpdateGame<Nothing, Nothing, Nothing>
-            public data class UpdateRoundInfo(
-                public val stopTimer: () -> Unit,
-                public val roundNumber: UInt,
-            ) : UpdateGame<Nothing, Nothing, Nothing>
-            public data class WordExplanationState(
-                public val wordState: WordExplanation.State,
-            ) : UpdateGame<Nothing, Nothing, Nothing>
-            public data class UpdateWordsExplanationResults(
-                public val newExplanationResults: KoneList<WordExplanation>,
-            ) : UpdateGame<Nothing, Nothing, Nothing>
-            public data object ConfirmWordsExplanationResults : UpdateGame<Nothing, Nothing, Nothing>
-            public data object FinishGame : UpdateGame<Nothing, Nothing, Nothing>
-        }
+        public data class UpdateGameSettings<out P, out WPID, out MetadataTransition: Any>(
+            public val playersList: KoneList<P>,
+            public val settingsBuilder: GameSettings.Builder<WPID>,
+            override val metadataTransition: MetadataTransition? = null,
+        ) : Transition<P, WPID, Nothing, MetadataTransition>
+        public data class InitialiseGame<WPID, out NoWordsProviderReason, out MetadataTransition: Any>(
+            val wordsProviderRegistry: WordsProviderRegistry<WPID, NoWordsProviderReason>,
+            override val metadataTransition: MetadataTransition? = null,
+        ) : Transition<Nothing, WPID, NoWordsProviderReason, MetadataTransition>
+        public data class SubmitPlayerWords<out MetadataTransition: Any>(
+            public val playerIndex: UInt,
+            public val playerWords: KoneSet<String>,
+            override val metadataTransition: MetadataTransition? = null,
+        ) : Transition<Nothing, Nothing, Nothing, MetadataTransition>
+        public data class SpeakerReady<out MetadataTransition: Any>(
+            override val metadataTransition: MetadataTransition? = null,
+        ) : Transition<Nothing, Nothing, Nothing, MetadataTransition>
+        public data class ListenerReady<out MetadataTransition: Any>(
+            override val metadataTransition: MetadataTransition? = null,
+        ) : Transition<Nothing, Nothing, Nothing, MetadataTransition>
+        public data class SpeakerAndListenerReady<out MetadataTransition: Any>(
+            override val metadataTransition: MetadataTransition? = null,
+        ) : Transition<Nothing, Nothing, Nothing, MetadataTransition>
+        public data class UpdateRoundInfo<out MetadataTransition: Any>(
+            public val stopTimer: () -> Unit,
+            public val roundNumber: UInt,
+            override val metadataTransition: MetadataTransition? = null,
+        ) : Transition<Nothing, Nothing, Nothing, MetadataTransition>
+        public data class WordExplanationState<out MetadataTransition: Any>(
+            public val wordState: WordExplanation.State,
+            override val metadataTransition: MetadataTransition? = null,
+        ) : Transition<Nothing, Nothing, Nothing, MetadataTransition>
+        public data class UpdateWordsExplanationResults<out MetadataTransition: Any>(
+            public val newExplanationResults: KoneList<WordExplanation>,
+            override val metadataTransition: MetadataTransition? = null,
+        ) : Transition<Nothing, Nothing, Nothing, MetadataTransition>
+        public data class ConfirmWordsExplanationResults<out MetadataTransition: Any>(
+            override val metadataTransition: MetadataTransition? = null,
+        ) : Transition<Nothing, Nothing, Nothing, MetadataTransition>
+        public data class FinishGame<out MetadataTransition: Any>(
+            override val metadataTransition: MetadataTransition? = null,
+        ) : Transition<Nothing, Nothing, Nothing, MetadataTransition>
     }
     
     public sealed interface NoNextStateReason<out NoMetadataTransitionReason, out NoWordsProviderReason> {

@@ -5,7 +5,7 @@ import kotlin.jvm.JvmInline
 
 
 @JvmInline
-public value class AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason> @PublishedApi internal constructor(
+public value class AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition : Any, NoMetadataTransitionReason> @PublishedApi internal constructor(
     @PublishedApi
     internal val automaton: AsynchronousAutomaton<
         GameStateMachine.State<P, WPID, Metadata>,

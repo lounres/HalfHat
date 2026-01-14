@@ -162,6 +162,7 @@ class Connection(
             ServerApi.PlayerDescription(
                 name = this.metadata.name,
                 isOnline = this.isOnline,
+                isHost = this.isHost,
             )
         fun KoneList<Room.Player.Description<PlayerMetadata>>.toServerApi(): KoneList<ServerApi.PlayerDescription> =
             map { it.toServerApi() }
@@ -233,10 +234,12 @@ class Connection(
                             ),
                             playersList = state.playersList.toServerApi(),
                             settings = state.settings.toServerApi(),
+                            initialWordsNumber = state.initialWordsNumber,
                             roundNumber = state.roundNumber,
                             cycleNumber = state.cycleNumber,
                             speakerIndex = state.speakerIndex,
                             listenerIndex = state.listenerIndex,
+                            restWordsNumber = state.restWordsNumber,
                             explanationScores = state.explanationScores,
                             guessingScores = state.guessingScores,
                             speakerReady = state.speakerReady,
@@ -257,13 +260,16 @@ class Connection(
                             ),
                             playersList = state.playersList.toServerApi(),
                             settings = state.settings.toServerApi(),
+                            initialWordsNumber = state.initialWordsNumber,
                             roundNumber = state.roundNumber,
                             cycleNumber = state.cycleNumber,
                             speakerIndex = state.speakerIndex,
                             listenerIndex = state.listenerIndex,
+                            restWordsNumber = state.restWordsNumber,
                             millisecondsLeft = state.millisecondsLeft,
                             explanationScores = state.explanationScores,
                             guessingScores = state.guessingScores,
+                            currentExplanationResultsSize = state.currentExplanationResultsSize,
                         )
                     is Room.Outgoing.State.RoundExplanation<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.RoundExplanation(
@@ -280,13 +286,16 @@ class Connection(
                             ),
                             playersList = state.playersList.toServerApi(),
                             settings = state.settings.toServerApi(),
+                            initialWordsNumber = state.initialWordsNumber,
                             roundNumber = state.roundNumber,
                             cycleNumber = state.cycleNumber,
                             speakerIndex = state.speakerIndex,
                             listenerIndex = state.listenerIndex,
+                            restWordsNumber = state.restWordsNumber,
                             millisecondsLeft = state.millisecondsLeft,
                             explanationScores = state.explanationScores,
                             guessingScores = state.guessingScores,
+                            currentExplanationResultsSize = state.currentExplanationResultsSize,
                         )
                     is Room.Outgoing.State.RoundLastGuess<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.RoundLastGuess(
@@ -303,13 +312,16 @@ class Connection(
                             ),
                             playersList = state.playersList.toServerApi(),
                             settings = state.settings.toServerApi(),
+                            initialWordsNumber = state.initialWordsNumber,
                             roundNumber = state.roundNumber,
                             cycleNumber = state.cycleNumber,
                             speakerIndex = state.speakerIndex,
                             listenerIndex = state.listenerIndex,
+                            restWordsNumber = state.restWordsNumber,
                             millisecondsLeft = state.millisecondsLeft,
                             explanationScores = state.explanationScores,
                             guessingScores = state.guessingScores,
+                            currentExplanationResultsSize = state.currentExplanationResultsSize,
                         )
                     is Room.Outgoing.State.RoundEditing<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.RoundEditing(
@@ -326,12 +338,15 @@ class Connection(
                             ),
                             playersList = state.playersList.toServerApi(),
                             settings = state.settings.toServerApi(),
+                            initialWordsNumber = state.initialWordsNumber,
                             roundNumber = state.roundNumber,
                             cycleNumber = state.cycleNumber,
                             speakerIndex = state.speakerIndex,
                             listenerIndex = state.listenerIndex,
+                            restWordsNumber = state.restWordsNumber,
                             explanationScores = state.explanationScores,
                             guessingScores = state.guessingScores,
+                            currentExplanationResultsSize = state.currentExplanationResultsSize,
                         )
                     is Room.Outgoing.State.GameResults<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.GameResults(
@@ -452,6 +467,7 @@ fun main() {
                                                         ServerApi.PlayerDescription(
                                                             name = description.metadata.name,
                                                             isOnline = description.isOnline,
+                                                            isHost = description.isHost,
                                                         )
                                                     },
                                                     state = when (it.stateType) {

@@ -28,6 +28,7 @@ public object ServerApi {
     public data class PlayerDescription(
         public val name: String,
         public val isOnline: Boolean,
+        public val isHost: Boolean,
     )
     
     @Serializable
@@ -210,10 +211,12 @@ public object ServerApi {
                 override val role: Role.RoundWaiting,
                 public val playersList: KoneList<PlayerDescription>,
                 public val settings: Settings,
+                public val initialWordsNumber: UInt,
                 public val roundNumber: UInt,
                 public val cycleNumber: UInt,
                 public val speakerIndex: UInt,
                 public val listenerIndex: UInt,
+                public val restWordsNumber: UInt,
                 public val explanationScores: KoneList<UInt>,
                 public val guessingScores: KoneList<UInt>,
                 public val speakerReady: Boolean,
@@ -226,13 +229,16 @@ public object ServerApi {
                 override val role: Role.RoundPreparation,
                 public val playersList: KoneList<PlayerDescription>,
                 public val settings: Settings,
+                public val initialWordsNumber: UInt,
                 public val roundNumber: UInt,
                 public val cycleNumber: UInt,
                 public val speakerIndex: UInt,
                 public val listenerIndex: UInt,
+                public val restWordsNumber: UInt,
                 public val millisecondsLeft: UInt,
                 public val explanationScores: KoneList<UInt>,
                 public val guessingScores: KoneList<UInt>,
+                public val currentExplanationResultsSize: UInt,
             ) : State
             
             @Serializable
@@ -241,13 +247,16 @@ public object ServerApi {
                 override val role: Role.RoundExplanation,
                 public val playersList: KoneList<PlayerDescription>,
                 public val settings: Settings,
+                public val initialWordsNumber: UInt,
                 public val roundNumber: UInt,
                 public val cycleNumber: UInt,
                 public val speakerIndex: UInt,
                 public val listenerIndex: UInt,
+                public val restWordsNumber: UInt,
                 public val millisecondsLeft: UInt,
                 public val explanationScores: KoneList<UInt>,
                 public val guessingScores: KoneList<UInt>,
+                public val currentExplanationResultsSize: UInt,
             ) : State
             
             @Serializable
@@ -256,13 +265,16 @@ public object ServerApi {
                 override val role: Role.RoundLastGuess,
                 public val playersList: KoneList<PlayerDescription>,
                 public val settings: Settings,
+                public val initialWordsNumber: UInt,
                 public val roundNumber: UInt,
                 public val cycleNumber: UInt,
                 public val speakerIndex: UInt,
                 public val listenerIndex: UInt,
+                public val restWordsNumber: UInt,
                 public val millisecondsLeft: UInt,
                 public val explanationScores: KoneList<UInt>,
                 public val guessingScores: KoneList<UInt>,
+                public val currentExplanationResultsSize: UInt,
             ) : State
             
             @Serializable
@@ -271,12 +283,15 @@ public object ServerApi {
                 override val role: Role.RoundEditing,
                 public val playersList: KoneList<PlayerDescription>,
                 public val settings: Settings,
+                public val initialWordsNumber: UInt,
                 public val roundNumber: UInt,
                 public val cycleNumber: UInt,
                 public val speakerIndex: UInt,
                 public val listenerIndex: UInt,
+                public val restWordsNumber: UInt,
                 public val explanationScores: KoneList<UInt>,
                 public val guessingScores: KoneList<UInt>,
+                public val currentExplanationResultsSize: UInt,
             ) : State
             
             @Serializable

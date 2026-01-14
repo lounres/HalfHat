@@ -11,7 +11,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 
-public fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason> AsynchronousGameStateMachine(
+public fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition: Any, NoMetadataTransitionReason> AsynchronousGameStateMachine(
     coroutineScope: CoroutineScope,
     random: Random = DefaultRandom,
     timerDelayDuration: Duration = 90.milliseconds,
@@ -21,10 +21,6 @@ public fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMeta
         previousState: GameStateMachine.State<P, WPID, Metadata>,
         metadataTransition: MetadataTransition
     ) -> CheckResult<Metadata, NoMetadataTransitionReason>,
-    metadataTransformer: suspend AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
-        previousState: GameStateMachine.State<P, WPID, Metadata>,
-        transition: GameStateMachine.Transition.UpdateGame<P, WPID, NoWordsProviderReason>
-    ) -> Metadata = { previousState, _ -> previousState.metadata },
     onTransition: suspend AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
         previousState: GameStateMachine.State<P, WPID, Metadata>,
         transition: GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>,
@@ -42,7 +38,6 @@ public fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMeta
                     timerDelayDuration = timerDelayDuration,
                     moveState = { move(it) },
                     checkMetadataUpdate = { previousState, metadataTransition -> AsynchronousGameStateMachine(this).checkMetadataUpdate(previousState, metadataTransition) },
-                    metadataTransformer = { previousState, transition -> AsynchronousGameStateMachine(this).metadataTransformer(previousState, transition) },
                     previousState = previousState,
                     transition = transition,
                 )
@@ -52,7 +47,7 @@ public fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMeta
     )
 
 @Suppress("FunctionName")
-public fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason> AsynchronousGameStateMachine.Companion.Initialization(
+public fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition: Any, NoMetadataTransitionReason> AsynchronousGameStateMachine.Companion.Initialization(
     coroutineScope: CoroutineScope,
     random: Random = DefaultRandom,
     mutex: Mutex = Mutex(),
@@ -63,10 +58,6 @@ public fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMeta
         previousState: GameStateMachine.State<P, WPID, Metadata>,
         metadataTransition: MetadataTransition
     ) -> CheckResult<Metadata, NoMetadataTransitionReason>,
-    metadataTransformer: suspend AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
-        previousState: GameStateMachine.State<P, WPID, Metadata>,
-        transition: GameStateMachine.Transition.UpdateGame<P, WPID, NoWordsProviderReason>
-    ) -> Metadata = { previousState, _ -> previousState.metadata },
     onTransition: suspend AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.(
         previousState: GameStateMachine.State<P, WPID, Metadata>,
         transition: GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>,
@@ -82,6 +73,5 @@ public fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMeta
         settingsBuilder = settingsBuilder,
     ),
     checkMetadataUpdate = checkMetadataUpdate,
-    metadataTransformer = metadataTransformer,
     onTransition = onTransition,
 )
