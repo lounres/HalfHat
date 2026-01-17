@@ -115,15 +115,15 @@ public class RealOnlineGameComponent(
                                                 null -> {}
                                                 is ServerApi.OnlineGame.State.GameInitialisation -> {}
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection -> {}
-                                                is ServerApi.OnlineGame.State.RoundWaiting -> {}
-                                                is ServerApi.OnlineGame.State.RoundPreparation ->
+                                                is ServerApi.OnlineGame.State.Round.Waiting -> {}
+                                                is ServerApi.OnlineGame.State.Round.Preparation ->
                                                     launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundExplanation ->
+                                                is ServerApi.OnlineGame.State.Round.Explanation ->
                                                     launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundLastGuess ->
+                                                is ServerApi.OnlineGame.State.Round.LastGuess ->
                                                     if (previousState.millisecondsLeft > 0u)
                                                         launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundEditing -> {}
+                                                is ServerApi.OnlineGame.State.Round.Editing -> {}
                                                 is ServerApi.OnlineGame.State.GameResults -> {}
                                             }
                                         is ServerApi.OnlineGame.State.PlayersWordsCollection ->
@@ -131,76 +131,76 @@ public class RealOnlineGameComponent(
                                                 null -> {}
                                                 is ServerApi.OnlineGame.State.GameInitialisation -> {}
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection -> {}
-                                                is ServerApi.OnlineGame.State.RoundWaiting -> {}
-                                                is ServerApi.OnlineGame.State.RoundPreparation ->
+                                                is ServerApi.OnlineGame.State.Round.Waiting -> {}
+                                                is ServerApi.OnlineGame.State.Round.Preparation ->
                                                     launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundExplanation ->
+                                                is ServerApi.OnlineGame.State.Round.Explanation ->
                                                     launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundLastGuess ->
+                                                is ServerApi.OnlineGame.State.Round.LastGuess ->
                                                     if (previousState.millisecondsLeft > 0u)
                                                         launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundEditing -> {}
+                                                is ServerApi.OnlineGame.State.Round.Editing -> {}
                                                 is ServerApi.OnlineGame.State.GameResults -> {}
                                             }
-                                        is ServerApi.OnlineGame.State.RoundWaiting ->
+                                        is ServerApi.OnlineGame.State.Round.Waiting ->
                                             when (previousState) {
                                                 null -> {}
                                                 is ServerApi.OnlineGame.State.GameInitialisation -> {}
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection -> {}
-                                                is ServerApi.OnlineGame.State.RoundWaiting -> {}
-                                                is ServerApi.OnlineGame.State.RoundPreparation ->
+                                                is ServerApi.OnlineGame.State.Round.Waiting -> {}
+                                                is ServerApi.OnlineGame.State.Round.Preparation ->
                                                     launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundExplanation ->
+                                                is ServerApi.OnlineGame.State.Round.Explanation ->
                                                     launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundLastGuess ->
+                                                is ServerApi.OnlineGame.State.Round.LastGuess ->
                                                     if (previousState.millisecondsLeft > 0u)
                                                         launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundEditing -> {}
+                                                is ServerApi.OnlineGame.State.Round.Editing -> {}
                                                 is ServerApi.OnlineGame.State.GameResults -> {}
                                             }
-                                        is ServerApi.OnlineGame.State.RoundPreparation ->
+                                        is ServerApi.OnlineGame.State.Round.Preparation ->
                                             when (previousState) {
                                                 null -> {}
                                                 is ServerApi.OnlineGame.State.GameInitialisation ->
                                                     launch { settings.playPreparationCountdown() }
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection ->
                                                     launch { settings.playPreparationCountdown() }
-                                                is ServerApi.OnlineGame.State.RoundWaiting ->
+                                                is ServerApi.OnlineGame.State.Round.Waiting ->
                                                     launch { settings.playPreparationCountdown() }
-                                                is ServerApi.OnlineGame.State.RoundPreparation ->
+                                                is ServerApi.OnlineGame.State.Round.Preparation ->
                                                     if (previousState.roundNumber != newState.roundNumber || (previousState.millisecondsLeft / 1000u) != (newState.millisecondsLeft / 1000u))
                                                         launch { settings.playPreparationCountdown() }
-                                                is ServerApi.OnlineGame.State.RoundExplanation ->
+                                                is ServerApi.OnlineGame.State.Round.Explanation ->
                                                     launch { settings.playPreparationCountdown() }
-                                                is ServerApi.OnlineGame.State.RoundLastGuess ->
+                                                is ServerApi.OnlineGame.State.Round.LastGuess ->
                                                     launch { settings.playPreparationCountdown() }
-                                                is ServerApi.OnlineGame.State.RoundEditing ->
+                                                is ServerApi.OnlineGame.State.Round.Editing ->
                                                     launch { settings.playPreparationCountdown() }
                                                 is ServerApi.OnlineGame.State.GameResults ->
                                                     launch { settings.playPreparationCountdown() }
                                             }
-                                        is ServerApi.OnlineGame.State.RoundExplanation ->
+                                        is ServerApi.OnlineGame.State.Round.Explanation ->
                                             when (previousState) {
                                                 null -> {}
                                                 is ServerApi.OnlineGame.State.GameInitialisation ->
                                                     launch { settings.playExplanationStart() }
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection ->
                                                     launch { settings.playExplanationStart() }
-                                                is ServerApi.OnlineGame.State.RoundWaiting ->
+                                                is ServerApi.OnlineGame.State.Round.Waiting ->
                                                     launch { settings.playExplanationStart() }
-                                                is ServerApi.OnlineGame.State.RoundPreparation ->
+                                                is ServerApi.OnlineGame.State.Round.Preparation ->
                                                     launch { settings.playExplanationStart() }
-                                                is ServerApi.OnlineGame.State.RoundExplanation ->
+                                                is ServerApi.OnlineGame.State.Round.Explanation ->
                                                     if (previousState.roundNumber != newState.roundNumber)
                                                         launch { settings.playExplanationStart() }
-                                                is ServerApi.OnlineGame.State.RoundLastGuess ->
+                                                is ServerApi.OnlineGame.State.Round.LastGuess ->
                                                     launch { settings.playExplanationStart() }
-                                                is ServerApi.OnlineGame.State.RoundEditing ->
+                                                is ServerApi.OnlineGame.State.Round.Editing ->
                                                     launch { settings.playExplanationStart() }
                                                 is ServerApi.OnlineGame.State.GameResults ->
                                                     launch { settings.playExplanationStart() }
                                             }
-                                        is ServerApi.OnlineGame.State.RoundLastGuess ->
+                                        is ServerApi.OnlineGame.State.Round.LastGuess ->
                                             when (previousState) {
                                                 null -> {}
                                                 is ServerApi.OnlineGame.State.GameInitialisation ->
@@ -213,29 +213,29 @@ public class RealOnlineGameComponent(
                                                         launch { settings.playFinalGuessStart() }
                                                     else
                                                         launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundWaiting ->
+                                                is ServerApi.OnlineGame.State.Round.Waiting ->
                                                     if (newState.millisecondsLeft > 0u)
                                                         launch { settings.playFinalGuessStart() }
                                                     else
                                                         launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundPreparation ->
+                                                is ServerApi.OnlineGame.State.Round.Preparation ->
                                                     if (newState.millisecondsLeft > 0u)
                                                         launch { settings.playFinalGuessStart() }
                                                     else
                                                         launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundExplanation ->
+                                                is ServerApi.OnlineGame.State.Round.Explanation ->
                                                     if (newState.millisecondsLeft > 0u)
                                                         launch { settings.playFinalGuessStart() }
                                                     else
                                                         launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundLastGuess ->
+                                                is ServerApi.OnlineGame.State.Round.LastGuess ->
                                                     if (newState.millisecondsLeft == 0u) {
                                                         launch { settings.playFinalGuessEnd() }
                                                     } else {
                                                         if (newState.roundNumber != previousState.roundNumber)
                                                             launch { settings.playFinalGuessStart() }
                                                     }
-                                                is ServerApi.OnlineGame.State.RoundEditing ->
+                                                is ServerApi.OnlineGame.State.Round.Editing ->
                                                     if (newState.millisecondsLeft > 0u)
                                                         launch { settings.playFinalGuessStart() }
                                                     else
@@ -246,20 +246,20 @@ public class RealOnlineGameComponent(
                                                     else
                                                         launch { settings.playFinalGuessEnd() }
                                             }
-                                        is ServerApi.OnlineGame.State.RoundEditing ->
+                                        is ServerApi.OnlineGame.State.Round.Editing ->
                                             when (previousState) {
                                                 null -> {}
                                                 is ServerApi.OnlineGame.State.GameInitialisation -> {}
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection -> {}
-                                                is ServerApi.OnlineGame.State.RoundWaiting -> {}
-                                                is ServerApi.OnlineGame.State.RoundPreparation ->
+                                                is ServerApi.OnlineGame.State.Round.Waiting -> {}
+                                                is ServerApi.OnlineGame.State.Round.Preparation ->
                                                     launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundExplanation ->
+                                                is ServerApi.OnlineGame.State.Round.Explanation ->
                                                     launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundLastGuess ->
+                                                is ServerApi.OnlineGame.State.Round.LastGuess ->
                                                     if (previousState.millisecondsLeft > 0u)
                                                         launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundEditing -> {}
+                                                is ServerApi.OnlineGame.State.Round.Editing -> {}
                                                 is ServerApi.OnlineGame.State.GameResults -> {}
                                             }
                                         is ServerApi.OnlineGame.State.GameResults ->
@@ -267,15 +267,15 @@ public class RealOnlineGameComponent(
                                                 null -> {}
                                                 is ServerApi.OnlineGame.State.GameInitialisation -> {}
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection -> {}
-                                                is ServerApi.OnlineGame.State.RoundWaiting -> {}
-                                                is ServerApi.OnlineGame.State.RoundPreparation ->
+                                                is ServerApi.OnlineGame.State.Round.Waiting -> {}
+                                                is ServerApi.OnlineGame.State.Round.Preparation ->
                                                     launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundExplanation ->
+                                                is ServerApi.OnlineGame.State.Round.Explanation ->
                                                     launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundLastGuess ->
+                                                is ServerApi.OnlineGame.State.Round.LastGuess ->
                                                     if (previousState.millisecondsLeft > 0u)
                                                         launch { settings.playFinalGuessEnd() }
-                                                is ServerApi.OnlineGame.State.RoundEditing -> {}
+                                                is ServerApi.OnlineGame.State.Round.Editing -> {}
                                                 is ServerApi.OnlineGame.State.GameResults -> {}
                                             }
                                     }

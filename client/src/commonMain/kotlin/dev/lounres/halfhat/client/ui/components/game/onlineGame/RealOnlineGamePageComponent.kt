@@ -42,12 +42,8 @@ import kotlinx.serialization.json.Json
 
 
 public class RealOnlineGamePageComponent(
-    override val onExitOnlineGameMode: () -> Unit,
-    private val onlineGameComponent: OnlineGameComponent,
     override val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, OnlineGamePageComponent.Child, UIComponentContext>, *>,
 ) : OnlineGamePageComponent {
-    override val connectionStatus: StateFlow<ConnectionStatus> get() = onlineGameComponent.connectionStatus
-    
     @Serializable
     public sealed interface Configuration {
         @Serializable
@@ -140,6 +136,8 @@ public suspend fun RealOnlineGamePageComponent(
                     OnlineGamePageComponent.Child.PreviewScreen(
                         RealPreviewScreenComponent(
                             componentContext = componentContext,
+                            onExitOnlineGameMode = onExitOnlineGameMode,
+                            connectionStatus = onlineGameComponent.connectionStatus,
                             currentRoomSearchEntry = currentRoomSearchEntry,
                             currentEnterName = currentEnterName,
                             onFetchFreeRoomId = { onlineGameComponent.sendSignal(ClientApi.Signal.FetchFreeRoomId) },
@@ -240,8 +238,6 @@ public suspend fun RealOnlineGamePageComponent(
     }
     
     return RealOnlineGamePageComponent(
-        onExitOnlineGameMode = onExitOnlineGameMode,
-        onlineGameComponent = onlineGameComponent,
         childSlot = childSlot.hub,
     )
 }

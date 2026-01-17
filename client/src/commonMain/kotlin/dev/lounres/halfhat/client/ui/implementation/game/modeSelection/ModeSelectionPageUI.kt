@@ -8,6 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.window.core.layout.WindowSizeClass
 import dev.lounres.halfhat.client.resources.*
 import dev.lounres.halfhat.client.ui.components.game.modeSelection.ModeSelectionPageComponent
 import dev.lounres.halfhat.client.ui.icons.GameModeDescriptionButton
@@ -24,201 +25,210 @@ import org.jetbrains.compose.resources.painterResource
 
 
 @Composable
-public fun ColumnScope.ModeSelectionPageUI(
+public fun ModeSelectionPageUI(
     component: ModeSelectionPageComponent,
+    windowSizeClass: WindowSizeClass,
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Box(
+        modifier = Modifier.fillMaxSize(),
     ) {
-        component.infoPopup.subscribeAsState().value.ifSome {
-            Dialog(
-                onDismissRequest = component.onCloseInfo
-            ) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(IntrinsicSize.Min)
-                        .padding(16.dp),
-                    shape = RoundedCornerShape(16.dp),
+        Column(
+            modifier = Modifier.widthIn(max = 480.dp).padding(16.dp).align(Alignment.Center),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            component.infoPopup.subscribeAsState().value.ifSome {
+                Dialog(
+                    onDismissRequest = component.onCloseInfo
                 ) {
-                    Column(
+                    Card(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
+                            .height(IntrinsicSize.Min)
                             .padding(16.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                        shape = RoundedCornerShape(16.dp),
                     ) {
-                        Text(
-                            text =
-                                when (it.component) {
-                                    ModeSelectionPageComponent.InfoPopup.OnlineGame -> "This is a mode that provides a game over internet by official HalfHat server."
-                                    ModeSelectionPageComponent.InfoPopup.LocalGame -> "This is a mode that provides a game over local network by HalfHat application on some device."
-                                    ModeSelectionPageComponent.InfoPopup.DeviceGame -> "This is a mode that provides a game on this device."
-                                    ModeSelectionPageComponent.InfoPopup.GameController -> "This is a mode that provides a timer and a controller of playing players for the game."
-                                    ModeSelectionPageComponent.InfoPopup.GameTimer -> "This is a mode that provides only a timer for the game."
-                                },
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        TextButton(
-                            onClick = component.onCloseInfo,
-                            modifier = Modifier.padding(8.dp),
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            Text("Close")
+                            Text(
+                                text =
+                                    when (it.component) {
+                                        ModeSelectionPageComponent.InfoPopup.OnlineGame -> "This is a mode that provides a game over internet by official HalfHat server."
+                                        ModeSelectionPageComponent.InfoPopup.LocalGame -> "This is a mode that provides a game over local network by HalfHat application on some device."
+                                        ModeSelectionPageComponent.InfoPopup.DeviceGame -> "This is a mode that provides a game on this device."
+                                        ModeSelectionPageComponent.InfoPopup.GameController -> "This is a mode that provides a timer and a controller of playing players for the game."
+                                        ModeSelectionPageComponent.InfoPopup.GameTimer -> "This is a mode that provides only a timer for the game."
+                                    },
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            TextButton(
+                                onClick = component.onCloseInfo,
+                                modifier = Modifier.padding(8.dp),
+                            ) {
+                                Text("Close")
+                            }
                         }
                     }
                 }
             }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Button(
-                modifier = Modifier.weight(1f),
-                onClick = component.onOnlineGameSelect,
+            Row(
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                Icon(
-                    imageVector = HalfHatIcon.GameModeOnlineGameIcon,
-                    modifier = commonIconModifier,
-                    contentDescription = null,
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Online game"
-                )
+                Button(
+                    modifier = Modifier.weight(1f),
+                    onClick = component.onOnlineGameSelect,
+                ) {
+                    Icon(
+                        imageVector = HalfHatIcon.GameModeOnlineGameIcon,
+                        modifier = commonIconModifier,
+                        contentDescription = null,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Online game"
+                    )
+                }
+                IconButton(
+                    onClick = component.onOnlineGameInfo,
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                ) {
+                    Icon(
+                        imageVector = HalfHatIcon.GameModeDescriptionButton,
+                        modifier = commonIconModifier,
+                        contentDescription = "Online game description",
+                    )
+                }
             }
-            IconButton(
-                onClick = component.onOnlineGameInfo,
-                colors = IconButtonDefaults.iconButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary,
-                ),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                Icon(
-                    imageVector = HalfHatIcon.GameModeDescriptionButton,
-                    modifier = commonIconModifier,
-                    contentDescription = "Online game description",
-                )
+                Button(
+                    enabled = false,
+                    modifier = Modifier.weight(1f),
+                    onClick = component.onLocalGameSelect,
+                ) {
+                    Icon(
+                        imageVector = HalfHatIcon.GameModeLocalGameIcon,
+                        modifier = commonIconModifier,
+                        contentDescription = null,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Local game"
+                    )
+                }
+                IconButton(
+                    onClick = component.onLocalGameInfo,
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                ) {
+                    Icon(
+                        imageVector = HalfHatIcon.GameModeDescriptionButton,
+                        modifier = commonIconModifier,
+                        contentDescription = "Local game description",
+                    )
+                }
             }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Button(
-                modifier = Modifier.weight(1f),
-                onClick = component.onLocalGameSelect,
+            Row(
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                Icon(
-                    imageVector = HalfHatIcon.GameModeLocalGameIcon,
-                    modifier = commonIconModifier,
-                    contentDescription = null,
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Local game"
-                )
+                Button(
+                    enabled = false,
+                    modifier = Modifier.weight(1f),
+                    onClick = component.onDeviceGameSelect,
+                ) {
+                    Icon(
+                        imageVector = HalfHatIcon.GameModeDeviceGameIcon,
+                        modifier = commonIconModifier,
+                        contentDescription = null,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Device game"
+                    )
+                }
+                IconButton(
+                    onClick = component.onDeviceGameInfo,
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                ) {
+                    Icon(
+                        imageVector = HalfHatIcon.GameModeDescriptionButton,
+                        modifier = commonIconModifier,
+                        contentDescription = "Device game description",
+                    )
+                }
             }
-            IconButton(
-                onClick = component.onLocalGameInfo,
-                colors = IconButtonDefaults.iconButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary,
-                ),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                Icon(
-                    imageVector = HalfHatIcon.GameModeDescriptionButton,
-                    modifier = commonIconModifier,
-                    contentDescription = "Local game description",
-                )
+                Button(
+                    enabled = false,
+                    modifier = Modifier.weight(1f),
+                    onClick = component.onGameControllerSelect,
+                ) {
+                    Icon(
+                        imageVector = HalfHatIcon.GameModeGameControllerIcon,
+                        modifier = commonIconModifier,
+                        contentDescription = null,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Game controller"
+                    )
+                }
+                IconButton(
+                    onClick = component.onGameControllerInfo,
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                ) {
+                    Icon(
+                        imageVector = HalfHatIcon.GameModeDescriptionButton,
+                        modifier = commonIconModifier,
+                        contentDescription = "Game controller description",
+                    )
+                }
             }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Button(
-                modifier = Modifier.weight(1f),
-                onClick = component.onDeviceGameSelect,
+            Row(
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                Icon(
-                    imageVector = HalfHatIcon.GameModeDeviceGameIcon,
-                    modifier = commonIconModifier,
-                    contentDescription = null,
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Device game"
-                )
-            }
-            IconButton(
-                onClick = component.onDeviceGameInfo,
-                colors = IconButtonDefaults.iconButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary,
-                ),
-            ) {
-                Icon(
-                    imageVector = HalfHatIcon.GameModeDescriptionButton,
-                    modifier = commonIconModifier,
-                    contentDescription = "Device game description",
-                )
-            }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Button(
-                modifier = Modifier.weight(1f),
-                onClick = component.onGameControllerSelect,
-            ) {
-                Icon(
-                    imageVector = HalfHatIcon.GameModeGameControllerIcon,
-                    modifier = commonIconModifier,
-                    contentDescription = null,
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Game controller"
-                )
-            }
-            IconButton(
-                onClick = component.onGameControllerInfo,
-                colors = IconButtonDefaults.iconButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary,
-                ),
-            ) {
-                Icon(
-                    imageVector = HalfHatIcon.GameModeDescriptionButton,
-                    modifier = commonIconModifier,
-                    contentDescription = "Game controller description",
-                )
-            }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Button(
-                modifier = Modifier.weight(1f),
-                onClick = component.onGameTimerSelect,
-            ) {
-                Icon(
-                    imageVector = HalfHatIcon.GameModeGameTimerIcon,
-                    modifier = commonIconModifier,
-                    contentDescription = null,
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Game timer"
-                )
-            }
-            IconButton(
-                onClick = component.onGameTimerInfo,
-                colors = IconButtonDefaults.iconButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary,
-                ),
-            ) {
-                Icon(
-                    imageVector = HalfHatIcon.GameModeDescriptionButton,
-                    modifier = commonIconModifier,
-                    contentDescription = "Game timer description",
-                )
+                Button(
+                    enabled = false,
+                    modifier = Modifier.weight(1f),
+                    onClick = component.onGameTimerSelect,
+                ) {
+                    Icon(
+                        imageVector = HalfHatIcon.GameModeGameTimerIcon,
+                        modifier = commonIconModifier,
+                        contentDescription = null,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Game timer"
+                    )
+                }
+                IconButton(
+                    onClick = component.onGameTimerInfo,
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                ) {
+                    Icon(
+                        imageVector = HalfHatIcon.GameModeDescriptionButton,
+                        modifier = commonIconModifier,
+                        contentDescription = "Game timer description",
+                    )
+                }
             }
         }
     }

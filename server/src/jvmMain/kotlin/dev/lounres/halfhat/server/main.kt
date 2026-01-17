@@ -32,6 +32,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.Boolean
 import kotlin.random.Random
 import kotlin.random.nextUInt
 import kotlin.uuid.Uuid
@@ -202,7 +203,9 @@ class Connection(
                             role = ServerApi.OnlineGame.Role.GameInitialisation(
                                 name = state.role.metadata.name,
                                 userIndex = state.role.userIndex,
-                                isHost = state.role.isHost
+                                isHost = state.role.isHost,
+                                isStartAvailable = state.role.isStartAvailable,
+                                areSettingsChangeable = state.role.areSettingsChangeable,
                             ),
                             playersList = state.playersList.toServerApi(),
                             settingsBuilder = state.settingsBuilder.toServerApi(),
@@ -220,17 +223,18 @@ class Connection(
                             playersWordsAreReady = state.playersWordsAreReady,
                         )
                     is Room.Outgoing.State.RoundWaiting<RoomMetadata, PlayerMetadata, WordsProviderID> ->
-                        ServerApi.OnlineGame.State.RoundWaiting(
+                        ServerApi.OnlineGame.State.Round.Waiting(
                             roomName = state.roomMetadata.name,
-                            role = ServerApi.OnlineGame.Role.RoundWaiting(
+                            role = ServerApi.OnlineGame.Role.Round.Waiting(
                                 name = state.role.metadata.name,
                                 userIndex = state.role.userIndex,
                                 isHost = state.role.isHost,
                                 roundRole = when (state.role.roundRole) {
-                                    Room.Outgoing.Role.RoundWaiting.RoundRole.Player -> ServerApi.OnlineGame.Role.RoundWaiting.RoundRole.Player
-                                    Room.Outgoing.Role.RoundWaiting.RoundRole.Listener -> ServerApi.OnlineGame.Role.RoundWaiting.RoundRole.Listener
-                                    Room.Outgoing.Role.RoundWaiting.RoundRole.Speaker -> ServerApi.OnlineGame.Role.RoundWaiting.RoundRole.Speaker
+                                    Room.Outgoing.Role.RoundWaiting.RoundRole.Player -> ServerApi.OnlineGame.Role.Round.Waiting.RoundRole.Player
+                                    Room.Outgoing.Role.RoundWaiting.RoundRole.Listener -> ServerApi.OnlineGame.Role.Round.Waiting.RoundRole.Listener
+                                    Room.Outgoing.Role.RoundWaiting.RoundRole.Speaker -> ServerApi.OnlineGame.Role.Round.Waiting.RoundRole.Speaker
                                 },
+                                isGameFinishable = state.role.isGameFinishable,
                             ),
                             playersList = state.playersList.toServerApi(),
                             settings = state.settings.toServerApi(),
@@ -246,16 +250,16 @@ class Connection(
                             listenerReady = state.listenerReady,
                         )
                     is Room.Outgoing.State.RoundPreparation<RoomMetadata, PlayerMetadata, WordsProviderID> ->
-                        ServerApi.OnlineGame.State.RoundPreparation(
+                        ServerApi.OnlineGame.State.Round.Preparation(
                             roomName = state.roomMetadata.name,
-                            role = ServerApi.OnlineGame.Role.RoundPreparation(
+                            role = ServerApi.OnlineGame.Role.Round.Preparation(
                                 name = state.role.metadata.name,
                                 userIndex = state.role.userIndex,
                                 isHost = state.role.isHost,
                                 roundRole = when (state.role.roundRole) {
-                                    Room.Outgoing.Role.RoundPreparation.RoundRole.Player -> ServerApi.OnlineGame.Role.RoundPreparation.RoundRole.Player
-                                    Room.Outgoing.Role.RoundPreparation.RoundRole.Listener -> ServerApi.OnlineGame.Role.RoundPreparation.RoundRole.Listener
-                                    Room.Outgoing.Role.RoundPreparation.RoundRole.Speaker -> ServerApi.OnlineGame.Role.RoundPreparation.RoundRole.Speaker
+                                    Room.Outgoing.Role.RoundPreparation.RoundRole.Player -> ServerApi.OnlineGame.Role.Round.Preparation.RoundRole.Player
+                                    Room.Outgoing.Role.RoundPreparation.RoundRole.Listener -> ServerApi.OnlineGame.Role.Round.Preparation.RoundRole.Listener
+                                    Room.Outgoing.Role.RoundPreparation.RoundRole.Speaker -> ServerApi.OnlineGame.Role.Round.Preparation.RoundRole.Speaker
                                 },
                             ),
                             playersList = state.playersList.toServerApi(),
@@ -272,16 +276,16 @@ class Connection(
                             currentExplanationResultsSize = state.currentExplanationResultsSize,
                         )
                     is Room.Outgoing.State.RoundExplanation<RoomMetadata, PlayerMetadata, WordsProviderID> ->
-                        ServerApi.OnlineGame.State.RoundExplanation(
+                        ServerApi.OnlineGame.State.Round.Explanation(
                             roomName = state.roomMetadata.name,
-                            role = ServerApi.OnlineGame.Role.RoundExplanation(
+                            role = ServerApi.OnlineGame.Role.Round.Explanation(
                                 name = state.role.metadata.name,
                                 userIndex = state.role.userIndex,
                                 isHost = state.role.isHost,
                                 roundRole = when (val role = state.role.roundRole) {
-                                    Room.Outgoing.Role.RoundExplanation.RoundRole.Player -> ServerApi.OnlineGame.Role.RoundExplanation.RoundRole.Player
-                                    Room.Outgoing.Role.RoundExplanation.RoundRole.Listener -> ServerApi.OnlineGame.Role.RoundExplanation.RoundRole.Listener
-                                    is Room.Outgoing.Role.RoundExplanation.RoundRole.Speaker -> ServerApi.OnlineGame.Role.RoundExplanation.RoundRole.Speaker(role.currentWord)
+                                    Room.Outgoing.Role.RoundExplanation.RoundRole.Player -> ServerApi.OnlineGame.Role.Round.Explanation.RoundRole.Player
+                                    Room.Outgoing.Role.RoundExplanation.RoundRole.Listener -> ServerApi.OnlineGame.Role.Round.Explanation.RoundRole.Listener
+                                    is Room.Outgoing.Role.RoundExplanation.RoundRole.Speaker -> ServerApi.OnlineGame.Role.Round.Explanation.RoundRole.Speaker(role.currentWord)
                                 },
                             ),
                             playersList = state.playersList.toServerApi(),
@@ -298,16 +302,16 @@ class Connection(
                             currentExplanationResultsSize = state.currentExplanationResultsSize,
                         )
                     is Room.Outgoing.State.RoundLastGuess<RoomMetadata, PlayerMetadata, WordsProviderID> ->
-                        ServerApi.OnlineGame.State.RoundLastGuess(
+                        ServerApi.OnlineGame.State.Round.LastGuess(
                             roomName = state.roomMetadata.name,
-                            role = ServerApi.OnlineGame.Role.RoundLastGuess(
+                            role = ServerApi.OnlineGame.Role.Round.LastGuess(
                                 name = state.role.metadata.name,
                                 userIndex = state.role.userIndex,
                                 isHost = state.role.isHost,
                                 roundRole = when (val role = state.role.roundRole) {
-                                    Room.Outgoing.Role.RoundLastGuess.RoundRole.Player -> ServerApi.OnlineGame.Role.RoundLastGuess.RoundRole.Player
-                                    Room.Outgoing.Role.RoundLastGuess.RoundRole.Listener -> ServerApi.OnlineGame.Role.RoundLastGuess.RoundRole.Listener
-                                    is Room.Outgoing.Role.RoundLastGuess.RoundRole.Speaker -> ServerApi.OnlineGame.Role.RoundLastGuess.RoundRole.Speaker(role.currentWord)
+                                    Room.Outgoing.Role.RoundLastGuess.RoundRole.Player -> ServerApi.OnlineGame.Role.Round.LastGuess.RoundRole.Player
+                                    Room.Outgoing.Role.RoundLastGuess.RoundRole.Listener -> ServerApi.OnlineGame.Role.Round.LastGuess.RoundRole.Listener
+                                    is Room.Outgoing.Role.RoundLastGuess.RoundRole.Speaker -> ServerApi.OnlineGame.Role.Round.LastGuess.RoundRole.Speaker(role.currentWord)
                                 },
                             ),
                             playersList = state.playersList.toServerApi(),
@@ -324,16 +328,16 @@ class Connection(
                             currentExplanationResultsSize = state.currentExplanationResultsSize,
                         )
                     is Room.Outgoing.State.RoundEditing<RoomMetadata, PlayerMetadata, WordsProviderID> ->
-                        ServerApi.OnlineGame.State.RoundEditing(
+                        ServerApi.OnlineGame.State.Round.Editing(
                             roomName = state.roomMetadata.name,
-                            role = ServerApi.OnlineGame.Role.RoundEditing(
+                            role = ServerApi.OnlineGame.Role.Round.Editing(
                                 name = state.role.metadata.name,
                                 userIndex = state.role.userIndex,
                                 isHost = state.role.isHost,
                                 roundRole = when (val role = state.role.roundRole) {
-                                    Room.Outgoing.Role.RoundEditing.RoundRole.Player -> ServerApi.OnlineGame.Role.RoundEditing.RoundRole.Player
-                                    Room.Outgoing.Role.RoundEditing.RoundRole.Listener -> ServerApi.OnlineGame.Role.RoundEditing.RoundRole.Listener
-                                    is Room.Outgoing.Role.RoundEditing.RoundRole.Speaker -> ServerApi.OnlineGame.Role.RoundEditing.RoundRole.Speaker(role.wordsToEdit)
+                                    Room.Outgoing.Role.RoundEditing.RoundRole.Player -> ServerApi.OnlineGame.Role.Round.Editing.RoundRole.Player
+                                    Room.Outgoing.Role.RoundEditing.RoundRole.Listener -> ServerApi.OnlineGame.Role.Round.Editing.RoundRole.Listener
+                                    is Room.Outgoing.Role.RoundEditing.RoundRole.Speaker -> ServerApi.OnlineGame.Role.Round.Editing.RoundRole.Speaker(role.wordsToEdit)
                                 },
                             ),
                             playersList = state.playersList.toServerApi(),
@@ -366,7 +370,10 @@ class Connection(
     
     override suspend fun sendError(error: Room.Outgoing.Error<NoWordsProviderReason>) {
         val errorToSend = when (error) {
-            is Room.Outgoing.Error.NoWordsProvider<NoWordsProviderReason> -> ServerApi.OnlineGame.Error.CannotFindDictionaryByID
+            is Room.Outgoing.Error.NoWordsProvider<NoWordsProviderReason> ->
+                when (val reason = error.reason) {
+                    NoWordsProviderReason.CannotFindDictionaryByID -> ServerApi.OnlineGame.Error.CannotFindDictionaryByID
+                }
             Room.Outgoing.Error.AttachmentIsDenied -> ServerApi.OnlineGame.Error.AttachmentIsDenied
             Room.Outgoing.Error.AttachmentIsAlreadySevered -> ServerApi.OnlineGame.Error.AttachmentIsAlreadySevered
             Room.Outgoing.Error.NotHostChangingGameSettings -> ServerApi.OnlineGame.Error.NotHostChangingGameSettings

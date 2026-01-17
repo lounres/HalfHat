@@ -6,16 +6,20 @@ import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationAction
 import dev.lounres.halfhat.client.components.navigation.controller.doStoringNavigation
 import dev.lounres.halfhat.client.components.navigation.controller.navigationContext
+import dev.lounres.halfhat.client.logic.components.game.onlineGame.ConnectionStatus
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.hub.set
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 
 public class RealPreviewScreenComponent(
     componentContext: UIComponentContext,
+    override val onExitOnlineGameMode: () -> Unit,
+    override val connectionStatus: StateFlow<ConnectionStatus>,
     override val currentRoomSearchEntry: KoneMutableAsynchronousHub<String>,
     override val currentEnterName: KoneMutableAsynchronousHub<String>,
     onFetchFreeRoomId: () -> Unit,

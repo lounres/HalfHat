@@ -1,20 +1,12 @@
 package dev.lounres.halfhat.client.ui.components
 
-import dev.lounres.halfhat.Language
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.lifecycle.newMutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.navigation.ChildrenVariants
-import dev.lounres.halfhat.client.components.navigation.controller.NavigationAction
-import dev.lounres.halfhat.client.components.navigation.controller.NavigationLoggerSpec
-import dev.lounres.halfhat.client.components.navigation.controller.NavigationNodePath
-import dev.lounres.halfhat.client.components.navigation.controller.NavigationNodeState
-import dev.lounres.halfhat.client.components.navigation.controller.NavigationRoot
-import dev.lounres.halfhat.client.components.navigation.controller.navigationController
+import dev.lounres.halfhat.client.components.navigation.controller.*
 import dev.lounres.halfhat.client.consts.WebPageSettings
-import dev.lounres.halfhat.client.logic.settings.language
-import dev.lounres.halfhat.client.logic.settings.volumeOn
 import dev.lounres.halfhat.client.logic.wordsProviders.DeviceGameWordsProviderID
 import dev.lounres.halfhat.client.logic.wordsProviders.DeviceGameWordsProviderRegistry
 import dev.lounres.halfhat.client.storage.settings.Settings
@@ -64,13 +56,9 @@ actual class RealMainWindowComponent(
     actual override val globalLifecycle: MutableUIComponentLifecycle,
     
     actual override val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>,
-    actual override val volumeOn: KoneMutableAsynchronousHubView<Boolean, *>,
-    actual override val language: KoneMutableAsynchronousHubView<Language, *>,
     
-    actual override val pageVariants: KoneAsynchronousHubView<ChildrenVariants<MainWindowComponentChild.Kind, MainWindowComponentChild, UIComponentContext>, *>,
-    actual override val openPage: (page: MainWindowComponentChild.Kind) -> Unit,
-    
-    actual override val menuList: KoneAsynchronousHubView<KoneList<MainWindowComponentMenuItem>, *>,
+    actual override val pageVariants: KoneAsynchronousHubView<ChildrenVariants<MainWindowComponentConfiguration, MainWindowComponentChild, UIComponentContext>, *>,
+    actual override val openPage: (page: MainWindowComponentConfiguration) -> Unit,
 ): MainWindowComponent
 
 actual val defaultDeviceGameWordsSource: GameStateMachine.WordsSource<DeviceGameWordsProviderID> =
@@ -142,7 +130,7 @@ suspend fun RealMainWindowComponent(
         }
     }
     
-    val (pageVariants, openPage, menuList) = globalComponentContext.pagesDescription()
+    val (pageVariants, openPage) = globalComponentContext.pagesDescription()
     
     globalComponentContext.navigationController?.setPathBuilder {
         pageVariants.context.navigationController?.pathBuilder?.invoke() ?: NavigationNodePath(
@@ -210,12 +198,8 @@ suspend fun RealMainWindowComponent(
         globalLifecycle = globalLifecycle,
         
         darkTheme = globalComponentContext.settings.darkTheme,
-        volumeOn = globalComponentContext.settings.volumeOn,
-        language = globalComponentContext.settings.language,
         
         pageVariants = pageVariants.hub,
         openPage = openPage,
-        
-        menuList = menuList,
     )
 }

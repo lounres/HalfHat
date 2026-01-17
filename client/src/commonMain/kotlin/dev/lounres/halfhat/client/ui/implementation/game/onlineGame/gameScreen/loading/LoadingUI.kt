@@ -1,6 +1,7 @@
 package dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.loading
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,14 +13,7 @@ import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.loadi
 
 
 @Composable
-public fun RowScope.LoadingActionsUI(
-    component: LoadingComponent
-) {
-
-}
-
-@Composable
-public fun ColumnScope.LoadingUI(
+public fun LoadingUI(
     component: LoadingComponent
 ) {
     Box(
@@ -40,18 +34,15 @@ public fun ColumnScope.LoadingUI(
             )
             Spacer(modifier = Modifier.height(4.dp))
             ContainedLoadingIndicator()
+            Spacer(modifier = Modifier.height(4.dp))
+            Button(
+                onClick = component.onExitOnlineGame,
+            ) {
+                Text(
+                    text = "Leave",
+                    fontSize = 24.sp,
+                )
+            }
         }
     }
 }
-
-@Composable
-public fun RowScope.LoadingToolbarUI(
-    component: LoadingComponent
-) {
-
-}
-
-@Composable
-public fun LoadingFloatingActionButtonUI(
-    component: LoadingComponent,
-): @Composable (() -> Unit)? = null

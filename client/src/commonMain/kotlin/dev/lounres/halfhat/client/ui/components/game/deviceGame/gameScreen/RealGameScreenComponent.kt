@@ -84,7 +84,7 @@ public suspend fun RealGameScreenComponent(
     val intermediateNavigation = SlotNavigationHub<RealGameScreenComponent.Configuration>()
     
     // TODO: Move the logic to logic package
-    val gameStateMachine = AsynchronousGameStateMachine.Initialization<String, DeviceGameWordsProviderID, NoDeviceGameWordsProviderReason, Nothing?, Nothing?, Nothing?>(
+    val gameStateMachine = AsynchronousGameStateMachine.Initialization<String, DeviceGameWordsProviderID, NoDeviceGameWordsProviderReason, Nothing?, Nothing, Nothing?>(
         metadata = null,
         playersList = playersList,
         settingsBuilder = settingsBuilder,

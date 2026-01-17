@@ -2,25 +2,17 @@ package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen
 
 import dev.lounres.halfhat.api.onlineGame.ClientApi
 import dev.lounres.halfhat.api.onlineGame.ServerApi
-import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.gameResults.RealGameResultsComponent
-import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.loading.RealLoadingComponent
-import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomScreen.RealRoomScreenComponent
-import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomSettings.RealRoomSettingsComponent
-import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundEditing.RealRoundEditingComponent
-import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundExplanation.RealRoundExplanationComponent
-import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundLastGuess.RealRoundLastGuessComponent
-import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundPreparation.RealRoundPreparationComponent
-import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundWaiting.RealRoundWaitingComponent
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotNode
 import dev.lounres.halfhat.client.consts.OnlineGameSettings
-import dev.lounres.halfhat.client.storage.settings.settings
-import dev.lounres.halfhat.client.ui.theming.darkTheme
+import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.gameResults.RealGameResultsComponent
+import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.loading.RealLoadingComponent
+import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomScreen.RealRoomScreenComponent
+import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.RealRoundScreenComponent
 import dev.lounres.halfhat.client.utils.copyToClipboard
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.hub.KoneAsynchronousHubView
 import kotlinx.coroutines.Dispatchers
@@ -31,38 +23,19 @@ import net.thauvin.erik.urlencoder.UrlEncoderUtil
 
 
 public class RealGameScreenComponent(
-    override val onExitOnlineGame: () -> Unit,
     override val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, GameScreenComponent.Child, UIComponentContext>, *>,
-    override val onCopyOnlineGameKey: () -> Unit,
-    override val onCopyOnlineGameLink: () -> Unit,
 ) : GameScreenComponent {
     
-
     public sealed interface Configuration {
         public data object Loading : Configuration
         public data class RoomScreen(
             val stateFlow: MutableStateFlow<ServerApi.OnlineGame.State.GameInitialisation>,
         ) : Configuration
-        public data class RoomSettings(
-            val stateFlow: MutableStateFlow<ServerApi.OnlineGame.State.GameInitialisation>,
-        ) : Configuration
         public data class PlayersWordsCollection(
             val stateFlow: MutableStateFlow<ServerApi.OnlineGame.State.PlayersWordsCollection>,
         ) : Configuration
-        public data class RoundWaiting(
-            val stateFlow: MutableStateFlow<ServerApi.OnlineGame.State.RoundWaiting>,
-        ) : Configuration
-        public data class RoundPreparation(
-            val stateFlow: MutableStateFlow<ServerApi.OnlineGame.State.RoundPreparation>,
-        ) : Configuration
-        public data class RoundExplanation(
-            val stateFlow: MutableStateFlow<ServerApi.OnlineGame.State.RoundExplanation>,
-        ) : Configuration
-        public data class RoundLastGuess(
-            val stateFlow: MutableStateFlow<ServerApi.OnlineGame.State.RoundLastGuess>,
-        ) : Configuration
-        public data class RoundEditing(
-            val stateFlow: MutableStateFlow<ServerApi.OnlineGame.State.RoundEditing>,
+        public data class RoundScreen(
+            val stateFlow: MutableStateFlow<ServerApi.OnlineGame.State.Round>,
         ) : Configuration
         public data class GameResults(
             val stateFlow: MutableStateFlow<ServerApi.OnlineGame.State.GameResults>,
@@ -91,115 +64,80 @@ public suspend fun RealGameScreenComponent(
                 null -> RealGameScreenComponent.Configuration.Loading
                 is ServerApi.OnlineGame.State.GameInitialisation -> RealGameScreenComponent.Configuration.RoomScreen(MutableStateFlow(gameState))
                 is ServerApi.OnlineGame.State.PlayersWordsCollection -> RealGameScreenComponent.Configuration.PlayersWordsCollection(MutableStateFlow(gameState))
-                is ServerApi.OnlineGame.State.RoundWaiting -> RealGameScreenComponent.Configuration.RoundWaiting(MutableStateFlow(gameState))
-                is ServerApi.OnlineGame.State.RoundPreparation -> RealGameScreenComponent.Configuration.RoundPreparation(MutableStateFlow(gameState))
-                is ServerApi.OnlineGame.State.RoundExplanation -> RealGameScreenComponent.Configuration.RoundExplanation(MutableStateFlow(gameState))
-                is ServerApi.OnlineGame.State.RoundLastGuess -> RealGameScreenComponent.Configuration.RoundLastGuess(MutableStateFlow(gameState))
-                is ServerApi.OnlineGame.State.RoundEditing -> RealGameScreenComponent.Configuration.RoundEditing(MutableStateFlow(gameState))
+                is ServerApi.OnlineGame.State.Round -> RealGameScreenComponent.Configuration.RoundScreen(MutableStateFlow(gameState))
                 is ServerApi.OnlineGame.State.GameResults -> RealGameScreenComponent.Configuration.GameResults(MutableStateFlow(gameState))
             },
-        ) { configuration, _, navigation ->
+        ) { configuration, componentContext, _ ->
             when(configuration) {
                 RealGameScreenComponent.Configuration.Loading ->
                     GameScreenComponent.Child.Loading(
                         RealLoadingComponent(
+                            onExitOnlineGame = onExitOnlineGame,
                         )
                     )
                 is RealGameScreenComponent.Configuration.RoomScreen ->
                     GameScreenComponent.Child.RoomScreen(
                         RealRoomScreenComponent(
-                            gameStateFlow = configuration.stateFlow,
-                            
-                            onOpenGameSettings = {
-                                coroutineScope.launch {
-                                    navigation.set(
-                                        RealGameScreenComponent.Configuration.RoomSettings(
-                                            configuration.stateFlow
-                                        )
-                                    )
-                                }
-                            },
-                            onStartGame = onStartGame
-                        )
-                    )
-                is RealGameScreenComponent.Configuration.RoomSettings ->
-                    GameScreenComponent.Child.RoomSettings(
-                        RealRoomSettingsComponent(
-                            onApplySettings = {
-                                onApplySettings(it)
-                                coroutineScope.launch {
-                                    navigation.set(
-                                        RealGameScreenComponent.Configuration.RoomScreen(
-                                            configuration.stateFlow
-                                        )
-                                    )
-                                }
-                            },
-                            onDiscardSettings = {
-                                coroutineScope.launch {
-                                    navigation.set(
-                                        RealGameScreenComponent.Configuration.RoomScreen(
-                                            configuration.stateFlow
-                                        )
-                                    )
-                                }
-                            },
-                            
-                            initialPreparationTimeSeconds = configuration.stateFlow.value.settingsBuilder.preparationTimeSeconds,
-                            initialExplanationTimeSeconds = configuration.stateFlow.value.settingsBuilder.explanationTimeSeconds,
-                            initialFinalGuessTimeSeconds = configuration.stateFlow.value.settingsBuilder.finalGuessTimeSeconds,
-                            initialStrictMode = configuration.stateFlow.value.settingsBuilder.strictMode,
-                            initialCachedEndConditionWordsNumber = configuration.stateFlow.value.settingsBuilder.cachedEndConditionWordsNumber,
-                            initialCachedEndConditionCyclesNumber = configuration.stateFlow.value.settingsBuilder.cachedEndConditionCyclesNumber,
-                            initialGameEndConditionType = configuration.stateFlow.value.settingsBuilder.gameEndConditionType,
-                        )
-                    )
-                is RealGameScreenComponent.Configuration.RoundWaiting ->
-                    GameScreenComponent.Child.RoundWaiting(
-                        RealRoundWaitingComponent(
-                            onFinishGame = onFinishGame,
-                            
                             gameState = configuration.stateFlow,
                             
-                            onSpeakerReady = onSpeakerReady,
-                            onListenerReady = onListenerReady,
+                            onExitOnlineGame = onExitOnlineGame,
+                            onCopyOnlineGameKey = {
+                                coroutineScope.launch {
+                                    val gameState = gameStateFlow.value
+                                    if (gameState != null) copyToClipboard(gameState.roomName)
+                                }
+                            },
+                            onCopyOnlineGameLink = {
+                                coroutineScope.launch {
+                                    val gameState = gameStateFlow.value
+                                    if (gameState != null) {
+                                        copyToClipboard("${OnlineGameSettings.linkBase}game/online/${UrlEncoderUtil.encode(gameState.roomName)}")
+                                    }
+                                }
+                            },
+                            
+                            onStartGame = onStartGame,
+                            
+                            onApplySettings = {
+                                onApplySettings(it)
+                            },
                         )
                     )
                 is RealGameScreenComponent.Configuration.PlayersWordsCollection ->
                     GameScreenComponent.Child.PlayersWordsCollection(
                         TODO()
                     )
-                is RealGameScreenComponent.Configuration.RoundPreparation ->
-                    GameScreenComponent.Child.RoundPreparation(
-                        RealRoundPreparationComponent(
-                            gameState = configuration.stateFlow,
-                        )
-                    )
-                is RealGameScreenComponent.Configuration.RoundExplanation ->
-                    GameScreenComponent.Child.RoundExplanation(
-                        RealRoundExplanationComponent(
+                is RealGameScreenComponent.Configuration.RoundScreen ->
+                    GameScreenComponent.Child.RoundScreen(
+                        RealRoundScreenComponent(
+                            componentContext = componentContext,
+                            
+                            onExitOnlineGame = onExitOnlineGame,
+                            onCopyOnlineGameKey = {
+                                coroutineScope.launch {
+                                    val gameState = gameStateFlow.value
+                                    if (gameState != null) copyToClipboard(gameState.roomName)
+                                }
+                            },
+                            onCopyOnlineGameLink = {
+                                coroutineScope.launch {
+                                    val gameState = gameStateFlow.value
+                                    if (gameState != null) {
+                                        copyToClipboard("${OnlineGameSettings.linkBase}game/online/${UrlEncoderUtil.encode(gameState.roomName)}")
+                                    }
+                                }
+                            },
+                            onFinishGame = onFinishGame,
+                            
                             gameState = configuration.stateFlow,
                             
-                            onExplanationResult = onExplanationResult,
-                        )
-                    )
-                is RealGameScreenComponent.Configuration.RoundLastGuess ->
-                    GameScreenComponent.Child.RoundLastGuess(
-                        RealRoundLastGuessComponent(
-                            gameState = configuration.stateFlow,
+                            onSpeakerReady = onSpeakerReady,
+                            onListenerReady = onListenerReady,
                             
                             onExplanationResult = onExplanationResult,
-                        )
-                    )
-                is RealGameScreenComponent.Configuration.RoundEditing ->
-                    GameScreenComponent.Child.RoundEditing(
-                        RealRoundEditingComponent(
-                            darkTheme = componentContext.settings.darkTheme,
-                            gameState = configuration.stateFlow,
                             
                             onUpdateExplanationResults = onUpdateExplanationResults,
-                            
-                            onConfirm = onConfirmExplanationResults,
+                            onConfirmExplanationResults = onConfirmExplanationResults,
                         )
                     )
                 is RealGameScreenComponent.Configuration.GameResults ->
@@ -222,10 +160,6 @@ public suspend fun RealGameScreenComponent(
                                 currentConfiguration.apply {
                                     stateFlow.value = newState
                                 }
-                            is RealGameScreenComponent.Configuration.RoomSettings ->
-                                currentConfiguration.apply {
-                                    stateFlow.value = newState
-                                }
                             else -> RealGameScreenComponent.Configuration.RoomScreen(
                                 stateFlow = MutableStateFlow(newState),
                             )
@@ -240,53 +174,13 @@ public suspend fun RealGameScreenComponent(
                                 stateFlow = MutableStateFlow(newState),
                             )
                         }
-                    is ServerApi.OnlineGame.State.RoundWaiting ->
+                    is ServerApi.OnlineGame.State.Round ->
                         when (currentConfiguration) {
-                            is RealGameScreenComponent.Configuration.RoundWaiting ->
+                            is RealGameScreenComponent.Configuration.RoundScreen ->
                                 currentConfiguration.apply {
                                     stateFlow.value = newState
                                 }
-                            else -> RealGameScreenComponent.Configuration.RoundWaiting(
-                                stateFlow = MutableStateFlow(newState),
-                            )
-                        }
-                    is ServerApi.OnlineGame.State.RoundPreparation ->
-                        when (currentConfiguration) {
-                            is RealGameScreenComponent.Configuration.RoundPreparation ->
-                                currentConfiguration.apply {
-                                    stateFlow.value = newState
-                                }
-                            else -> RealGameScreenComponent.Configuration.RoundPreparation(
-                                stateFlow = MutableStateFlow(newState),
-                            )
-                        }
-                    is ServerApi.OnlineGame.State.RoundExplanation ->
-                        when (currentConfiguration) {
-                            is RealGameScreenComponent.Configuration.RoundExplanation ->
-                                currentConfiguration.apply {
-                                    stateFlow.value = newState
-                                }
-                            else -> RealGameScreenComponent.Configuration.RoundExplanation(
-                                stateFlow = MutableStateFlow(newState),
-                            )
-                        }
-                    is ServerApi.OnlineGame.State.RoundLastGuess ->
-                        when (currentConfiguration) {
-                            is RealGameScreenComponent.Configuration.RoundLastGuess ->
-                                currentConfiguration.apply {
-                                    stateFlow.value = newState
-                                }
-                            else -> RealGameScreenComponent.Configuration.RoundLastGuess(
-                                stateFlow = MutableStateFlow(newState),
-                            )
-                        }
-                    is ServerApi.OnlineGame.State.RoundEditing ->
-                        when (currentConfiguration) {
-                            is RealGameScreenComponent.Configuration.RoundEditing ->
-                                currentConfiguration.apply {
-                                    stateFlow.value = newState
-                                }
-                            else -> RealGameScreenComponent.Configuration.RoundEditing(
+                            else -> RealGameScreenComponent.Configuration.RoundScreen(
                                 stateFlow = MutableStateFlow(newState),
                             )
                         }
@@ -306,21 +200,6 @@ public suspend fun RealGameScreenComponent(
     }
     
     return RealGameScreenComponent(
-        onExitOnlineGame = onExitOnlineGame,
         childSlot = childSlot.hub,
-        onCopyOnlineGameKey = {
-            coroutineScope.launch {
-                val gameState = gameStateFlow.value
-                if (gameState != null) copyToClipboard(gameState.roomName)
-            }
-        },
-        onCopyOnlineGameLink = {
-            coroutineScope.launch {
-                val gameState = gameStateFlow.value
-                if (gameState != null) {
-                    copyToClipboard("${OnlineGameSettings.linkBase}game/online/${UrlEncoderUtil.encode(gameState.roomName)}")
-                }
-            }
-        }
     )
 }

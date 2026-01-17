@@ -427,6 +427,8 @@ public class Room<
                 override val metadata: PlayerMetadata,
                 override val userIndex: UInt,
                 override val isHost: Boolean,
+                public val isStartAvailable: Boolean,
+                public val areSettingsChangeable: Boolean,
             ) : Role<PlayerMetadata>
             
             @Serializable
@@ -442,6 +444,7 @@ public class Room<
                 override val userIndex: UInt,
                 override val isHost: Boolean,
                 public val roundRole: RoundRole,
+                public val isGameFinishable: Boolean,
             ) : Role<PlayerMetadata> {
                 @Serializable
                 public enum class RoundRole {
@@ -744,7 +747,6 @@ public class Room<
             val playersList = nextState.playersList.mapIndexed { index, player ->
                 Description(metadata = player.metadata, isOnline = player.isOnline, isHost = index == hostIndex)
             }
-            println("nextState.playersList = ${nextState.playersList}")
             nextState.playersList.forEachIndexed { index, player ->
                 val gameStateToSend = when (nextState) {
                     is GameStateMachine.State.GameInitialisation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
@@ -755,6 +757,8 @@ public class Room<
                                 metadata = player.metadata,
                                 userIndex = index,
                                 isHost = index == hostIndex,
+                                isStartAvailable = index == hostIndex && nextState.playersList.size >= 2u,
+                                areSettingsChangeable = index == hostIndex,
                             ),
                             playersList = playersList,
                             settingsBuilder = GameSettings.Builder(
@@ -808,7 +812,8 @@ public class Room<
                                     nextState.speakerIndex -> Outgoing.Role.RoundWaiting.RoundRole.Speaker
                                     nextState.listenerIndex -> Outgoing.Role.RoundWaiting.RoundRole.Listener
                                     else -> Outgoing.Role.RoundWaiting.RoundRole.Player
-                                }
+                                },
+                                isGameFinishable = index == hostIndex,
                             ),
                             playersList = playersList,
                             settings = GameSettings(

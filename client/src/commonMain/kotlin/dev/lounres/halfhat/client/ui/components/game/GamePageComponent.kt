@@ -1,7 +1,6 @@
 package dev.lounres.halfhat.client.ui.components.game
 
 import dev.lounres.halfhat.client.components.UIComponentContext
-import dev.lounres.halfhat.client.ui.components.PageComponent
 import dev.lounres.halfhat.client.ui.components.game.controller.ControllerPageComponent
 import dev.lounres.halfhat.client.ui.components.game.deviceGame.DeviceGamePageComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.OnlineGamePageComponent
@@ -12,8 +11,7 @@ import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
 import dev.lounres.kone.hub.KoneAsynchronousHubView
 
 
-public interface GamePageComponent : PageComponent {
-    override val textName: String get() = "Game"
+public interface GamePageComponent {
     public val currentChild: KoneAsynchronousHubView<ChildrenSlot<*, Child, UIComponentContext>, *>
     
     public sealed interface Child {

@@ -13,99 +13,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.window.core.layout.WindowSizeClass
 import dev.lounres.halfhat.client.logic.components.game.onlineGame.ConnectionStatus
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.OnlineGamePageComponent
 import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.icons.OnlineGameConnectionSettingsButton
 import dev.lounres.halfhat.client.ui.icons.OnlineGameExitModeButton
-import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.GameScreenActionsUI
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.GameScreenUI
-import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.previewScreen.PreviewScreenActionsUI
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.previewScreen.PreviewScreenUI
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.kone.hub.subscribeAsState
 
 
 @Composable
-public fun RowScope.OnlineGamePageActionsUI(
+public fun OnlineGamePageUI(
     component: OnlineGamePageComponent,
+    windowSizeClass: WindowSizeClass,
 ) {
     when (val child = component.childSlot.subscribeAsState().value.component) {
-        is OnlineGamePageComponent.Child.PreviewScreen -> PreviewScreenActionsUI(child.component)
-        is OnlineGamePageComponent.Child.GameScreen -> GameScreenActionsUI(child.component)
-    }
-    IconButton(
-        onClick = component.onExitOnlineGameMode
-    ) {
-        Icon(
-            modifier = commonIconModifier,
-            imageVector = HalfHatIcon.OnlineGameExitModeButton,
-            contentDescription = "Exit online game"
-        )
-    }
-}
-
-@Composable
-public fun ColumnScope.OnlineGamePageUI(
-    component: OnlineGamePageComponent,
-) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Surface(
-                modifier = Modifier.weight(1f),
-                shape = CircleShape,
-                border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.outline)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp, horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    val connectionStatus by component.connectionStatus.collectAsState()
-                    Text(
-                        text = when (connectionStatus) {
-                            ConnectionStatus.Connected -> "Connected"
-                            ConnectionStatus.Disconnected -> "Connecting..."
-                        },
-                        fontSize = 16.sp,
-                    )
-                    Canvas(
-                        modifier = Modifier.size(8.dp),
-                    ) {
-                        drawCircle(
-                            color = when (connectionStatus) {
-                                ConnectionStatus.Connected -> Color.Green
-                                ConnectionStatus.Disconnected -> Color.Red
-                            },
-                        )
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-            OutlinedIconButton(
-                enabled = false,
-                onClick = { /*TODO()*/ },
-                border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.outline),
-                colors = IconButtonDefaults.outlinedIconButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary,
-                ),
-            ) {
-                Icon(
-                    modifier = commonIconModifier,
-                    imageVector = HalfHatIcon.OnlineGameConnectionSettingsButton,
-                    contentDescription = "Connection settings",
-                )
-            }
-        }
-        when (val child = component.childSlot.subscribeAsState().value.component) {
-            is OnlineGamePageComponent.Child.PreviewScreen -> PreviewScreenUI(child.component)
-            is OnlineGamePageComponent.Child.GameScreen -> GameScreenUI(child.component)
-        }
+        is OnlineGamePageComponent.Child.PreviewScreen -> PreviewScreenUI(child.component)
+        is OnlineGamePageComponent.Child.GameScreen -> GameScreenUI(child.component, windowSizeClass)
     }
 }

@@ -18,22 +18,18 @@ import dev.lounres.halfhat.client.logic.settings.CustomSounds
 import dev.lounres.halfhat.client.logic.settings.DeviceGameDefaultSettingsKey
 import dev.lounres.halfhat.client.logic.settings.LanguageKey
 import dev.lounres.halfhat.client.logic.settings.VolumeOnKey
+import dev.lounres.halfhat.client.logic.settings.volumeOn
 import dev.lounres.halfhat.client.logic.wordsProviders.DeviceGameWordsProviderID
 import dev.lounres.halfhat.client.logic.wordsProviders.DeviceGameWordsProviderRegistry
 import dev.lounres.halfhat.client.logic.wordsProviders.DeviceGameWordsProviderRegistryKey
 import dev.lounres.halfhat.client.storage.settings.Settings
 import dev.lounres.halfhat.client.storage.settings.SettingsSerializer
 import dev.lounres.halfhat.client.storage.settings.settings
-import dev.lounres.halfhat.client.ui.components.about.RealAboutPageComponent
-import dev.lounres.halfhat.client.ui.components.faq.RealFAQPageComponent
-import dev.lounres.halfhat.client.ui.components.feedback.RealFeedbackPageComponent
 import dev.lounres.halfhat.client.ui.components.game.RealGamePageComponent
-import dev.lounres.halfhat.client.ui.components.gameHistory.RealGameHistoryPageComponent
 import dev.lounres.halfhat.client.ui.components.home.RealHomePageComponent
-import dev.lounres.halfhat.client.ui.components.news.RealNewsPageComponent
-import dev.lounres.halfhat.client.ui.components.rules.RealRulesPageComponent
-import dev.lounres.halfhat.client.ui.components.settings.RealSettingsPageComponent
+import dev.lounres.halfhat.client.ui.components.miscellanea.RealMiscellaneaComponent
 import dev.lounres.halfhat.client.ui.theming.DarkTheme
+import dev.lounres.halfhat.client.ui.theming.darkTheme
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.komponentual.navigation.set
 import dev.lounres.kone.collections.interop.toKoneList
@@ -45,13 +41,13 @@ import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.collections.map.KoneMap
 import dev.lounres.kone.collections.map.empty
 import dev.lounres.kone.collections.map.get
-import dev.lounres.kone.collections.set.KoneSet
-import dev.lounres.kone.collections.set.build
+import dev.lounres.kone.collections.set.toKoneSet
 import dev.lounres.kone.collections.utils.drop
 import dev.lounres.kone.collections.utils.firstThatOrNull
-import dev.lounres.kone.collections.utils.map
-import dev.lounres.kone.collections.utils.plusAssign
-import dev.lounres.kone.hub.*
+import dev.lounres.kone.hub.KoneAsynchronousHubView
+import dev.lounres.kone.hub.KoneMutableAsynchronousHub
+import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
+import dev.lounres.kone.hub.value
 import dev.lounres.kone.registry.correspondsTo
 import dev.lounres.kone.registry.serialization.RegistrySerializableKey
 import dev.lounres.logKube.core.CurrentPlatformLogger
@@ -65,18 +61,9 @@ expect class RealMainWindowComponent: MainWindowComponent {
     override val globalLifecycle: MutableUIComponentLifecycle
     
     override val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>
-    override val volumeOn: KoneMutableAsynchronousHubView<Boolean, *>
-    override val language: KoneMutableAsynchronousHubView<Language, *>
     
-    override val pageVariants: KoneAsynchronousHubView<ChildrenVariants<MainWindowComponentChild.Kind, MainWindowComponentChild, UIComponentContext>, *>
-    override val openPage: (page: MainWindowComponentChild.Kind) -> Unit
-    
-    override val menuList: KoneAsynchronousHubView<KoneList<MainWindowComponentMenuItem>, *>
-}
-
-sealed interface RealMainWindowComponentMenuItemByKind {
-    data object Separator: RealMainWindowComponentMenuItemByKind
-    data class Child(val child: MainWindowComponentChild.Kind): RealMainWindowComponentMenuItemByKind
+    override val pageVariants: KoneAsynchronousHubView<ChildrenVariants<MainWindowComponentConfiguration, MainWindowComponentChild, UIComponentContext>, *>
+    override val openPage: (page: MainWindowComponentConfiguration) -> Unit
 }
 
 data class SettingDescription<T>(
@@ -89,10 +76,10 @@ expect val defaultDeviceGameWordsSource: GameStateMachine.WordsSource<DeviceGame
 val defaultDarkThemeMode: DarkTheme = DarkTheme.System
 
 val settingsDefaults: Map<String, SettingDescription<*>> = mapOf(
-    "DarkTheme" to SettingDescription(DarkTheme.Key, DarkTheme.System),
+    "DarkTheme" to SettingDescription(DarkTheme.Key, defaultDarkThemeMode),
     "VolumeOn" to SettingDescription(VolumeOnKey, true),
     "Language" to SettingDescription(LanguageKey, Language.English),
-    "InitialSelectedPage" to SettingDescription(MainWindowComponentChild.Kind.Key, MainWindowComponentChild.Kind.Primary.Game),
+    "InitialSelectedPage" to SettingDescription(MainWindowComponentConfiguration.Key, MainWindowComponentConfiguration.Game),
     "DeviceGameDefaultSettings" to SettingDescription(
         DeviceGameDefaultSettingsKey,
         GameStateMachine.GameSettings.Builder<DeviceGameWordsProviderID>(
@@ -141,9 +128,8 @@ fun globalComponentContext(
 }
 
 data class PagesDescription(
-    val pageVariants: VariantsNode<MainWindowComponentChild.Kind, MainWindowComponentChild, UIComponentContext>,
-    val openPage: (page: MainWindowComponentChild.Kind) -> Unit,
-    val menuList: KoneAsynchronousHubView<KoneList<MainWindowComponentMenuItem>, *>,
+    val pageVariants: VariantsNode<MainWindowComponentConfiguration, MainWindowComponentChild, UIComponentContext>,
+    val openPage: (page: MainWindowComponentConfiguration) -> Unit,
 )
 
 suspend fun UIComponentContext.pagesDescription(): PagesDescription {
@@ -154,7 +140,7 @@ suspend fun UIComponentContext.pagesDescription(): PagesDescription {
             loggerSource = "pagesDescription at dev.lounres.halfhat.client.ui.components.RealMainWindowComponent",
             navigationControllerSpec = NavigationControllerSpec(
                 key = "page",
-                configurationSerializer = MainWindowComponentChild.Kind.serializer(),
+                configurationSerializer = MainWindowComponentConfiguration.serializer(),
                 pathBuilder = { navigationState, children ->
                     val prefix = navigationState.currentVariant.path
                     val subPath = children[navigationState.currentVariant].context.navigationController?.pathBuilder?.invoke()
@@ -187,84 +173,46 @@ suspend fun UIComponentContext.pagesDescription(): PagesDescription {
                     )
                 },
             ),
-            allVariants = KoneSet.build {
-                +MainWindowComponentChild.Kind.Primary.entries.toKoneList()
-                +MainWindowComponentChild.Kind.Secondary.entries.toKoneList()
-            },
-            initialVariant = this.settings.value[MainWindowComponentChild.Kind.Key],
+            allVariants = MainWindowComponentConfiguration.entries.toKoneList().toKoneSet(),
+            initialVariant = this.settings.value[MainWindowComponentConfiguration.Key],
         ) { configuration, componentContext, navigation ->
             when (configuration) {
-                MainWindowComponentChild.Kind.Primary.Home ->
-                    MainWindowComponentChild.Primary.Home(
+                MainWindowComponentConfiguration.Home ->
+                    MainWindowComponentChild.Home(
                         RealHomePageComponent()
                     )
-                MainWindowComponentChild.Kind.Primary.Game ->
-                    MainWindowComponentChild.Primary.Game(
+                MainWindowComponentConfiguration.Game ->
+                    MainWindowComponentChild.Game(
                         RealGamePageComponent(
                             componentContext = componentContext,
                         )
                     )
-                MainWindowComponentChild.Kind.Secondary.News ->
-                    MainWindowComponentChild.Secondary.News(
-                        RealNewsPageComponent()
-                    )
-                MainWindowComponentChild.Kind.Secondary.Rules ->
-                    MainWindowComponentChild.Secondary.Rules(
-                        RealRulesPageComponent()
-                    )
-                MainWindowComponentChild.Kind.Secondary.FAQ ->
-                    MainWindowComponentChild.Secondary.FAQ(
-                        RealFAQPageComponent(
-                            onFeedbackLinkClick = {
-                                coroutineScope.launch {
-                                    navigation.set(MainWindowComponentChild.Kind.Secondary.Feedback)
-                                }
-                            }
+                MainWindowComponentConfiguration.Miscellanea ->
+                    MainWindowComponentChild.Miscellanea(
+                        RealMiscellaneaComponent(
+                            darkTheme = componentContext.settings.darkTheme,
+                            volumeOn = componentContext.settings.volumeOn,
+                            
+                            openSettings = { /*TODO*/ },
+                            openGameHistory = { /*TODO*/ },
+                            openFeedback = { /*TODO*/ },
+                            openRules = { /*TODO*/ },
+                            openFAQ = { /*TODO*/ },
+                            openAbout = { /*TODO*/ },
+                            openNews = { /*TODO*/ },
                         )
-                    )
-                MainWindowComponentChild.Kind.Secondary.GameHistory ->
-                    MainWindowComponentChild.Secondary.GameHistory(
-                        RealGameHistoryPageComponent()
-                    )
-                MainWindowComponentChild.Kind.Secondary.Settings ->
-                    MainWindowComponentChild.Secondary.Settings(
-                        RealSettingsPageComponent()
-                    )
-                MainWindowComponentChild.Kind.Secondary.Feedback ->
-                    MainWindowComponentChild.Secondary.Feedback(
-                        RealFeedbackPageComponent()
-                    )
-                MainWindowComponentChild.Kind.Secondary.About ->
-                    MainWindowComponentChild.Secondary.About(
-                        RealAboutPageComponent()
                     )
             }
         }
     
-    val openPage: (page: MainWindowComponentChild.Kind) -> Unit = { page ->
+    val openPage: (page: MainWindowComponentConfiguration) -> Unit = { page ->
         coroutineScope.launch {
             pageVariants.set(page)
         }
     }
     
-    val menuListByKinds: KoneList<RealMainWindowComponentMenuItemByKind> = KoneList.build {
-        this += MainWindowComponentChild.Kind.Primary.entries.toKoneList().map { RealMainWindowComponentMenuItemByKind.Child(it) }
-        +RealMainWindowComponentMenuItemByKind.Separator
-        this += MainWindowComponentChild.Kind.Secondary.entries.toKoneList().map { RealMainWindowComponentMenuItemByKind.Child(it) }
-    }
-    val menuList: KoneAsynchronousHub<KoneList<MainWindowComponentMenuItem>> =
-        pageVariants.hub.map { childrenVariants ->
-            menuListByKinds.map {
-                when (it) {
-                    is RealMainWindowComponentMenuItemByKind.Child -> MainWindowComponentMenuItem.Child(childrenVariants.allVariants[it.child])
-                    RealMainWindowComponentMenuItemByKind.Separator -> MainWindowComponentMenuItem.Separator
-                }
-            }
-        }
-    
     return PagesDescription(
         pageVariants = pageVariants,
         openPage = openPage,
-        menuList = menuList,
     )
 }

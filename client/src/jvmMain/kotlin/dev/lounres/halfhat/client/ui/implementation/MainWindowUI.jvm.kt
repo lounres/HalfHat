@@ -10,6 +10,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.WindowInfo
 import androidx.compose.ui.unit.DpSize
@@ -19,6 +20,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberWindowState
+import androidx.window.core.layout.WindowSizeClass
 import dev.lounres.halfhat.client.components.lifecycle.MutableUIComponentLifecycle
 import dev.lounres.halfhat.client.components.lifecycle.UIComponentLifecycleState
 import dev.lounres.halfhat.client.ui.components.MainWindowComponent
@@ -63,14 +65,16 @@ fun LifecycleController(
 
 @Composable
 fun MainWindowUI(
-    component: MainWindowComponent?
+    component: MainWindowComponent?,
 ) {
     if (component != null)
         Window(
-            title = "HalfHat — ${component.pageVariants.subscribeAsState().value.active.component.component.textName}",
+//            title = "HalfHat — ${component.pageVariants.subscribeAsState().value.active.component.component.textName}",
 //            icon = painterResource(Res.drawable.halfhat_logo), // TODO: Add window icon
+            title = "${component.windowState.size}",
             state = component.windowState,
             onCloseRequest = component.onWindowCloseRequest,
+            resizable = false,
         ) {
             LifecycleController(
                 component.globalLifecycle,

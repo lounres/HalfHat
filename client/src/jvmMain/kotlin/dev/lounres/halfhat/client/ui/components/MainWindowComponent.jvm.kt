@@ -18,10 +18,7 @@ actual interface MainWindowComponent {
     val windowState: WindowState
     
     actual val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>
-    actual val volumeOn: KoneMutableAsynchronousHubView<Boolean, *>
-    actual val language: KoneMutableAsynchronousHubView<Language, *>
     
-    actual val pageVariants: KoneAsynchronousHubView<ChildrenVariants<MainWindowComponentChild.Kind, MainWindowComponentChild, UIComponentContext>, *>
-    actual val openPage: (page: MainWindowComponentChild.Kind) -> Unit
-    actual val menuList: KoneAsynchronousHubView<KoneList<MainWindowComponentMenuItem>, *>
+    actual val pageVariants: KoneAsynchronousHubView<ChildrenVariants<MainWindowComponentConfiguration, MainWindowComponentChild, UIComponentContext>, *>
+    actual val openPage: (page: MainWindowComponentConfiguration) -> Unit
 }

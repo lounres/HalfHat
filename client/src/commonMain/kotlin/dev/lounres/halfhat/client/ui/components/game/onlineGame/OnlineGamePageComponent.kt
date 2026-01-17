@@ -10,10 +10,6 @@ import kotlinx.coroutines.flow.StateFlow
 
 
 public interface OnlineGamePageComponent {
-    public val onExitOnlineGameMode: () -> Unit
-    
-    public val connectionStatus: StateFlow<ConnectionStatus>
-    
     public val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, Child, UIComponentContext>, *>
     
     public sealed interface Child {

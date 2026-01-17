@@ -2,5 +2,5 @@ package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.load
 
 
 public class RealLoadingComponent(
-
+    override val onExitOnlineGame: () -> Unit,
 ): LoadingComponent
