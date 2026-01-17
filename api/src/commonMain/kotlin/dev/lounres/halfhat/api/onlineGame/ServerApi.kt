@@ -2,6 +2,7 @@ package dev.lounres.halfhat.api.onlineGame
 
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.array.KoneBooleanArray
+import dev.lounres.kone.collections.array.KoneUIntArray
 import dev.lounres.kone.collections.list.KoneList
 import kotlinx.serialization.Serializable
 
@@ -75,6 +76,115 @@ public object ServerApi {
     
     public object OnlineGame {
         @Serializable
+        public sealed interface PlayerDescription {
+            public val name: String
+            public val userIndex: UInt
+            public val isOnline: Boolean
+            public val isHost: Boolean
+            
+            @Serializable
+            public data class GameInitialisation(
+                override val name: String,
+                override val userIndex: UInt,
+                override val isOnline: Boolean,
+                override val isHost: Boolean,
+            ) : PlayerDescription
+            
+            @Serializable
+            public data class PlayersWordsCollection(
+                override val name: String,
+                override val userIndex: UInt,
+                override val isOnline: Boolean,
+                override val isHost: Boolean,
+                public val finishedWordsCollection: Boolean,
+            ) : PlayerDescription
+            
+            @Serializable
+            public sealed interface Round : PlayerDescription {
+                public val roundRole: RoundRole
+                public val scoreExplained: UInt
+                public val scoreGuessed: UInt
+                public val scoreSum: UInt
+                
+                @Serializable
+                public enum class RoundRole {
+                    Player, Speaker, Listener,
+                }
+                
+                @Serializable
+                public data class Waiting(
+                    override val name: String,
+                    override val userIndex: UInt,
+                    override val isOnline: Boolean,
+                    override val isHost: Boolean,
+                    override val roundRole: RoundRole,
+                    override val scoreExplained: UInt,
+                    override val scoreGuessed: UInt,
+                    override val scoreSum: UInt,
+                ) : Round
+                
+                @Serializable
+                public data class Preparation(
+                    override val name: String,
+                    override val userIndex: UInt,
+                    override val isOnline: Boolean,
+                    override val isHost: Boolean,
+                    override val roundRole: RoundRole,
+                    override val scoreExplained: UInt,
+                    override val scoreGuessed: UInt,
+                    override val scoreSum: UInt,
+                ) : Round
+                
+                @Serializable
+                public data class Explanation(
+                    override val name: String,
+                    override val userIndex: UInt,
+                    override val isOnline: Boolean,
+                    override val isHost: Boolean,
+                    override val roundRole: RoundRole,
+                    override val scoreExplained: UInt,
+                    override val scoreGuessed: UInt,
+                    override val scoreSum: UInt,
+                ) : Round
+                
+                @Serializable
+                public data class LastGuess(
+                    override val name: String,
+                    override val userIndex: UInt,
+                    override val isOnline: Boolean,
+                    override val isHost: Boolean,
+                    override val roundRole: RoundRole,
+                    override val scoreExplained: UInt,
+                    override val scoreGuessed: UInt,
+                    override val scoreSum: UInt,
+                ) : Round
+                
+                @Serializable
+                public data class Editing(
+                    override val name: String,
+                    override val userIndex: UInt,
+                    override val isOnline: Boolean,
+                    override val isHost: Boolean,
+                    override val roundRole: RoundRole,
+                    override val scoreExplained: UInt,
+                    override val scoreGuessed: UInt,
+                    override val scoreSum: UInt,
+                ) : Round
+            }
+            
+            @Serializable
+            public data class GameResults(
+                override val name: String,
+                override val userIndex: UInt,
+                override val isOnline: Boolean,
+                override val isHost: Boolean,
+                public val scoreExplained: UInt,
+                public val scoreGuessed: UInt,
+                public val scoreSum: UInt,
+            ) : PlayerDescription
+        }
+        
+        @Serializable
         public sealed interface Role {
             public val name: String
             public val userIndex: UInt
@@ -94,10 +204,14 @@ public object ServerApi {
                 override val name: String,
                 override val userIndex: UInt,
                 override val isHost: Boolean,
+                public val finishedWordsCollection: Boolean,
             ) : Role
             
             @Serializable
             public sealed interface Round : Role {
+                public val roundsBeforeSpeaking: UInt
+                public val roundsBeforeListening: UInt
+                
                 @Serializable
                 public data class Waiting(
                     override val name: String,
@@ -105,6 +219,8 @@ public object ServerApi {
                     override val isHost: Boolean,
                     public val roundRole: RoundRole,
                     public val isGameFinishable: Boolean,
+                    override val roundsBeforeSpeaking: UInt,
+                    override val roundsBeforeListening: UInt,
                 ) : Round {
                     @Serializable
                     public enum class RoundRole {
@@ -118,6 +234,8 @@ public object ServerApi {
                     override val userIndex: UInt,
                     override val isHost: Boolean,
                     public val roundRole: RoundRole,
+                    override val roundsBeforeSpeaking: UInt,
+                    override val roundsBeforeListening: UInt,
                 ) : Round {
                     @Serializable
                     public enum class RoundRole {
@@ -131,6 +249,8 @@ public object ServerApi {
                     override val userIndex: UInt,
                     override val isHost: Boolean,
                     public val roundRole: RoundRole,
+                    override val roundsBeforeSpeaking: UInt,
+                    override val roundsBeforeListening: UInt,
                 ) : Round {
                     @Serializable
                     public sealed interface RoundRole {
@@ -149,6 +269,8 @@ public object ServerApi {
                     override val userIndex: UInt,
                     override val isHost: Boolean,
                     public val roundRole: RoundRole,
+                    override val roundsBeforeSpeaking: UInt,
+                    override val roundsBeforeListening: UInt,
                 ) : Round {
                     @Serializable
                     public sealed interface RoundRole {
@@ -167,6 +289,8 @@ public object ServerApi {
                     override val userIndex: UInt,
                     override val isHost: Boolean,
                     public val roundRole: RoundRole,
+                    override val roundsBeforeSpeaking: UInt,
+                    override val roundsBeforeListening: UInt,
                 ) : Round {
                     @Serializable
                     public sealed interface RoundRole {
@@ -199,7 +323,7 @@ public object ServerApi {
             public data class GameInitialisation(
                 override val roomName: String,
                 override val role: Role.GameInitialisation,
-                public val playersList: KoneList<PlayerDescription>,
+                public val playersList: KoneList<PlayerDescription.GameInitialisation>,
                 public val settingsBuilder: SettingsBuilder,
             ) : State
             
@@ -207,7 +331,7 @@ public object ServerApi {
             public data class PlayersWordsCollection(
                 override val roomName: String,
                 override val role: Role.PlayersWordsCollection,
-                public val playersList: KoneList<PlayerDescription>,
+                public val playersList: KoneList<PlayerDescription.PlayersWordsCollection>,
                 public val settings: Settings,
                 public val playersWordsAreReady: KoneBooleanArray,
             ) : State
@@ -215,104 +339,116 @@ public object ServerApi {
             @Serializable
             public sealed interface Round : State {
                 override val role: Role.Round
-                public val playersList: KoneList<PlayerDescription>
+                public val playersList: KoneList<PlayerDescription.Round>
                 public val settings: Settings
                 public val initialWordsNumber: UInt
                 public val roundNumber: UInt
                 public val cycleNumber: UInt
                 public val speakerIndex: UInt
                 public val listenerIndex: UInt
+                public val nextSpeakerIndex: UInt
+                public val nextListenerIndex: UInt
                 public val restWordsNumber: UInt
-                public val explanationScores: KoneList<UInt>
-                public val guessingScores: KoneList<UInt>
+                public val wordsInProgressNumber: UInt
+                public val leaderboardPermutation: KoneUIntArray
                 
                 @Serializable
                 public data class Waiting(
                     override val roomName: String,
                     override val role: Role.Round.Waiting,
-                    override val playersList: KoneList<PlayerDescription>,
+                    override val playersList: KoneList<PlayerDescription.Round.Waiting>,
                     override val settings: Settings,
                     override val initialWordsNumber: UInt,
                     override val roundNumber: UInt,
                     override val cycleNumber: UInt,
                     override val speakerIndex: UInt,
                     override val listenerIndex: UInt,
+                    override val nextSpeakerIndex: UInt,
+                    override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
-                    override val explanationScores: KoneList<UInt>,
-                    override val guessingScores: KoneList<UInt>,
+                    override val wordsInProgressNumber: UInt,
                     public val speakerReady: Boolean,
                     public val listenerReady: Boolean,
+                    override val leaderboardPermutation: KoneUIntArray,
                 ) : Round
                 
                 @Serializable
                 public data class Preparation(
                     override val roomName: String,
                     override val role: Role.Round.Preparation,
-                    override val playersList: KoneList<PlayerDescription>,
+                    override val playersList: KoneList<PlayerDescription.Round.Preparation>,
                     override val settings: Settings,
                     override val initialWordsNumber: UInt,
                     override val roundNumber: UInt,
                     override val cycleNumber: UInt,
                     override val speakerIndex: UInt,
                     override val listenerIndex: UInt,
+                    override val nextSpeakerIndex: UInt,
+                    override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
+                    override val wordsInProgressNumber: UInt,
                     public val millisecondsLeft: UInt,
-                    override val explanationScores: KoneList<UInt>,
-                    override val guessingScores: KoneList<UInt>,
                     public val currentExplanationResultsSize: UInt,
+                    override val leaderboardPermutation: KoneUIntArray,
                 ) : Round
                 
                 @Serializable
                 public data class Explanation(
                     override val roomName: String,
                     override val role: Role.Round.Explanation,
-                    override val playersList: KoneList<PlayerDescription>,
+                    override val playersList: KoneList<PlayerDescription.Round.Explanation>,
                     override val settings: Settings,
                     override val initialWordsNumber: UInt,
                     override val roundNumber: UInt,
                     override val cycleNumber: UInt,
                     override val speakerIndex: UInt,
                     override val listenerIndex: UInt,
+                    override val nextSpeakerIndex: UInt,
+                    override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
+                    override val wordsInProgressNumber: UInt,
                     public val millisecondsLeft: UInt,
-                    override val explanationScores: KoneList<UInt>,
-                    override val guessingScores: KoneList<UInt>,
                     public val currentExplanationResultsSize: UInt,
+                    override val leaderboardPermutation: KoneUIntArray,
                 ) : Round
                 
                 @Serializable
                 public data class LastGuess(
                     override val roomName: String,
                     override val role: Role.Round.LastGuess,
-                    override val playersList: KoneList<PlayerDescription>,
+                    override val playersList: KoneList<PlayerDescription.Round.LastGuess>,
                     override val settings: Settings,
                     override val initialWordsNumber: UInt,
                     override val roundNumber: UInt,
                     override val cycleNumber: UInt,
                     override val speakerIndex: UInt,
                     override val listenerIndex: UInt,
+                    override val nextSpeakerIndex: UInt,
+                    override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
+                    override val wordsInProgressNumber: UInt,
                     public val millisecondsLeft: UInt,
-                    override val explanationScores: KoneList<UInt>,
-                    override val guessingScores: KoneList<UInt>,
                     public val currentExplanationResultsSize: UInt,
+                    override val leaderboardPermutation: KoneUIntArray,
                 ) : Round
                 
                 @Serializable
                 public data class Editing(
                     override val roomName: String,
                     override val role: Role.Round.Editing,
-                    override val playersList: KoneList<PlayerDescription>,
+                    override val playersList: KoneList<PlayerDescription.Round.Editing>,
                     override val settings: Settings,
                     override val initialWordsNumber: UInt,
                     override val roundNumber: UInt,
                     override val cycleNumber: UInt,
                     override val speakerIndex: UInt,
                     override val listenerIndex: UInt,
+                    override val nextSpeakerIndex: UInt,
+                    override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
-                    override val explanationScores: KoneList<UInt>,
-                    override val guessingScores: KoneList<UInt>,
+                    override val wordsInProgressNumber: UInt,
                     public val currentExplanationResultsSize: UInt,
+                    override val leaderboardPermutation: KoneUIntArray,
                 ) : Round
             }
             
@@ -320,8 +456,8 @@ public object ServerApi {
             public data class GameResults(
                 override val roomName: String,
                 override val role: Role.GameResults,
-                public val playersList: KoneList<String>,
-                public val results: KoneList<GameStateMachine.GameResult>,
+                public val playersList: KoneList<PlayerDescription.GameResults>,
+                public val leaderboardPermutation: KoneUIntArray,
             ) : State
         }
         

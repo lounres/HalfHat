@@ -1,6 +1,10 @@
 package dev.lounres.halfhat.logic.gameStateMachine
 
 import dev.lounres.kone.automata.CheckResult
+import dev.lounres.kone.collections.array.KoneMutableUIntArray
+import dev.lounres.kone.collections.array.KoneUIntArray
+import dev.lounres.kone.collections.array.fill
+import dev.lounres.kone.collections.array.toKoneUIntArray
 import dev.lounres.kone.collections.iterables.isEmpty
 import dev.lounres.kone.collections.iterables.isNotEmpty
 import dev.lounres.kone.collections.iterables.next
@@ -16,6 +20,7 @@ import dev.lounres.kone.collections.set.addAllFrom
 import dev.lounres.kone.collections.set.build
 import dev.lounres.kone.collections.set.of
 import dev.lounres.kone.collections.utils.*
+import dev.lounres.kone.repeat
 import dev.lounres.kone.scope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -45,6 +50,60 @@ internal inline fun <P, WPID, NoWordsProviderReason, MetadataTransition: Any, GS
             delay(timerDelayDuration)
         }
     }
+}
+
+@PublishedApi
+internal data class ScheduledPair(
+    val speakerIndex: UInt,
+    val listenerIndex: UInt,
+)
+
+@PublishedApi
+internal fun nextScheduledPairFor(
+    playersNumber: UInt,
+    pair: ScheduledPair
+): ScheduledPair {
+    val nextSpeakerIndex = (pair.speakerIndex + 1u) % playersNumber
+    var nextListenerIndex = (pair.listenerIndex + 1u) % playersNumber
+    if (nextSpeakerIndex == 0u) {
+        nextListenerIndex = (nextListenerIndex + 1u) % playersNumber
+        if (nextListenerIndex == 0u) {
+            nextListenerIndex = 1u
+        }
+    }
+    return ScheduledPair(
+        speakerIndex = nextSpeakerIndex,
+        listenerIndex = nextListenerIndex,
+    )
+}
+
+@PublishedApi
+internal data class Schedule(
+    val playersRoundsBeforeSpeaking: KoneUIntArray,
+    val playersRoundsBeforeListening: KoneUIntArray,
+)
+
+@PublishedApi
+internal fun scheduleFor(
+    playersNumber: UInt,
+    pair: ScheduledPair
+): Schedule {
+    val playersRoundsBeforeSpeaking = KoneMutableUIntArray.fill(playersNumber)
+    val playersRoundsBeforeListening = KoneMutableUIntArray.fill(playersNumber)
+    
+    var currentPair = pair
+    repeat(playersNumber * 2u) {
+        currentPair = nextScheduledPairFor(playersNumber, currentPair)
+        if (playersRoundsBeforeSpeaking[currentPair.speakerIndex] == 0u)
+            playersRoundsBeforeSpeaking[currentPair.speakerIndex] = it + 1u
+        if (playersRoundsBeforeListening[currentPair.listenerIndex] == 0u)
+            playersRoundsBeforeListening[currentPair.listenerIndex] = it + 1u
+    }
+    
+    return Schedule(
+        playersRoundsBeforeSpeaking = playersRoundsBeforeSpeaking.toKoneUIntArray(),
+        playersRoundsBeforeListening = playersRoundsBeforeListening.toKoneUIntArray(),
+    )
 }
 
 @PublishedApi
@@ -93,6 +152,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         cycleNumber = previousState.cycleNumber,
                         speakerIndex = previousState.speakerIndex,
                         listenerIndex = previousState.listenerIndex,
+                        nextSpeakerIndex = previousState.nextSpeakerIndex,
+                        nextListenerIndex = previousState.nextListenerIndex,
+                        playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                        playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                         restWords = previousState.restWords,
                         explanationScores = previousState.explanationScores,
                         guessingScores = previousState.guessingScores,
@@ -109,6 +172,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         initialWordsNumber = previousState.initialWordsNumber,
                         speakerIndex = previousState.speakerIndex,
                         listenerIndex = previousState.listenerIndex,
+                        nextSpeakerIndex = previousState.nextSpeakerIndex,
+                        nextListenerIndex = previousState.nextListenerIndex,
+                        playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                        playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                         startInstant = previousState.startInstant,
                         millisecondsLeft = previousState.millisecondsLeft,
                         restWords = previousState.restWords,
@@ -126,6 +193,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         initialWordsNumber = previousState.initialWordsNumber,
                         speakerIndex = previousState.speakerIndex,
                         listenerIndex = previousState.listenerIndex,
+                        nextSpeakerIndex = previousState.nextSpeakerIndex,
+                        nextListenerIndex = previousState.nextListenerIndex,
+                        playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                        playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                         startInstant = previousState.startInstant,
                         millisecondsLeft = previousState.millisecondsLeft,
                         restWords = previousState.restWords,
@@ -144,6 +215,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         initialWordsNumber = previousState.initialWordsNumber,
                         speakerIndex = previousState.speakerIndex,
                         listenerIndex = previousState.listenerIndex,
+                        nextSpeakerIndex = previousState.nextSpeakerIndex,
+                        nextListenerIndex = previousState.nextListenerIndex,
+                        playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                        playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                         startInstant = previousState.startInstant,
                         millisecondsLeft = previousState.millisecondsLeft,
                         restWords = previousState.restWords,
@@ -162,6 +237,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         initialWordsNumber = previousState.initialWordsNumber,
                         speakerIndex = previousState.speakerIndex,
                         listenerIndex = previousState.listenerIndex,
+                        nextSpeakerIndex = previousState.nextSpeakerIndex,
+                        nextListenerIndex = previousState.nextListenerIndex,
+                        playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                        playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                         restWords = previousState.restWords,
                         explanationScores = previousState.explanationScores,
                         guessingScores = previousState.guessingScores,
@@ -228,6 +307,8 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                         }
                                         GameStateMachine.GameEndCondition.Type.Cycles -> wordsProviderOrReason.result.allWords()
                                     }
+                                    val nextPair = nextScheduledPairFor(playersList.size, ScheduledPair(0u, 1u))
+                                    val schedule = scheduleFor(playersList.size, ScheduledPair(0u, 1u))
                                     CheckResult.Success(
                                         GameStateMachine.State.RoundWaiting(
                                             metadata = newMetadata,
@@ -238,6 +319,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                             cycleNumber = 0u,
                                             speakerIndex = 0u,
                                             listenerIndex = 1u,
+                                            nextSpeakerIndex = nextPair.speakerIndex,
+                                            nextListenerIndex = nextPair.listenerIndex,
+                                            playersRoundsBeforeSpeaking = schedule.playersRoundsBeforeSpeaking,
+                                            playersRoundsBeforeListening = schedule.playersRoundsBeforeListening,
                                             restWords = restWords,
                                             explanationScores = KoneList.generate(playersList.size) { 0u },
                                             guessingScores = KoneList.generate(playersList.size) { 0u },
@@ -272,6 +357,8 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                             val restWords = KoneSet.build {
                                 for (words in newPlayersWords) addAllFrom(words!!)
                             }
+                            val nextPair = nextScheduledPairFor(previousState.playersList.size, ScheduledPair(0u, 1u))
+                            val schedule = scheduleFor(previousState.playersList.size, ScheduledPair(0u, 1u))
                             CheckResult.Success(
                                 GameStateMachine.State.RoundWaiting(
                                     metadata = newMetadata,
@@ -282,6 +369,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                     cycleNumber = 0u,
                                     speakerIndex = 0u,
                                     listenerIndex = 1u,
+                                    nextSpeakerIndex = nextPair.speakerIndex,
+                                    nextListenerIndex = nextPair.listenerIndex,
+                                    playersRoundsBeforeSpeaking = schedule.playersRoundsBeforeSpeaking,
+                                    playersRoundsBeforeListening = schedule.playersRoundsBeforeListening,
                                     restWords = restWords,
                                     explanationScores = KoneList.generate(previousState.playersList.size) { 0u },
                                     guessingScores = KoneList.generate(previousState.playersList.size) { 0u },
@@ -329,6 +420,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                 cycleNumber = previousState.cycleNumber,
                                 speakerIndex = previousState.speakerIndex,
                                 listenerIndex = previousState.listenerIndex,
+                                nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                nextListenerIndex = previousState.nextListenerIndex,
+                                playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                 startInstant = Clock.System.now(),
                                 millisecondsLeft = previousState.settings.preparationTimeSeconds * 1000u,
                                 restWords = previousState.restWords,
@@ -349,6 +444,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                 cycleNumber = previousState.cycleNumber,
                                 speakerIndex = previousState.speakerIndex,
                                 listenerIndex = previousState.listenerIndex,
+                                nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                nextListenerIndex = previousState.nextListenerIndex,
+                                playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                 restWords = previousState.restWords,
                                 explanationScores = previousState.explanationScores,
                                 guessingScores = previousState.guessingScores,
@@ -386,6 +485,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                 cycleNumber = previousState.cycleNumber,
                                 speakerIndex = previousState.speakerIndex,
                                 listenerIndex = previousState.listenerIndex,
+                                nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                nextListenerIndex = previousState.nextListenerIndex,
+                                playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                 startInstant = Clock.System.now(),
                                 millisecondsLeft = previousState.settings.preparationTimeSeconds * 1000u,
                                 restWords = previousState.restWords,
@@ -406,6 +509,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                 cycleNumber = previousState.cycleNumber,
                                 speakerIndex = previousState.speakerIndex,
                                 listenerIndex = previousState.listenerIndex,
+                                nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                nextListenerIndex = previousState.nextListenerIndex,
+                                playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                 restWords = previousState.restWords,
                                 explanationScores = previousState.explanationScores,
                                 guessingScores = previousState.guessingScores,
@@ -442,6 +549,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                             cycleNumber = previousState.cycleNumber,
                             speakerIndex = previousState.speakerIndex,
                             listenerIndex = previousState.listenerIndex,
+                            nextSpeakerIndex = previousState.nextSpeakerIndex,
+                            nextListenerIndex = previousState.nextListenerIndex,
+                            playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                            playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                             startInstant = Clock.System.now(),
                             millisecondsLeft = previousState.settings.preparationTimeSeconds * 1000u,
                             restWords = previousState.restWords,
@@ -497,6 +608,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                     cycleNumber = previousState.cycleNumber,
                                     speakerIndex = previousState.speakerIndex,
                                     listenerIndex = previousState.listenerIndex,
+                                    nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                    nextListenerIndex = previousState.nextListenerIndex,
+                                    playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                    playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                     startInstant = previousState.startInstant,
                                     millisecondsLeft = preparationTimeSeconds * 1000u - spentTimeMilliseconds,
                                     restWords = previousState.restWords,
@@ -520,6 +635,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                     cycleNumber = previousState.cycleNumber,
                                     speakerIndex = previousState.speakerIndex,
                                     listenerIndex = previousState.listenerIndex,
+                                    nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                    nextListenerIndex = previousState.nextListenerIndex,
+                                    playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                    playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                     startInstant = previousState.startInstant,
                                     millisecondsLeft = (preparationTimeSeconds + explanationTimeSeconds) * 1000u - spentTimeMilliseconds,
                                     restWords = restWords,
@@ -545,6 +664,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                     cycleNumber = previousState.cycleNumber,
                                     speakerIndex = previousState.speakerIndex,
                                     listenerIndex = previousState.listenerIndex,
+                                    nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                    nextListenerIndex = previousState.nextListenerIndex,
+                                    playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                    playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                     startInstant = previousState.startInstant,
                                     millisecondsLeft = (preparationTimeSeconds + explanationTimeSeconds + finalGuessTimeSeconds) * 1000u - spentTimeMilliseconds,
                                     restWords = restWords,
@@ -570,6 +693,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                         cycleNumber = previousState.cycleNumber,
                                         speakerIndex = previousState.speakerIndex,
                                         listenerIndex = previousState.listenerIndex,
+                                        nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                        nextListenerIndex = previousState.nextListenerIndex,
+                                        playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                        playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                         restWords = previousState.restWords,
                                         explanationScores = previousState.explanationScores,
                                         guessingScores = previousState.guessingScores,
@@ -590,6 +717,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                         cycleNumber = previousState.cycleNumber,
                                         speakerIndex = previousState.speakerIndex,
                                         listenerIndex = previousState.listenerIndex,
+                                        nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                        nextListenerIndex = previousState.nextListenerIndex,
+                                        playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                        playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                         startInstant = previousState.startInstant,
                                         millisecondsLeft = 0u,
                                         restWords = restWords,
@@ -625,6 +756,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                     cycleNumber = previousState.cycleNumber,
                                     speakerIndex = previousState.speakerIndex,
                                     listenerIndex = previousState.listenerIndex,
+                                    nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                    nextListenerIndex = previousState.nextListenerIndex,
+                                    playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                    playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                     startInstant = previousState.startInstant,
                                     millisecondsLeft = (preparationTimeSeconds + explanationTimeSeconds) * 1000u - spentTimeMilliseconds,
                                     restWords = previousState.restWords,
@@ -646,6 +781,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                     cycleNumber = previousState.cycleNumber,
                                     speakerIndex = previousState.speakerIndex,
                                     listenerIndex = previousState.listenerIndex,
+                                    nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                    nextListenerIndex = previousState.nextListenerIndex,
+                                    playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                    playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                     startInstant = previousState.startInstant,
                                     millisecondsLeft = (preparationTimeSeconds + explanationTimeSeconds + finalGuessTimeSeconds) * 1000u - spentTimeMilliseconds,
                                     restWords = previousState.restWords,
@@ -670,6 +809,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                         cycleNumber = previousState.cycleNumber,
                                         speakerIndex = previousState.speakerIndex,
                                         listenerIndex = previousState.listenerIndex,
+                                        nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                        nextListenerIndex = previousState.nextListenerIndex,
+                                        playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                        playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                         restWords = previousState.restWords,
                                         explanationScores = previousState.explanationScores,
                                         guessingScores = previousState.guessingScores,
@@ -695,6 +838,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                         cycleNumber = previousState.cycleNumber,
                                         speakerIndex = previousState.speakerIndex,
                                         listenerIndex = previousState.listenerIndex,
+                                        nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                        nextListenerIndex = previousState.nextListenerIndex,
+                                        playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                        playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                         startInstant = previousState.startInstant,
                                         millisecondsLeft = 0u,
                                         restWords = previousState.restWords,
@@ -729,6 +876,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                     cycleNumber = previousState.cycleNumber,
                                     speakerIndex = previousState.speakerIndex,
                                     listenerIndex = previousState.listenerIndex,
+                                    nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                    nextListenerIndex = previousState.nextListenerIndex,
+                                    playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                    playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                     startInstant = previousState.startInstant,
                                     millisecondsLeft = (preparationTimeSeconds + explanationTimeSeconds + finalGuessTimeSeconds) * 1000u - spentTimeMilliseconds,
                                     restWords = previousState.restWords,
@@ -753,6 +904,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                         cycleNumber = previousState.cycleNumber,
                                         speakerIndex = previousState.speakerIndex,
                                         listenerIndex = previousState.listenerIndex,
+                                        nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                        nextListenerIndex = previousState.nextListenerIndex,
+                                        playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                        playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                         restWords = previousState.restWords,
                                         explanationScores = previousState.explanationScores,
                                         guessingScores = previousState.guessingScores,
@@ -778,6 +933,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                         cycleNumber = previousState.cycleNumber,
                                         speakerIndex = previousState.speakerIndex,
                                         listenerIndex = previousState.listenerIndex,
+                                        nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                        nextListenerIndex = previousState.nextListenerIndex,
+                                        playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                        playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                         startInstant = previousState.startInstant,
                                         millisecondsLeft = 0u,
                                         restWords = previousState.restWords,
@@ -815,6 +974,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                 cycleNumber = previousState.cycleNumber,
                                 speakerIndex = previousState.speakerIndex,
                                 listenerIndex = previousState.listenerIndex,
+                                nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                nextListenerIndex = previousState.nextListenerIndex,
+                                playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                 startInstant = previousState.startInstant,
                                 millisecondsLeft = previousState.millisecondsLeft,
                                 restWords = nextRestWords,
@@ -840,6 +1003,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                 cycleNumber = previousState.cycleNumber,
                                 speakerIndex = previousState.speakerIndex,
                                 listenerIndex = previousState.listenerIndex,
+                                nextSpeakerIndex = previousState.nextSpeakerIndex,
+                                nextListenerIndex = previousState.nextListenerIndex,
+                                playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                                playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                                 restWords = previousState.restWords,
                                 explanationScores = previousState.explanationScores,
                                 guessingScores = previousState.guessingScores,
@@ -866,6 +1033,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                             cycleNumber = previousState.cycleNumber,
                             speakerIndex = previousState.speakerIndex,
                             listenerIndex = previousState.listenerIndex,
+                            nextSpeakerIndex = previousState.nextSpeakerIndex,
+                            nextListenerIndex = previousState.nextListenerIndex,
+                            playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                            playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                             restWords = previousState.restWords,
                             explanationScores = previousState.explanationScores,
                             guessingScores = previousState.guessingScores,
@@ -900,6 +1071,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                             cycleNumber = previousState.cycleNumber,
                             speakerIndex = previousState.speakerIndex,
                             listenerIndex = previousState.listenerIndex,
+                            nextSpeakerIndex = previousState.nextSpeakerIndex,
+                            nextListenerIndex = previousState.nextListenerIndex,
+                            playersRoundsBeforeSpeaking = previousState.playersRoundsBeforeSpeaking,
+                            playersRoundsBeforeListening = previousState.playersRoundsBeforeListening,
                             restWords = previousState.restWords,
                             explanationScores = previousState.explanationScores,
                             guessingScores = previousState.guessingScores,
@@ -954,10 +1129,12 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                         guessingScores[it],
                                         explanationScores[it] + guessingScores[it],
                                     )
-                                }.apply { sortByDescending { it.sum } }
+                                }.apply { sortByDescending { it.scoreSum } }
                             )
                         )
-                    else
+                    else {
+                        val nextNextPair = nextScheduledPairFor(previousState.playersList.size, ScheduledPair(nextSpeakerIndex, nextListenerIndex))
+                        val nextSchedul = scheduleFor(previousState.playersList.size, ScheduledPair(nextSpeakerIndex, nextListenerIndex))
                         CheckResult.Success(
                             GameStateMachine.State.RoundWaiting(
                                 metadata = newMetadata,
@@ -968,6 +1145,10 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                 cycleNumber = nextCycleNumber,
                                 speakerIndex = nextSpeakerIndex,
                                 listenerIndex = nextListenerIndex,
+                                nextSpeakerIndex = nextNextPair.speakerIndex,
+                                nextListenerIndex = nextNextPair.listenerIndex,
+                                playersRoundsBeforeSpeaking = nextSchedul.playersRoundsBeforeSpeaking,
+                                playersRoundsBeforeListening = nextSchedul.playersRoundsBeforeListening,
                                 restWords = newRestWords,
                                 explanationScores = explanationScores,
                                 guessingScores = guessingScores,
@@ -975,6 +1156,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                 listenerReady = false,
                             )
                         )
+                    }
                 }
                 is GameStateMachine.State.GameInitialisation,
                 is GameStateMachine.State.PlayersWordsCollection,
@@ -997,9 +1179,9 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                     player = it,
                                     scoreExplained = previousState.explanationScores[it],
                                     scoreGuessed = previousState.guessingScores[it],
-                                    sum = previousState.explanationScores[it] + previousState.guessingScores[it],
+                                    scoreSum = previousState.explanationScores[it] + previousState.guessingScores[it],
                                 )
-                            }.apply { sortByDescending { it.sum } }
+                            }.apply { sortByDescending { it.scoreSum } }
                         )
                     )
                 is GameStateMachine.State.GameInitialisation,

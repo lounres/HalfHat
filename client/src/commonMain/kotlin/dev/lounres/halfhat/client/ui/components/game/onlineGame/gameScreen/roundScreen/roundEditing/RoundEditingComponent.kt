@@ -1,24 +1,19 @@
 package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundEditing
 
-import dev.lounres.halfhat.api.onlineGame.ServerApi
-import dev.lounres.halfhat.client.ui.theming.DarkTheme
-import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.kone.collections.list.KoneList
-import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
-import kotlinx.coroutines.flow.StateFlow
+import dev.lounres.halfhat.client.components.UIComponentContext
+import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
+import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundEditing.listener.RoundEditingListenerContentComponent
+import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundEditing.player.RoundEditingPlayerContentComponent
+import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundEditing.speaker.RoundEditingSpeakerContentComponent
+import dev.lounres.kone.hub.KoneAsynchronousHubView
 
 
 public interface RoundEditingComponent {
-    public val gameState: StateFlow<ServerApi.OnlineGame.State.Round.Editing>
+    public val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, Child, UIComponentContext>, *>
     
-    public val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>
-    
-    // TODO: Make UI NOT to serve logic again: UI should not provide list of the words manually
-    public val onGuessed: (KoneList<GameStateMachine.WordExplanation>, UInt) -> Unit
-    // TODO: Make UI NOT to serve logic again: UI should not provide list of the words manually
-    public val onNotGuessed: (KoneList<GameStateMachine.WordExplanation>, UInt) -> Unit
-    // TODO: Make UI NOT to serve logic again: UI should not provide list of the words manually
-    public val onMistake: (KoneList<GameStateMachine.WordExplanation>, UInt) -> Unit
-    
-    public val onConfirm: () -> Unit
+    public sealed interface Child {
+        public data class Speaker(val component: RoundEditingSpeakerContentComponent) : Child
+        public data class Listener(val component: RoundEditingListenerContentComponent) : Child
+        public data class Player(val component: RoundEditingPlayerContentComponent) : Child
+    }
 }

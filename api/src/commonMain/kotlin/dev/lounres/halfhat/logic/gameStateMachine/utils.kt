@@ -26,4 +26,4 @@ public val <P> GameStateMachine.State.RoundEditing<P, *, *>.speaker: P get() = p
 public val <P> GameStateMachine.State.RoundEditing<P, *, *>.listener: P get() = playersList[listenerIndex]
 
 public val <P> GameStateMachine.State.GameResults<P, *>.personalResults: KoneList<GameStateMachine.PersonalResult<P>>
-    get() = results.map { GameStateMachine.PersonalResult(playersList[it.player], it.scoreExplained, it.scoreGuessed, it.sum) }
+    get() = results.map { GameStateMachine.PersonalResult(playersList[it.player], it.scoreExplained, it.scoreGuessed, it.scoreSum) }

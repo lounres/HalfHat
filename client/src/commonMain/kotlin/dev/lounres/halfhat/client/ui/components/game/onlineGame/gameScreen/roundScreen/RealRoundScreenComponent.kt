@@ -15,6 +15,9 @@ import dev.lounres.halfhat.client.ui.theming.darkTheme
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.hub.KoneAsynchronousHubView
+import dev.lounres.kone.hub.KoneMutableAsynchronousHub
+import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,7 +33,12 @@ class RealRoundScreenComponent(
     override val gameState: StateFlow<ServerApi.OnlineGame.State.Round>,
     
     override val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, RoundScreenComponent.Child, UIComponentContext>, *>,
+    
+    override val coroutineScope: CoroutineScope,
 ) : RoundScreenComponent {
+    override val openAdditionalCard: KoneMutableAsynchronousHubView<Boolean, *> = KoneMutableAsynchronousHub(false)
+    override val additionalCard: KoneMutableAsynchronousHubView<AdditionalCard, *> = KoneMutableAsynchronousHub(AdditionalCard.Schedule)
+    
     public sealed interface Configuration {
         public data class RoundWaiting(
             val stateFlow: MutableStateFlow<ServerApi.OnlineGame.State.Round.Waiting>,
@@ -68,7 +76,6 @@ suspend fun RealRoundScreenComponent(
     onUpdateExplanationResults: (KoneList<GameStateMachine.WordExplanation>) -> Unit,
     onConfirmExplanationResults: () -> Unit,
 ): RealRoundScreenComponent {
-    
     val childSlot =
         componentContext.uiChildrenDefaultSlotNode(
             initialConfiguration = when(val gameState = gameState.value) {
@@ -115,19 +122,20 @@ suspend fun RealRoundScreenComponent(
                 is RealRoundScreenComponent.Configuration.RoundEditing ->
                     RoundScreenComponent.Child.RoundEditing(
                         RealRoundEditingComponent(
+                            componentContext = componentContext,
+                            
                             gameState = configuration.stateFlow,
                             
-                            darkTheme = componentContext.settings.darkTheme,
-                            
                             onUpdateExplanationResults = onUpdateExplanationResults,
-                            
-                            onConfirm = onConfirmExplanationResults,
+                            onConfirmExplanationResults = onConfirmExplanationResults,
                         )
                     )
             }
         }
     
-    componentContext.coroutineScope(Dispatchers.Default).launch {
+    val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
+    
+    coroutineScope.launch {
         gameState.collect { newState ->
             childSlot.navigate { currentConfiguration ->
                 when (newState) {
@@ -196,5 +204,7 @@ suspend fun RealRoundScreenComponent(
         gameState = gameState,
         
         childSlot = childSlot.hub,
+        
+        coroutineScope = coroutineScope
     )
 }

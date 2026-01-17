@@ -144,6 +144,8 @@ public suspend fun RealGameScreenComponent(
                     GameScreenComponent.Child.GameResults(
                         RealGameResultsComponent(
                             gameState = configuration.stateFlow,
+                            
+                            onLeaveGameResults = onExitOnlineGame,
                         )
                     )
             }

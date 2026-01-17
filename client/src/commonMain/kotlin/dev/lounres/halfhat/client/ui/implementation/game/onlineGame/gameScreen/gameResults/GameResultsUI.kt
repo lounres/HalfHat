@@ -108,107 +108,135 @@ public fun GameResultsUI(
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize().padding(8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    val gameState = component.gameState.collectAsState().value
-                    when (section) {
-                        ResultsSection.PlayersStatistic -> {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(8.dp),
-                            ) {
-                                Spacer(modifier = Modifier.width(40.dp))
-                                Text(
-                                    modifier = Modifier.weight(1f),
-                                    text = "Player",
-                                    fontWeight = FontWeight.SemiBold,
-                                    autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
-                                    softWrap = false,
-                                    maxLines = 1,
-                                )
-                                Text(
-                                    modifier = Modifier.weight(1f),
-                                    text = "Explained",
-                                    textAlign = TextAlign.Center,
-                                    fontWeight = FontWeight.SemiBold,
-                                    autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
-                                    softWrap = false,
-                                    maxLines = 1,
-                                )
-                                Text(
-                                    modifier = Modifier.weight(1f),
-                                    text = "Guessed",
-                                    textAlign = TextAlign.Center,
-                                    fontWeight = FontWeight.SemiBold,
-                                    autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
-                                    softWrap = false,
-                                    maxLines = 1,
-                                )
-                                Text(
-                                    modifier = Modifier.weight(1f),
-                                    text = "Sum",
-                                    textAlign = TextAlign.Center,
-                                    fontWeight = FontWeight.SemiBold,
-                                    autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
-                                    softWrap = false,
-                                    maxLines = 1,
-                                )
-                            }
-                            HorizontalDivider(
-                                color = MaterialTheme.colorScheme.outline,
-                            )
-                            val playersList = gameState.playersList
-                            for ((index, player) in playersList.withIndex()) {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Surface(
-                                    shape = CircleShape,
-                                    color =
-                                        if (index == gameState.role.userIndex) MaterialTheme.colorScheme.tertiaryContainer
-                                        else MaterialTheme.colorScheme.surface,
+                    Column(
+                        modifier = Modifier.fillMaxWidth().weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        val gameState = component.gameState.collectAsState().value
+                        when (section) {
+                            ResultsSection.PlayersStatistic -> {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(8.dp),
                                 ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth().padding(8.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
+                                    Spacer(modifier = Modifier.width(40.dp))
+                                    Text(
+                                        modifier = Modifier.weight(1f),
+                                        text = "Player",
+                                        fontWeight = FontWeight.SemiBold,
+                                        autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
+                                        softWrap = false,
+                                        maxLines = 1,
+                                    )
+                                    Text(
+                                        modifier = Modifier.weight(1f),
+                                        text = "Explained",
+                                        textAlign = TextAlign.Center,
+                                        fontWeight = FontWeight.SemiBold,
+                                        autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
+                                        softWrap = false,
+                                        maxLines = 1,
+                                    )
+                                    Text(
+                                        modifier = Modifier.weight(1f),
+                                        text = "Guessed",
+                                        textAlign = TextAlign.Center,
+                                        fontWeight = FontWeight.SemiBold,
+                                        autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
+                                        softWrap = false,
+                                        maxLines = 1,
+                                    )
+                                    Text(
+                                        modifier = Modifier.weight(1f),
+                                        text = "Sum",
+                                        textAlign = TextAlign.Center,
+                                        fontWeight = FontWeight.SemiBold,
+                                        autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
+                                        softWrap = false,
+                                        maxLines = 1,
+                                    )
+                                }
+                                HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.outline,
+                                )
+                                val playersList = gameState.playersList
+                                for ((index, player) in playersList.withIndex()) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Surface(
+                                        shape = CircleShape,
+                                        color =
+                                            if (index == gameState.role.userIndex) MaterialTheme.colorScheme.tertiaryContainer
+                                            else MaterialTheme.colorScheme.surface,
                                     ) {
-//                                        if (player.isHost)
-//                                            Icon(
-//                                                imageVector = HalfHatIcon.OnlineGameHostMarkIcon,
-//                                                modifier = Modifier.size(24.dp),
-//                                                contentDescription = null,
-//                                            )
-//                                        else
-//                                            Spacer(Modifier.width(24.dp))
-//                                        Spacer(Modifier.width(4.dp))
-                                        Icon(
-                                            imageVector = HalfHatIcon.OnlineGamePlayerIcon,
-                                            modifier = Modifier.size(24.dp),
-                                            contentDescription = null,
-                                        )
-                                        Spacer(modifier = Modifier.width(16.dp))
-                                        Text(
-                                            modifier = Modifier.weight(1f),
-                                            text = player,
-                                        )
-                                        Text(
-                                            modifier = Modifier.weight(1f),
-                                            text = "${gameState.results[index].scoreExplained}",
-                                            textAlign = TextAlign.Center,
-                                        )
-                                        Text(
-                                            modifier = Modifier.weight(1f),
-                                            text = "${gameState.results[index].scoreExplained}",
-                                            textAlign = TextAlign.Center,
-                                        )
-                                        Text(
-                                            modifier = Modifier.weight(1f),
-                                            text = "${gameState.results[index].sum}",
-                                            textAlign = TextAlign.Center,
-                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+//                                            if (player.isHost)
+//                                                Icon(
+//                                                    imageVector = HalfHatIcon.OnlineGameHostMarkIcon,
+//                                                    modifier = Modifier.size(24.dp),
+//                                                    contentDescription = null,
+//                                                )
+//                                            else
+//                                                Spacer(Modifier.width(24.dp))
+//                                            Spacer(Modifier.width(4.dp))
+                                            Icon(
+                                                imageVector = HalfHatIcon.OnlineGamePlayerIcon,
+                                                modifier = Modifier.size(24.dp),
+                                                contentDescription = null,
+                                            )
+                                            Spacer(modifier = Modifier.width(16.dp))
+                                            Text(
+                                                modifier = Modifier.weight(1f),
+                                                text = player.name,
+                                            )
+                                            Text(
+                                                modifier = Modifier.weight(1f),
+                                                text = "${player.scoreExplained}",
+                                                textAlign = TextAlign.Center,
+                                            )
+                                            Text(
+                                                modifier = Modifier.weight(1f),
+                                                text = "${player.scoreExplained}",
+                                                textAlign = TextAlign.Center,
+                                            )
+                                            Text(
+                                                modifier = Modifier.weight(1f),
+                                                text = "${player.scoreSum}",
+                                                textAlign = TextAlign.Center,
+                                            )
+                                        }
                                     }
                                 }
                             }
+                            
+                            ResultsSection.WordsStatistic -> {} // TODO
+                            ResultsSection.Settings -> {} // TODO
                         }
-                        ResultsSection.WordsStatistic -> {} // TODO
-                        ResultsSection.Settings -> {} // TODO
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        FilledTonalButton(
+                            modifier = Modifier.weight(1f),
+                            onClick = component.onLeaveGameResults,
+                        ) {
+                            Text(
+                                text = "Leave room",
+                                fontSize = 16.sp,
+                            )
+                        }
+                        Button( // TODO
+                            enabled = false,
+                            modifier = Modifier.weight(1f),
+                            onClick = {},
+                        ) {
+                            Text(
+                                text = "Play again",
+                                fontSize = 16.sp,
+                            )
+                        }
                     }
                 }
             }

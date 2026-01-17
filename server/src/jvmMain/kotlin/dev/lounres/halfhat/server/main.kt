@@ -15,6 +15,7 @@ import dev.lounres.kone.collections.map.contains
 import dev.lounres.kone.collections.map.getOrNull
 import dev.lounres.kone.collections.set.*
 import dev.lounres.kone.collections.utils.map
+import dev.lounres.kone.collections.utils.mapIndexed
 import dev.lounres.kone.collections.utils.sort
 import dev.lounres.kone.collections.utils.take
 import dev.lounres.kone.repeat
@@ -159,14 +160,6 @@ class Connection(
     val playerAttachmentMutex = Mutex()
     
     override suspend fun sendNewState(state: Room.Outgoing.State<RoomMetadata, PlayerMetadata, WordsProviderID>) {
-        fun Room.Player.Description<PlayerMetadata>.toServerApi(): ServerApi.PlayerDescription =
-            ServerApi.PlayerDescription(
-                name = this.metadata.name,
-                isOnline = this.isOnline,
-                isHost = this.isHost,
-            )
-        fun KoneList<Room.Player.Description<PlayerMetadata>>.toServerApi(): KoneList<ServerApi.PlayerDescription> =
-            map { it.toServerApi() }
         fun Room.GameSettings.Builder<WordsProviderID>.toServerApi(): ServerApi.SettingsBuilder = 
             ServerApi.SettingsBuilder(
                 preparationTimeSeconds = this.preparationTimeSeconds,
@@ -207,7 +200,14 @@ class Connection(
                                 isStartAvailable = state.role.isStartAvailable,
                                 areSettingsChangeable = state.role.areSettingsChangeable,
                             ),
-                            playersList = state.playersList.toServerApi(),
+                            playersList = state.playersList.mapIndexed { index, player ->
+                                ServerApi.OnlineGame.PlayerDescription.GameInitialisation(
+                                    name = player.metadata.name,
+                                    userIndex = index,
+                                    isOnline = player.isOnline,
+                                    isHost = player.isHost,
+                                )
+                            },
                             settingsBuilder = state.settingsBuilder.toServerApi(),
                         )
                     is Room.Outgoing.State.PlayersWordsCollection<RoomMetadata, PlayerMetadata, WordsProviderID> ->
@@ -216,13 +216,22 @@ class Connection(
                             role = ServerApi.OnlineGame.Role.PlayersWordsCollection(
                                 name = state.role.metadata.name,
                                 userIndex = state.role.userIndex,
-                                isHost = state.role.isHost
+                                isHost = state.role.isHost,
+                                finishedWordsCollection = state.role.finishedWordsCollection,
                             ),
-                            playersList = state.playersList.toServerApi(),
+                            playersList = state.playersList.mapIndexed { index, player ->
+                                ServerApi.OnlineGame.PlayerDescription.PlayersWordsCollection(
+                                    name = player.metadata.name,
+                                    userIndex = index,
+                                    isOnline = player.isOnline,
+                                    isHost = player.isHost,
+                                    finishedWordsCollection = player.finishedWordsCollection,
+                                )
+                            },
                             settings = state.settings.toServerApi(),
                             playersWordsAreReady = state.playersWordsAreReady,
                         )
-                    is Room.Outgoing.State.RoundWaiting<RoomMetadata, PlayerMetadata, WordsProviderID> ->
+                    is Room.Outgoing.State.Round.Waiting<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.Round.Waiting(
                             roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.Round.Waiting(
@@ -230,26 +239,45 @@ class Connection(
                                 userIndex = state.role.userIndex,
                                 isHost = state.role.isHost,
                                 roundRole = when (state.role.roundRole) {
-                                    Room.Outgoing.Role.RoundWaiting.RoundRole.Player -> ServerApi.OnlineGame.Role.Round.Waiting.RoundRole.Player
-                                    Room.Outgoing.Role.RoundWaiting.RoundRole.Listener -> ServerApi.OnlineGame.Role.Round.Waiting.RoundRole.Listener
-                                    Room.Outgoing.Role.RoundWaiting.RoundRole.Speaker -> ServerApi.OnlineGame.Role.Round.Waiting.RoundRole.Speaker
+                                    Room.Outgoing.Role.Round.Waiting.RoundRole.Player -> ServerApi.OnlineGame.Role.Round.Waiting.RoundRole.Player
+                                    Room.Outgoing.Role.Round.Waiting.RoundRole.Listener -> ServerApi.OnlineGame.Role.Round.Waiting.RoundRole.Listener
+                                    Room.Outgoing.Role.Round.Waiting.RoundRole.Speaker -> ServerApi.OnlineGame.Role.Round.Waiting.RoundRole.Speaker
                                 },
                                 isGameFinishable = state.role.isGameFinishable,
+                                roundsBeforeSpeaking = state.role.roundsBeforeSpeaking,
+                                roundsBeforeListening = state.role.roundsBeforeListening,
                             ),
-                            playersList = state.playersList.toServerApi(),
+                            playersList = state.playersList.mapIndexed { index, player ->
+                                ServerApi.OnlineGame.PlayerDescription.Round.Waiting(
+                                    name = player.metadata.name,
+                                    userIndex = index,
+                                    isOnline = player.isOnline,
+                                    isHost = player.isHost,
+                                    roundRole = when (player.roundRole) {
+                                        Room.Outgoing.PlayerDescription.Round.RoundRole.Player -> ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Player
+                                        Room.Outgoing.PlayerDescription.Round.RoundRole.Speaker -> ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Speaker
+                                        Room.Outgoing.PlayerDescription.Round.RoundRole.Listener -> ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Listener
+                                    },
+                                    scoreExplained = player.scoreExplained,
+                                    scoreGuessed = player.scoreGuessed,
+                                    scoreSum = player.scoreSum,
+                                )
+                            },
                             settings = state.settings.toServerApi(),
                             initialWordsNumber = state.initialWordsNumber,
                             roundNumber = state.roundNumber,
                             cycleNumber = state.cycleNumber,
                             speakerIndex = state.speakerIndex,
                             listenerIndex = state.listenerIndex,
+                            nextSpeakerIndex = state.nextSpeakerIndex,
+                            nextListenerIndex = state.nextListenerIndex,
                             restWordsNumber = state.restWordsNumber,
-                            explanationScores = state.explanationScores,
-                            guessingScores = state.guessingScores,
+                            wordsInProgressNumber = state.wordsInProgressNumber,
                             speakerReady = state.speakerReady,
                             listenerReady = state.listenerReady,
+                            leaderboardPermutation = state.leaderboardPermutation,
                         )
-                    is Room.Outgoing.State.RoundPreparation<RoomMetadata, PlayerMetadata, WordsProviderID> ->
+                    is Room.Outgoing.State.Round.Preparation<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.Round.Preparation(
                             roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.Round.Preparation(
@@ -257,25 +285,44 @@ class Connection(
                                 userIndex = state.role.userIndex,
                                 isHost = state.role.isHost,
                                 roundRole = when (state.role.roundRole) {
-                                    Room.Outgoing.Role.RoundPreparation.RoundRole.Player -> ServerApi.OnlineGame.Role.Round.Preparation.RoundRole.Player
-                                    Room.Outgoing.Role.RoundPreparation.RoundRole.Listener -> ServerApi.OnlineGame.Role.Round.Preparation.RoundRole.Listener
-                                    Room.Outgoing.Role.RoundPreparation.RoundRole.Speaker -> ServerApi.OnlineGame.Role.Round.Preparation.RoundRole.Speaker
+                                    Room.Outgoing.Role.Round.Preparation.RoundRole.Player -> ServerApi.OnlineGame.Role.Round.Preparation.RoundRole.Player
+                                    Room.Outgoing.Role.Round.Preparation.RoundRole.Listener -> ServerApi.OnlineGame.Role.Round.Preparation.RoundRole.Listener
+                                    Room.Outgoing.Role.Round.Preparation.RoundRole.Speaker -> ServerApi.OnlineGame.Role.Round.Preparation.RoundRole.Speaker
                                 },
+                                roundsBeforeSpeaking = state.role.roundsBeforeSpeaking,
+                                roundsBeforeListening = state.role.roundsBeforeListening,
                             ),
-                            playersList = state.playersList.toServerApi(),
+                            playersList = state.playersList.mapIndexed { index, player ->
+                                ServerApi.OnlineGame.PlayerDescription.Round.Preparation(
+                                    name = player.metadata.name,
+                                    userIndex = index,
+                                    isOnline = player.isOnline,
+                                    isHost = player.isHost,
+                                    roundRole = when (player.roundRole) {
+                                        Room.Outgoing.PlayerDescription.Round.RoundRole.Player -> ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Player
+                                        Room.Outgoing.PlayerDescription.Round.RoundRole.Speaker -> ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Speaker
+                                        Room.Outgoing.PlayerDescription.Round.RoundRole.Listener -> ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Listener
+                                    },
+                                    scoreExplained = player.scoreExplained,
+                                    scoreGuessed = player.scoreGuessed,
+                                    scoreSum = player.scoreSum,
+                                )
+                            },
                             settings = state.settings.toServerApi(),
                             initialWordsNumber = state.initialWordsNumber,
                             roundNumber = state.roundNumber,
                             cycleNumber = state.cycleNumber,
                             speakerIndex = state.speakerIndex,
                             listenerIndex = state.listenerIndex,
+                            nextSpeakerIndex = state.nextSpeakerIndex,
+                            nextListenerIndex = state.nextListenerIndex,
                             restWordsNumber = state.restWordsNumber,
+                            wordsInProgressNumber = state.wordsInProgressNumber,
                             millisecondsLeft = state.millisecondsLeft,
-                            explanationScores = state.explanationScores,
-                            guessingScores = state.guessingScores,
                             currentExplanationResultsSize = state.currentExplanationResultsSize,
+                            leaderboardPermutation = state.leaderboardPermutation,
                         )
-                    is Room.Outgoing.State.RoundExplanation<RoomMetadata, PlayerMetadata, WordsProviderID> ->
+                    is Room.Outgoing.State.Round.Explanation<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.Round.Explanation(
                             roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.Round.Explanation(
@@ -283,25 +330,44 @@ class Connection(
                                 userIndex = state.role.userIndex,
                                 isHost = state.role.isHost,
                                 roundRole = when (val role = state.role.roundRole) {
-                                    Room.Outgoing.Role.RoundExplanation.RoundRole.Player -> ServerApi.OnlineGame.Role.Round.Explanation.RoundRole.Player
-                                    Room.Outgoing.Role.RoundExplanation.RoundRole.Listener -> ServerApi.OnlineGame.Role.Round.Explanation.RoundRole.Listener
-                                    is Room.Outgoing.Role.RoundExplanation.RoundRole.Speaker -> ServerApi.OnlineGame.Role.Round.Explanation.RoundRole.Speaker(role.currentWord)
+                                    Room.Outgoing.Role.Round.Explanation.RoundRole.Player -> ServerApi.OnlineGame.Role.Round.Explanation.RoundRole.Player
+                                    Room.Outgoing.Role.Round.Explanation.RoundRole.Listener -> ServerApi.OnlineGame.Role.Round.Explanation.RoundRole.Listener
+                                    is Room.Outgoing.Role.Round.Explanation.RoundRole.Speaker -> ServerApi.OnlineGame.Role.Round.Explanation.RoundRole.Speaker(role.currentWord)
                                 },
+                                roundsBeforeSpeaking = state.role.roundsBeforeSpeaking,
+                                roundsBeforeListening = state.role.roundsBeforeListening,
                             ),
-                            playersList = state.playersList.toServerApi(),
+                            playersList = state.playersList.mapIndexed { index, player ->
+                                ServerApi.OnlineGame.PlayerDescription.Round.Explanation(
+                                    name = player.metadata.name,
+                                    userIndex = index,
+                                    isOnline = player.isOnline,
+                                    isHost = player.isHost,
+                                    roundRole = when (player.roundRole) {
+                                        Room.Outgoing.PlayerDescription.Round.RoundRole.Player -> ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Player
+                                        Room.Outgoing.PlayerDescription.Round.RoundRole.Speaker -> ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Speaker
+                                        Room.Outgoing.PlayerDescription.Round.RoundRole.Listener -> ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Listener
+                                    },
+                                    scoreExplained = player.scoreExplained,
+                                    scoreGuessed = player.scoreGuessed,
+                                    scoreSum = player.scoreSum,
+                                )
+                            },
                             settings = state.settings.toServerApi(),
                             initialWordsNumber = state.initialWordsNumber,
                             roundNumber = state.roundNumber,
                             cycleNumber = state.cycleNumber,
                             speakerIndex = state.speakerIndex,
                             listenerIndex = state.listenerIndex,
+                            nextSpeakerIndex = state.nextSpeakerIndex,
+                            nextListenerIndex = state.nextListenerIndex,
                             restWordsNumber = state.restWordsNumber,
+                            wordsInProgressNumber = state.wordsInProgressNumber,
                             millisecondsLeft = state.millisecondsLeft,
-                            explanationScores = state.explanationScores,
-                            guessingScores = state.guessingScores,
                             currentExplanationResultsSize = state.currentExplanationResultsSize,
+                            leaderboardPermutation = state.leaderboardPermutation,
                         )
-                    is Room.Outgoing.State.RoundLastGuess<RoomMetadata, PlayerMetadata, WordsProviderID> ->
+                    is Room.Outgoing.State.Round.LastGuess<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.Round.LastGuess(
                             roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.Round.LastGuess(
@@ -309,25 +375,44 @@ class Connection(
                                 userIndex = state.role.userIndex,
                                 isHost = state.role.isHost,
                                 roundRole = when (val role = state.role.roundRole) {
-                                    Room.Outgoing.Role.RoundLastGuess.RoundRole.Player -> ServerApi.OnlineGame.Role.Round.LastGuess.RoundRole.Player
-                                    Room.Outgoing.Role.RoundLastGuess.RoundRole.Listener -> ServerApi.OnlineGame.Role.Round.LastGuess.RoundRole.Listener
-                                    is Room.Outgoing.Role.RoundLastGuess.RoundRole.Speaker -> ServerApi.OnlineGame.Role.Round.LastGuess.RoundRole.Speaker(role.currentWord)
+                                    Room.Outgoing.Role.Round.LastGuess.RoundRole.Player -> ServerApi.OnlineGame.Role.Round.LastGuess.RoundRole.Player
+                                    Room.Outgoing.Role.Round.LastGuess.RoundRole.Listener -> ServerApi.OnlineGame.Role.Round.LastGuess.RoundRole.Listener
+                                    is Room.Outgoing.Role.Round.LastGuess.RoundRole.Speaker -> ServerApi.OnlineGame.Role.Round.LastGuess.RoundRole.Speaker(role.currentWord)
                                 },
+                                roundsBeforeSpeaking = state.role.roundsBeforeSpeaking,
+                                roundsBeforeListening = state.role.roundsBeforeListening,
                             ),
-                            playersList = state.playersList.toServerApi(),
+                            playersList = state.playersList.mapIndexed { index, player ->
+                                ServerApi.OnlineGame.PlayerDescription.Round.LastGuess(
+                                    name = player.metadata.name,
+                                    userIndex = index,
+                                    isOnline = player.isOnline,
+                                    isHost = player.isHost,
+                                    roundRole = when (player.roundRole) {
+                                        Room.Outgoing.PlayerDescription.Round.RoundRole.Player -> ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Player
+                                        Room.Outgoing.PlayerDescription.Round.RoundRole.Speaker -> ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Speaker
+                                        Room.Outgoing.PlayerDescription.Round.RoundRole.Listener -> ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Listener
+                                    },
+                                    scoreExplained = player.scoreExplained,
+                                    scoreGuessed = player.scoreGuessed,
+                                    scoreSum = player.scoreSum,
+                                )
+                            },
                             settings = state.settings.toServerApi(),
                             initialWordsNumber = state.initialWordsNumber,
                             roundNumber = state.roundNumber,
                             cycleNumber = state.cycleNumber,
                             speakerIndex = state.speakerIndex,
                             listenerIndex = state.listenerIndex,
+                            nextSpeakerIndex = state.nextSpeakerIndex,
+                            nextListenerIndex = state.nextListenerIndex,
                             restWordsNumber = state.restWordsNumber,
+                            wordsInProgressNumber = state.wordsInProgressNumber,
                             millisecondsLeft = state.millisecondsLeft,
-                            explanationScores = state.explanationScores,
-                            guessingScores = state.guessingScores,
                             currentExplanationResultsSize = state.currentExplanationResultsSize,
+                            leaderboardPermutation = state.leaderboardPermutation,
                         )
-                    is Room.Outgoing.State.RoundEditing<RoomMetadata, PlayerMetadata, WordsProviderID> ->
+                    is Room.Outgoing.State.Round.Editing<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.Round.Editing(
                             roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.Round.Editing(
@@ -335,22 +420,43 @@ class Connection(
                                 userIndex = state.role.userIndex,
                                 isHost = state.role.isHost,
                                 roundRole = when (val role = state.role.roundRole) {
-                                    Room.Outgoing.Role.RoundEditing.RoundRole.Player -> ServerApi.OnlineGame.Role.Round.Editing.RoundRole.Player
-                                    Room.Outgoing.Role.RoundEditing.RoundRole.Listener -> ServerApi.OnlineGame.Role.Round.Editing.RoundRole.Listener
-                                    is Room.Outgoing.Role.RoundEditing.RoundRole.Speaker -> ServerApi.OnlineGame.Role.Round.Editing.RoundRole.Speaker(role.wordsToEdit)
+                                    Room.Outgoing.Role.Round.Editing.RoundRole.Player -> ServerApi.OnlineGame.Role.Round.Editing.RoundRole.Player
+                                    Room.Outgoing.Role.Round.Editing.RoundRole.Listener -> ServerApi.OnlineGame.Role.Round.Editing.RoundRole.Listener
+                                    is Room.Outgoing.Role.Round.Editing.RoundRole.Speaker -> ServerApi.OnlineGame.Role.Round.Editing.RoundRole.Speaker(
+                                        role.wordsToEdit
+                                    )
                                 },
+                                roundsBeforeSpeaking = state.role.roundsBeforeSpeaking,
+                                roundsBeforeListening = state.role.roundsBeforeListening,
                             ),
-                            playersList = state.playersList.toServerApi(),
+                            playersList = state.playersList.mapIndexed { index, player ->
+                                ServerApi.OnlineGame.PlayerDescription.Round.Editing(
+                                    name = player.metadata.name,
+                                    userIndex = index,
+                                    isOnline = player.isOnline,
+                                    isHost = player.isHost,
+                                    roundRole = when (player.roundRole) {
+                                        Room.Outgoing.PlayerDescription.Round.RoundRole.Player -> ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Player
+                                        Room.Outgoing.PlayerDescription.Round.RoundRole.Speaker -> ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Speaker
+                                        Room.Outgoing.PlayerDescription.Round.RoundRole.Listener -> ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Listener
+                                    },
+                                    scoreExplained = player.scoreExplained,
+                                    scoreGuessed = player.scoreGuessed,
+                                    scoreSum = player.scoreSum,
+                                )
+                            },
                             settings = state.settings.toServerApi(),
                             initialWordsNumber = state.initialWordsNumber,
                             roundNumber = state.roundNumber,
                             cycleNumber = state.cycleNumber,
                             speakerIndex = state.speakerIndex,
                             listenerIndex = state.listenerIndex,
+                            nextSpeakerIndex = state.nextSpeakerIndex,
+                            nextListenerIndex = state.nextListenerIndex,
                             restWordsNumber = state.restWordsNumber,
-                            explanationScores = state.explanationScores,
-                            guessingScores = state.guessingScores,
+                            wordsInProgressNumber = state.wordsInProgressNumber,
                             currentExplanationResultsSize = state.currentExplanationResultsSize,
+                            leaderboardPermutation = state.leaderboardPermutation,
                         )
                     is Room.Outgoing.State.GameResults<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.GameResults(
@@ -360,8 +466,18 @@ class Connection(
                                 userIndex = state.role.userIndex,
                                 isHost = state.role.isHost,
                             ),
-                            playersList = state.playersList.map { it.metadata.name },
-                            results = state.results,
+                            playersList = state.playersList.mapIndexed { index, player ->
+                                ServerApi.OnlineGame.PlayerDescription.GameResults(
+                                    name = player.metadata.name,
+                                    userIndex = index,
+                                    isOnline = player.isOnline,
+                                    isHost = player.isHost,
+                                    scoreExplained = player.scoreExplained,
+                                    scoreGuessed = player.scoreGuessed,
+                                    scoreSum = player.scoreSum,
+                                )
+                            },
+                            leaderboardPermutation = state.leaderboardPermutation,
                         )
                 }
             )

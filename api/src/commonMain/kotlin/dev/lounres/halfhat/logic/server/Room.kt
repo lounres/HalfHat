@@ -5,7 +5,10 @@ import dev.lounres.halfhat.logic.server.Room.GameStateMachineMetadataTransition.
 import dev.lounres.halfhat.logic.server.Room.Player.Description
 import dev.lounres.kone.automata.*
 import dev.lounres.kone.collections.array.KoneBooleanArray
+import dev.lounres.kone.collections.array.KoneIntArray
+import dev.lounres.kone.collections.array.KoneUIntArray
 import dev.lounres.kone.collections.array.generate
+import dev.lounres.kone.collections.interop.toKoneUIntArray
 import dev.lounres.kone.collections.iterables.isEmpty
 import dev.lounres.kone.collections.iterables.isNotEmpty
 import dev.lounres.kone.collections.list.*
@@ -417,6 +420,115 @@ public class Room<
     
     public object Outgoing {
         @Serializable
+        public sealed interface PlayerDescription<out PlayerMetadata> {
+            public val metadata: PlayerMetadata
+            public val userIndex: UInt
+            public val isOnline: Boolean
+            public val isHost: Boolean
+            
+            @Serializable
+            public data class GameInitialisation<out PlayerMetadata>(
+                override val metadata: PlayerMetadata,
+                override val userIndex: UInt,
+                override val isOnline: Boolean,
+                override val isHost: Boolean,
+            ) : PlayerDescription<PlayerMetadata>
+            
+            @Serializable
+            public data class PlayersWordsCollection<out PlayerMetadata>(
+                override val metadata: PlayerMetadata,
+                override val userIndex: UInt,
+                override val isOnline: Boolean,
+                override val isHost: Boolean,
+                public val finishedWordsCollection: Boolean,
+            ) : PlayerDescription<PlayerMetadata>
+            
+            @Serializable
+            public sealed interface Round<out PlayerMetadata> : PlayerDescription<PlayerMetadata> {
+                public val roundRole: RoundRole
+                public val scoreExplained: UInt
+                public val scoreGuessed: UInt
+                public val scoreSum: UInt
+                
+                @Serializable
+                public enum class RoundRole {
+                    Player, Speaker, Listener,
+                }
+                
+                @Serializable
+                public data class Waiting<out PlayerMetadata>(
+                    override val metadata: PlayerMetadata,
+                    override val userIndex: UInt,
+                    override val isOnline: Boolean,
+                    override val isHost: Boolean,
+                    override val roundRole: RoundRole,
+                    override val scoreExplained: UInt,
+                    override val scoreGuessed: UInt,
+                    override val scoreSum: UInt,
+                ) : Round<PlayerMetadata>
+                
+                @Serializable
+                public data class Preparation<out PlayerMetadata>(
+                    override val metadata: PlayerMetadata,
+                    override val userIndex: UInt,
+                    override val isOnline: Boolean,
+                    override val isHost: Boolean,
+                    override val roundRole: RoundRole,
+                    override val scoreExplained: UInt,
+                    override val scoreGuessed: UInt,
+                    override val scoreSum: UInt,
+                ) : Round<PlayerMetadata>
+                
+                @Serializable
+                public data class Explanation<out PlayerMetadata>(
+                    override val metadata: PlayerMetadata,
+                    override val userIndex: UInt,
+                    override val isOnline: Boolean,
+                    override val isHost: Boolean,
+                    override val roundRole: RoundRole,
+                    override val scoreExplained: UInt,
+                    override val scoreGuessed: UInt,
+                    override val scoreSum: UInt,
+                ) : Round<PlayerMetadata>
+                
+                @Serializable
+                public data class LastGuess<out PlayerMetadata>(
+                    override val metadata: PlayerMetadata,
+                    override val userIndex: UInt,
+                    override val isOnline: Boolean,
+                    override val isHost: Boolean,
+                    override val roundRole: RoundRole,
+                    override val scoreExplained: UInt,
+                    override val scoreGuessed: UInt,
+                    override val scoreSum: UInt,
+                ) : Round<PlayerMetadata>
+                
+                @Serializable
+                public data class Editing<out PlayerMetadata>(
+                    override val metadata: PlayerMetadata,
+                    override val userIndex: UInt,
+                    override val isOnline: Boolean,
+                    override val isHost: Boolean,
+                    override val roundRole: RoundRole,
+                    override val scoreExplained: UInt,
+                    override val scoreGuessed: UInt,
+                    override val scoreSum: UInt,
+                ) : Round<PlayerMetadata>
+            }
+            
+            @Serializable
+            public data class GameResults<out PlayerMetadata>(
+                override val metadata: PlayerMetadata,
+                override val userIndex: UInt,
+                override val isOnline: Boolean,
+                override val isHost: Boolean,
+                public val scoreExplained: UInt,
+                public val scoreGuessed: UInt,
+                public val scoreSum: UInt,
+            ) : PlayerDescription<PlayerMetadata>
+        }
+        
+        @Serializable
         public sealed interface Role<out PlayerMetadata> {
             public val metadata: PlayerMetadata
             public val userIndex: UInt
@@ -436,77 +548,94 @@ public class Room<
                 override val metadata: PlayerMetadata,
                 override val userIndex: UInt,
                 override val isHost: Boolean,
+                public val finishedWordsCollection: Boolean,
             ) : Role<PlayerMetadata>
             
             @Serializable
-            public data class RoundWaiting<out PlayerMetadata>(
-                override val metadata: PlayerMetadata,
-                override val userIndex: UInt,
-                override val isHost: Boolean,
-                public val roundRole: RoundRole,
-                public val isGameFinishable: Boolean,
-            ) : Role<PlayerMetadata> {
+            public sealed interface Round<out PlayerMetadata> : Role<PlayerMetadata> {
+                public val roundsBeforeSpeaking: UInt
+                public val roundsBeforeListening: UInt
+                
                 @Serializable
-                public enum class RoundRole {
-                    Player, Speaker, Listener,
+                public data class Waiting<out PlayerMetadata>(
+                    override val metadata: PlayerMetadata,
+                    override val userIndex: UInt,
+                    override val isHost: Boolean,
+                    public val roundRole: RoundRole,
+                    public val isGameFinishable: Boolean,
+                    override val roundsBeforeSpeaking: UInt,
+                    override val roundsBeforeListening: UInt,
+                ) : Round<PlayerMetadata> {
+                    @Serializable
+                    public enum class RoundRole {
+                        Player, Speaker, Listener,
+                    }
                 }
-            }
-            
-            @Serializable
-            public data class RoundPreparation<out PlayerMetadata>(
-                override val metadata: PlayerMetadata,
-                override val userIndex: UInt,
-                override val isHost: Boolean,
-                public val roundRole: RoundRole,
-            ) : Role<PlayerMetadata> {
+                
                 @Serializable
-                public enum class RoundRole {
-                    Player, Speaker, Listener,
+                public data class Preparation<out PlayerMetadata>(
+                    override val metadata: PlayerMetadata,
+                    override val userIndex: UInt,
+                    override val isHost: Boolean,
+                    public val roundRole: RoundRole,
+                    override val roundsBeforeSpeaking: UInt,
+                    override val roundsBeforeListening: UInt,
+                ) : Round<PlayerMetadata> {
+                    @Serializable
+                    public enum class RoundRole {
+                        Player, Speaker, Listener,
+                    }
                 }
-            }
-            
-            @Serializable
-            public data class RoundExplanation<out PlayerMetadata>(
-                override val metadata: PlayerMetadata,
-                override val userIndex: UInt,
-                override val isHost: Boolean,
-                public val roundRole: RoundRole,
-            ) : Role<PlayerMetadata> {
+                
                 @Serializable
-                public sealed interface RoundRole {
-                    public data object Player : RoundRole
-                    public data class Speaker(val currentWord: String) : RoundRole
-                    public data object Listener : RoundRole
+                public data class Explanation<out PlayerMetadata>(
+                    override val metadata: PlayerMetadata,
+                    override val userIndex: UInt,
+                    override val isHost: Boolean,
+                    public val roundRole: RoundRole,
+                    override val roundsBeforeSpeaking: UInt,
+                    override val roundsBeforeListening: UInt,
+                ) : Round<PlayerMetadata> {
+                    @Serializable
+                    public sealed interface RoundRole {
+                        public data object Player : RoundRole
+                        public data class Speaker(val currentWord: String) : RoundRole
+                        public data object Listener : RoundRole
+                    }
                 }
-            }
-            
-            @Serializable
-            public data class RoundLastGuess<out PlayerMetadata>(
-                override val metadata: PlayerMetadata,
-                override val userIndex: UInt,
-                override val isHost: Boolean,
-                public val roundRole: RoundRole,
-            ) : Role<PlayerMetadata> {
+                
                 @Serializable
-                public sealed interface RoundRole {
-                    public data object Player : RoundRole
-                    public data class Speaker(val currentWord: String) : RoundRole
-                    public data object Listener : RoundRole
+                public data class LastGuess<out PlayerMetadata>(
+                    override val metadata: PlayerMetadata,
+                    override val userIndex: UInt,
+                    override val isHost: Boolean,
+                    public val roundRole: RoundRole,
+                    override val roundsBeforeSpeaking: UInt,
+                    override val roundsBeforeListening: UInt,
+                ) : Round<PlayerMetadata> {
+                    @Serializable
+                    public sealed interface RoundRole {
+                        public data object Player : RoundRole
+                        public data class Speaker(val currentWord: String) : RoundRole
+                        public data object Listener : RoundRole
+                    }
                 }
-            }
-            
-            @Serializable
-            public data class RoundEditing<out PlayerMetadata>(
-                override val metadata: PlayerMetadata,
-                override val userIndex: UInt,
-                override val isHost: Boolean,
-                public val roundRole: RoundRole,
-            ) : Role<PlayerMetadata> {
+                
                 @Serializable
-                public sealed interface RoundRole {
-                    public data object Player : RoundRole
-                    public data class Speaker(public val wordsToEdit: KoneList<GameStateMachine.WordExplanation>) : RoundRole
-                    public data object Listener : RoundRole
+                public data class Editing<out PlayerMetadata>(
+                    override val metadata: PlayerMetadata,
+                    override val userIndex: UInt,
+                    override val isHost: Boolean,
+                    public val roundRole: RoundRole,
+                    override val roundsBeforeSpeaking: UInt,
+                    override val roundsBeforeListening: UInt,
+                ) : Round<PlayerMetadata> {
+                    @Serializable
+                    public sealed interface RoundRole {
+                        public data object Player : RoundRole
+                        public data class Speaker(public val wordsToEdit: KoneList<GameStateMachine.WordExplanation>) : RoundRole
+                        public data object Listener : RoundRole
+                    }
                 }
             }
             
@@ -527,7 +656,7 @@ public class Room<
             public data class GameInitialisation<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
                 override val roomMetadata: RoomMetadata,
                 override val role: Role.GameInitialisation<PlayerMetadata>,
-                public val playersList: KoneList<Player.Description<PlayerMetadata>>,
+                public val playersList: KoneList<PlayerDescription.GameInitialisation<PlayerMetadata>>,
                 public val settingsBuilder: GameSettings.Builder<WordsProviderID>,
             ) : State<RoomMetadata, PlayerMetadata, WordsProviderID>
             
@@ -535,106 +664,133 @@ public class Room<
             public data class PlayersWordsCollection<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
                 override val roomMetadata: RoomMetadata,
                 override val role: Role.PlayersWordsCollection<PlayerMetadata>,
-                public val playersList: KoneList<Player.Description<PlayerMetadata>>,
+                public val playersList: KoneList<PlayerDescription.PlayersWordsCollection<PlayerMetadata>>,
                 public val settings: GameSettings<WordsProviderID>,
                 public val playersWordsAreReady: KoneBooleanArray,
             ) : State<RoomMetadata, PlayerMetadata, WordsProviderID>
             
             @Serializable
-            public data class RoundWaiting<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
-                override val roomMetadata: RoomMetadata,
-                override val role: Role.RoundWaiting<PlayerMetadata>,
-                public val playersList: KoneList<Player.Description<PlayerMetadata>>,
-                public val settings: GameSettings<WordsProviderID>,
-                public val initialWordsNumber: UInt,
-                public val roundNumber: UInt,
-                public val cycleNumber: UInt,
-                public val speakerIndex: UInt,
-                public val listenerIndex: UInt,
-                public val restWordsNumber: UInt,
-                public val explanationScores: KoneList<UInt>,
-                public val guessingScores: KoneList<UInt>,
-                public val speakerReady: Boolean,
-                public val listenerReady: Boolean,
-            ) : State<RoomMetadata, PlayerMetadata, WordsProviderID>
-            
-            @Serializable
-            public data class RoundPreparation<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
-                override val roomMetadata: RoomMetadata,
-                override val role: Role.RoundPreparation<PlayerMetadata>,
-                public val playersList: KoneList<Player.Description<PlayerMetadata>>,
-                public val settings: GameSettings<WordsProviderID>,
-                public val initialWordsNumber: UInt,
-                public val roundNumber: UInt,
-                public val cycleNumber: UInt,
-                public val speakerIndex: UInt,
-                public val listenerIndex: UInt,
-                public val restWordsNumber: UInt,
-                public val millisecondsLeft: UInt,
-                public val explanationScores: KoneList<UInt>,
-                public val guessingScores: KoneList<UInt>,
-                public val currentExplanationResultsSize: UInt,
-            ) : State<RoomMetadata, PlayerMetadata, WordsProviderID>
-            
-            @Serializable
-            public data class RoundExplanation<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
-                override val roomMetadata: RoomMetadata,
-                override val role: Role.RoundExplanation<PlayerMetadata>,
-                public val playersList: KoneList<Player.Description<PlayerMetadata>>,
-                public val settings: GameSettings<WordsProviderID>,
-                public val initialWordsNumber: UInt,
-                public val roundNumber: UInt,
-                public val cycleNumber: UInt,
-                public val speakerIndex: UInt,
-                public val listenerIndex: UInt,
-                public val restWordsNumber: UInt,
-                public val millisecondsLeft: UInt,
-                public val explanationScores: KoneList<UInt>,
-                public val guessingScores: KoneList<UInt>,
-                public val currentExplanationResultsSize: UInt,
-            ) : State<RoomMetadata, PlayerMetadata, WordsProviderID>
-            
-            @Serializable
-            public data class RoundLastGuess<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
-                override val roomMetadata: RoomMetadata,
-                override val role: Role.RoundLastGuess<PlayerMetadata>,
-                public val playersList: KoneList<Player.Description<PlayerMetadata>>,
-                public val settings: GameSettings<WordsProviderID>,
-                public val initialWordsNumber: UInt,
-                public val roundNumber: UInt,
-                public val cycleNumber: UInt,
-                public val speakerIndex: UInt,
-                public val listenerIndex: UInt,
-                public val restWordsNumber: UInt,
-                public val millisecondsLeft: UInt,
-                public val explanationScores: KoneList<UInt>,
-                public val guessingScores: KoneList<UInt>,
-                public val currentExplanationResultsSize: UInt,
-            ) : State<RoomMetadata, PlayerMetadata, WordsProviderID>
-            
-            @Serializable
-            public data class RoundEditing<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
-                override val roomMetadata: RoomMetadata,
-                override val role: Role.RoundEditing<PlayerMetadata>,
-                public val playersList: KoneList<Player.Description<PlayerMetadata>>,
-                public val settings: GameSettings<WordsProviderID>,
-                public val initialWordsNumber: UInt,
-                public val roundNumber: UInt,
-                public val cycleNumber: UInt,
-                public val speakerIndex: UInt,
-                public val listenerIndex: UInt,
-                public val restWordsNumber: UInt,
-                public val explanationScores: KoneList<UInt>,
-                public val guessingScores: KoneList<UInt>,
-                public val currentExplanationResultsSize: UInt,
-            ) : State<RoomMetadata, PlayerMetadata, WordsProviderID>
+            public sealed interface Round<out RoomMetadata, out PlayerMetadata, out WordsProviderID> : State<RoomMetadata, PlayerMetadata, WordsProviderID> {
+                override val role: Role.Round<PlayerMetadata>
+                public val playersList: KoneList<PlayerDescription.Round<PlayerMetadata>>
+                public val settings: GameSettings<WordsProviderID>
+                public val initialWordsNumber: UInt
+                public val roundNumber: UInt
+                public val cycleNumber: UInt
+                public val speakerIndex: UInt
+                public val listenerIndex: UInt
+                public val nextSpeakerIndex: UInt
+                public val nextListenerIndex: UInt
+                public val restWordsNumber: UInt
+                public val wordsInProgressNumber: UInt
+                public val leaderboardPermutation: KoneUIntArray
+                
+                @Serializable
+                public data class Waiting<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
+                    override val roomMetadata: RoomMetadata,
+                    override val role: Role.Round.Waiting<PlayerMetadata>,
+                    override val playersList: KoneList<PlayerDescription.Round.Waiting<PlayerMetadata>>,
+                    override val settings: GameSettings<WordsProviderID>,
+                    override val initialWordsNumber: UInt,
+                    override val roundNumber: UInt,
+                    override val cycleNumber: UInt,
+                    override val speakerIndex: UInt,
+                    override val listenerIndex: UInt,
+                    override val nextSpeakerIndex: UInt,
+                    override val nextListenerIndex: UInt,
+                    override val restWordsNumber: UInt,
+                    override val wordsInProgressNumber: UInt,
+                    public val speakerReady: Boolean,
+                    public val listenerReady: Boolean,
+                    override val leaderboardPermutation: KoneUIntArray,
+                ) : Round<RoomMetadata, PlayerMetadata, WordsProviderID>
+                
+                @Serializable
+                public data class Preparation<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
+                    override val roomMetadata: RoomMetadata,
+                    override val role: Role.Round.Preparation<PlayerMetadata>,
+                    override val playersList: KoneList<PlayerDescription.Round.Preparation<PlayerMetadata>>,
+                    override val settings: GameSettings<WordsProviderID>,
+                    override val initialWordsNumber: UInt,
+                    override val roundNumber: UInt,
+                    override val cycleNumber: UInt,
+                    override val speakerIndex: UInt,
+                    override val listenerIndex: UInt,
+                    override val nextSpeakerIndex: UInt,
+                    override val nextListenerIndex: UInt,
+                    override val restWordsNumber: UInt,
+                    override val wordsInProgressNumber: UInt,
+                    public val millisecondsLeft: UInt,
+                    public val currentExplanationResultsSize: UInt,
+                    override val leaderboardPermutation: KoneUIntArray,
+                ) : Round<RoomMetadata, PlayerMetadata, WordsProviderID>
+                
+                @Serializable
+                public data class Explanation<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
+                    override val roomMetadata: RoomMetadata,
+                    override val role: Role.Round.Explanation<PlayerMetadata>,
+                    override val playersList: KoneList<PlayerDescription.Round.Explanation<PlayerMetadata>>,
+                    override val settings: GameSettings<WordsProviderID>,
+                    override val initialWordsNumber: UInt,
+                    override val roundNumber: UInt,
+                    override val cycleNumber: UInt,
+                    override val speakerIndex: UInt,
+                    override val listenerIndex: UInt,
+                    override val nextSpeakerIndex: UInt,
+                    override val nextListenerIndex: UInt,
+                    override val restWordsNumber: UInt,
+                    override val wordsInProgressNumber: UInt,
+                    public val millisecondsLeft: UInt,
+                    public val currentExplanationResultsSize: UInt,
+                    override val leaderboardPermutation: KoneUIntArray,
+                ) : Round<RoomMetadata, PlayerMetadata, WordsProviderID>
+                
+                @Serializable
+                public data class LastGuess<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
+                    override val roomMetadata: RoomMetadata,
+                    override val role: Role.Round.LastGuess<PlayerMetadata>,
+                    override val playersList: KoneList<PlayerDescription.Round.LastGuess<PlayerMetadata>>,
+                    override val settings: GameSettings<WordsProviderID>,
+                    override val initialWordsNumber: UInt,
+                    override val roundNumber: UInt,
+                    override val cycleNumber: UInt,
+                    override val speakerIndex: UInt,
+                    override val listenerIndex: UInt,
+                    override val nextSpeakerIndex: UInt,
+                    override val nextListenerIndex: UInt,
+                    override val restWordsNumber: UInt,
+                    override val wordsInProgressNumber: UInt,
+                    public val millisecondsLeft: UInt,
+                    public val currentExplanationResultsSize: UInt,
+                    override val leaderboardPermutation: KoneUIntArray,
+                ) : Round<RoomMetadata, PlayerMetadata, WordsProviderID>
+                
+                @Serializable
+                public data class Editing<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
+                    override val roomMetadata: RoomMetadata,
+                    override val role: Role.Round.Editing<PlayerMetadata>,
+                    override val playersList: KoneList<PlayerDescription.Round.Editing<PlayerMetadata>>,
+                    override val settings: GameSettings<WordsProviderID>,
+                    override val initialWordsNumber: UInt,
+                    override val roundNumber: UInt,
+                    override val cycleNumber: UInt,
+                    override val speakerIndex: UInt,
+                    override val listenerIndex: UInt,
+                    override val nextSpeakerIndex: UInt,
+                    override val nextListenerIndex: UInt,
+                    override val restWordsNumber: UInt,
+                    override val wordsInProgressNumber: UInt,
+                    public val currentExplanationResultsSize: UInt,
+                    override val leaderboardPermutation: KoneUIntArray,
+                ) : Round<RoomMetadata, PlayerMetadata, WordsProviderID>
+            }
             
             @Serializable
             public data class GameResults<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
                 override val roomMetadata: RoomMetadata,
                 override val role: Role.GameResults<PlayerMetadata>,
-                public val playersList: KoneList<Player.Description<PlayerMetadata>>,
-                public val results: KoneList<GameStateMachine.GameResult>,
+                public val playersList: KoneList<PlayerDescription.GameResults<PlayerMetadata>>,
+                public val leaderboardPermutation: KoneUIntArray,
             ) : State<RoomMetadata, PlayerMetadata, WordsProviderID>
         }
         
@@ -760,7 +916,14 @@ public class Room<
                                 isStartAvailable = index == hostIndex && nextState.playersList.size >= 2u,
                                 areSettingsChangeable = index == hostIndex,
                             ),
-                            playersList = playersList,
+                            playersList = playersList.mapIndexed { index, player ->
+                                Outgoing.PlayerDescription.GameInitialisation(
+                                    metadata = player.metadata,
+                                    userIndex = index,
+                                    isOnline = player.isOnline,
+                                    isHost = player.isHost,
+                                )
+                            },
                             settingsBuilder = GameSettings.Builder(
                                 preparationTimeSeconds = gameMachineSettingsBuilder.preparationTimeSeconds,
                                 explanationTimeSeconds = gameMachineSettingsBuilder.explanationTimeSeconds,
@@ -784,8 +947,17 @@ public class Room<
                                 metadata = player.metadata,
                                 userIndex = index,
                                 isHost = index == hostIndex,
+                                finishedWordsCollection = nextState.playersWords[index] != null,
                             ),
-                            playersList = playersList,
+                            playersList = playersList.mapIndexed { index, player ->
+                                Outgoing.PlayerDescription.PlayersWordsCollection(
+                                    metadata = player.metadata,
+                                    userIndex = index,
+                                    isOnline = player.isOnline,
+                                    isHost = player.isHost,
+                                    finishedWordsCollection = nextState.playersWords[index] != null,
+                                )
+                            },
                             settings = GameSettings(
                                 preparationTimeSeconds = gameMachineSettings.preparationTimeSeconds,
                                 explanationTimeSeconds = gameMachineSettings.explanationTimeSeconds,
@@ -802,20 +974,37 @@ public class Room<
                     }
                     is GameStateMachine.State.RoundWaiting<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
                         val gameMachineSettings = nextState.settings
-                        Outgoing.State.RoundWaiting(
+                        Outgoing.State.Round.Waiting(
                             roomMetadata = metadata,
-                            role = Outgoing.Role.RoundWaiting(
+                            role = Outgoing.Role.Round.Waiting(
                                 metadata = player.metadata,
                                 userIndex = index,
                                 isHost = index == hostIndex,
                                 roundRole = when (index) {
-                                    nextState.speakerIndex -> Outgoing.Role.RoundWaiting.RoundRole.Speaker
-                                    nextState.listenerIndex -> Outgoing.Role.RoundWaiting.RoundRole.Listener
-                                    else -> Outgoing.Role.RoundWaiting.RoundRole.Player
+                                    nextState.speakerIndex -> Outgoing.Role.Round.Waiting.RoundRole.Speaker
+                                    nextState.listenerIndex -> Outgoing.Role.Round.Waiting.RoundRole.Listener
+                                    else -> Outgoing.Role.Round.Waiting.RoundRole.Player
                                 },
                                 isGameFinishable = index == hostIndex,
+                                roundsBeforeSpeaking = nextState.playersRoundsBeforeSpeaking[index],
+                                roundsBeforeListening = nextState.playersRoundsBeforeListening[index],
                             ),
-                            playersList = playersList,
+                            playersList = playersList.mapIndexed { index, player ->
+                                Outgoing.PlayerDescription.Round.Waiting(
+                                    metadata = player.metadata,
+                                    userIndex = index,
+                                    isOnline = player.isOnline,
+                                    isHost = player.isHost,
+                                    roundRole = when (index) {
+                                        nextState.speakerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Speaker
+                                        nextState.listenerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Listener
+                                        else -> Outgoing.PlayerDescription.Round.RoundRole.Player
+                                    },
+                                    scoreExplained = nextState.explanationScores[index],
+                                    scoreGuessed = nextState.guessingScores[index],
+                                    scoreSum = nextState.explanationScores[index] + nextState.guessingScores[index],
+                                )
+                            },
                             settings = GameSettings(
                                 preparationTimeSeconds = gameMachineSettings.preparationTimeSeconds,
                                 explanationTimeSeconds = gameMachineSettings.explanationTimeSeconds,
@@ -832,28 +1021,50 @@ public class Room<
                             cycleNumber = nextState.cycleNumber,
                             speakerIndex = nextState.speakerIndex,
                             listenerIndex = nextState.listenerIndex,
+                            nextSpeakerIndex = nextState.nextSpeakerIndex,
+                            nextListenerIndex = nextState.nextListenerIndex,
                             restWordsNumber = nextState.restWords.size,
-                            explanationScores = nextState.explanationScores,
-                            guessingScores = nextState.guessingScores,
+                            wordsInProgressNumber = 0u,
                             speakerReady = nextState.speakerReady,
                             listenerReady = nextState.listenerReady,
+                            leaderboardPermutation = playersList
+                                .indices
+                                .sortedByDescending { nextState.explanationScores[it] + nextState.guessingScores[it] }
+                                .toKoneUIntArray(),
                         )
                     }
                     is GameStateMachine.State.RoundPreparation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
                         val gameMachineSettings = nextState.settings
-                        Outgoing.State.RoundPreparation(
+                        Outgoing.State.Round.Preparation(
                             roomMetadata = metadata,
-                            role = Outgoing.Role.RoundPreparation(
+                            role = Outgoing.Role.Round.Preparation(
                                 metadata = player.metadata,
                                 userIndex = index,
                                 isHost = index == hostIndex,
                                 roundRole = when (index) {
-                                    nextState.speakerIndex -> Outgoing.Role.RoundPreparation.RoundRole.Speaker
-                                    nextState.listenerIndex -> Outgoing.Role.RoundPreparation.RoundRole.Listener
-                                    else -> Outgoing.Role.RoundPreparation.RoundRole.Player
-                                }
+                                    nextState.speakerIndex -> Outgoing.Role.Round.Preparation.RoundRole.Speaker
+                                    nextState.listenerIndex -> Outgoing.Role.Round.Preparation.RoundRole.Listener
+                                    else -> Outgoing.Role.Round.Preparation.RoundRole.Player
+                                },
+                                roundsBeforeSpeaking = nextState.playersRoundsBeforeSpeaking[index],
+                                roundsBeforeListening = nextState.playersRoundsBeforeListening[index],
                             ),
-                            playersList = playersList,
+                            playersList = playersList.mapIndexed { index, player ->
+                                Outgoing.PlayerDescription.Round.Preparation(
+                                    metadata = player.metadata,
+                                    userIndex = index,
+                                    isOnline = player.isOnline,
+                                    isHost = player.isHost,
+                                    roundRole = when (index) {
+                                        nextState.speakerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Speaker
+                                        nextState.listenerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Listener
+                                        else -> Outgoing.PlayerDescription.Round.RoundRole.Player
+                                    },
+                                    scoreExplained = nextState.explanationScores[index],
+                                    scoreGuessed = nextState.guessingScores[index],
+                                    scoreSum = nextState.explanationScores[index] + nextState.guessingScores[index],
+                                )
+                            },
                             settings = GameSettings(
                                 preparationTimeSeconds = gameMachineSettings.preparationTimeSeconds,
                                 explanationTimeSeconds = gameMachineSettings.explanationTimeSeconds,
@@ -870,28 +1081,50 @@ public class Room<
                             cycleNumber = nextState.cycleNumber,
                             speakerIndex = nextState.speakerIndex,
                             listenerIndex = nextState.listenerIndex,
+                            nextSpeakerIndex = nextState.nextSpeakerIndex,
+                            nextListenerIndex = nextState.nextListenerIndex,
                             restWordsNumber = nextState.restWords.size,
+                            wordsInProgressNumber = nextState.currentExplanationResults.size,
                             millisecondsLeft = nextState.millisecondsLeft,
-                            explanationScores = nextState.explanationScores,
-                            guessingScores = nextState.guessingScores,
                             currentExplanationResultsSize = nextState.currentExplanationResults.size,
+                            leaderboardPermutation = playersList
+                                .indices
+                                .sortedByDescending { nextState.explanationScores[it] + nextState.guessingScores[it] }
+                                .toKoneUIntArray(),
                         )
                     }
                     is GameStateMachine.State.RoundExplanation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
                         val gameMachineSettings = nextState.settings
-                        Outgoing.State.RoundExplanation(
+                        Outgoing.State.Round.Explanation(
                             roomMetadata = metadata,
-                            role = Outgoing.Role.RoundExplanation(
+                            role = Outgoing.Role.Round.Explanation(
                                 metadata = player.metadata,
                                 userIndex = index,
                                 isHost = index == hostIndex,
                                 roundRole = when (index) {
-                                    nextState.speakerIndex -> Outgoing.Role.RoundExplanation.RoundRole.Speaker(nextState.currentWord)
-                                    nextState.listenerIndex -> Outgoing.Role.RoundExplanation.RoundRole.Listener
-                                    else -> Outgoing.Role.RoundExplanation.RoundRole.Player
-                                }
+                                    nextState.speakerIndex -> Outgoing.Role.Round.Explanation.RoundRole.Speaker(nextState.currentWord)
+                                    nextState.listenerIndex -> Outgoing.Role.Round.Explanation.RoundRole.Listener
+                                    else -> Outgoing.Role.Round.Explanation.RoundRole.Player
+                                },
+                                roundsBeforeSpeaking = nextState.playersRoundsBeforeSpeaking[index],
+                                roundsBeforeListening = nextState.playersRoundsBeforeListening[index],
                             ),
-                            playersList = playersList,
+                            playersList = playersList.mapIndexed { index, player ->
+                                Outgoing.PlayerDescription.Round.Explanation(
+                                    metadata = player.metadata,
+                                    userIndex = index,
+                                    isOnline = player.isOnline,
+                                    isHost = player.isHost,
+                                    roundRole = when (index) {
+                                        nextState.speakerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Speaker
+                                        nextState.listenerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Listener
+                                        else -> Outgoing.PlayerDescription.Round.RoundRole.Player
+                                    },
+                                    scoreExplained = nextState.explanationScores[index],
+                                    scoreGuessed = nextState.guessingScores[index],
+                                    scoreSum = nextState.explanationScores[index] + nextState.guessingScores[index],
+                                )
+                            },
                             settings = GameSettings(
                                 preparationTimeSeconds = gameMachineSettings.preparationTimeSeconds,
                                 explanationTimeSeconds = gameMachineSettings.explanationTimeSeconds,
@@ -908,28 +1141,50 @@ public class Room<
                             cycleNumber = nextState.cycleNumber,
                             speakerIndex = nextState.speakerIndex,
                             listenerIndex = nextState.listenerIndex,
+                            nextSpeakerIndex = nextState.nextSpeakerIndex,
+                            nextListenerIndex = nextState.nextListenerIndex,
                             restWordsNumber = nextState.restWords.size,
+                            wordsInProgressNumber = nextState.currentExplanationResults.size,
                             millisecondsLeft = nextState.millisecondsLeft,
-                            explanationScores = nextState.explanationScores,
-                            guessingScores = nextState.guessingScores,
                             currentExplanationResultsSize = nextState.currentExplanationResults.size,
+                            leaderboardPermutation = playersList
+                                .indices
+                                .sortedByDescending { nextState.explanationScores[it] + nextState.guessingScores[it] }
+                                .toKoneUIntArray(),
                         )
                     }
                     is GameStateMachine.State.RoundLastGuess<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
                         val gameMachineSettings = nextState.settings
-                        Outgoing.State.RoundLastGuess(
+                        Outgoing.State.Round.LastGuess(
                             roomMetadata = metadata,
-                            role = Outgoing.Role.RoundLastGuess(
+                            role = Outgoing.Role.Round.LastGuess(
                                 metadata = player.metadata,
                                 userIndex = index,
                                 isHost = index == hostIndex,
                                 roundRole = when (index) {
-                                    nextState.speakerIndex -> Outgoing.Role.RoundLastGuess.RoundRole.Speaker(nextState.currentWord)
-                                    nextState.listenerIndex -> Outgoing.Role.RoundLastGuess.RoundRole.Listener
-                                    else -> Outgoing.Role.RoundLastGuess.RoundRole.Player
-                                }
+                                    nextState.speakerIndex -> Outgoing.Role.Round.LastGuess.RoundRole.Speaker(nextState.currentWord)
+                                    nextState.listenerIndex -> Outgoing.Role.Round.LastGuess.RoundRole.Listener
+                                    else -> Outgoing.Role.Round.LastGuess.RoundRole.Player
+                                },
+                                roundsBeforeSpeaking = nextState.playersRoundsBeforeSpeaking[index],
+                                roundsBeforeListening = nextState.playersRoundsBeforeListening[index],
                             ),
-                            playersList = playersList,
+                            playersList = playersList.mapIndexed { index, player ->
+                                Outgoing.PlayerDescription.Round.LastGuess(
+                                    metadata = player.metadata,
+                                    userIndex = index,
+                                    isOnline = player.isOnline,
+                                    isHost = player.isHost,
+                                    roundRole = when (index) {
+                                        nextState.speakerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Speaker
+                                        nextState.listenerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Listener
+                                        else -> Outgoing.PlayerDescription.Round.RoundRole.Player
+                                    },
+                                    scoreExplained = nextState.explanationScores[index],
+                                    scoreGuessed = nextState.guessingScores[index],
+                                    scoreSum = nextState.explanationScores[index] + nextState.guessingScores[index],
+                                )
+                            },
                             settings = GameSettings(
                                 preparationTimeSeconds = gameMachineSettings.preparationTimeSeconds,
                                 explanationTimeSeconds = gameMachineSettings.explanationTimeSeconds,
@@ -946,28 +1201,50 @@ public class Room<
                             cycleNumber = nextState.cycleNumber,
                             speakerIndex = nextState.speakerIndex,
                             listenerIndex = nextState.listenerIndex,
+                            nextSpeakerIndex = nextState.nextSpeakerIndex,
+                            nextListenerIndex = nextState.nextListenerIndex,
                             restWordsNumber = nextState.restWords.size,
+                            wordsInProgressNumber = nextState.currentExplanationResults.size,
                             millisecondsLeft = nextState.millisecondsLeft,
-                            explanationScores = nextState.explanationScores,
-                            guessingScores = nextState.guessingScores,
                             currentExplanationResultsSize = nextState.currentExplanationResults.size,
+                            leaderboardPermutation = playersList
+                                .indices
+                                .sortedByDescending { nextState.explanationScores[it] + nextState.guessingScores[it] }
+                                .toKoneUIntArray(),
                         )
                     }
                     is GameStateMachine.State.RoundEditing<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
                         val gameMachineSettings = nextState.settings
-                        Outgoing.State.RoundEditing(
+                        Outgoing.State.Round.Editing(
                             roomMetadata = metadata,
-                            role = Outgoing.Role.RoundEditing(
+                            role = Outgoing.Role.Round.Editing(
                                 metadata = player.metadata,
                                 userIndex = index,
                                 isHost = index == hostIndex,
                                 roundRole = when (index) {
-                                    nextState.speakerIndex -> Outgoing.Role.RoundEditing.RoundRole.Speaker(nextState.currentExplanationResults)
-                                    nextState.listenerIndex -> Outgoing.Role.RoundEditing.RoundRole.Listener
-                                    else -> Outgoing.Role.RoundEditing.RoundRole.Player
-                                }
+                                    nextState.speakerIndex -> Outgoing.Role.Round.Editing.RoundRole.Speaker(nextState.currentExplanationResults)
+                                    nextState.listenerIndex -> Outgoing.Role.Round.Editing.RoundRole.Listener
+                                    else -> Outgoing.Role.Round.Editing.RoundRole.Player
+                                },
+                                roundsBeforeSpeaking = nextState.playersRoundsBeforeSpeaking[index],
+                                roundsBeforeListening = nextState.playersRoundsBeforeListening[index],
                             ),
-                            playersList = playersList,
+                            playersList = playersList.mapIndexed { index, player ->
+                                Outgoing.PlayerDescription.Round.Editing(
+                                    metadata = player.metadata,
+                                    userIndex = index,
+                                    isOnline = player.isOnline,
+                                    isHost = player.isHost,
+                                    roundRole = when (index) {
+                                        nextState.speakerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Speaker
+                                        nextState.listenerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Listener
+                                        else -> Outgoing.PlayerDescription.Round.RoundRole.Player
+                                    },
+                                    scoreExplained = nextState.explanationScores[index],
+                                    scoreGuessed = nextState.guessingScores[index],
+                                    scoreSum = nextState.explanationScores[index] + nextState.guessingScores[index],
+                                )
+                            },
                             settings = GameSettings(
                                 preparationTimeSeconds = gameMachineSettings.preparationTimeSeconds,
                                 explanationTimeSeconds = gameMachineSettings.explanationTimeSeconds,
@@ -984,10 +1261,15 @@ public class Room<
                             cycleNumber = nextState.cycleNumber,
                             speakerIndex = nextState.speakerIndex,
                             listenerIndex = nextState.listenerIndex,
+                            nextSpeakerIndex = nextState.nextSpeakerIndex,
+                            nextListenerIndex = nextState.nextListenerIndex,
                             restWordsNumber = nextState.restWords.size,
-                            explanationScores = nextState.explanationScores,
-                            guessingScores = nextState.guessingScores,
+                            wordsInProgressNumber = nextState.currentExplanationResults.size,
                             currentExplanationResultsSize = nextState.currentExplanationResults.size,
+                            leaderboardPermutation = playersList
+                                .indices
+                                .sortedByDescending { nextState.explanationScores[it] + nextState.guessingScores[it] }
+                                .toKoneUIntArray(),
                         )
                     }
                     is GameStateMachine.State.GameResults<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, *> -> {
@@ -998,8 +1280,21 @@ public class Room<
                                 userIndex = index,
                                 isHost = index == hostIndex,
                             ),
-                            playersList = playersList,
-                            results = nextState.results
+                            playersList = playersList.mapIndexed { index, player ->
+                                Outgoing.PlayerDescription.GameResults(
+                                    metadata = player.metadata,
+                                    userIndex = index,
+                                    isOnline = player.isOnline,
+                                    isHost = player.isHost,
+                                    scoreExplained = nextState.results[index].scoreExplained,
+                                    scoreGuessed = nextState.results[index].scoreGuessed,
+                                    scoreSum = nextState.results[index].scoreSum,
+                                )
+                            },
+                            leaderboardPermutation = playersList
+                                .indices
+                                .sortedByDescending { nextState.results[it].scoreSum }
+                                .toKoneUIntArray(),
                         )
                     }
                 }

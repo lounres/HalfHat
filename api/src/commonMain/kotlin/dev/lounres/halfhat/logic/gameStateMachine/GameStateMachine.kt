@@ -1,5 +1,6 @@
 package dev.lounres.halfhat.logic.gameStateMachine
 
+import dev.lounres.kone.collections.array.KoneUIntArray
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.set.KoneSet
 import kotlinx.serialization.Serializable
@@ -93,7 +94,7 @@ public object GameStateMachine {
         val player: UInt,
         val scoreExplained: UInt,
         val scoreGuessed: UInt,
-        val sum: UInt,
+        val scoreSum: UInt,
     )
     
     public data class PersonalResult<P>(
@@ -129,6 +130,10 @@ public object GameStateMachine {
             val cycleNumber: UInt,
             val speakerIndex: UInt,
             val listenerIndex: UInt,
+            val nextSpeakerIndex: UInt,
+            val nextListenerIndex: UInt,
+            val playersRoundsBeforeSpeaking: KoneUIntArray,
+            val playersRoundsBeforeListening: KoneUIntArray,
             val restWords: KoneSet<String>,
             val explanationScores: KoneList<UInt>,
             val guessingScores: KoneList<UInt>,
@@ -145,6 +150,10 @@ public object GameStateMachine {
             val cycleNumber: UInt,
             val speakerIndex: UInt,
             val listenerIndex: UInt,
+            val nextSpeakerIndex: UInt,
+            val nextListenerIndex: UInt,
+            val playersRoundsBeforeSpeaking: KoneUIntArray,
+            val playersRoundsBeforeListening: KoneUIntArray,
             val startInstant: Instant,
             val millisecondsLeft: UInt,
             val restWords: KoneSet<String>,
@@ -162,6 +171,10 @@ public object GameStateMachine {
             val cycleNumber: UInt,
             val speakerIndex: UInt,
             val listenerIndex: UInt,
+            val nextSpeakerIndex: UInt,
+            val nextListenerIndex: UInt,
+            val playersRoundsBeforeSpeaking: KoneUIntArray,
+            val playersRoundsBeforeListening: KoneUIntArray,
             val startInstant: Instant,
             val millisecondsLeft: UInt,
             val restWords: KoneSet<String>,
@@ -180,6 +193,10 @@ public object GameStateMachine {
             val cycleNumber: UInt,
             val speakerIndex: UInt,
             val listenerIndex: UInt,
+            val nextSpeakerIndex: UInt,
+            val nextListenerIndex: UInt,
+            val playersRoundsBeforeSpeaking: KoneUIntArray,
+            val playersRoundsBeforeListening: KoneUIntArray,
             val startInstant: Instant,
             val millisecondsLeft: UInt,
             val restWords: KoneSet<String>,
@@ -198,6 +215,10 @@ public object GameStateMachine {
             val cycleNumber: UInt,
             val speakerIndex: UInt,
             val listenerIndex: UInt,
+            val nextSpeakerIndex: UInt,
+            val nextListenerIndex: UInt,
+            val playersRoundsBeforeSpeaking: KoneUIntArray,
+            val playersRoundsBeforeListening: KoneUIntArray,
             val restWords: KoneSet<String>,
             val explanationScores: KoneList<UInt>,
             val guessingScores: KoneList<UInt>,

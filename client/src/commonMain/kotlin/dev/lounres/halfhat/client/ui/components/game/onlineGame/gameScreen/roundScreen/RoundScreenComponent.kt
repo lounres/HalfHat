@@ -9,6 +9,8 @@ import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.round
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundPreparation.RoundPreparationComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundWaiting.RoundWaitingComponent
 import dev.lounres.kone.hub.KoneAsynchronousHubView
+import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
 
 
@@ -22,6 +24,10 @@ interface RoundScreenComponent {
     
     public val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, Child, UIComponentContext>, *>
     
+    public val coroutineScope: CoroutineScope
+    public val openAdditionalCard: KoneMutableAsynchronousHubView<Boolean, *>
+    public val additionalCard: KoneMutableAsynchronousHubView<AdditionalCard, *>
+    
     public sealed interface Child {
         public data class RoundWaiting(val component: RoundWaitingComponent) : Child
         public data class RoundPreparation(val component: RoundPreparationComponent) : Child
@@ -29,4 +35,8 @@ interface RoundScreenComponent {
         public data class RoundLastGuess(val component: RoundLastGuessComponent) : Child
         public data class RoundEditing(val component: RoundEditingComponent) : Child
     }
+}
+
+enum class AdditionalCard {
+    Schedule, PlayersStatistic, WordsStatistic, Settings,
 }

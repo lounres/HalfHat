@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.window.core.layout.WindowSizeClass
 import dev.lounres.halfhat.api.onlineGame.ServerApi
+import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.AdditionalCard
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.RoundScreenComponent
 import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.icons.OnlineGameCopyKeyButton
@@ -72,8 +73,11 @@ import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.r
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundScreen.roundPreparation.RoundPreparationGameCardUI
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundScreen.roundWaiting.RoundWaitingGameCardUI
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
+import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.list.indices
+import dev.lounres.kone.hub.set
 import dev.lounres.kone.hub.subscribeAsState
+import kotlinx.coroutines.launch
 
 
 fun RoundScreenToolbarContentUI(
@@ -146,10 +150,6 @@ fun RoundScreenGameCardUI(
     }
 }
 
-private enum class AdditionalCard {
-    Schedule, PlayersStatistic, WordsStatistic, Settings,
-}
-
 private fun ToggleButtonShapes.toIconToggleButtonShapes(): IconToggleButtonShapes =
     IconToggleButtonShapes(
         shape = shape,
@@ -165,14 +165,18 @@ fun RoundScreenAdditionalCardUI(
     Column(
         modifier = modifier,
     ) {
-        var additionalCard by remember { mutableStateOf(AdditionalCard.Schedule) }
+        val additionalCard = component.additionalCard.subscribeAsState().value
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
             IconToggleButton(
                 checked = additionalCard == AdditionalCard.Schedule,
-                onCheckedChange = { if (it) additionalCard = AdditionalCard.Schedule },
+                onCheckedChange = {
+                    if (it) component.coroutineScope.launch {
+                        component.additionalCard.set(AdditionalCard.Schedule)
+                    }
+                },
                 shapes = ButtonGroupDefaults.connectedLeadingButtonShapes().toIconToggleButtonShapes(),
                 colors = IconButtonDefaults.filledTonalIconToggleButtonColors(),
             ) {
@@ -184,7 +188,11 @@ fun RoundScreenAdditionalCardUI(
             }
             IconToggleButton(
                 checked = additionalCard == AdditionalCard.PlayersStatistic,
-                onCheckedChange = { if (it) additionalCard = AdditionalCard.PlayersStatistic },
+                onCheckedChange = {
+                    if (it) component.coroutineScope.launch {
+                        component.additionalCard.set(AdditionalCard.PlayersStatistic)
+                    }
+                },
                 shapes = ButtonGroupDefaults.connectedMiddleButtonShapes().toIconToggleButtonShapes(),
                 colors = IconButtonDefaults.filledTonalIconToggleButtonColors(),
             ) {
@@ -197,7 +205,11 @@ fun RoundScreenAdditionalCardUI(
             IconToggleButton(
                 enabled = false,
                 checked = additionalCard == AdditionalCard.WordsStatistic,
-                onCheckedChange = { if (it) additionalCard = AdditionalCard.WordsStatistic },
+                onCheckedChange = {
+                    if (it) component.coroutineScope.launch {
+                        component.additionalCard.set(AdditionalCard.WordsStatistic)
+                    }
+                },
                 shapes = ButtonGroupDefaults.connectedMiddleButtonShapes().toIconToggleButtonShapes(),
                 colors = IconButtonDefaults.filledTonalIconToggleButtonColors(),
             ) {
@@ -210,7 +222,11 @@ fun RoundScreenAdditionalCardUI(
             IconToggleButton(
                 enabled = false,
                 checked = additionalCard == AdditionalCard.Settings,
-                onCheckedChange = { if (it) additionalCard = AdditionalCard.Settings },
+                onCheckedChange = {
+                    if (it) component.coroutineScope.launch {
+                        component.additionalCard.set(AdditionalCard.Settings)
+                    }
+                },
                 shapes = ButtonGroupDefaults.connectedTrailingButtonShapes().toIconToggleButtonShapes(),
                 colors = IconButtonDefaults.filledTonalIconToggleButtonColors(),
             ) {
@@ -306,7 +322,7 @@ fun RoundScreenAdditionalCardUI(
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     Text(
-                                        text = "?", // TODO
+                                        text = gameState.playersList[gameState.nextSpeakerIndex].name,
                                         autoSize = TextAutoSize.StepBased(maxFontSize = 32.sp),
                                     )
                                 }
@@ -333,7 +349,7 @@ fun RoundScreenAdditionalCardUI(
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     Text(
-                                        text = "?", // TODO
+                                        text = gameState.playersList[gameState.nextListenerIndex].name,
                                         autoSize = TextAutoSize.StepBased(maxFontSize = 32.sp),
                                     )
                                 }
@@ -341,12 +357,17 @@ fun RoundScreenAdditionalCardUI(
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "You are speaker in ?? rounds", // TODO
+                            text = "You will be speaking in ${gameState.role.roundsBeforeSpeaking} rounds",
                             fontSize = 20.sp,
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "You are listener in ?? rounds", // TODO
+                            text = "You will be listening in ${gameState.role.roundsBeforeListening} rounds",
+                            fontSize = 20.sp,
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "${gameState.restWordsNumber + gameState.wordsInProgressNumber} (-${gameState.wordsInProgressNumber}) of ${gameState.initialWordsNumber} words left in the game",
                             fontSize = 20.sp,
                         )
                     }
@@ -386,10 +407,8 @@ fun RoundScreenAdditionalCardUI(
                         HorizontalDivider(
                             color = MaterialTheme.colorScheme.outline,
                         )
-                        // TODO: Move the leaderboard to the server logic
-                        val playersList = gameState.playersList
-                        for (index in playersList.indices.sortedByDescending { gameState.explanationScores[it] + gameState.guessingScores[it] }) {
-                            val player = playersList[index]
+                        for (index in gameState.leaderboardPermutation) {
+                            val player = gameState.playersList[index]
                             Spacer(modifier = Modifier.height(8.dp))
                             Surface(
                                 shape = CircleShape,
@@ -411,10 +430,10 @@ fun RoundScreenAdditionalCardUI(
                                         Spacer(Modifier.width(24.dp))
                                     Spacer(Modifier.width(4.dp))
                                     Icon(
-                                        imageVector = when (index) {
-                                            gameState.speakerIndex -> HalfHatIcon.OnlineGameSpeakerIcon
-                                            gameState.listenerIndex -> HalfHatIcon.OnlineGameListenerIcon
-                                            else -> HalfHatIcon.OnlineGamePlayerIcon
+                                        imageVector = when (player.roundRole) {
+                                            ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Speaker -> HalfHatIcon.OnlineGameSpeakerIcon
+                                            ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Listener -> HalfHatIcon.OnlineGameListenerIcon
+                                            ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Player -> HalfHatIcon.OnlineGamePlayerIcon
                                         },
                                         modifier = Modifier.size(24.dp),
                                         contentDescription = null,
@@ -425,21 +444,24 @@ fun RoundScreenAdditionalCardUI(
                                         text = player.name,
                                     )
                                     val additionalPointsString =
-                                        if (index == gameState.speakerIndex || index == gameState.listenerIndex) " (+0)"
-                                        else ""
+                                        when (player.roundRole) {
+                                            ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Speaker -> " (+${gameState.wordsInProgressNumber})"
+                                            ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Listener -> " (+${gameState.wordsInProgressNumber})"
+                                            ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Player -> ""
+                                        }
                                     Text(
                                         modifier = Modifier.weight(1f),
-                                        text = "${gameState.explanationScores[index]}${if (index == gameState.speakerIndex) additionalPointsString else ""}",
+                                        text = "${player.scoreExplained}${if (player.roundRole == ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Speaker) additionalPointsString else ""}",
                                         textAlign = TextAlign.Center,
                                     )
                                     Text(
                                         modifier = Modifier.weight(1f),
-                                        text = "${gameState.guessingScores[index]}${if (index == gameState.listenerIndex) additionalPointsString else ""}",
+                                        text = "${player.scoreGuessed}${if (player.roundRole == ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Listener) additionalPointsString else ""}",
                                         textAlign = TextAlign.Center,
                                     )
                                     Text(
                                         modifier = Modifier.weight(1f),
-                                        text = "${gameState.explanationScores[index] + gameState.guessingScores[index]}$additionalPointsString",
+                                        text = "${player.scoreSum}$additionalPointsString",
                                         textAlign = TextAlign.Center,
                                     )
                                 }
@@ -458,14 +480,18 @@ fun RoundScreenAdditionalCardUI(
 fun ColumnScope.RoundScreenCompactUI(
     component: RoundScreenComponent,
 ) {
-    var openAdditionalCard by remember { mutableStateOf(false) }
+    val openAdditionalCard = component.openAdditionalCard.subscribeAsState().value
     HorizontalFloatingToolbar(
         colors = toolbarColors,
         expanded = true,
         floatingActionButton = {
             ToggleFloatingActionButton(
                 checked = openAdditionalCard,
-                onCheckedChange = { openAdditionalCard = it },
+                onCheckedChange = {
+                    component.coroutineScope.launch {
+                        component.openAdditionalCard.set(it)
+                    }
+                },
             ) {
                 val contentColor = lerp(
                     MaterialTheme.colorScheme.onPrimaryContainer,
@@ -495,14 +521,18 @@ fun ColumnScope.RoundScreenCompactUI(
 fun ColumnScope.RoundScreenLargeUI(
     component: RoundScreenComponent,
 ) {
-    var openAdditionalCard by remember { mutableStateOf(false) }
+    val openAdditionalCard = component.openAdditionalCard.subscribeAsState().value
     HorizontalFloatingToolbar(
         colors = toolbarColors,
         expanded = true,
         floatingActionButton = {
             ToggleFloatingActionButton(
                 checked = openAdditionalCard,
-                onCheckedChange = { openAdditionalCard = it },
+                onCheckedChange = {
+                    component.coroutineScope.launch {
+                        component.openAdditionalCard.set(it)
+                    }
+                },
             ) {
                 val contentColor = lerp(
                     MaterialTheme.colorScheme.onPrimaryContainer,
