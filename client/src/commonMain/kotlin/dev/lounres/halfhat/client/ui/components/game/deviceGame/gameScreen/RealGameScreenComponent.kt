@@ -405,7 +405,7 @@ public suspend fun RealGameScreenComponent(
                     RealGameScreenComponent.Configuration.RoundEditing(
                         wordsToEdit = MutableStateFlow(state.currentExplanationResults),
                     )
-                is GameStateMachine.State.GameResults<String, *> ->
+                is GameStateMachine.State.GameResults<String, *, *> ->
                     RealGameScreenComponent.Configuration.GameResults(
                         results = MutableStateFlow(state.personalResults),
                     )

@@ -225,11 +225,12 @@ public object GameStateMachine {
             val currentExplanationResults: KoneList<WordExplanation>,
         ) : State<P, WPID, Metadata>
         
-        public data class GameResults<out P, out Metadata>(
+        public data class GameResults<out P, out WPID, out Metadata>(
             override val metadata: Metadata,
             override val playersList: KoneList<P>,
+            val settings: GameSettings<WPID>,
             val results: KoneList<GameResult>,
-        ) : State<P, Nothing, Metadata>
+        ) : State<P, WPID, Metadata>
     }
     
     public sealed interface Transition<out P, out WPID, out NoWordsProviderReason, out MetadataTransition: Any> {

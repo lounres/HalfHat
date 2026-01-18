@@ -84,7 +84,7 @@ public class Room<
                                 is GameStateMachine.State.RoundExplanation<*, *, *>,
                                 is GameStateMachine.State.RoundLastGuess<*, *, *>,
                                 is GameStateMachine.State.RoundEditing<*, *, *>,
-                                is GameStateMachine.State.GameResults<*, *>,
+                                is GameStateMachine.State.GameResults<*, *, *>,
                                     -> GameStateMachine.Transition.NoOperation()
                             }
                         )
@@ -127,7 +127,7 @@ public class Room<
                         is GameStateMachine.State.RoundExplanation<*, *, *>,
                         is GameStateMachine.State.RoundLastGuess<*, *, *>,
                         is GameStateMachine.State.RoundEditing<*, *, *>,
-                        is GameStateMachine.State.GameResults<*, *>,
+                        is GameStateMachine.State.GameResults<*, *, *>,
                             -> TransitionOrReason.Failure(null)
                     }
                 }
@@ -193,7 +193,7 @@ public class Room<
                         is GameStateMachine.State.RoundExplanation<*, *, *>,
                         is GameStateMachine.State.RoundLastGuess<*, *, *>,
                         is GameStateMachine.State.RoundEditing<*, *, *>,
-                        is GameStateMachine.State.GameResults<*, *>,
+                        is GameStateMachine.State.GameResults<*, *, *>,
                             -> TransitionOrReason.Failure(null)
                     }
                 }
@@ -221,7 +221,7 @@ public class Room<
                         is GameStateMachine.State.RoundExplanation<*, *, *>,
                         is GameStateMachine.State.RoundLastGuess<*, *, *>,
                         is GameStateMachine.State.RoundEditing<*, *, *>,
-                        is GameStateMachine.State.GameResults<*, *>,
+                        is GameStateMachine.State.GameResults<*, *, *>,
                             -> TransitionOrReason.Failure(null)
                     }
                 }
@@ -253,7 +253,7 @@ public class Room<
                         is GameStateMachine.State.RoundWaiting<*, *, *>,
                         is GameStateMachine.State.RoundPreparation<*, *, *>,
                         is GameStateMachine.State.RoundEditing<*, *, *>,
-                        is GameStateMachine.State.GameResults<*, *>,
+                        is GameStateMachine.State.GameResults<*, *, *>,
                             -> TransitionOrReason.Failure(null)
                     }
                 }
@@ -281,7 +281,7 @@ public class Room<
                         is GameStateMachine.State.RoundPreparation<*, *, *>,
                         is GameStateMachine.State.RoundExplanation<*, *, *>,
                         is GameStateMachine.State.RoundLastGuess<*, *, *>,
-                        is GameStateMachine.State.GameResults<*, *>,
+                        is GameStateMachine.State.GameResults<*, *, *>,
                             -> TransitionOrReason.Failure(null)
                     }
                 }
@@ -309,7 +309,7 @@ public class Room<
                         is GameStateMachine.State.RoundPreparation<*, *, *>,
                         is GameStateMachine.State.RoundExplanation<*, *, *>,
                         is GameStateMachine.State.RoundLastGuess<*, *, *>,
-                        is GameStateMachine.State.GameResults<*, *>,
+                        is GameStateMachine.State.GameResults<*, *, *>,
                             -> TransitionOrReason.Failure(null)
                     }
                 }
@@ -790,6 +790,7 @@ public class Room<
                 override val roomMetadata: RoomMetadata,
                 override val role: Role.GameResults<PlayerMetadata>,
                 public val playersList: KoneList<PlayerDescription.GameResults<PlayerMetadata>>,
+                public val settings: GameSettings<WordsProviderID>,
                 public val leaderboardPermutation: KoneUIntArray,
             ) : State<RoomMetadata, PlayerMetadata, WordsProviderID>
         }
@@ -892,7 +893,7 @@ public class Room<
                             is GameStateMachine.State.RoundExplanation<*, *, *>,
                             is GameStateMachine.State.RoundLastGuess<*, *, *>,
                             is GameStateMachine.State.RoundEditing<*, *, *>,
-                            is GameStateMachine.State.GameResults<*, *>,
+                            is GameStateMachine.State.GameResults<*, *, *>,
                                 -> CheckResult.Failure(null)
                         }
                     }
@@ -1272,7 +1273,8 @@ public class Room<
                                 .toKoneUIntArray(),
                         )
                     }
-                    is GameStateMachine.State.GameResults<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, *> -> {
+                    is GameStateMachine.State.GameResults<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
+                        val gameMachineSettings = nextState.settings
                         Outgoing.State.GameResults(
                             roomMetadata = metadata,
                             role = Outgoing.Role.GameResults(
@@ -1291,6 +1293,17 @@ public class Room<
                                     scoreSum = nextState.results[index].scoreSum,
                                 )
                             },
+                            settings = GameSettings(
+                                preparationTimeSeconds = gameMachineSettings.preparationTimeSeconds,
+                                explanationTimeSeconds = gameMachineSettings.explanationTimeSeconds,
+                                finalGuessTimeSeconds = gameMachineSettings.finalGuessTimeSeconds,
+                                strictMode = gameMachineSettings.strictMode,
+                                gameEndCondition = gameMachineSettings.gameEndCondition,
+                                wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
+                                    GameStateMachine.WordsSource.Players -> WordsSource.Players
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.ServerDictionary(wordsSource.providerId)
+                                },
+                            ),
                             leaderboardPermutation = playersList
                                 .indices
                                 .sortedByDescending { nextState.results[it].scoreSum }
@@ -1387,7 +1400,7 @@ public class Room<
                 is GameStateMachine.State.RoundExplanation<*, *, *>,
                 is GameStateMachine.State.RoundLastGuess<*, *, *>,
                 is GameStateMachine.State.RoundEditing<*, *, *>,
-                is GameStateMachine.State.GameResults<*, *>,
+                is GameStateMachine.State.GameResults<*, *, *>,
                     -> {
                     val player = previousState.playersList.firstThatOrNull { it.metadata.id == playerID }
                     if (player == null || !checkConnectionAttachment(player.metadata, player.isOnline, connection)) {

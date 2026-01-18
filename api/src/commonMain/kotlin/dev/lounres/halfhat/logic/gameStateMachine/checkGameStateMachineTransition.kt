@@ -250,6 +250,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                     GameStateMachine.State.GameResults(
                         metadata = newMetadata,
                         playersList = previousState.playersList,
+                        settings = previousState.settings,
                         results = previousState.results,
                     )
             }
@@ -1122,6 +1123,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                             GameStateMachine.State.GameResults(
                                 metadata = newMetadata,
                                 playersList = previousState.playersList,
+                                settings = previousState.settings,
                                 results = KoneSettableList.generate(previousState.playersList.size) {
                                     GameStateMachine.GameResult(
                                         it,
@@ -1174,6 +1176,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                         GameStateMachine.State.GameResults(
                             metadata = newMetadata,
                             playersList = previousState.playersList,
+                            settings = previousState.settings,
                             results = KoneSettableList.generate(previousState.playersList.size) {
                                 GameStateMachine.GameResult(
                                     player = it,

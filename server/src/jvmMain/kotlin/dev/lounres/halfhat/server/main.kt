@@ -477,6 +477,7 @@ class Connection(
                                     scoreSum = player.scoreSum,
                                 )
                             },
+                            settings = state.settings.toServerApi(),
                             leaderboardPermutation = state.leaderboardPermutation,
                         )
                 }

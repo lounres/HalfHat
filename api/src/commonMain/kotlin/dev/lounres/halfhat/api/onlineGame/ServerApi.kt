@@ -457,6 +457,7 @@ public object ServerApi {
                 override val roomName: String,
                 override val role: Role.GameResults,
                 public val playersList: KoneList<PlayerDescription.GameResults>,
+                public val settings: Settings,
                 public val leaderboardPermutation: KoneUIntArray,
             ) : State
         }

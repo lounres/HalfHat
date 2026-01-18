@@ -1,30 +1,22 @@
 package dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.gameResults
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.TextAutoSize
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.gameResults.GameResultsComponent
-import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
-import dev.lounres.halfhat.client.ui.icons.OnlineGameHostMarkIcon
-import dev.lounres.halfhat.client.ui.icons.OnlineGameListenerIcon
-import dev.lounres.halfhat.client.ui.icons.OnlineGamePlayerIcon
-import dev.lounres.halfhat.client.ui.icons.OnlineGamePlayersButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGameSettingsButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGameSpeakerIcon
-import dev.lounres.halfhat.client.ui.icons.OnlineGameWordsButton
+import dev.lounres.halfhat.client.ui.icons.*
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
+import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.iterables.next
-import dev.lounres.kone.collections.list.indices
 import dev.lounres.kone.collections.utils.withIndex
 
 
@@ -87,7 +79,6 @@ public fun GameResultsUI(
                     )
                 }
                 IconToggleButton(
-                    enabled = false,
                     checked = section == ResultsSection.Settings,
                     onCheckedChange = { if (it) section = ResultsSection.Settings },
                     shapes = ButtonGroupDefaults.connectedTrailingButtonShapes().toIconToggleButtonShapes(),
@@ -212,7 +203,199 @@ public fun GameResultsUI(
                             }
                             
                             ResultsSection.WordsStatistic -> {} // TODO
-                            ResultsSection.Settings -> {} // TODO
+                            ResultsSection.Settings -> {
+                                val gameState = component.gameState.collectAsState().value
+                                val settingsBuilder = gameState.settings
+                                
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.Bottom,
+                                ) {
+                                    OutlinedTextField(
+                                        modifier = Modifier.weight(1f),
+                                        enabled = false,
+                                        value = settingsBuilder.preparationTimeSeconds.toString(),
+                                        onValueChange = {},
+                                        label = {
+                                            Text(
+                                                text = "Preparation",
+                                            )
+                                        },
+                                        singleLine = true,
+                                        textStyle = TextStyle(textAlign = TextAlign.Center),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                            errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                            errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                            errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                                            errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                        ),
+                                    )
+                                    
+                                    Column {
+                                        Icon(
+                                            modifier = commonIconModifier,
+                                            imageVector = HalfHatIcon.OnlineGameSettingsIconBetweenTimes,
+                                            contentDescription = null,
+                                        )
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                    }
+                                    
+                                    OutlinedTextField(
+                                        modifier = Modifier.weight(1f),
+                                        enabled = false,
+                                        value = settingsBuilder.explanationTimeSeconds.toString(),
+                                        onValueChange = {},
+                                        label = {
+                                            Text(
+                                                text = "Explanation",
+                                            )
+                                        },
+                                        singleLine = true,
+                                        textStyle = TextStyle(textAlign = TextAlign.Center),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                            errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                            errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                            errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                                            errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                        ),
+                                    )
+                                    
+                                    Column {
+                                        Icon(
+                                            modifier = commonIconModifier,
+                                            imageVector = HalfHatIcon.OnlineGameSettingsIconBetweenTimes,
+                                            contentDescription = null,
+                                        )
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                    }
+                                    
+                                    OutlinedTextField(
+                                        modifier = Modifier.weight(1f),
+                                        enabled = false,
+                                        value = settingsBuilder.finalGuessTimeSeconds.toString(),
+                                        onValueChange = {},
+                                        label = {
+                                            Text(
+                                                text = "Final guess",
+                                            )
+                                        },
+                                        singleLine = true,
+                                        textStyle = TextStyle(textAlign = TextAlign.Center),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                            errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                            errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                            errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                                            errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                        ),
+                                    )
+                                }
+                                
+                                Spacer(modifier = Modifier.height(8.dp))
+                                
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.Bottom,
+                                ) {
+                                    val actualGameEndConditionType = settingsBuilder.gameEndCondition
+                                    OutlinedTextField(
+                                        modifier = Modifier.weight(1f),
+                                        enabled = false,
+                                        value = when (actualGameEndConditionType) {
+                                            is GameStateMachine.GameEndCondition.Words -> "Words"
+                                            is GameStateMachine.GameEndCondition.Cycles -> "Cycles"
+                                        },
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        singleLine = true,
+                                        label = {
+                                            Text(
+                                                text = "Game end condition",
+                                            )
+                                        },
+                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                                        textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
+                                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                            errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                            errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                            errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                            errorLabelColor = MaterialTheme.colorScheme.tertiary,
+//                                        errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                        ),
+                                    )
+                                    
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    
+                                    when (val gameEndCondition = settingsBuilder.gameEndCondition) {
+                                        is GameStateMachine.GameEndCondition.Words -> {
+                                            OutlinedTextField(
+                                                modifier = Modifier.weight(1f),
+                                                enabled = false,
+                                                value = gameEndCondition.number.toString(),
+                                                onValueChange = {},
+                                                label = {
+                                                    Text(
+                                                        text = "The number of words",
+                                                    )
+                                                },
+                                                textStyle = TextStyle(textAlign = TextAlign.Center),
+                                                singleLine = true,
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                                    errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                                    errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                                    errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                                                    errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                                ),
+                                            )
+                                        }
+                                        
+                                        is GameStateMachine.GameEndCondition.Cycles -> {
+                                            OutlinedTextField(
+                                                modifier = Modifier.weight(1f),
+                                                enabled = false,
+                                                value = gameEndCondition.number.toString(),
+                                                onValueChange = {},
+                                                label = {
+                                                    Text(
+                                                        text = "The number of cycles",
+                                                    )
+                                                },
+                                                textStyle = TextStyle(textAlign = TextAlign.Center),
+                                                singleLine = true,
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                                    errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                                    errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                                    errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                                                    errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                                ),
+                                            )
+                                        }
+                                    }
+                                }
+                                
+                                Spacer(modifier = Modifier.height(8.dp))
+                                
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Checkbox(
+                                        enabled = false,
+                                        checked = settingsBuilder.strictMode,
+                                        onCheckedChange = {},
+                                        colors = CheckboxDefaults.colors()
+                                    )
+                                    
+                                    Text(
+                                        text = "Strict mode",
+                                        fontSize = 20.sp,
+                                    )
+                                }
+                            }
                         }
                     }
                     Row(
