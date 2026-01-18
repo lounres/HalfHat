@@ -50,7 +50,7 @@ public suspend fun RealGameScreenComponent(
     componentContext: UIComponentContext,
     gameStateFlow: StateFlow<ServerApi.OnlineGame.State?>,
     onExitOnlineGame: () -> Unit,
-    onApplySettings: (ClientApi.SettingsBuilder) -> Unit,
+    onApplySettings: (ClientApi.SettingsBuilder.Patch) -> Unit,
     onStartGame: () -> Unit,
     onFinishGame: () -> Unit,
     onSubmitWords: (KoneList<String>) -> Unit,

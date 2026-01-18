@@ -5,9 +5,7 @@ import dev.lounres.halfhat.logic.server.Room.GameStateMachineMetadataTransition.
 import dev.lounres.halfhat.logic.server.Room.Player.Description
 import dev.lounres.kone.algebraic.context
 import dev.lounres.kone.automata.*
-import dev.lounres.kone.collections.array.KoneBooleanArray
 import dev.lounres.kone.collections.array.KoneUIntArray
-import dev.lounres.kone.collections.array.generate
 import dev.lounres.kone.collections.interop.toKoneUIntArray
 import dev.lounres.kone.collections.iterables.isEmpty
 import dev.lounres.kone.collections.iterables.isNotEmpty
@@ -17,11 +15,9 @@ import dev.lounres.kone.collections.map.KoneMap
 import dev.lounres.kone.collections.set.KoneSet
 import dev.lounres.kone.collections.utils.*
 import dev.lounres.kone.contexts.invoke
-import dev.lounres.kone.relations.Comparator
 import dev.lounres.kone.relations.ComparisonResult
 import dev.lounres.kone.relations.Equality
 import dev.lounres.kone.relations.Order
-import dev.lounres.kone.relations.comparator
 import dev.lounres.kone.relations.compareWith
 import dev.lounres.kone.relations.defaultFor
 import kotlinx.coroutines.CoroutineScope
@@ -101,7 +97,7 @@ public class Room<
                 }
             }
             
-            public suspend fun updateGameSettings(settingsBuilder: GameSettings.Builder<WordsProviderID>) {
+            public suspend fun updateGameSettings(settingsBuilderPatch: GameSettings.Builder.Patch<WordsProviderID>) {
                 val result = player.room.gameStateMachine.moveMaybe { previousState ->
                     if (previousState.metadata.allPlayersList.firstThat { it.isOnline } != player) {
                         node.element.sendError(Outgoing.Error.NotHostChangingGameSettings)
@@ -113,14 +109,15 @@ public class Room<
                                 GameStateMachine.Transition.UpdateGameSettings(
                                     playersList = previousState.playersList,
                                     settingsBuilder = GameStateMachine.GameSettings.Builder(
-                                        preparationTimeSeconds = settingsBuilder.preparationTimeSeconds,
-                                        explanationTimeSeconds = settingsBuilder.explanationTimeSeconds,
-                                        finalGuessTimeSeconds = settingsBuilder.finalGuessTimeSeconds,
-                                        strictMode = settingsBuilder.strictMode,
-                                        cachedEndConditionWordsNumber = settingsBuilder.cachedEndConditionWordsNumber,
-                                        cachedEndConditionCyclesNumber = settingsBuilder.cachedEndConditionCyclesNumber,
-                                        gameEndConditionType = settingsBuilder.gameEndConditionType,
-                                        wordsSource = when (val wordsSource = settingsBuilder.wordsSource) {
+                                        preparationTimeSeconds = settingsBuilderPatch.preparationTimeSeconds ?: previousState.settingsBuilder.preparationTimeSeconds,
+                                        explanationTimeSeconds = settingsBuilderPatch.explanationTimeSeconds ?: previousState.settingsBuilder.explanationTimeSeconds,
+                                        finalGuessTimeSeconds = settingsBuilderPatch.finalGuessTimeSeconds ?: previousState.settingsBuilder.finalGuessTimeSeconds,
+                                        strictMode = settingsBuilderPatch.strictMode ?: previousState.settingsBuilder.strictMode,
+                                        cachedEndConditionWordsNumber = settingsBuilderPatch.cachedEndConditionWordsNumber ?: previousState.settingsBuilder.cachedEndConditionWordsNumber,
+                                        cachedEndConditionCyclesNumber = settingsBuilderPatch.cachedEndConditionCyclesNumber ?: previousState.settingsBuilder.cachedEndConditionCyclesNumber,
+                                        gameEndConditionType = settingsBuilderPatch.gameEndConditionType ?: previousState.settingsBuilder.gameEndConditionType,
+                                        wordsSource = when (val wordsSource = settingsBuilderPatch.wordsSource) {
+                                            null -> previousState.settingsBuilder.wordsSource
                                             WordsSource.Players -> GameStateMachine.WordsSource.Players
                                             is WordsSource.ServerDictionary<WordsProviderID> -> GameStateMachine.WordsSource.Custom(wordsSource.id)
                                         },
@@ -412,7 +409,18 @@ public class Room<
             val cachedEndConditionCyclesNumber: UInt,
             val gameEndConditionType: GameStateMachine.GameEndCondition.Type,
             val wordsSource: WordsSource<WordsProviderID>,
-        )
+        ) {
+            public data class Patch<out WordsProviderID>(
+                val preparationTimeSeconds: UInt?,
+                val explanationTimeSeconds: UInt?,
+                val finalGuessTimeSeconds: UInt?,
+                val strictMode: Boolean?,
+                val cachedEndConditionWordsNumber: UInt?,
+                val cachedEndConditionCyclesNumber: UInt?,
+                val gameEndConditionType: GameStateMachine.GameEndCondition.Type?,
+                val wordsSource: WordsSource<WordsProviderID>?,
+            )
+        }
     }
     
     public object Outgoing {

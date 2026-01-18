@@ -16,24 +16,19 @@ public class RealRoomScreenComponent(
     
     override val onStartGame: () -> Unit,
     
-    onApplySettings: (ClientApi.SettingsBuilder) -> Unit,
+    onApplySettings: (ClientApi.SettingsBuilder.Patch) -> Unit,
 ) : RoomScreenComponent {
     override val onApplySettings: () -> Unit = {
-        val settingsBuilder = gameState.value.settingsBuilder
-        
         onApplySettings(
-            ClientApi.SettingsBuilder(
-                preparationTimeSeconds = preparationTimeSeconds.value ?: settingsBuilder.preparationTimeSeconds,
-                explanationTimeSeconds = explanationTimeSeconds.value ?: settingsBuilder.explanationTimeSeconds,
-                finalGuessTimeSeconds = finalGuessTimeSeconds.value ?: settingsBuilder.finalGuessTimeSeconds,
-                strictMode = strictMode.value ?: settingsBuilder.strictMode,
-                cachedEndConditionWordsNumber = cachedEndConditionWordsNumber.value ?: settingsBuilder.cachedEndConditionWordsNumber,
-                cachedEndConditionCyclesNumber = cachedEndConditionCyclesNumber.value ?: settingsBuilder.cachedEndConditionCyclesNumber,
-                gameEndConditionType = gameEndConditionType.value ?: settingsBuilder.gameEndConditionType,
-                wordsSource = when (val wordSource = settingsBuilder.wordsSource) {
-                    ServerApi.WordsSource.Players -> ClientApi.WordsSource.Players
-                    is ServerApi.WordsSource.ServerDictionary -> ClientApi.WordsSource.ServerDictionary(wordSource.id)
-                },
+            ClientApi.SettingsBuilder.Patch(
+                preparationTimeSeconds = preparationTimeSeconds.value,
+                explanationTimeSeconds = explanationTimeSeconds.value,
+                finalGuessTimeSeconds = finalGuessTimeSeconds.value,
+                strictMode = strictMode.value,
+                cachedEndConditionWordsNumber = cachedEndConditionWordsNumber.value,
+                cachedEndConditionCyclesNumber = cachedEndConditionCyclesNumber.value,
+                gameEndConditionType = gameEndConditionType.value,
+                wordsSource = null,
             )
         )
         

@@ -41,7 +41,7 @@ public object GameStateMachine {
     }
     
     public interface WordsProvider {
-        public val size: UInt
+        // Maybe not exactly this `number` of words but no more than this number.
         public fun randomWords(number: UInt): KoneSet<String>
         public fun allWords(): KoneSet<String>
     }

@@ -72,7 +72,6 @@ object DummyOnlineGameWordsProviderRegistry : Room.WordProviderRegistry<WordsPro
     private object TemporaryDictionary : GameStateMachine.WordsProvider {
         private val words = KoneSet.of("картина", "корзина", "картонка", "собачонка")
         
-        override val size: UInt get() = words.size
         override fun randomWords(number: UInt): KoneSet<String> = words.take(number).toKoneSet()
         override fun allWords(): KoneSet<String> = words
     }
@@ -82,9 +81,9 @@ object OnlineGameWordsProviderRegistry : Room.WordProviderRegistry<WordsProvider
     private class ResourceDictionary(
         private val words: KoneSet<String>
     ) : GameStateMachine.WordsProvider {
-        override val size: UInt get() = words.size
         override fun allWords(): KoneSet<String> = words
         override fun randomWords(number: UInt): KoneSet<String> {
+            val number = minOf(number, words.size)
             if (number == 0u) return KoneSet.empty()
             
             val indices = KoneMutableUIntArray.generate(number) { Random.nextUInt(words.size - it) }
@@ -725,18 +724,19 @@ fun main() {
                                     return@withLock
                                 }
                                 
-                                val settingsBuilder = signal.settingsBuilder
+                                val settingsBuilderPatch = signal.settingsBuilderPatch
                                 
                                 attachment.updateGameSettings(
-                                    Room.GameSettings.Builder(
-                                        preparationTimeSeconds = settingsBuilder.preparationTimeSeconds,
-                                        explanationTimeSeconds = settingsBuilder.explanationTimeSeconds,
-                                        finalGuessTimeSeconds = settingsBuilder.finalGuessTimeSeconds,
-                                        strictMode = settingsBuilder.strictMode,
-                                        cachedEndConditionWordsNumber = settingsBuilder.cachedEndConditionWordsNumber,
-                                        cachedEndConditionCyclesNumber = settingsBuilder.cachedEndConditionCyclesNumber,
-                                        gameEndConditionType = settingsBuilder.gameEndConditionType,
-                                        wordsSource = when (val wordsSource = settingsBuilder.wordsSource) {
+                                    Room.GameSettings.Builder.Patch(
+                                        preparationTimeSeconds = settingsBuilderPatch.preparationTimeSeconds,
+                                        explanationTimeSeconds = settingsBuilderPatch.explanationTimeSeconds,
+                                        finalGuessTimeSeconds = settingsBuilderPatch.finalGuessTimeSeconds,
+                                        strictMode = settingsBuilderPatch.strictMode,
+                                        cachedEndConditionWordsNumber = settingsBuilderPatch.cachedEndConditionWordsNumber,
+                                        cachedEndConditionCyclesNumber = settingsBuilderPatch.cachedEndConditionCyclesNumber,
+                                        gameEndConditionType = settingsBuilderPatch.gameEndConditionType,
+                                        wordsSource = when (val wordsSource = settingsBuilderPatch.wordsSource) {
+                                            null -> null
                                             ClientApi.WordsSource.Players -> Room.WordsSource.Players
                                             is ClientApi.WordsSource.ServerDictionary -> Room.WordsSource.ServerDictionary(wordsSource.id)
                                         },

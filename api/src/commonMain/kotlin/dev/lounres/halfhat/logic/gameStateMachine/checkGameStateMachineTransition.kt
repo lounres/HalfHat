@@ -29,7 +29,6 @@ import dev.lounres.kone.scope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.min
 import kotlin.random.Random
 import kotlin.time.Clock
 import kotlin.time.Duration
@@ -315,10 +314,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                     CheckResult.Failure(GameStateMachine.NoNextStateReason.NoWordsProvider(wordsProviderOrReason.reason))
                                 is GameStateMachine.WordsProviderRegistry.ResultOrReason.Success -> {
                                     val restWords = when (settingsBuilder.gameEndConditionType) {
-                                        GameStateMachine.GameEndCondition.Type.Words -> {
-                                            val provider = wordsProviderOrReason.result
-                                            provider.randomWords(min(provider.size, settingsBuilder.cachedEndConditionWordsNumber))
-                                        }
+                                        GameStateMachine.GameEndCondition.Type.Words -> wordsProviderOrReason.result.randomWords(settingsBuilder.cachedEndConditionWordsNumber)
                                         GameStateMachine.GameEndCondition.Type.Cycles -> wordsProviderOrReason.result.allWords()
                                     }
                                     val nextPair = nextScheduledPairFor(playersList.size, ScheduledPair(0u, 1u))
