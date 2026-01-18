@@ -22,6 +22,7 @@ import io.ktor.client.plugins.websocket.sendSerialized
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.http.URLProtocol
 import io.ktor.serialization.deserialize
+import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
@@ -30,7 +31,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.launch
-import kotlinx.io.IOException
 
 
 public class RealOnlineGameComponent(
@@ -285,8 +285,9 @@ public class RealOnlineGameComponent(
                         }
                         cancel()
                     }
-                } catch (exception: IOException) {
+                } catch (exception: Exception) {
                     logger.warn(throwable = exception) { "Online game websocket connection exception" }
+                    if (exception is CancellationException) throw exception
                 }
                 connectionStatus.value = ConnectionStatus.Disconnected
                 gameStateFlow.value = null
