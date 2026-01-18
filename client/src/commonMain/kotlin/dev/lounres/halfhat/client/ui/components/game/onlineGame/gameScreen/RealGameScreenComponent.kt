@@ -7,10 +7,12 @@ import dev.lounres.halfhat.client.components.coroutineScope
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotNode
 import dev.lounres.halfhat.client.consts.OnlineGameSettings
+import dev.lounres.halfhat.client.storage.settings.settings
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.gameResults.RealGameResultsComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.loading.RealLoadingComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomScreen.RealRoomScreenComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.RealRoundScreenComponent
+import dev.lounres.halfhat.client.ui.theming.darkTheme
 import dev.lounres.halfhat.client.utils.copyToClipboard
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
@@ -144,6 +146,9 @@ public suspend fun RealGameScreenComponent(
                     GameScreenComponent.Child.GameResults(
                         RealGameResultsComponent(
                             gameState = configuration.stateFlow,
+                            
+                            coroutineScope = componentContext.coroutineScope(Dispatchers.Default),
+                            darkTheme = componentContext.settings.darkTheme,
                             
                             onLeaveGameResults = onExitOnlineGame,
                         )

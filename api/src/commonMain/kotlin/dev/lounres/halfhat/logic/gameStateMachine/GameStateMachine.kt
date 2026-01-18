@@ -1,9 +1,28 @@
 package dev.lounres.halfhat.logic.gameStateMachine
 
 import dev.lounres.kone.collections.array.KoneUIntArray
+import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.list.KoneList
+import dev.lounres.kone.collections.map.KoneMap
+import dev.lounres.kone.collections.map.KoneMutableMap
+import dev.lounres.kone.collections.map.component1
+import dev.lounres.kone.collections.map.component2
+import dev.lounres.kone.collections.map.of
 import dev.lounres.kone.collections.set.KoneSet
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.StructureKind
+import kotlinx.serialization.descriptors.buildSerialDescriptor
+import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.encoding.decodeStructure
+import kotlinx.serialization.encoding.encodeStructure
+import kotlin.time.Duration
 import kotlin.time.Instant
 
 
@@ -55,6 +74,76 @@ public object GameStateMachine {
         }
     }
     
+    @Serializable
+    public data class WordStatistic(
+        val spentTime: Duration,
+        val state: State,
+    ) {
+        @Serializable
+        public enum class State {
+            Explained, Mistake, InProgress;
+        }
+        
+        @Serializable
+        public data class AndWord(
+            val word: String,
+            val spentTime: Duration,
+            val state: State,
+        )
+        
+//        public typealias WordsStatistic = @Serializable(with = WordsStatisticSerializer::class) KoneMap<String, WordStatistic>
+//
+//        public object WordsStatisticSerializer : KSerializer<KoneMap<String, WordStatistic>> {
+//            @OptIn(InternalSerializationApi::class)
+//            override val descriptor: SerialDescriptor = buildSerialDescriptor("dev.lounres.kone.registry.serialization.RegistrySerializer", StructureKind.MAP) {
+//                element(
+//                    elementName = "key",
+//                    descriptor = String.serializer().descriptor,
+//                )
+//                element(
+//                    elementName = "value",
+//                    descriptor = WordStatistic.serializer().descriptor,
+//                )
+//            }
+//
+//            override fun serialize(encoder: Encoder, value: KoneMap<String, WordStatistic>) {
+//                encoder.encodeStructure(descriptor) {
+//                    var registrationIndex = 0
+//                    for ((key, value) in value.nodesView) {
+//                        encodeSerializableElement(descriptor, registrationIndex++, String.serializer(), key)
+//                        encodeSerializableElement(descriptor, registrationIndex++, WordStatistic.serializer(), value)
+//                    }
+//                }
+//            }
+//
+//            @OptIn(ExperimentalSerializationApi::class)
+//            override fun deserialize(decoder: Decoder): KoneMap<String, WordStatistic> =
+//                decoder.decodeStructure(descriptor) {
+//                    val result = KoneMutableMap.of<String, WordStatistic>()
+//                    if (decodeSequentially()) {
+//                        val size = decodeCollectionSize(descriptor)
+//                        repeat(size) {
+//                            val key = decodeSerializableElement(descriptor, it * 2, String.serializer())
+//                            val value = decodeSerializableElement(descriptor, it * 2 + 1, WordStatistic.serializer())
+//                            result[key] = value
+//                        }
+//                    } else {
+//                        while (true) {
+//                            val keyIndex = decodeElementIndex(descriptor)
+//                            if (keyIndex == CompositeDecoder.DECODE_DONE) break
+//                            val key = decodeSerializableElement(descriptor, keyIndex, String.serializer())
+//                            decodeElementIndex(descriptor).also {
+//                                require(it == keyIndex + 1) { "Value must follow key in a map, index for key: $keyIndex, returned index for value: $it" }
+//                            }
+//                            val value = decodeSerializableElement(descriptor, keyIndex + 1, WordStatistic.serializer())
+//                            result[key] = value
+//                        }
+//                    }
+//                    result
+//                }
+//        }
+    }
+    
     public data class GameSettings<out WPID>(
         val preparationTimeSeconds: UInt,
         val explanationTimeSeconds: UInt,
@@ -101,7 +190,7 @@ public object GameStateMachine {
         val player: P,
         val scoreExplained: UInt,
         val scoreGuessed: UInt,
-        val sum: UInt,
+        val scoreSum: UInt,
     )
     
     public sealed interface State<out P, out WPID, out Metadata> {
@@ -137,6 +226,7 @@ public object GameStateMachine {
             val restWords: KoneSet<String>,
             val explanationScores: KoneList<UInt>,
             val guessingScores: KoneList<UInt>,
+            val wordsStatistic: KoneMap<String, WordStatistic>,
             val speakerReady: Boolean,
             val listenerReady: Boolean,
         ) : State<P, WPID, Metadata>
@@ -159,6 +249,7 @@ public object GameStateMachine {
             val restWords: KoneSet<String>,
             val explanationScores: KoneList<UInt>,
             val guessingScores: KoneList<UInt>,
+            val wordsStatistic: KoneMap<String, WordStatistic>,
             val currentExplanationResults: KoneList<WordExplanation>,
         ) : State<P, WPID, Metadata>
         
@@ -181,6 +272,8 @@ public object GameStateMachine {
             val currentWord: String,
             val explanationScores: KoneList<UInt>,
             val guessingScores: KoneList<UInt>,
+            val wordsStatistic: KoneMap<String, WordStatistic>,
+            val wordExplanationStart: Instant,
             val currentExplanationResults: KoneList<WordExplanation>,
         ) : State<P, WPID, Metadata>
         
@@ -203,6 +296,8 @@ public object GameStateMachine {
             val currentWord: String,
             val explanationScores: KoneList<UInt>,
             val guessingScores: KoneList<UInt>,
+            val wordsStatistic: KoneMap<String, WordStatistic>,
+            val wordExplanationStart: Instant,
             val currentExplanationResults: KoneList<WordExplanation>,
         ) : State<P, WPID, Metadata>
         
@@ -222,6 +317,7 @@ public object GameStateMachine {
             val restWords: KoneSet<String>,
             val explanationScores: KoneList<UInt>,
             val guessingScores: KoneList<UInt>,
+            val wordsStatistic: KoneMap<String, WordStatistic>,
             val currentExplanationResults: KoneList<WordExplanation>,
         ) : State<P, WPID, Metadata>
         
@@ -230,6 +326,7 @@ public object GameStateMachine {
             override val playersList: KoneList<P>,
             val settings: GameSettings<WPID>,
             val results: KoneList<GameResult>,
+            val wordsStatistic: KoneMap<String, WordStatistic>,
         ) : State<P, WPID, Metadata>
     }
     
@@ -297,6 +394,7 @@ public object GameStateMachine {
         public data object CannotUpdateRoundInfoNotDuringTheRound : NoNextStateReason<Nothing, Nothing>
         public data object CannotSubmitWordExplanationResultNotDuringExplanationOrLastGuess : NoNextStateReason<Nothing, Nothing>
         public data object CannotUpdateWordExplanationResultsNotDuringRoundEditing : NoNextStateReason<Nothing, Nothing>
+        public data object CannotUpdateWordExplanationResultsWithOtherWordsSet : NoNextStateReason<Nothing, Nothing>
         public data object CannotConfirmWordExplanationResultsNotDuringRoundEditing : NoNextStateReason<Nothing, Nothing>
         public data object CannotFinishGameNotDuringRoundWaiting : NoNextStateReason<Nothing, Nothing>
     }

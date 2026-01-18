@@ -9,6 +9,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -31,6 +32,7 @@ import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.hub.set
 import dev.lounres.kone.hub.subscribeAsState
 import kotlinx.coroutines.launch
+import kotlin.time.Duration
 
 
 fun RoundScreenToolbarContentUI(
@@ -156,7 +158,6 @@ fun RoundScreenAdditionalCardUI(
                 )
             }
             IconToggleButton(
-                enabled = false,
                 checked = additionalCard == AdditionalCard.WordsStatistic,
                 onCheckedChange = {
                     if (it) component.coroutineScope.launch {
@@ -420,7 +421,84 @@ fun RoundScreenAdditionalCardUI(
                             }
                         }
                     }
-                    AdditionalCard.WordsStatistic -> {} // TODO
+                    AdditionalCard.WordsStatistic -> {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(8.dp).height(IntrinsicSize.Min),
+                        ) {
+//                            Spacer(modifier = Modifier.width(40.dp))
+                            Text(
+                                modifier = Modifier.weight(1f),
+                                text = "Word",
+                                textAlign = TextAlign.Center,
+                                fontWeight = FontWeight.SemiBold,
+                                autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
+                                maxLines = 1,
+                                softWrap = false,
+                            )
+                            Text(
+                                modifier = Modifier.weight(1f),
+                                text = "Time spent",
+                                textAlign = TextAlign.Center,
+                                fontWeight = FontWeight.SemiBold,
+                                autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
+                                maxLines = 1,
+                                softWrap = false,
+                            )
+                        }
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outline,
+                        )
+                        val useDark = component.darkTheme.subscribeAsState().value.isDark
+                        for ((word, spentTime, state) in gameState.wordsStatistic) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Surface(
+                                shape = CircleShape,
+                                color = when (state) {
+                                    GameStateMachine.WordStatistic.State.Explained -> if (useDark) Color(0xFFB1D18A) else Color(0xFF4C662B)
+                                    GameStateMachine.WordStatistic.State.InProgress -> if (useDark) Color(0xFFAAC7FF) else Color(0xFF415F91)
+                                    GameStateMachine.WordStatistic.State.Mistake -> if (useDark) Color(0xFFFFB5A0) else Color(0xFF8F4C38)
+                                },
+                                contentColor = when (state) {
+                                    GameStateMachine.WordStatistic.State.Explained -> if (useDark) Color(0xFF1F3701) else Color(0xFFFFFFFF)
+                                    GameStateMachine.WordStatistic.State.InProgress -> if (useDark) Color(0xFF0A305F) else Color(0xFFFFFFFF)
+                                    GameStateMachine.WordStatistic.State.Mistake -> if (useDark) Color(0xFF561F0F) else Color(0xFFFFFFFF)
+                                },
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+//                                    Icon(
+//                                        imageVector = when (player.roundRole) {
+//                                            ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Speaker -> HalfHatIcon.OnlineGameSpeakerIcon
+//                                            ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Listener -> HalfHatIcon.OnlineGameListenerIcon
+//                                            ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Player -> HalfHatIcon.OnlineGamePlayerIcon
+//                                        },
+//                                        modifier = Modifier.size(24.dp),
+//                                        contentDescription = null,
+//                                    )
+//                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Text(
+                                        modifier = Modifier.weight(1f),
+                                        text = word,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                    )
+                                    val allSeconds = spentTime.inWholeSeconds
+                                    val seconds = allSeconds % 60
+                                    val minutes = allSeconds / 60
+                                    Text(
+                                        modifier = Modifier.weight(1f),
+                                        text = "$minutes:${seconds.toString().padStart(2, '0')}",
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                    )
+                                }
+                            }
+                        }
+                    }
                     AdditionalCard.Settings -> {
                         val gameState = component.gameState.collectAsState().value
                         val settingsBuilder = gameState.settings

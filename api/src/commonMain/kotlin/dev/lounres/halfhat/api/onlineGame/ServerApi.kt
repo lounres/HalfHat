@@ -350,6 +350,7 @@ public object ServerApi {
                 public val nextListenerIndex: UInt
                 public val restWordsNumber: UInt
                 public val wordsInProgressNumber: UInt
+                public val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>
                 public val leaderboardPermutation: KoneUIntArray
                 
                 @Serializable
@@ -367,6 +368,7 @@ public object ServerApi {
                     override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
                     override val wordsInProgressNumber: UInt,
+                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
                     public val speakerReady: Boolean,
                     public val listenerReady: Boolean,
                     override val leaderboardPermutation: KoneUIntArray,
@@ -387,8 +389,8 @@ public object ServerApi {
                     override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
                     override val wordsInProgressNumber: UInt,
+                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
                     public val millisecondsLeft: UInt,
-                    public val currentExplanationResultsSize: UInt,
                     override val leaderboardPermutation: KoneUIntArray,
                 ) : Round
                 
@@ -407,8 +409,8 @@ public object ServerApi {
                     override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
                     override val wordsInProgressNumber: UInt,
+                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
                     public val millisecondsLeft: UInt,
-                    public val currentExplanationResultsSize: UInt,
                     override val leaderboardPermutation: KoneUIntArray,
                 ) : Round
                 
@@ -427,8 +429,8 @@ public object ServerApi {
                     override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
                     override val wordsInProgressNumber: UInt,
+                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
                     public val millisecondsLeft: UInt,
-                    public val currentExplanationResultsSize: UInt,
                     override val leaderboardPermutation: KoneUIntArray,
                 ) : Round
                 
@@ -447,7 +449,7 @@ public object ServerApi {
                     override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
                     override val wordsInProgressNumber: UInt,
-                    public val currentExplanationResultsSize: UInt,
+                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
                     override val leaderboardPermutation: KoneUIntArray,
                 ) : Round
             }
@@ -459,6 +461,7 @@ public object ServerApi {
                 public val playersList: KoneList<PlayerDescription.GameResults>,
                 public val settings: Settings,
                 public val leaderboardPermutation: KoneUIntArray,
+                public val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
             ) : State
         }
         
@@ -510,6 +513,8 @@ public object ServerApi {
             public data object CannotUpdateWordExplanationResultsNotDuringRoundEditing : Error
             @Serializable
             public data object NotSpeakerUpdatingWordExplanationResults : Error
+            @Serializable
+            public data object CannotUpdateWordExplanationResultsWithOtherWordsSet : Error
             @Serializable
             public data object CannotConfirmWordExplanationResultsNotDuringRoundEditing : Error
             @Serializable

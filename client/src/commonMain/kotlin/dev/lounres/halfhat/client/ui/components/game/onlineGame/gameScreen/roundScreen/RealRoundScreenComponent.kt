@@ -11,6 +11,7 @@ import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.round
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundLastGuess.RealRoundLastGuessComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundPreparation.RealRoundPreparationComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundWaiting.RealRoundWaitingComponent
+import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.halfhat.client.ui.theming.darkTheme
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
@@ -35,6 +36,7 @@ class RealRoundScreenComponent(
     override val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, RoundScreenComponent.Child, UIComponentContext>, *>,
     
     override val coroutineScope: CoroutineScope,
+    override val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>,
 ) : RoundScreenComponent {
     override val openAdditionalCard: KoneMutableAsynchronousHubView<Boolean, *> = KoneMutableAsynchronousHub(false)
     override val additionalCard: KoneMutableAsynchronousHubView<AdditionalCard, *> = KoneMutableAsynchronousHub(AdditionalCard.Schedule)
@@ -205,6 +207,7 @@ suspend fun RealRoundScreenComponent(
         
         childSlot = childSlot.hub,
         
-        coroutineScope = coroutineScope
+        coroutineScope = coroutineScope,
+        darkTheme = componentContext.settings.darkTheme,
     )
 }

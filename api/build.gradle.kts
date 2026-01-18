@@ -9,6 +9,7 @@ kotlin {
         commonMain {
             dependencies {
                 // Kone
+                api(versions.kone.algebraic)
                 api(versions.kone.collections)
                 api(versions.kone.automata)
                 implementation(versions.kone.util.misc)

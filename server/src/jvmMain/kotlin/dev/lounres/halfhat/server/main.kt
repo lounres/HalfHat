@@ -273,6 +273,7 @@ class Connection(
                             nextListenerIndex = state.nextListenerIndex,
                             restWordsNumber = state.restWordsNumber,
                             wordsInProgressNumber = state.wordsInProgressNumber,
+                            wordsStatistic = state.wordsStatistic,
                             speakerReady = state.speakerReady,
                             listenerReady = state.listenerReady,
                             leaderboardPermutation = state.leaderboardPermutation,
@@ -318,8 +319,8 @@ class Connection(
                             nextListenerIndex = state.nextListenerIndex,
                             restWordsNumber = state.restWordsNumber,
                             wordsInProgressNumber = state.wordsInProgressNumber,
+                            wordsStatistic = state.wordsStatistic,
                             millisecondsLeft = state.millisecondsLeft,
-                            currentExplanationResultsSize = state.currentExplanationResultsSize,
                             leaderboardPermutation = state.leaderboardPermutation,
                         )
                     is Room.Outgoing.State.Round.Explanation<RoomMetadata, PlayerMetadata, WordsProviderID> ->
@@ -363,8 +364,8 @@ class Connection(
                             nextListenerIndex = state.nextListenerIndex,
                             restWordsNumber = state.restWordsNumber,
                             wordsInProgressNumber = state.wordsInProgressNumber,
+                            wordsStatistic = state.wordsStatistic,
                             millisecondsLeft = state.millisecondsLeft,
-                            currentExplanationResultsSize = state.currentExplanationResultsSize,
                             leaderboardPermutation = state.leaderboardPermutation,
                         )
                     is Room.Outgoing.State.Round.LastGuess<RoomMetadata, PlayerMetadata, WordsProviderID> ->
@@ -408,8 +409,8 @@ class Connection(
                             nextListenerIndex = state.nextListenerIndex,
                             restWordsNumber = state.restWordsNumber,
                             wordsInProgressNumber = state.wordsInProgressNumber,
+                            wordsStatistic = state.wordsStatistic,
                             millisecondsLeft = state.millisecondsLeft,
-                            currentExplanationResultsSize = state.currentExplanationResultsSize,
                             leaderboardPermutation = state.leaderboardPermutation,
                         )
                     is Room.Outgoing.State.Round.Editing<RoomMetadata, PlayerMetadata, WordsProviderID> ->
@@ -455,7 +456,7 @@ class Connection(
                             nextListenerIndex = state.nextListenerIndex,
                             restWordsNumber = state.restWordsNumber,
                             wordsInProgressNumber = state.wordsInProgressNumber,
-                            currentExplanationResultsSize = state.currentExplanationResultsSize,
+                            wordsStatistic = state.wordsStatistic,
                             leaderboardPermutation = state.leaderboardPermutation,
                         )
                     is Room.Outgoing.State.GameResults<RoomMetadata, PlayerMetadata, WordsProviderID> ->
@@ -479,6 +480,7 @@ class Connection(
                             },
                             settings = state.settings.toServerApi(),
                             leaderboardPermutation = state.leaderboardPermutation,
+                            wordsStatistic = state.wordsStatistic,
                         )
                 }
             )
@@ -509,6 +511,7 @@ class Connection(
             Room.Outgoing.Error.NotSpeakerSubmittingWordExplanationResult -> ServerApi.OnlineGame.Error.NotSpeakerSubmittingWordExplanationResult
             Room.Outgoing.Error.CannotUpdateWordExplanationResultsNotDuringRoundEditing -> ServerApi.OnlineGame.Error.CannotUpdateWordExplanationResultsNotDuringRoundEditing
             Room.Outgoing.Error.NotSpeakerUpdatingWordExplanationResults -> ServerApi.OnlineGame.Error.NotSpeakerUpdatingWordExplanationResults
+            Room.Outgoing.Error.CannotUpdateWordExplanationResultsWithOtherWordsSet -> ServerApi.OnlineGame.Error.CannotUpdateWordExplanationResultsWithOtherWordsSet
             Room.Outgoing.Error.CannotConfirmWordExplanationResultsNotDuringRoundEditing -> ServerApi.OnlineGame.Error.CannotConfirmWordExplanationResultsNotDuringRoundEditing
             Room.Outgoing.Error.NotSpeakerConfirmingWordExplanationResults -> ServerApi.OnlineGame.Error.NotSpeakerConfirmingWordExplanationResults
             Room.Outgoing.Error.CannotFinishGameNotDuringRoundWaiting -> ServerApi.OnlineGame.Error.CannotFinishGameNotDuringRoundWaiting

@@ -8,6 +8,7 @@ import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.round
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundLastGuess.RoundLastGuessComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundPreparation.RoundPreparationComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundWaiting.RoundWaitingComponent
+import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.kone.hub.KoneAsynchronousHubView
 import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
 import kotlinx.coroutines.CoroutineScope
@@ -25,6 +26,7 @@ interface RoundScreenComponent {
     public val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, Child, UIComponentContext>, *>
     
     public val coroutineScope: CoroutineScope
+    public val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>
     public val openAdditionalCard: KoneMutableAsynchronousHubView<Boolean, *>
     public val additionalCard: KoneMutableAsynchronousHubView<AdditionalCard, *>
     

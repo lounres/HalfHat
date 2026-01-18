@@ -1,12 +1,15 @@
 package dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.gameResults
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -18,11 +21,10 @@ import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.utils.withIndex
+import dev.lounres.kone.hub.set
+import dev.lounres.kone.hub.subscribeAsState
+import kotlinx.coroutines.launch
 
-
-private enum class ResultsSection {
-    PlayersStatistic, WordsStatistic, Settings
-}
 
 private fun ToggleButtonShapes.toIconToggleButtonShapes(): IconToggleButtonShapes =
     IconToggleButtonShapes(
@@ -33,7 +35,7 @@ private fun ToggleButtonShapes.toIconToggleButtonShapes(): IconToggleButtonShape
 
 @Composable
 public fun GameResultsUI(
-    component: GameResultsComponent
+    component: GameResultsComponent,
 ) {
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -48,14 +50,18 @@ public fun GameResultsUI(
         Column(
             modifier = Modifier.widthIn(max = 630.dp).fillMaxWidth().weight(1f),
         ) {
-            var section by remember { mutableStateOf(ResultsSection.PlayersStatistic) }
+            val section = component.section.subscribeAsState().value
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
             ) {
                 IconToggleButton(
-                    checked = section == ResultsSection.PlayersStatistic,
-                    onCheckedChange = { if (it) section = ResultsSection.PlayersStatistic },
+                    checked = section == GameResultsComponent.Section.PlayersStatistic,
+                    onCheckedChange = {
+                        if (it) component.coroutineScope.launch {
+                            component.section.set(GameResultsComponent.Section.PlayersStatistic)
+                        }
+                    },
                     shapes = ButtonGroupDefaults.connectedLeadingButtonShapes().toIconToggleButtonShapes(),
                     colors = IconButtonDefaults.filledTonalIconToggleButtonColors(),
                 ) {
@@ -66,9 +72,12 @@ public fun GameResultsUI(
                     )
                 }
                 IconToggleButton(
-                    enabled = false,
-                    checked = section == ResultsSection.WordsStatistic,
-                    onCheckedChange = { if (it) section = ResultsSection.WordsStatistic },
+                    checked = section == GameResultsComponent.Section.WordsStatistic,
+                    onCheckedChange = {
+                        if (it) component.coroutineScope.launch {
+                            component.section.set(GameResultsComponent.Section.WordsStatistic)
+                        }
+                    },
                     shapes = ButtonGroupDefaults.connectedMiddleButtonShapes().toIconToggleButtonShapes(),
                     colors = IconButtonDefaults.filledTonalIconToggleButtonColors(),
                 ) {
@@ -79,8 +88,12 @@ public fun GameResultsUI(
                     )
                 }
                 IconToggleButton(
-                    checked = section == ResultsSection.Settings,
-                    onCheckedChange = { if (it) section = ResultsSection.Settings },
+                    checked = section == GameResultsComponent.Section.Settings,
+                    onCheckedChange = {
+                        if (it) component.coroutineScope.launch {
+                            component.section.set(GameResultsComponent.Section.Settings)
+                        }
+                    },
                     shapes = ButtonGroupDefaults.connectedTrailingButtonShapes().toIconToggleButtonShapes(),
                     colors = IconButtonDefaults.filledTonalIconToggleButtonColors(),
                 ) {
@@ -106,7 +119,7 @@ public fun GameResultsUI(
                     ) {
                         val gameState = component.gameState.collectAsState().value
                         when (section) {
-                            ResultsSection.PlayersStatistic -> {
+                            GameResultsComponent.Section.PlayersStatistic -> {
                                 Row(
                                     modifier = Modifier.fillMaxWidth().padding(8.dp),
                                 ) {
@@ -202,8 +215,89 @@ public fun GameResultsUI(
                                 }
                             }
                             
-                            ResultsSection.WordsStatistic -> {} // TODO
-                            ResultsSection.Settings -> {
+                            GameResultsComponent.Section.WordsStatistic -> {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(8.dp).height(IntrinsicSize.Min),
+                                ) {
+//                            Spacer(modifier = Modifier.width(40.dp))
+                                    Text(
+                                        modifier = Modifier.weight(1f),
+                                        text = "Word",
+                                        textAlign = TextAlign.Center,
+                                        fontWeight = FontWeight.SemiBold,
+                                        autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
+                                        maxLines = 1,
+                                        softWrap = false,
+                                    )
+                                    Text(
+                                        modifier = Modifier.weight(1f),
+                                        text = "Spent time",
+                                        textAlign = TextAlign.Center,
+                                        fontWeight = FontWeight.SemiBold,
+                                        autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
+                                        maxLines = 1,
+                                        softWrap = false,
+                                    )
+                                }
+                                HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.outline,
+                                )
+                                Column(
+                                    modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()),
+                                ) {
+                                    val useDark = component.darkTheme.subscribeAsState().value.isDark
+                                    for ((word, spentTime, state) in gameState.wordsStatistic) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = when (state) {
+                                                GameStateMachine.WordStatistic.State.Explained -> if (useDark) Color(0xFFB1D18A) else Color(0xFF4C662B)
+                                                GameStateMachine.WordStatistic.State.InProgress -> if (useDark) Color(0xFFAAC7FF) else Color(0xFF415F91)
+                                                GameStateMachine.WordStatistic.State.Mistake -> if (useDark) Color(0xFFFFB5A0) else Color(0xFF8F4C38)
+                                            },
+                                            contentColor = when (state) {
+                                                GameStateMachine.WordStatistic.State.Explained -> if (useDark) Color(0xFF1F3701) else Color(0xFFFFFFFF)
+                                                GameStateMachine.WordStatistic.State.InProgress -> if (useDark) Color(0xFF0A305F) else Color(0xFFFFFFFF)
+                                                GameStateMachine.WordStatistic.State.Mistake -> if (useDark) Color(0xFF561F0F) else Color(0xFFFFFFFF)
+                                            },
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+//                                                Icon(
+//                                                    imageVector = when (player.roundRole) {
+//                                                        ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Speaker -> HalfHatIcon.OnlineGameSpeakerIcon
+//                                                        ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Listener -> HalfHatIcon.OnlineGameListenerIcon
+//                                                        ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Player -> HalfHatIcon.OnlineGamePlayerIcon
+//                                                    },
+//                                                    modifier = Modifier.size(24.dp),
+//                                                    contentDescription = null,
+//                                                )
+//                                                Spacer(modifier = Modifier.width(16.dp))
+                                                Text(
+                                                    modifier = Modifier.weight(1f),
+                                                    text = word,
+                                                    textAlign = TextAlign.Center,
+                                                    maxLines = 1,
+                                                    softWrap = false,
+                                                )
+                                                val allSeconds = spentTime.inWholeSeconds
+                                                val seconds = allSeconds % 60
+                                                val minutes = allSeconds / 60
+                                                Text(
+                                                    modifier = Modifier.weight(1f),
+                                                    text = "$minutes:${seconds.toString().padStart(2, '0')}",
+                                                    textAlign = TextAlign.Center,
+                                                    maxLines = 1,
+                                                    softWrap = false,
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            GameResultsComponent.Section.Settings -> {
                                 val gameState = component.gameState.collectAsState().value
                                 val settingsBuilder = gameState.settings
                                 
@@ -398,6 +492,7 @@ public fun GameResultsUI(
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
@@ -410,6 +505,7 @@ public fun GameResultsUI(
                                 fontSize = 16.sp,
                             )
                         }
+                        Spacer(modifier = Modifier.width(8.dp))
                         Button( // TODO
                             enabled = false,
                             modifier = Modifier.weight(1f),
