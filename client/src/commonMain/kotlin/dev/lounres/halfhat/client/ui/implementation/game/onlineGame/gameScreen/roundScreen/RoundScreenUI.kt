@@ -1,49 +1,16 @@
 package dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundScreen
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.TextAutoSize
-import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingToolbarDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.HorizontalFloatingToolbar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.IconToggleButton
-import androidx.compose.material3.IconToggleButtonShapes
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.ToggleButtonShapes
-import androidx.compose.material3.ToggleFloatingActionButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -52,29 +19,15 @@ import androidx.window.core.layout.WindowSizeClass
 import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.AdditionalCard
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.RoundScreenComponent
-import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
-import dev.lounres.halfhat.client.ui.icons.OnlineGameCopyKeyButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGameCopyLinkButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGameExitRoomButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGameFinishGameButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGameHostMarkIcon
-import dev.lounres.halfhat.client.ui.icons.OnlineGameListenerIcon
-import dev.lounres.halfhat.client.ui.icons.OnlineGameOpenAdditionalCardButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGamePlayerIcon
-import dev.lounres.halfhat.client.ui.icons.OnlineGamePlayersButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGameScheduleButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGameSettingsButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGameSpeakerIcon
-import dev.lounres.halfhat.client.ui.icons.OnlineGameSpeakerToListenerRightArrow
-import dev.lounres.halfhat.client.ui.icons.OnlineGameWordsButton
+import dev.lounres.halfhat.client.ui.icons.*
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundScreen.roundEditing.RoundEditingGameCardUI
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundScreen.roundExplanation.RoundExplanationGameCardUI
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundScreen.roundLastGuess.RoundLastGuessGameCardUI
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundScreen.roundPreparation.RoundPreparationGameCardUI
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundScreen.roundWaiting.RoundWaitingGameCardUI
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
+import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.iterables.next
-import dev.lounres.kone.collections.list.indices
 import dev.lounres.kone.hub.set
 import dev.lounres.kone.hub.subscribeAsState
 import kotlinx.coroutines.launch
@@ -220,7 +173,6 @@ fun RoundScreenAdditionalCardUI(
                 )
             }
             IconToggleButton(
-                enabled = false,
                 checked = additionalCard == AdditionalCard.Settings,
                 onCheckedChange = {
                     if (it) component.coroutineScope.launch {
@@ -469,7 +421,199 @@ fun RoundScreenAdditionalCardUI(
                         }
                     }
                     AdditionalCard.WordsStatistic -> {} // TODO
-                    AdditionalCard.Settings -> {} // TODO
+                    AdditionalCard.Settings -> {
+                        val gameState = component.gameState.collectAsState().value
+                        val settingsBuilder = gameState.settings
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.Bottom,
+                        ) {
+                            OutlinedTextField(
+                                modifier = Modifier.weight(1f),
+                                enabled = false,
+                                value = settingsBuilder.preparationTimeSeconds.toString(),
+                                onValueChange = {},
+                                label = {
+                                    Text(
+                                        text = "Preparation",
+                                    )
+                                },
+                                singleLine = true,
+                                textStyle = TextStyle(textAlign = TextAlign.Center),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                    errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                    errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                    errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                                    errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                ),
+                            )
+                            
+                            Column {
+                                Icon(
+                                    modifier = commonIconModifier,
+                                    imageVector = HalfHatIcon.OnlineGameSettingsIconBetweenTimes,
+                                    contentDescription = null,
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+                            
+                            OutlinedTextField(
+                                modifier = Modifier.weight(1f),
+                                enabled = false,
+                                value = settingsBuilder.explanationTimeSeconds.toString(),
+                                onValueChange = {},
+                                label = {
+                                    Text(
+                                        text = "Explanation",
+                                    )
+                                },
+                                singleLine = true,
+                                textStyle = TextStyle(textAlign = TextAlign.Center),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                    errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                    errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                    errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                                    errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                ),
+                            )
+                            
+                            Column {
+                                Icon(
+                                    modifier = commonIconModifier,
+                                    imageVector = HalfHatIcon.OnlineGameSettingsIconBetweenTimes,
+                                    contentDescription = null,
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+                            
+                            OutlinedTextField(
+                                modifier = Modifier.weight(1f),
+                                enabled = false,
+                                value = settingsBuilder.finalGuessTimeSeconds.toString(),
+                                onValueChange = {},
+                                label = {
+                                    Text(
+                                        text = "Final guess",
+                                    )
+                                },
+                                singleLine = true,
+                                textStyle = TextStyle(textAlign = TextAlign.Center),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                    errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                    errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                    errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                                    errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                ),
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.Bottom,
+                        ) {
+                            val actualGameEndConditionType = settingsBuilder.gameEndCondition
+                            OutlinedTextField(
+                                modifier = Modifier.weight(1f),
+                                enabled = false,
+                                value = when (actualGameEndConditionType) {
+                                    is GameStateMachine.GameEndCondition.Words -> "Words"
+                                    is GameStateMachine.GameEndCondition.Cycles -> "Cycles"
+                                },
+                                onValueChange = {},
+                                readOnly = true,
+                                singleLine = true,
+                                label = {
+                                    Text(
+                                        text = "Game end condition",
+                                    )
+                                },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                                textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                    errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                    errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                    errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                    errorLabelColor = MaterialTheme.colorScheme.tertiary,
+//                                        errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                ),
+                            )
+                            
+                            Spacer(modifier = Modifier.width(8.dp))
+                            
+                            when (val gameEndCondition = settingsBuilder.gameEndCondition) {
+                                is GameStateMachine.GameEndCondition.Words -> {
+                                    OutlinedTextField(
+                                        modifier = Modifier.weight(1f),
+                                        enabled = false,
+                                        value = gameEndCondition.number.toString(),
+                                        onValueChange = {},
+                                        label = {
+                                            Text(
+                                                text = "The number of words",
+                                            )
+                                        },
+                                        textStyle = TextStyle(textAlign = TextAlign.Center),
+                                        singleLine = true,
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                            errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                            errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                            errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                                            errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                        ),
+                                    )
+                                }
+                                
+                                is GameStateMachine.GameEndCondition.Cycles -> {
+                                    OutlinedTextField(
+                                        modifier = Modifier.weight(1f),
+                                        enabled = false,
+                                        value = gameEndCondition.number.toString(),
+                                        onValueChange = {},
+                                        label = {
+                                            Text(
+                                                text = "The number of cycles",
+                                            )
+                                        },
+                                        textStyle = TextStyle(textAlign = TextAlign.Center),
+                                        singleLine = true,
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                            errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                            errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                            errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                                            errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                        ),
+                                    )
+                                }
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Checkbox(
+                                enabled = false,
+                                checked = settingsBuilder.strictMode,
+                                onCheckedChange = {},
+                                colors = CheckboxDefaults.colors()
+                            )
+                            
+                            Text(
+                                text = "Strict mode",
+                                fontSize = 20.sp,
+                            )
+                        }
+                    }
                 }
             }
         }
