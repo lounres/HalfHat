@@ -39,7 +39,7 @@ class RealRoundScreenComponent(
     override val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>,
 ) : RoundScreenComponent {
     override val openAdditionalCard: KoneMutableAsynchronousHubView<Boolean, *> = KoneMutableAsynchronousHub(false)
-    override val additionalCard: KoneMutableAsynchronousHubView<AdditionalCard, *> = KoneMutableAsynchronousHub(AdditionalCard.Schedule)
+    override val additionalCard: KoneMutableAsynchronousHubView<RoundScreenComponent.AdditionalCard, *> = KoneMutableAsynchronousHub(RoundScreenComponent.AdditionalCard.Schedule)
     
     public sealed interface Configuration {
         public data class RoundWaiting(

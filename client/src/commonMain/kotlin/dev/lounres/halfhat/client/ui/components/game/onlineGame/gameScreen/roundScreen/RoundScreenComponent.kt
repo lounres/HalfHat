@@ -37,8 +37,8 @@ interface RoundScreenComponent {
         public data class RoundLastGuess(val component: RoundLastGuessComponent) : Child
         public data class RoundEditing(val component: RoundEditingComponent) : Child
     }
-}
-
-enum class AdditionalCard {
-    Schedule, PlayersStatistic, WordsStatistic, Settings,
+    
+    enum class AdditionalCard {
+        Schedule, PlayersStatistic, WordsStatistic, Settings,
+    }
 }

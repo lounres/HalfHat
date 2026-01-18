@@ -21,11 +21,11 @@ import dev.lounres.halfhat.client.ui.icons.OnlineGameSpeakerToListenerDownArrow
 fun RoundWaitingGameCardUI(
     component: RoundWaitingComponent,
 ) {
-    val gameState = component.gameState.collectAsState().value
     Column(
         modifier = Modifier.fillMaxSize().padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        val gameState = component.gameState.collectAsState().value
         Column(
             modifier = Modifier.fillMaxWidth().weight(1f),
             horizontalAlignment = Alignment.CenterHorizontally,

@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.window.core.layout.WindowSizeClass
 import dev.lounres.halfhat.api.onlineGame.ServerApi
-import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.AdditionalCard
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.RoundScreenComponent
 import dev.lounres.halfhat.client.ui.icons.*
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundScreen.roundEditing.RoundEditingGameCardUI
@@ -32,7 +31,6 @@ import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.hub.set
 import dev.lounres.kone.hub.subscribeAsState
 import kotlinx.coroutines.launch
-import kotlin.time.Duration
 
 
 fun RoundScreenToolbarContentUI(
@@ -126,10 +124,10 @@ fun RoundScreenAdditionalCardUI(
             horizontalArrangement = Arrangement.Center,
         ) {
             IconToggleButton(
-                checked = additionalCard == AdditionalCard.Schedule,
+                checked = additionalCard == RoundScreenComponent.AdditionalCard.Schedule,
                 onCheckedChange = {
                     if (it) component.coroutineScope.launch {
-                        component.additionalCard.set(AdditionalCard.Schedule)
+                        component.additionalCard.set(RoundScreenComponent.AdditionalCard.Schedule)
                     }
                 },
                 shapes = ButtonGroupDefaults.connectedLeadingButtonShapes().toIconToggleButtonShapes(),
@@ -142,10 +140,10 @@ fun RoundScreenAdditionalCardUI(
                 )
             }
             IconToggleButton(
-                checked = additionalCard == AdditionalCard.PlayersStatistic,
+                checked = additionalCard == RoundScreenComponent.AdditionalCard.PlayersStatistic,
                 onCheckedChange = {
                     if (it) component.coroutineScope.launch {
-                        component.additionalCard.set(AdditionalCard.PlayersStatistic)
+                        component.additionalCard.set(RoundScreenComponent.AdditionalCard.PlayersStatistic)
                     }
                 },
                 shapes = ButtonGroupDefaults.connectedMiddleButtonShapes().toIconToggleButtonShapes(),
@@ -158,10 +156,10 @@ fun RoundScreenAdditionalCardUI(
                 )
             }
             IconToggleButton(
-                checked = additionalCard == AdditionalCard.WordsStatistic,
+                checked = additionalCard == RoundScreenComponent.AdditionalCard.WordsStatistic,
                 onCheckedChange = {
                     if (it) component.coroutineScope.launch {
-                        component.additionalCard.set(AdditionalCard.WordsStatistic)
+                        component.additionalCard.set(RoundScreenComponent.AdditionalCard.WordsStatistic)
                     }
                 },
                 shapes = ButtonGroupDefaults.connectedMiddleButtonShapes().toIconToggleButtonShapes(),
@@ -174,10 +172,10 @@ fun RoundScreenAdditionalCardUI(
                 )
             }
             IconToggleButton(
-                checked = additionalCard == AdditionalCard.Settings,
+                checked = additionalCard == RoundScreenComponent.AdditionalCard.Settings,
                 onCheckedChange = {
                     if (it) component.coroutineScope.launch {
-                        component.additionalCard.set(AdditionalCard.Settings)
+                        component.additionalCard.set(RoundScreenComponent.AdditionalCard.Settings)
                     }
                 },
                 shapes = ButtonGroupDefaults.connectedTrailingButtonShapes().toIconToggleButtonShapes(),
@@ -200,7 +198,7 @@ fun RoundScreenAdditionalCardUI(
             ) {
                 val gameState = component.gameState.collectAsState().value
                 when (additionalCard) {
-                    AdditionalCard.Schedule -> {
+                    RoundScreenComponent.AdditionalCard.Schedule -> {
                         Text(
                             text = "Current round",
                             fontSize = 24.sp,
@@ -324,7 +322,7 @@ fun RoundScreenAdditionalCardUI(
                             fontSize = 20.sp,
                         )
                     }
-                    AdditionalCard.PlayersStatistic -> {
+                    RoundScreenComponent.AdditionalCard.PlayersStatistic -> {
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(8.dp),
                         ) {
@@ -421,7 +419,7 @@ fun RoundScreenAdditionalCardUI(
                             }
                         }
                     }
-                    AdditionalCard.WordsStatistic -> {
+                    RoundScreenComponent.AdditionalCard.WordsStatistic -> {
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(8.dp).height(IntrinsicSize.Min),
                         ) {
@@ -499,7 +497,7 @@ fun RoundScreenAdditionalCardUI(
                             }
                         }
                     }
-                    AdditionalCard.Settings -> {
+                    RoundScreenComponent.AdditionalCard.Settings -> {
                         val gameState = component.gameState.collectAsState().value
                         val settingsBuilder = gameState.settings
                         
@@ -797,9 +795,8 @@ public fun RoundScreenUI(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val gameState = component.gameState.collectAsState().value
         Text(
-            text = gameState.roomName,
+            text = component.gameState.collectAsState().value.roomName,
             fontSize = 48.sp,
         )
         val minWidthDp = windowSizeClass.minWidthDp

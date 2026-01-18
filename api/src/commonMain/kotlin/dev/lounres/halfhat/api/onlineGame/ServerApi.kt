@@ -333,7 +333,6 @@ public object ServerApi {
                 override val role: Role.PlayersWordsCollection,
                 public val playersList: KoneList<PlayerDescription.PlayersWordsCollection>,
                 public val settings: Settings,
-                public val playersWordsAreReady: KoneBooleanArray,
             ) : State
             
             @Serializable

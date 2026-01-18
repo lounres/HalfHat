@@ -634,7 +634,6 @@ public class Room<
                 override val role: Role.PlayersWordsCollection<PlayerMetadata>,
                 public val playersList: KoneList<PlayerDescription.PlayersWordsCollection<PlayerMetadata>>,
                 public val settings: GameSettings<WordsProviderID>,
-                public val playersWordsAreReady: KoneBooleanArray,
             ) : State<RoomMetadata, PlayerMetadata, WordsProviderID>
             
             public sealed interface Round<out RoomMetadata, out PlayerMetadata, out WordsProviderID> : State<RoomMetadata, PlayerMetadata, WordsProviderID> {
@@ -958,7 +957,6 @@ public class Room<
                                     is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.ServerDictionary(wordsSource.providerId)
                                 },
                             ),
-                            playersWordsAreReady = KoneBooleanArray.generate(nextState.playersWords.size) { nextState.playersWords[it] != null }
                         )
                     }
                     is GameStateMachine.State.RoundWaiting<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {

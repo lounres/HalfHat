@@ -169,6 +169,9 @@ public suspend fun RealOnlineGamePageComponent(
                             onFinishGame = {
                                 onlineGameComponent.sendSignal(ClientApi.Signal.OnlineGame.FinishGame)
                             },
+                            onSubmitWords = {
+                                onlineGameComponent.sendSignal(ClientApi.Signal.OnlineGame.SubmitWords(it))
+                            },
                             onSpeakerReady = {
                                 onlineGameComponent.sendSignal(ClientApi.Signal.OnlineGame.SpeakerReady)
                             },

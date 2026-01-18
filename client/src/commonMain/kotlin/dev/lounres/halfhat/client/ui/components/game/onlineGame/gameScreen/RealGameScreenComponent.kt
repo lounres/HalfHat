@@ -12,6 +12,7 @@ import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.gameR
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.loading.RealLoadingComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomScreen.RealRoomScreenComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.RealRoundScreenComponent
+import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.wordsCollection.RealWordsCollectionComponent
 import dev.lounres.halfhat.client.ui.theming.darkTheme
 import dev.lounres.halfhat.client.utils.copyToClipboard
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
@@ -52,6 +53,7 @@ public suspend fun RealGameScreenComponent(
     onApplySettings: (ClientApi.SettingsBuilder) -> Unit,
     onStartGame: () -> Unit,
     onFinishGame: () -> Unit,
+    onSubmitWords: (KoneList<String>) -> Unit,
     onSpeakerReady: () -> Unit,
     onListenerReady: () -> Unit,
     onExplanationResult: (GameStateMachine.WordExplanation.State) -> Unit,
@@ -107,7 +109,29 @@ public suspend fun RealGameScreenComponent(
                     )
                 is RealGameScreenComponent.Configuration.PlayersWordsCollection ->
                     GameScreenComponent.Child.PlayersWordsCollection(
-                        TODO()
+                        RealWordsCollectionComponent(
+                            componentContext = componentContext,
+                            
+                            onSubmitWords = onSubmitWords,
+                            
+                            onExitOnlineGame = onExitOnlineGame,
+                            onCopyOnlineGameKey = {
+                                coroutineScope.launch {
+                                    val gameState = gameStateFlow.value
+                                    if (gameState != null) copyToClipboard(gameState.roomName)
+                                }
+                            },
+                            onCopyOnlineGameLink = {
+                                coroutineScope.launch {
+                                    val gameState = gameStateFlow.value
+                                    if (gameState != null) {
+                                        copyToClipboard("${OnlineGameSettings.linkBase}game/online/${UrlEncoderUtil.encode(gameState.roomName)}")
+                                    }
+                                }
+                            },
+                            
+                            gameState = configuration.stateFlow,
+                        )
                     )
                 is RealGameScreenComponent.Configuration.RoundScreen ->
                     GameScreenComponent.Child.RoundScreen(

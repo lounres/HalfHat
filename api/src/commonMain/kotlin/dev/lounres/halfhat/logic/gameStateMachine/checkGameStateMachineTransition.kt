@@ -363,7 +363,7 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
         is GameStateMachine.Transition.SubmitPlayerWords ->
             when (previousState) {
                 is GameStateMachine.State.PlayersWordsCollection ->
-                    if (previousState.playersList[transition.playerIndex] != null)
+                    if (previousState.playersWords[transition.playerIndex] != null)
                         CheckResult.Failure(GameStateMachine.NoNextStateReason.PlayerAlreadySubmittedWords)
                     else {
                         val newPlayersWords = previousState.playersWords.toKoneSettableList()

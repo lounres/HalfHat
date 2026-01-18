@@ -7,6 +7,7 @@ import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.g
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.loading.LoadingUI
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roomScreen.RoomScreenUI
 import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundScreen.RoundScreenUI
+import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.wordsCollection.WordsCollectionUI
 import dev.lounres.kone.hub.subscribeAsState
 
 
@@ -19,7 +20,7 @@ public fun GameScreenUI(
     when (child) {
         is GameScreenComponent.Child.Loading -> LoadingUI(child.component)
         is GameScreenComponent.Child.RoomScreen -> RoomScreenUI(child.component, windowSizeClass)
-        is GameScreenComponent.Child.PlayersWordsCollection -> TODO()
+        is GameScreenComponent.Child.PlayersWordsCollection -> WordsCollectionUI(child.component, windowSizeClass)
         is GameScreenComponent.Child.RoundScreen -> RoundScreenUI(child.component, windowSizeClass)
         is GameScreenComponent.Child.GameResults -> GameResultsUI(child.component)
     }

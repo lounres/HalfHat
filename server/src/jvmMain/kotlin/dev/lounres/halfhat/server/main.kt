@@ -143,7 +143,8 @@ fun getRoomByIdOrCreate(id: String): ServerRoom = rooms.computeIfAbsent(id) {
             cachedEndConditionWordsNumber = 100u,
             cachedEndConditionCyclesNumber = 4u,
             gameEndConditionType = GameStateMachine.GameEndCondition.Type.Words,
-            wordsSource = Room.WordsSource.ServerDictionary("medium")
+            wordsSource = Room.WordsSource.ServerDictionary("medium"),
+//            wordsSource = Room.WordsSource.Players,
         ),
         initialMetadataFactory = { PlayerMetadata(it) },
         checkConnectionAttachment = { _, isOnline, _ -> !isOnline }
@@ -229,7 +230,6 @@ class Connection(
                                 )
                             },
                             settings = state.settings.toServerApi(),
-                            playersWordsAreReady = state.playersWordsAreReady,
                         )
                     is Room.Outgoing.State.Round.Waiting<RoomMetadata, PlayerMetadata, WordsProviderID> ->
                         ServerApi.OnlineGame.State.Round.Waiting(
