@@ -25,6 +25,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -37,6 +40,7 @@ import androidx.compose.material3.IconToggleButtonShapes
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -47,7 +51,11 @@ import androidx.compose.material3.ToggleFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.lerp
@@ -58,6 +66,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.window.core.layout.WindowSizeClass
 import dev.lounres.halfhat.api.onlineGame.ServerApi
+import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomScreen.RoomScreenComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.wordsCollection.WordsCollectionComponent
 import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.icons.OnlineGameCopyKeyButton
@@ -509,17 +518,31 @@ fun WordsCollectionAdditionalCardUI(
                                         },
                                         textStyle = TextStyle(textAlign = TextAlign.Center),
                                         singleLine = true,
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            errorCursorColor = MaterialTheme.colorScheme.tertiary,
-                                            errorBorderColor = MaterialTheme.colorScheme.tertiary,
-                                            errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
-                                            errorLabelColor = MaterialTheme.colorScheme.tertiary,
-                                            errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
-                                        ),
                                     )
                                 }
                             }
                         }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        OutlinedTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = false,
+                            value = when (val wordsSource = settingsBuilder.wordsSource) {
+                                ServerApi.WordsSource.Players -> "Players"
+                                ServerApi.WordsSource.HostDictionary -> "Host dictionary"
+                            },
+                            onValueChange = {},
+                            readOnly = true,
+                            singleLine = true,
+                            label = {
+                                Text(
+                                    text = "Words source",
+                                )
+                            },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                            textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
+                        )
                         
                         Spacer(modifier = Modifier.height(8.dp))
                         
@@ -531,7 +554,6 @@ fun WordsCollectionAdditionalCardUI(
                                 enabled = false,
                                 checked = settingsBuilder.strictMode,
                                 onCheckedChange = {},
-                                colors = CheckboxDefaults.colors()
                             )
                             
                             Text(

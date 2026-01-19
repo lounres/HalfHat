@@ -94,6 +94,10 @@ kotlin {
                 api(versions.ktor.client.websockets)
                 api(versions.ktor.serialization.kotlinx.json)
                 api(versions.ktor.serialization.kotlinx.protobuf)
+                
+                // FileKit
+                api(libs.filekit.core)
+                api(libs.filekit.dialogs)
 
                 // Koin
 //                api(versions.koin.core)

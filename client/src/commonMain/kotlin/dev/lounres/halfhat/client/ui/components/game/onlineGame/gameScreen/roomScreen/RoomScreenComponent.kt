@@ -2,6 +2,7 @@ package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.room
 
 import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
+import dev.lounres.kone.collections.list.KoneList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -22,8 +23,14 @@ public interface RoomScreenComponent {
     public val cachedEndConditionWordsNumber: MutableStateFlow<UInt?>
     public val cachedEndConditionCyclesNumber: MutableStateFlow<UInt?>
     public val gameEndConditionType: MutableStateFlow<GameStateMachine.GameEndCondition.Type?>
-//    val wordsSource // TODO: Implement different words sources
+    public val wordsSource: MutableStateFlow<WordsSource?>
+    public val hostDictionary: MutableStateFlow<KoneList<String>?>
     
     public val onApplySettings: () -> Unit
     public val onDiscardSettings: () -> Unit
+    
+    public sealed interface WordsSource {
+        public data object Players : WordsSource
+        public data object HostDictionary : WordsSource
+    }
 }

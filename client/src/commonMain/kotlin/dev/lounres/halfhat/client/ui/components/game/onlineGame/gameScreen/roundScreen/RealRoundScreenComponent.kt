@@ -118,6 +118,8 @@ suspend fun RealRoundScreenComponent(
                         RealRoundLastGuessComponent(
                             gameState = configuration.stateFlow,
                             
+                            darkTheme = componentContext.settings.darkTheme,
+                            
                             onExplanationResult = onExplanationResult,
                         )
                     )

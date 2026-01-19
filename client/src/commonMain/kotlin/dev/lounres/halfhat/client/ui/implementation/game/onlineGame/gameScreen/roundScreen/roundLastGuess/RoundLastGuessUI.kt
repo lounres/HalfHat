@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -21,6 +22,7 @@ import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundLastGuess.RoundLastGuessComponent
 import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.icons.OnlineGameSpeakerToListenerRightArrow
+import dev.lounres.kone.hub.subscribeAsState
 
 
 @Composable
@@ -140,6 +142,7 @@ public fun RoundLastGuessGameCardUI(
                     modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
+                    val useDark = component.darkTheme.subscribeAsState().value.isDark
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
@@ -147,6 +150,14 @@ public fun RoundLastGuessGameCardUI(
                             modifier = Modifier.weight(1f),
                             shape = CircleShape,
                             onClick = component.onNotGuessed,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor =
+                                    if (useDark) Color(0xFFAAC7FF)
+                                    else Color(0xFF415F91),
+                                contentColor =
+                                    if (useDark) Color(0xFF0A305F)
+                                    else Color(0xFFFFFFFF),
+                            ),
                         ) {
                             Text(
                                 text = "Not guessed",
@@ -158,6 +169,14 @@ public fun RoundLastGuessGameCardUI(
                             modifier = Modifier.weight(1f),
                             shape = CircleShape,
                             onClick = component.onMistake,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor =
+                                    if (useDark) Color(0xFFFFB5A0)
+                                    else Color(0xFF8F4C38),
+                                contentColor =
+                                    if (useDark) Color(0xFF561F0F)
+                                    else Color(0xFFFFFFFF),
+                            ),
                         ) {
                             Text(
                                 text = "Mistake",
@@ -170,6 +189,14 @@ public fun RoundLastGuessGameCardUI(
                         modifier = Modifier.fillMaxWidth(),
                         shape = CircleShape,
                         onClick = component.onGuessed,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor =
+                                if (useDark) Color(0xFFB1D18A)
+                                else Color(0xFF4C662B),
+                            contentColor =
+                                if (useDark) Color(0xFF1F3701)
+                                else Color(0xFFFFFFFF),
+                        ),
                     ) {
                         Text(
                             text = "Guessed",

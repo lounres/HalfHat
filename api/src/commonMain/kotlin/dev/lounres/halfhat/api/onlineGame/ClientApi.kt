@@ -10,12 +10,14 @@ public object ClientApi {
     public sealed interface WordsSource {
         @Serializable
         public data object Players : WordsSource
-//        @Serializable
-//        public data object HostDictionary: WordsSource
         @Serializable
-        public data class ServerDictionary(
-            val id: String,
-        ) : WordsSource
+        public data class HostDictionary(
+            val words: KoneList<String>,
+        ): WordsSource
+//        @Serializable
+//        public data class ServerDictionary(
+//            val id: ULong,
+//        ) : WordsSource
     }
     
     @Serializable

@@ -1,12 +1,16 @@
 package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundLastGuess
 
 import dev.lounres.halfhat.api.onlineGame.ServerApi
+import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
+import dev.lounres.kone.hub.KoneAsynchronousHubView
 import kotlinx.coroutines.flow.StateFlow
 
 
 public class RealRoundLastGuessComponent(
     override val gameState: StateFlow<ServerApi.OnlineGame.State.Round.LastGuess>,
+    
+    override val darkTheme: KoneAsynchronousHubView<DarkTheme, *>,
     
     onExplanationResult: (GameStateMachine.WordExplanation.State) -> Unit,
 ) : RoundLastGuessComponent {

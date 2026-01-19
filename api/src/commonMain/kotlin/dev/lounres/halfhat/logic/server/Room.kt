@@ -35,7 +35,7 @@ public class Room<
     ConnectionType: Room.Connection<RoomMetadata, PlayerMetadata, WordsProviderID, NoWordsProviderReason>,
 >(
     public val metadata: RoomMetadata,
-    public val wordsProviderRegistry: WordProviderRegistry<WordsProviderID, NoWordsProviderReason>,
+    public val wordsProviderRegistry: GameStateMachine.WordsProviderRegistry<WordsProviderID, NoWordsProviderReason>,
     initialSettingsBuilder: GameSettings.Builder<WordsProviderID>,
     private val initialMetadataFactory: (PlayerID) -> PlayerMetadata,
     private val checkConnectionAttachment: (metadata: PlayerMetadata, isOnline: Boolean, connection: ConnectionType) -> Boolean,
@@ -119,7 +119,7 @@ public class Room<
                                         wordsSource = when (val wordsSource = settingsBuilderPatch.wordsSource) {
                                             null -> previousState.settingsBuilder.wordsSource
                                             WordsSource.Players -> GameStateMachine.WordsSource.Players
-                                            is WordsSource.ServerDictionary<WordsProviderID> -> GameStateMachine.WordsSource.Custom(wordsSource.id)
+                                            is WordsSource.Custom<WordsProviderID> -> GameStateMachine.WordsSource.Custom(wordsSource.id)
                                         },
                                     ),
                                 )
@@ -379,15 +379,9 @@ public class Room<
         public suspend fun sendError(error: Outgoing.Error<NoWordsProviderReason>)
     }
     
-    public interface WordProviderRegistry<WordsProviderID, NoWordsProviderReason> : GameStateMachine.WordsProviderRegistry<WordsProviderID, NoWordsProviderReason> {
-        public operator fun contains(id: WordsProviderID): Boolean
-        override suspend operator fun get(providerId: WordsProviderID): GameStateMachine.WordsProviderRegistry.ResultOrReason<NoWordsProviderReason>
-    }
-    
     public sealed interface WordsSource<out WordsProviderID> {
         public data object Players : WordsSource<Nothing>
-//        public data object HostDictionary: WordsSource
-        public data class ServerDictionary<WordsProviderID>(
+        public data class Custom<WordsProviderID>(
             public val id: WordsProviderID,
         ) : WordsSource<WordsProviderID>
     }
@@ -869,7 +863,7 @@ public class Room<
                 gameEndConditionType = initialSettingsBuilder.gameEndConditionType,
                 wordsSource = when (val source = initialSettingsBuilder.wordsSource) {
                     WordsSource.Players -> GameStateMachine.WordsSource.Players
-                    is WordsSource.ServerDictionary<WordsProviderID> -> GameStateMachine.WordsSource.Custom(source.id)
+                    is WordsSource.Custom<WordsProviderID> -> GameStateMachine.WordsSource.Custom(source.id)
                 },
             ),
             checkMetadataUpdate = { previousState, metadataTransition: GameStateMachineMetadataTransition<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType> ->
@@ -930,7 +924,7 @@ public class Room<
                                 gameEndConditionType = gameMachineSettingsBuilder.gameEndConditionType,
                                 wordsSource = when (val wordsSource = gameMachineSettingsBuilder.wordsSource) {
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.ServerDictionary(wordsSource.providerId)
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.Custom(wordsSource.providerId)
                                 }
                             )
                         )
@@ -962,7 +956,7 @@ public class Room<
                                 gameEndCondition = gameMachineSettings.gameEndCondition,
                                 wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.ServerDictionary(wordsSource.providerId)
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.Custom(wordsSource.providerId)
                                 },
                             ),
                         )
@@ -1008,7 +1002,7 @@ public class Room<
                                 gameEndCondition = gameMachineSettings.gameEndCondition,
                                 wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.ServerDictionary(wordsSource.providerId)
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.Custom(wordsSource.providerId)
                                 },
                             ),
                             initialWordsNumber = nextState.initialWordsNumber,
@@ -1069,7 +1063,7 @@ public class Room<
                                 gameEndCondition = gameMachineSettings.gameEndCondition,
                                 wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.ServerDictionary(wordsSource.providerId)
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.Custom(wordsSource.providerId)
                                 },
                             ),
                             initialWordsNumber = nextState.initialWordsNumber,
@@ -1129,7 +1123,7 @@ public class Room<
                                 gameEndCondition = gameMachineSettings.gameEndCondition,
                                 wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.ServerDictionary(wordsSource.providerId)
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.Custom(wordsSource.providerId)
                                 },
                             ),
                             initialWordsNumber = nextState.initialWordsNumber,
@@ -1189,7 +1183,7 @@ public class Room<
                                 gameEndCondition = gameMachineSettings.gameEndCondition,
                                 wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.ServerDictionary(wordsSource.providerId)
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.Custom(wordsSource.providerId)
                                 },
                             ),
                             initialWordsNumber = nextState.initialWordsNumber,
@@ -1249,7 +1243,7 @@ public class Room<
                                 gameEndCondition = gameMachineSettings.gameEndCondition,
                                 wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.ServerDictionary(wordsSource.providerId)
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.Custom(wordsSource.providerId)
                                 },
                             ),
                             initialWordsNumber = nextState.initialWordsNumber,
@@ -1296,7 +1290,7 @@ public class Room<
                                 gameEndCondition = gameMachineSettings.gameEndCondition,
                                 wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.ServerDictionary(wordsSource.providerId)
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.Custom(wordsSource.providerId)
                                 },
                             ),
                             leaderboardPermutation = playersList

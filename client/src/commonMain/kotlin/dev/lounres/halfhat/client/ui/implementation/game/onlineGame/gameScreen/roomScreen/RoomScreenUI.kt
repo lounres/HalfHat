@@ -1,5 +1,6 @@
 package dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roomScreen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -32,15 +33,21 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.window.core.layout.WindowSizeClass
+import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomScreen.RoomScreenComponent
 import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.icons.OnlineGameCopyKeyButton
@@ -52,8 +59,15 @@ import dev.lounres.halfhat.client.ui.icons.OnlineGameSettingsButton
 import dev.lounres.halfhat.client.ui.icons.OnlineGameSettingsIconBetweenTimes
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
+import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.utils.withIndex
+import dev.lounres.kone.scope
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.openFilePicker
+import io.github.vinceglb.filekit.readString
+import kotlinx.coroutines.launch
 import kotlin.text.ifEmpty
 
 
@@ -156,281 +170,435 @@ fun RoomScreenSettingsCardUI(
             val settingsBuilder = gameState.settingsBuilder
             val areSettingsChangeable = gameState.role.areSettingsChangeable
             
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Bottom,
+            Column(
+                modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                val currentPreparationTimeSeconds = component.preparationTimeSeconds.collectAsState().value
-                OutlinedTextField(
-                    modifier = Modifier.weight(1f),
-                    enabled = areSettingsChangeable,
-                    isError = areSettingsChangeable && currentPreparationTimeSeconds != null,
-                    value = (currentPreparationTimeSeconds.takeIf { areSettingsChangeable } ?: settingsBuilder.preparationTimeSeconds).toString(),
-                    onValueChange = {
-                        component.preparationTimeSeconds.value =
-                            it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
-                    },
-                    label = {
-                        Text(
-                            text = "Preparation",
-                        )
-                    },
-                    singleLine = true,
-                    textStyle = TextStyle(textAlign = TextAlign.Center),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        errorCursorColor = MaterialTheme.colorScheme.tertiary,
-                        errorBorderColor = MaterialTheme.colorScheme.tertiary,
-                        errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
-                        errorLabelColor = MaterialTheme.colorScheme.tertiary,
-                        errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
-                    ),
-                )
-                
-                Column {
-                    Icon(
-                        modifier = commonIconModifier,
-                        imageVector = HalfHatIcon.OnlineGameSettingsIconBetweenTimes,
-                        contentDescription = null,
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-                
-                val currentExplanationTimeSeconds = component.explanationTimeSeconds.collectAsState().value
-                OutlinedTextField(
-                    modifier = Modifier.weight(1f),
-                    enabled = areSettingsChangeable,
-                    isError = areSettingsChangeable && currentExplanationTimeSeconds != null,
-                    value = (currentExplanationTimeSeconds.takeIf { areSettingsChangeable } ?: settingsBuilder.explanationTimeSeconds).toString(),
-                    onValueChange = {
-                        component.explanationTimeSeconds.value =
-                            it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
-                    },
-                    label = {
-                        Text(
-                            text = "Explanation",
-                        )
-                    },
-                    singleLine = true,
-                    textStyle = TextStyle(textAlign = TextAlign.Center),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        errorCursorColor = MaterialTheme.colorScheme.tertiary,
-                        errorBorderColor = MaterialTheme.colorScheme.tertiary,
-                        errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
-                        errorLabelColor = MaterialTheme.colorScheme.tertiary,
-                        errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
-                    ),
-                )
-                
-                Column {
-                    Icon(
-                        modifier = commonIconModifier,
-                        imageVector = HalfHatIcon.OnlineGameSettingsIconBetweenTimes,
-                        contentDescription = null,
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-                
-                val currentFinalGuessTimeSeconds = component.finalGuessTimeSeconds.collectAsState().value
-                OutlinedTextField(
-                    modifier = Modifier.weight(1f),
-                    enabled = areSettingsChangeable,
-                    isError = areSettingsChangeable && currentFinalGuessTimeSeconds != null,
-                    value = (currentFinalGuessTimeSeconds.takeIf { areSettingsChangeable } ?: settingsBuilder.finalGuessTimeSeconds).toString(),
-                    onValueChange = {
-                        component.finalGuessTimeSeconds.value =
-                            it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
-                    },
-                    label = {
-                        Text(
-                            text = "Final guess",
-                        )
-                    },
-                    singleLine = true,
-                    textStyle = TextStyle(textAlign = TextAlign.Center),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        errorCursorColor = MaterialTheme.colorScheme.tertiary,
-                        errorBorderColor = MaterialTheme.colorScheme.tertiary,
-                        errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
-                        errorLabelColor = MaterialTheme.colorScheme.tertiary,
-                        errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
-                    ),
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Bottom,
-            ) {
-                var menuExpanded by remember { mutableStateOf(false) }
-                ExposedDropdownMenuBox(
-                    modifier = Modifier.weight(1f),
-                    expanded = false,
-                    onExpandedChange = { menuExpanded = it },
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Bottom,
                 ) {
-                    val currentGameEndConditionType = component.gameEndConditionType.collectAsState().value
-                    val actualGameEndConditionType = currentGameEndConditionType.takeIf { areSettingsChangeable } ?: settingsBuilder.gameEndConditionType
-                    val isChanged = areSettingsChangeable && currentGameEndConditionType != null
+                    val currentPreparationTimeSeconds = component.preparationTimeSeconds.collectAsState().value
                     OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, areSettingsChangeable),
+                        modifier = Modifier.weight(1f),
                         enabled = areSettingsChangeable,
-                        isError = isChanged,
-                        value = when (actualGameEndConditionType) {
-                            GameStateMachine.GameEndCondition.Type.Words -> "Words"
-                            GameStateMachine.GameEndCondition.Type.Cycles -> "Cycles"
+                        isError = areSettingsChangeable && currentPreparationTimeSeconds != null,
+                        value = (currentPreparationTimeSeconds.takeIf { areSettingsChangeable } ?: settingsBuilder.preparationTimeSeconds).toString(),
+                        onValueChange = {
+                            component.preparationTimeSeconds.value =
+                                it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
                         },
-                        onValueChange = {},
-                        readOnly = true,
-                        singleLine = true,
                         label = {
                             Text(
-                                text = "Game end condition",
+                                text = "Preparation",
                             )
                         },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = menuExpanded) },
-                        textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
-                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                        singleLine = true,
+                        textStyle = TextStyle(textAlign = TextAlign.Center),
+                        colors = OutlinedTextFieldDefaults.colors(
                             errorCursorColor = MaterialTheme.colorScheme.tertiary,
                             errorBorderColor = MaterialTheme.colorScheme.tertiary,
                             errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
                             errorLabelColor = MaterialTheme.colorScheme.tertiary,
-//                            errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                            errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
                         ),
                     )
                     
-                    ExposedDropdownMenu(
-                        expanded = menuExpanded,
-                        onDismissRequest = { menuExpanded = false },
-                    ) {
-                        val itemColors =
-                            if (isChanged)
-                                MenuDefaults.selectableItemColors()
-                            else
-                                MenuDefaults.selectableItemColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.onSecondary,
-                                    selectedTextColor = MaterialTheme.colorScheme.secondary,
-                                    selectedLeadingIconColor = MaterialTheme.colorScheme.onSecondary,
-                                    selectedTrailingIconColor = MaterialTheme.colorScheme.onSecondary,
-                                )
-                        DropdownMenuItem(
-                            selected = actualGameEndConditionType == GameStateMachine.GameEndCondition.Type.Words,
-                            text = { Text(text = "Words", style = MaterialTheme.typography.bodyLarge) },
-                            onClick = {
-                                component.gameEndConditionType.value = GameStateMachine.GameEndCondition.Type.Words
-                                menuExpanded = false
-                            },
-                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                            shapes = MenuDefaults.itemShapes(),
-                            colors = itemColors,
+                    Column {
+                        Icon(
+                            modifier = commonIconModifier,
+                            imageVector = HalfHatIcon.OnlineGameSettingsIconBetweenTimes,
+                            contentDescription = null,
                         )
-                        DropdownMenuItem(
-                            selected = actualGameEndConditionType == GameStateMachine.GameEndCondition.Type.Cycles,
-                            text = { Text(text = "Cycles", style = MaterialTheme.typography.bodyLarge) },
-                            onClick = {
-                                component.gameEndConditionType.value = GameStateMachine.GameEndCondition.Type.Cycles
-                                menuExpanded = false
-                            },
-                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                            shapes = MenuDefaults.itemShapes(),
-                            colors = itemColors,
-                        )
-                    }
-                }
-                
-                Spacer(modifier = Modifier.width(8.dp))
-                
-                when (
-                    component.gameEndConditionType.collectAsState().value.takeIf { areSettingsChangeable } ?: settingsBuilder.gameEndConditionType
-                ) {
-                    GameStateMachine.GameEndCondition.Type.Words -> {
-                        val currentCachedEndConditionWordsNumber = component.cachedEndConditionWordsNumber.collectAsState().value
-                        OutlinedTextField(
-                            modifier = Modifier.weight(1f),
-                            enabled = areSettingsChangeable,
-                            isError = areSettingsChangeable && currentCachedEndConditionWordsNumber != null,
-                            value = (currentCachedEndConditionWordsNumber.takeIf { areSettingsChangeable } ?: settingsBuilder.cachedEndConditionWordsNumber).toString(),
-                            onValueChange = {
-                                component.cachedEndConditionWordsNumber.value =
-                                    it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
-                            },
-                            label = {
-                                Text(
-                                    text = "The number of words",
-                                )
-                            },
-                            textStyle = TextStyle(textAlign = TextAlign.Center),
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                errorCursorColor = MaterialTheme.colorScheme.tertiary,
-                                errorBorderColor = MaterialTheme.colorScheme.tertiary,
-                                errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
-                                errorLabelColor = MaterialTheme.colorScheme.tertiary,
-                                errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
-                            ),
-                        )
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                     
-                    GameStateMachine.GameEndCondition.Type.Cycles -> {
-                        val currentCachedEndConditionCyclesNumber = component.cachedEndConditionCyclesNumber.collectAsState().value
+                    val currentExplanationTimeSeconds = component.explanationTimeSeconds.collectAsState().value
+                    OutlinedTextField(
+                        modifier = Modifier.weight(1f),
+                        enabled = areSettingsChangeable,
+                        isError = areSettingsChangeable && currentExplanationTimeSeconds != null,
+                        value = (currentExplanationTimeSeconds.takeIf { areSettingsChangeable } ?: settingsBuilder.explanationTimeSeconds).toString(),
+                        onValueChange = {
+                            component.explanationTimeSeconds.value =
+                                it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                        },
+                        label = {
+                            Text(
+                                text = "Explanation",
+                            )
+                        },
+                        singleLine = true,
+                        textStyle = TextStyle(textAlign = TextAlign.Center),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                            errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                            errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                            errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                            errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                        ),
+                    )
+                    
+                    Column {
+                        Icon(
+                            modifier = commonIconModifier,
+                            imageVector = HalfHatIcon.OnlineGameSettingsIconBetweenTimes,
+                            contentDescription = null,
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                    
+                    val currentFinalGuessTimeSeconds = component.finalGuessTimeSeconds.collectAsState().value
+                    OutlinedTextField(
+                        modifier = Modifier.weight(1f),
+                        enabled = areSettingsChangeable,
+                        isError = areSettingsChangeable && currentFinalGuessTimeSeconds != null,
+                        value = (currentFinalGuessTimeSeconds.takeIf { areSettingsChangeable } ?: settingsBuilder.finalGuessTimeSeconds).toString(),
+                        onValueChange = {
+                            component.finalGuessTimeSeconds.value =
+                                it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                        },
+                        label = {
+                            Text(
+                                text = "Final guess",
+                            )
+                        },
+                        singleLine = true,
+                        textStyle = TextStyle(textAlign = TextAlign.Center),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                            errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                            errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                            errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                            errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                        ),
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    var gameEndConditionMenuExpanded by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(
+                        modifier = Modifier.weight(1f),
+                        expanded = false,
+                        onExpandedChange = { gameEndConditionMenuExpanded = it },
+                    ) {
+                        val currentGameEndConditionType = component.gameEndConditionType.collectAsState().value
+                        val actualGameEndConditionType = currentGameEndConditionType.takeIf { areSettingsChangeable } ?: settingsBuilder.gameEndConditionType
+                        val isChanged = areSettingsChangeable && currentGameEndConditionType != null
                         OutlinedTextField(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, areSettingsChangeable),
                             enabled = areSettingsChangeable,
-                            isError = areSettingsChangeable && currentCachedEndConditionCyclesNumber != null,
-                            value = (currentCachedEndConditionCyclesNumber.takeIf { areSettingsChangeable } ?: settingsBuilder.cachedEndConditionCyclesNumber).toString(),
-                            onValueChange = {
-                                component.cachedEndConditionCyclesNumber.value =
-                                    it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                            isError = isChanged,
+                            value = when (actualGameEndConditionType) {
+                                GameStateMachine.GameEndCondition.Type.Words -> "Words"
+                                GameStateMachine.GameEndCondition.Type.Cycles -> "Cycles"
                             },
+                            onValueChange = {},
+                            readOnly = true,
+                            singleLine = true,
                             label = {
                                 Text(
-                                    text = "The number of cycles",
+                                    text = "Game end condition",
                                 )
                             },
-                            textStyle = TextStyle(textAlign = TextAlign.Center),
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = gameEndConditionMenuExpanded) },
+                            textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
                                 errorCursorColor = MaterialTheme.colorScheme.tertiary,
                                 errorBorderColor = MaterialTheme.colorScheme.tertiary,
                                 errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
                                 errorLabelColor = MaterialTheme.colorScheme.tertiary,
-                                errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+    //                            errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
                             ),
                         )
+                        
+                        ExposedDropdownMenu(
+                            expanded = gameEndConditionMenuExpanded,
+                            onDismissRequest = { gameEndConditionMenuExpanded = false },
+                        ) {
+                            val itemColors =
+                                if (isChanged)
+                                    MenuDefaults.selectableItemColors()
+                                else
+                                    MenuDefaults.selectableItemColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.onSecondary,
+                                        selectedTextColor = MaterialTheme.colorScheme.secondary,
+                                        selectedLeadingIconColor = MaterialTheme.colorScheme.onSecondary,
+                                        selectedTrailingIconColor = MaterialTheme.colorScheme.onSecondary,
+                                    )
+                            DropdownMenuItem(
+                                selected = actualGameEndConditionType == GameStateMachine.GameEndCondition.Type.Words,
+                                text = { Text(text = "Words", style = MaterialTheme.typography.bodyLarge) },
+                                onClick = {
+                                    component.gameEndConditionType.value = GameStateMachine.GameEndCondition.Type.Words
+                                    gameEndConditionMenuExpanded = false
+                                },
+                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                shapes = MenuDefaults.itemShapes(),
+                                colors = itemColors,
+                            )
+                            DropdownMenuItem(
+                                selected = actualGameEndConditionType == GameStateMachine.GameEndCondition.Type.Cycles,
+                                text = { Text(text = "Cycles", style = MaterialTheme.typography.bodyLarge) },
+                                onClick = {
+                                    component.gameEndConditionType.value = GameStateMachine.GameEndCondition.Type.Cycles
+                                    gameEndConditionMenuExpanded = false
+                                },
+                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                shapes = MenuDefaults.itemShapes(),
+                                colors = itemColors,
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    when (
+                        component.gameEndConditionType.collectAsState().value.takeIf { areSettingsChangeable } ?: settingsBuilder.gameEndConditionType
+                    ) {
+                        GameStateMachine.GameEndCondition.Type.Words -> {
+                            val currentCachedEndConditionWordsNumber = component.cachedEndConditionWordsNumber.collectAsState().value
+                            OutlinedTextField(
+                                modifier = Modifier.weight(1f),
+                                enabled = areSettingsChangeable,
+                                isError = areSettingsChangeable && currentCachedEndConditionWordsNumber != null,
+                                value = (currentCachedEndConditionWordsNumber.takeIf { areSettingsChangeable } ?: settingsBuilder.cachedEndConditionWordsNumber).toString(),
+                                onValueChange = {
+                                    component.cachedEndConditionWordsNumber.value =
+                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                                },
+                                label = {
+                                    Text(
+                                        text = "The number of words",
+                                    )
+                                },
+                                textStyle = TextStyle(textAlign = TextAlign.Center),
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                    errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                    errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                    errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                                    errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                ),
+                            )
+                        }
+                        
+                        GameStateMachine.GameEndCondition.Type.Cycles -> {
+                            val currentCachedEndConditionCyclesNumber = component.cachedEndConditionCyclesNumber.collectAsState().value
+                            OutlinedTextField(
+                                modifier = Modifier.weight(1f),
+                                enabled = areSettingsChangeable,
+                                isError = areSettingsChangeable && currentCachedEndConditionCyclesNumber != null,
+                                value = (currentCachedEndConditionCyclesNumber.takeIf { areSettingsChangeable } ?: settingsBuilder.cachedEndConditionCyclesNumber).toString(),
+                                onValueChange = {
+                                    component.cachedEndConditionCyclesNumber.value =
+                                        it.filter { it.isDigit() }.dropWhile { it == '0' }.ifEmpty { "0" }.toUInt()
+                                },
+                                label = {
+                                    Text(
+                                        text = "The number of cycles",
+                                    )
+                                },
+                                textStyle = TextStyle(textAlign = TextAlign.Center),
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                    errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                    errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                    errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                                    errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                ),
+                            )
+                        }
                     }
                 }
-            }
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                val currentStrictMode = component.strictMode.collectAsState().value
-                Checkbox(
-                    enabled = areSettingsChangeable,
-                    checked = currentStrictMode.takeIf { areSettingsChangeable } ?: settingsBuilder.strictMode,
-                    onCheckedChange = { component.strictMode.value = it },
-                    colors =
-                        if (areSettingsChangeable && currentStrictMode != null)
-                            CheckboxDefaults.colors(
-                                checkedCheckmarkColor = MaterialTheme.colorScheme.onTertiary,
-                                checkedBoxColor = MaterialTheme.colorScheme.tertiary,
-                                checkedBorderColor = MaterialTheme.colorScheme.tertiary,
-                                uncheckedBorderColor = MaterialTheme.colorScheme.tertiary,
-                            )
-                        else
-                            CheckboxDefaults.colors()
-                )
                 
-                Text(
-                    text = "Strict mode",
-                    fontSize = 20.sp,
-                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                scope {
+                    var wordSourceMenuExpanded by remember { mutableStateOf(false) }
+                    
+                    val currentWordSource = component.wordsSource.collectAsState().value
+                    val actualWordSource = currentWordSource.takeIf { areSettingsChangeable }
+                        ?: when (val wordsSource = settingsBuilder.wordsSource) {
+                            ServerApi.WordsSource.Players -> RoomScreenComponent.WordsSource.Players
+                            ServerApi.WordsSource.HostDictionary -> RoomScreenComponent.WordsSource.HostDictionary
+                        }
+                    val isChanged = areSettingsChangeable && currentWordSource != null
+                    
+                    ExposedDropdownMenuBox(
+                        modifier = Modifier.fillMaxWidth(),
+                        expanded = false,
+                        onExpandedChange = { wordSourceMenuExpanded = it },
+                    ) {
+                        OutlinedTextField(
+                            modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, areSettingsChangeable),
+                            enabled = areSettingsChangeable,
+                            isError = isChanged,
+                            value = when (actualWordSource) {
+                                RoomScreenComponent.WordsSource.Players -> "Players"
+                                RoomScreenComponent.WordsSource.HostDictionary -> "Host dictionary"
+                            },
+                            onValueChange = {},
+                            readOnly = true,
+                            singleLine = true,
+                            label = {
+                                Text(
+                                    text = "Words source",
+                                )
+                            },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = wordSourceMenuExpanded) },
+                            textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                errorLabelColor = MaterialTheme.colorScheme.tertiary,
+        //                        errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                            ),
+                        )
+                        
+                        ExposedDropdownMenu(
+                            expanded = wordSourceMenuExpanded,
+                            onDismissRequest = { wordSourceMenuExpanded = false },
+                        ) {
+                            val itemColors =
+                                if (isChanged)
+                                    MenuDefaults.selectableItemColors()
+                                else
+                                    MenuDefaults.selectableItemColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.onSecondary,
+                                        selectedTextColor = MaterialTheme.colorScheme.secondary,
+                                        selectedLeadingIconColor = MaterialTheme.colorScheme.onSecondary,
+                                        selectedTrailingIconColor = MaterialTheme.colorScheme.onSecondary,
+                                    )
+                            DropdownMenuItem(
+                                selected = actualWordSource == ServerApi.WordsSource.Players,
+                                text = { Text(text = "Players", style = MaterialTheme.typography.bodyLarge) },
+                                onClick = {
+                                    component.wordsSource.value = RoomScreenComponent.WordsSource.Players
+                                    wordSourceMenuExpanded = false
+                                },
+                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                shapes = MenuDefaults.itemShapes(),
+                                colors = itemColors,
+                            )
+                            DropdownMenuItem(
+                                selected = actualWordSource == ServerApi.WordsSource.HostDictionary,
+                                text = { Text(text = "Host dictionary", style = MaterialTheme.typography.bodyLarge) },
+                                onClick = {
+                                    component.wordsSource.value = RoomScreenComponent.WordsSource.HostDictionary
+                                    wordSourceMenuExpanded = false
+                                },
+                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                shapes = MenuDefaults.itemShapes(),
+                                colors = itemColors,
+                            )
+                        }
+                    }
+                    
+                    if (actualWordSource is RoomScreenComponent.WordsSource.HostDictionary) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        val coroutineScope = rememberCoroutineScope()
+                        val currentHostDictionary = component.hostDictionary.collectAsState().value
+                        val contentColor = when {
+                            currentHostDictionary != null -> MaterialTheme.colorScheme.tertiary
+                            currentWordSource != null -> MaterialTheme.colorScheme.error
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                        Box(
+                            modifier = Modifier
+                                .aspectRatio(2f)
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
+                                .drawBehind {
+                                    drawRoundRect(
+                                        color = contentColor,
+                                        style = Stroke(
+                                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 8.dp.toPx())),
+                                        ),
+                                        cornerRadius = CornerRadius(8.dp.toPx()),
+                                    )
+                                }
+                                .clickable(
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            val file = FileKit.openFilePicker(
+                                                type = FileKitType.File("txt")
+                                            )
+                                            if (file != null) {
+                                                component.hostDictionary.value = file.readString().lines().toKoneList()
+                                            }
+                                        }
+                                    }
+                                )
+                                /*.dragAndDropTarget( // TODO: Wait for support of drag and drop in Compose
+                                    shouldStartDragAndDrop = { true },
+                                    target = remember {
+                                        object: DragAndDropTarget {
+                                            
+                                            // Highlights the border of a potential drop target
+                                            override fun onEntered(event: DragAndDropEvent) {
+                                                // TODO
+                                            }
+                                            
+                                            override fun onExited(event: DragAndDropEvent) {
+                                                // TODO
+                                            }
+                                            
+                                            override fun onDrop(event: DragAndDropEvent): Boolean {
+                                                return true
+                                            }
+                                        }
+                                    }
+                                )*/,
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = "Click to open file",
+                                fontSize = 16.sp,
+                                style = TextStyle(color = contentColor),
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    val currentStrictMode = component.strictMode.collectAsState().value
+                    Checkbox(
+                        enabled = areSettingsChangeable,
+                        checked = currentStrictMode.takeIf { areSettingsChangeable } ?: settingsBuilder.strictMode,
+                        onCheckedChange = { component.strictMode.value = it },
+                        colors =
+                            if (areSettingsChangeable && currentStrictMode != null)
+                                CheckboxDefaults.colors(
+                                    checkedCheckmarkColor = MaterialTheme.colorScheme.onTertiary,
+                                    checkedBoxColor = MaterialTheme.colorScheme.tertiary,
+                                    checkedBorderColor = MaterialTheme.colorScheme.tertiary,
+                                    uncheckedBorderColor = MaterialTheme.colorScheme.tertiary,
+                                )
+                            else
+                                CheckboxDefaults.colors()
+                    )
+                    
+                    Text(
+                        text = "Strict mode",
+                        fontSize = 20.sp,
+                    )
+                }
             }
-            
-            Spacer(modifier = Modifier.weight(1f))
             
             if (
                 areSettingsChangeable && (
@@ -440,30 +608,35 @@ fun RoomScreenSettingsCardUI(
                     component.strictMode.collectAsState().value != null ||
                     component.cachedEndConditionWordsNumber.collectAsState().value != null ||
                     component.cachedEndConditionCyclesNumber.collectAsState().value != null ||
-                    component.gameEndConditionType.collectAsState().value != null
+                    component.gameEndConditionType.collectAsState().value != null ||
+                    component.wordsSource.collectAsState().value != null
                 )
-            ) Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
             ) {
-                Button(
-                    onClick = component.onApplySettings
-                ) {
-                    Text(
-                        text = "Apply",
-                        fontSize = 24.sp,
-                    )
-                }
+                Spacer(modifier = Modifier.height(8.dp))
                 
-                Spacer(modifier = Modifier.width(8.dp))
-                
-                FilledTonalButton(
-                    onClick = component.onDiscardSettings
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
                 ) {
-                    Text(
-                        text = "Discard",
-                        fontSize = 24.sp,
-                    )
+                    Button(
+                        onClick = component.onApplySettings
+                    ) {
+                        Text(
+                            text = "Apply",
+                            fontSize = 24.sp,
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    FilledTonalButton(
+                        onClick = component.onDiscardSettings
+                    ) {
+                        Text(
+                            text = "Discard",
+                            fontSize = 24.sp,
+                        )
+                    }
                 }
             }
         }

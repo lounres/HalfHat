@@ -6,18 +6,12 @@ import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.halfhat.logic.server.Room
 import dev.lounres.kone.collections.array.KoneMutableUIntArray
 import dev.lounres.kone.collections.array.generate
-import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.empty
-import dev.lounres.kone.collections.list.of
-import dev.lounres.kone.collections.map.associateWith
-import dev.lounres.kone.collections.map.contains
-import dev.lounres.kone.collections.map.getOrNull
 import dev.lounres.kone.collections.set.*
 import dev.lounres.kone.collections.utils.map
 import dev.lounres.kone.collections.utils.mapIndexed
 import dev.lounres.kone.collections.utils.sort
-import dev.lounres.kone.collections.utils.take
 import dev.lounres.kone.repeat
 import dev.lounres.logKube.core.*
 import io.ktor.serialization.*
@@ -33,7 +27,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.Boolean
 import kotlin.random.Random
 import kotlin.random.nextUInt
 import kotlin.uuid.Uuid
@@ -56,28 +49,17 @@ data class PlayerMetadata(
     override val id: String get() = name
 }
 
-typealias WordsProviderID = String
+sealed interface WordsProviderID {
+    data class HostDictionary(
+        val words: KoneList<String>,
+    ) : WordsProviderID
+}
 
 sealed interface NoWordsProviderReason {
     data object CannotFindDictionaryByID : NoWordsProviderReason
 }
 
-object DummyOnlineGameWordsProviderRegistry : Room.WordProviderRegistry<WordsProviderID, NoWordsProviderReason> {
-    override fun contains(id: WordsProviderID): Boolean = id == "kek"
-    
-    override suspend fun get(providerId: WordsProviderID): GameStateMachine.WordsProviderRegistry.ResultOrReason<NoWordsProviderReason> =
-        if (providerId == "kek") GameStateMachine.WordsProviderRegistry.ResultOrReason.Success(TemporaryDictionary)
-        else GameStateMachine.WordsProviderRegistry.ResultOrReason.Failure(NoWordsProviderReason.CannotFindDictionaryByID)
-    
-    private object TemporaryDictionary : GameStateMachine.WordsProvider {
-        private val words = KoneSet.of("картина", "корзина", "картонка", "собачонка")
-        
-        override fun randomWords(number: UInt): KoneSet<String> = words.take(number).toKoneSet()
-        override fun allWords(): KoneSet<String> = words
-    }
-}
-
-object OnlineGameWordsProviderRegistry : Room.WordProviderRegistry<WordsProviderID, NoWordsProviderReason> {
+object OnlineGameWordsProviderRegistry : GameStateMachine.WordsProviderRegistry<WordsProviderID, NoWordsProviderReason> {
     private class ResourceDictionary(
         private val words: KoneSet<String>
     ) : GameStateMachine.WordsProvider {
@@ -85,14 +67,14 @@ object OnlineGameWordsProviderRegistry : Room.WordProviderRegistry<WordsProvider
         override fun randomWords(number: UInt): KoneSet<String> {
             val number = minOf(number, words.size)
             if (number == 0u) return KoneSet.empty()
-            
+
             val indices = KoneMutableUIntArray.generate(number) { Random.nextUInt(words.size - it) }
             if (number >= 2u) for (i in number - 2u downTo 0u) for (j in number - 1u downTo i + 1u) {
                 if (indices[j] >= indices[i]) indices[j]++
             }
-            
+
             indices.sort()
-            
+
             return KoneSet.build {
                 var indexIndex = 0u
                 var currentIndex = 0u
@@ -106,24 +88,27 @@ object OnlineGameWordsProviderRegistry : Room.WordProviderRegistry<WordsProvider
             }
         }
     }
+
+//    private val dictionaries = KoneList
+//        .of("easy", "medium", "hard")
+//        .withIndex()
+//        .associate { (index, name) ->
+//            index.toULong() mapsTo lazy {
+//                ResourceDictionary(
+//                    javaClass.getResourceAsStream("/dictionaries/$name")!!.bufferedReader().readLines().toKoneList().toKoneSet()
+//                )
+//            }
+//        }
     
-    private val dictionaries = KoneList
-        .of("easy", "medium", "hard")
-        .associateWith {
-            lazy {
-                ResourceDictionary(
-                    javaClass.getResourceAsStream("/dictionaries/$it")!!.bufferedReader().readLines().toKoneList().toKoneSet()
-                )
-            }
+    override suspend fun get(providerId: WordsProviderID): GameStateMachine.WordsProviderRegistry.ResultOrReason<NoWordsProviderReason> =
+        when (providerId) {
+            is WordsProviderID.HostDictionary -> GameStateMachine.WordsProviderRegistry.ResultOrReason.Success(ResourceDictionary(providerId.words.toKoneSet()))
+//            is WordsProviderID.ServerDictionary -> {
+//                val provider = dictionaries.getOrNull(providerId)?.value
+//                if (provider != null) GameStateMachine.WordsProviderRegistry.ResultOrReason.Success(provider)
+//                else GameStateMachine.WordsProviderRegistry.ResultOrReason.Failure(NoWordsProviderReason.CannotFindDictionaryByID)
+//            }
         }
-    
-    override fun contains(id: WordsProviderID): Boolean = id in dictionaries
-    
-    override suspend fun get(providerId: WordsProviderID): GameStateMachine.WordsProviderRegistry.ResultOrReason<NoWordsProviderReason> {
-        val provider = dictionaries.getOrNull(providerId)?.value
-        return if (provider != null) GameStateMachine.WordsProviderRegistry.ResultOrReason.Success(provider)
-        else GameStateMachine.WordsProviderRegistry.ResultOrReason.Failure(NoWordsProviderReason.CannotFindDictionaryByID)
-    }
 }
 
 typealias ServerRoom = Room<RoomMetadata, String, PlayerMetadata, WordsProviderID, NoWordsProviderReason, Connection>
@@ -142,8 +127,8 @@ fun getRoomByIdOrCreate(id: String): ServerRoom = rooms.computeIfAbsent(id) {
             cachedEndConditionWordsNumber = 100u,
             cachedEndConditionCyclesNumber = 4u,
             gameEndConditionType = GameStateMachine.GameEndCondition.Type.Words,
-            wordsSource = Room.WordsSource.ServerDictionary("medium"),
-//            wordsSource = Room.WordsSource.Players,
+//            wordsSource = Room.WordsSource.Dictionary(2uL),
+            wordsSource = Room.WordsSource.Players,
         ),
         initialMetadataFactory = { PlayerMetadata(it) },
         checkConnectionAttachment = { _, isOnline, _ -> !isOnline }
@@ -160,8 +145,8 @@ class Connection(
     val playerAttachmentMutex = Mutex()
     
     override suspend fun sendNewState(state: Room.Outgoing.State<RoomMetadata, PlayerMetadata, WordsProviderID>) {
-        fun Room.GameSettings.Builder<WordsProviderID>.toServerApi(): ServerApi.SettingsBuilder = 
-            ServerApi.SettingsBuilder(
+        fun Room.GameSettings.Builder<WordsProviderID>.toServerApi(): ServerApi.Settings.Builder =
+            ServerApi.Settings.Builder(
                 preparationTimeSeconds = this.preparationTimeSeconds,
                 explanationTimeSeconds = this.explanationTimeSeconds,
                 finalGuessTimeSeconds = this.finalGuessTimeSeconds,
@@ -171,7 +156,10 @@ class Connection(
                 gameEndConditionType = this.gameEndConditionType,
                 wordsSource = when (val wordsSource = this.wordsSource) {
                     Room.WordsSource.Players -> ServerApi.WordsSource.Players
-                    is Room.WordsSource.ServerDictionary -> ServerApi.WordsSource.ServerDictionary(wordsSource.id)
+                    is Room.WordsSource.Custom -> when (val id = wordsSource.id) {
+                        is WordsProviderID.HostDictionary -> ServerApi.WordsSource.HostDictionary
+//                        is WordsProviderID.ServerDictionary -> ServerApi.WordsSource.ServerDictionary(id.)
+                    }
                 },
             )
         fun Room.GameSettings<WordsProviderID>.toServerApi(): ServerApi.Settings =
@@ -183,7 +171,10 @@ class Connection(
                 gameEndCondition = this.gameEndCondition,
                 wordsSource = when (val wordsSource = this.wordsSource) {
                     Room.WordsSource.Players -> ServerApi.WordsSource.Players
-                    is Room.WordsSource.ServerDictionary -> ServerApi.WordsSource.ServerDictionary(wordsSource.id)
+                    is Room.WordsSource.Custom -> when (val id = wordsSource.id) {
+                        is WordsProviderID.HostDictionary -> ServerApi.WordsSource.HostDictionary
+//                        is WordsProviderID.ServerDictionary -> ServerApi.WordsSource.ServerDictionary(id.)
+                    }
                 },
             )
         
@@ -738,7 +729,8 @@ fun main() {
                                         wordsSource = when (val wordsSource = settingsBuilderPatch.wordsSource) {
                                             null -> null
                                             ClientApi.WordsSource.Players -> Room.WordsSource.Players
-                                            is ClientApi.WordsSource.ServerDictionary -> Room.WordsSource.ServerDictionary(wordsSource.id)
+                                            is ClientApi.WordsSource.HostDictionary -> Room.WordsSource.Custom(WordsProviderID.HostDictionary(wordsSource.words))
+//                                            is ClientApi.WordsSource.ServerDictionary -> Room.WordsSource.ServerDictionary(wordsSource.id)
                                         },
                                     )
                                 )

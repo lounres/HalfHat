@@ -673,6 +673,27 @@ fun RoundScreenAdditionalCardUI(
                         
                         Spacer(modifier = Modifier.height(8.dp))
                         
+                        OutlinedTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = false,
+                            value = when (val wordsSource = settingsBuilder.wordsSource) {
+                                ServerApi.WordsSource.Players -> "Players"
+                                ServerApi.WordsSource.HostDictionary -> "Host dictionary"
+                            },
+                            onValueChange = {},
+                            readOnly = true,
+                            singleLine = true,
+                            label = {
+                                Text(
+                                    text = "Words source",
+                                )
+                            },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                            textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
+                        )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,

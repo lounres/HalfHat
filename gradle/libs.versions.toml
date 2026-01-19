@@ -2,6 +2,7 @@
 appDirs = "1.2.0"
 room = "2.7.0-alpha11"
 sqldelight = "2.1.0"
+filekit = "0.12.0"
 
 [plugins]
 
@@ -11,6 +12,10 @@ sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 [libraries]
 
 appDirs = { module = "ca.gosyer:kotlin-multiplatform-appdirs", version.ref = "appDirs" }
+
+filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekit"}
+filekit-dialogs = { module = "io.github.vinceglb:filekit-dialogs", version.ref = "filekit"}
+filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose", version.ref = "filekit"}
 
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }

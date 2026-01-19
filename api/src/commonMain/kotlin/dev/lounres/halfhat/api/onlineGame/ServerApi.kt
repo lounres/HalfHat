@@ -1,7 +1,6 @@
 package dev.lounres.halfhat.api.onlineGame
 
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.kone.collections.array.KoneBooleanArray
 import dev.lounres.kone.collections.array.KoneUIntArray
 import dev.lounres.kone.collections.list.KoneList
 import kotlinx.serialization.Serializable
@@ -17,13 +16,13 @@ public object ServerApi {
     public sealed interface WordsSource {
         @Serializable
         public data object Players : WordsSource
-//        @Serializable
-//        public data object HostDictionary: WordsSource
         @Serializable
-        public data class ServerDictionary(
-            public val id: String,
-//            public val name: String,
-        ) : WordsSource
+        public data object HostDictionary: WordsSource
+//        @Serializable
+//        public data class ServerDictionary(
+//            public val id: ULong,
+////            public val name: String,
+//        ) : WordsSource
     }
     
     @Serializable
@@ -53,18 +52,6 @@ public object ServerApi {
     }
     
     @Serializable
-    public data class SettingsBuilder(
-        public val preparationTimeSeconds: UInt,
-        public val explanationTimeSeconds: UInt,
-        public val finalGuessTimeSeconds: UInt,
-        public val strictMode: Boolean,
-        public val cachedEndConditionWordsNumber: UInt,
-        public val cachedEndConditionCyclesNumber: UInt,
-        public val gameEndConditionType: GameStateMachine.GameEndCondition.Type,
-        public val wordsSource: WordsSource,
-    )
-    
-    @Serializable
     public data class Settings(
         public val preparationTimeSeconds: UInt,
         public val explanationTimeSeconds: UInt,
@@ -72,7 +59,19 @@ public object ServerApi {
         public val strictMode: Boolean,
         public val gameEndCondition: GameStateMachine.GameEndCondition,
         public val wordsSource: WordsSource,
-    )
+    ) {
+        @Serializable
+        public data class Builder(
+            public val preparationTimeSeconds: UInt,
+            public val explanationTimeSeconds: UInt,
+            public val finalGuessTimeSeconds: UInt,
+            public val strictMode: Boolean,
+            public val cachedEndConditionWordsNumber: UInt,
+            public val cachedEndConditionCyclesNumber: UInt,
+            public val gameEndConditionType: GameStateMachine.GameEndCondition.Type,
+            public val wordsSource: WordsSource,
+        )
+    }
     
     public object OnlineGame {
         @Serializable
@@ -324,7 +323,7 @@ public object ServerApi {
                 override val roomName: String,
                 override val role: Role.GameInitialisation,
                 public val playersList: KoneList<PlayerDescription.GameInitialisation>,
-                public val settingsBuilder: SettingsBuilder,
+                public val settingsBuilder: Settings.Builder,
             ) : State
             
             @Serializable

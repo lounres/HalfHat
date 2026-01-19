@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.gameResults.GameResultsComponent
 import dev.lounres.halfhat.client.ui.icons.*
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
@@ -202,7 +203,7 @@ public fun GameResultsUI(
                                             )
                                             Text(
                                                 modifier = Modifier.weight(1f),
-                                                text = "${player.scoreExplained}",
+                                                text = "${player.scoreGuessed}",
                                                 textAlign = TextAlign.Center,
                                             )
                                             Text(
@@ -470,6 +471,27 @@ public fun GameResultsUI(
                                         }
                                     }
                                 }
+                                
+                                Spacer(modifier = Modifier.height(8.dp))
+                                
+                                OutlinedTextField(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    enabled = false,
+                                    value = when (val wordsSource = settingsBuilder.wordsSource) {
+                                        ServerApi.WordsSource.Players -> "Players"
+                                        ServerApi.WordsSource.HostDictionary -> "Host dictionary"
+                                    },
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    singleLine = true,
+                                    label = {
+                                        Text(
+                                            text = "Words source",
+                                        )
+                                    },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                                    textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
+                                )
                                 
                                 Spacer(modifier = Modifier.height(8.dp))
                                 
