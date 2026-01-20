@@ -74,7 +74,6 @@ fun MainWindowUI(
             title = "${component.windowState.size}",
             state = component.windowState,
             onCloseRequest = component.onWindowCloseRequest,
-            resizable = false,
         ) {
             LifecycleController(
                 component.globalLifecycle,

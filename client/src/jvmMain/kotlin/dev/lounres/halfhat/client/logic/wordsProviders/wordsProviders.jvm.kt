@@ -47,7 +47,6 @@ public actual sealed interface DeviceGameWordsProviderID {
 public class LocalDeviceGameWordsProvider(
     private val words: KoneSet<String>,
 ) : GameStateMachine.WordsProvider {
-    override val size: UInt = words.size
     override fun allWords(): KoneSet<String> = words
     override fun randomWords(number: UInt): KoneSet<String> =
         if (number <= words.size) words.shuffled(Random).take(number).toKoneSet()
