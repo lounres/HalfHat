@@ -7,7 +7,6 @@ import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
-//    alias(versions.plugins.android.library)
     alias(versions.plugins.kotlin.compose)
     alias(versions.plugins.compose.multiplatform)
     alias(versions.plugins.kotlinx.atomicfu)
@@ -237,27 +236,6 @@ compose {
         }
     }
 }
-
-//android {
-//    compileSdk = (findProperty("android.compileSdk") as String).toInt()
-//    namespace = "com.myapplication.common"
-//
-//    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
-//    sourceSets["main"].res.srcDirs("src/androidMain/res")
-//    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
-//
-//    defaultConfig {
-//        minSdk = (findProperty("android.minSdk") as String).toInt()
-//        targetSdk = (findProperty("android.targetSdk") as String).toInt()
-//    }
-//    compileOptions {
-//        sourceCompatibility = JavaVersion.VERSION_11
-//        targetCompatibility = JavaVersion.VERSION_11
-//    }
-//    kotlin {
-//        jvmToolchain(11)
-//    }
-//}
 
 fun ExtraPropertiesExtension.getOrNull(name: String): Any? = if (has(name)) get(name) else null
 

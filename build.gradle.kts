@@ -1,5 +1,7 @@
 @file:OptIn(ExperimentalKotlinGradlePluginApi::class)
 
+import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import kotlinx.atomicfu.plugin.gradle.AtomicFUPluginExtension
 import org.gradle.accessors.dm.LibrariesForVersions
 import org.gradle.accessors.dm.RootProjectAccessor
@@ -14,6 +16,8 @@ import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 
 plugins {
     alias(versions.plugins.kotlin.multiplatform) apply false
+    alias(versions.plugins.android.library) apply false
+    alias(versions.plugins.android.application) apply false
     alias(versions.plugins.kotlin.compose) apply false
     alias(versions.plugins.kotlinx.atomicfu) apply false
     alias(versions.plugins.kotlinx.serialization) apply false
@@ -84,13 +88,34 @@ stal {
                 }
             }
         }
-//        "kotlin android target" {
-//            pluginManager.withPlugin(versions.plugins.kotlin.multiplatform) {
-//                configure<KotlinMultiplatformExtension> {
-//                    android()
-//                }
-//            }
-//        }
+        "kotlin android library target" {
+            apply(versions.plugins.android.library)
+            pluginManager.withPlugin(versions.plugins.kotlin.multiplatform) {
+                configure<KotlinMultiplatformExtension> {
+                    configure<KotlinMultiplatformAndroidLibraryTarget> {
+                        namespace = "${rootProject.group}${project.path.replace(':', '.')}"
+                        compileSdk = (rootProject.extra["android.compileSdk"] as String).toInt()
+                        minSdk = (rootProject.extra["android.minSdk"] as String).toInt()
+
+                        withHostTestBuilder {  }.configure {  }
+                        withDeviceTestBuilder {
+                            sourceSetTreeName = "test"
+                        }
+                    }
+                }
+            }
+        }
+        "kotlin android application target" {
+            apply(versions.plugins.android.application)
+            configure<ApplicationExtension> {
+                namespace = "${rootProject.group}${project.path.replace(':', '.')}"
+                compileSdk = (rootProject.extra["android.compileSdk"] as String).toInt()
+
+                defaultConfig {
+                    minSdk = (rootProject.extra["android.minSdk"] as String).toInt()
+                }
+            }
+        }
         "kotlin" {
             apply(versions.plugins.kotlin.multiplatform)
             configure<KotlinMultiplatformExtension> {

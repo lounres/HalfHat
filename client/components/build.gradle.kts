@@ -1,5 +1,4 @@
 plugins {
-//    alias(versions.plugins.android.library)
     alias(versions.plugins.kotlinx.serialization)
     alias(versions.plugins.kotlinx.atomicfu)
 }
@@ -27,13 +26,5 @@ kotlin {
                 implementation(versions.kotlinx.serialization.core)
             }
         }
-
-//        val androidMain by getting {
-//            dependencies {
-//                api("androidx.activity:activity-compose:1.6.1")
-//                api("androidx.appcompat:appcompat:1.6.1")
-//                api("androidx.core:core-ktx:1.9.0")
-//            }
-//        }
     }
 }

@@ -42,18 +42,21 @@ plugins {
 
 stal {
     structure {
-        "api"("library", "server", "desktop", "web", "android")
+        "api"("library", "server", "desktop", "web", "android library")
         "server"("server")
-        "client"("desktop", "web", "android") {
-            "components"("library", "desktop", "web", "android")
+        "client"("desktop", "web", "android library") {
+            "components"("library", "desktop", "web", "android library")
             "proxy"("kotlin jvm target")
+            "android"("android application")
         }
     }
     tag {
         "kotlin jvm target" since { hasAnyOf("server", "desktop") }
         "kotlin web targets" since { hasAnyOf("web") }
-        "kotlin android target" since { hasAnyOf("android") }
-        "kotlin" since { hasAnyOf("kotlin jvm target", "kotlin web targets", "kotlin android target") }
+        "kotlin android library target" since { hasAnyOf("android library") }
+        "kotlin android application target" since { hasAnyOf("android application") }
+        "kotlin android target" since { hasAnyOf("kotlin android library target", "kotlin android application target") }
+        "kotlin" since { hasAnyOf("kotlin jvm target", "kotlin web targets", "kotlin android library target") }
     }
     action {
         gradle.allprojects {
