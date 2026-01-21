@@ -47,14 +47,14 @@ stal {
         "client"("desktop", "web", "android library") {
             "components"("library", "desktop", "web", "android library")
             "proxy"("kotlin jvm target")
-            "android"("android application")
+//            "android"("android application")
         }
     }
     tag {
         "kotlin jvm target" since { hasAnyOf("server", "desktop") }
         "kotlin web targets" since { hasAnyOf("web") }
-        "kotlin android library target" since { hasAnyOf("android library") }
-        "kotlin android application target" since { hasAnyOf("android application") }
+//        "kotlin android library target" since { hasAnyOf("android library") }
+//        "kotlin android application target" since { hasAnyOf("android application") }
         "kotlin android target" since { hasAnyOf("kotlin android library target", "kotlin android application target") }
         "kotlin" since { hasAnyOf("kotlin jvm target", "kotlin web targets", "kotlin android library target") }
     }
