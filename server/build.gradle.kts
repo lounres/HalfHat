@@ -4,7 +4,7 @@ plugins {
     alias(versions.plugins.kotlinx.serialization)
     alias(versions.plugins.kotlinx.atomicfu)
 //    alias(versions.plugins.ktor)
-    id("com.gradleup.shadow") version "9.3.0"
+    alias(versions.plugins.shadow)
 }
 
 val mainClassFQN = "dev.lounres.halfhat.server.MainKt"
