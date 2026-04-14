@@ -38,10 +38,10 @@ public class RealOnlineGameComponent(
     override val roomDescriptionFlow: MutableSharedFlow<ServerApi.RoomDescription> = MutableSharedFlow(extraBufferCapacity = 1)
     override val gameStateFlow: MutableStateFlow<ServerApi.OnlineGame.State?> = MutableStateFlow(null)
     override val availableDictionariesFlow: MutableStateFlow<KoneList<DictionaryId.WithDescription>?> = MutableStateFlow(null)
+
+    private var outgoingSignals = Channel<ClientApi.Signal>(Channel.UNLIMITED)
     
-    private val outgoingSignals = Channel<ClientApi.Signal>(Channel.UNLIMITED)
-    
-    override fun sendSignal(signal: ClientApi.Signal) { outgoingSignals.trySend(signal) }
+    override fun sendSignal(signal: ClientApi.Signal) { if (connectionStatus.value == Connected) outgoingSignals.trySend(signal) }
     
     override fun resetGameState() {
         gameStateFlow.value = null
@@ -294,6 +294,7 @@ public class RealOnlineGameComponent(
                 }
                 connectionStatus.value = ConnectionStatus.Disconnected
                 gameStateFlow.value = null
+                outgoingSignals = Channel(Channel.UNLIMITED)
                 delay(1000.milliseconds)
             }
         }
