@@ -24,8 +24,8 @@ import dev.lounres.kone.collections.map.isNotEmpty
 import dev.lounres.kone.collections.utils.allIndexed
 import dev.lounres.kone.collections.utils.drop
 import dev.lounres.kone.collections.utils.joinToString
-import dev.lounres.kone.hub.KoneAsynchronousHubView
-import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
+import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.hub.set
 import dev.lounres.kone.scope
 import dev.lounres.logKube.core.DefaultCurrentPlatformLogWriter
@@ -33,8 +33,8 @@ import dev.lounres.logKube.core.LogAcceptor
 import dev.lounres.logKube.core.Logger
 import js.array.component1
 import js.array.component2
-import js.core.JsPrimitives.toKotlinString
 import js.iterable.iterator
+import js.string.JsStrings.toKotlinString
 import js.uri.decodeURIComponent
 import js.uri.encodeURIComponent
 import kotlinx.coroutines.Dispatchers
@@ -54,10 +54,10 @@ import kotlin.js.toJsString
 
 actual class RealMainWindowComponent(
     actual override val globalLifecycle: MutableUIComponentLifecycle,
-    
-    actual override val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>,
-    
-    actual override val pageVariants: KoneAsynchronousHubView<ChildrenVariants<MainWindowComponentConfiguration, MainWindowComponentChild, UIComponentContext>, *>,
+
+    actual override val darkTheme: KoneMutableAsynchronousHub<DarkTheme>,
+
+    actual override val pageVariants: KoneAsynchronousHub<ChildrenVariants<MainWindowComponentConfiguration, MainWindowComponentChild, UIComponentContext>>,
     actual override val openPage: (page: MainWindowComponentConfiguration) -> Unit,
 ): MainWindowComponent
 
@@ -160,7 +160,7 @@ suspend fun RealMainWindowComponent(
                 NavigationNodePath(
                     path = actualPath.drop(basePath.size),
                     arguments = KoneMap.build {
-                        for ((key, value) in URLSearchParams(location.search).entries()) {
+                        for ([val key, val value] in URLSearchParams(location.search).entries()) {
                             set(decodeURIComponent(key.toKotlinString()), decodeURIComponent(value.toKotlinString()))
                         }
                     }

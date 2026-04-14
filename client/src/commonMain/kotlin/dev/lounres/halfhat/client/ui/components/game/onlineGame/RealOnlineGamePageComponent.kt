@@ -1,7 +1,6 @@
 package dev.lounres.halfhat.client.ui.components.game.onlineGame
 
 import dev.lounres.halfhat.api.onlineGame.ClientApi
-import dev.lounres.halfhat.client.logic.components.game.onlineGame.ConnectionStatus
 import dev.lounres.halfhat.client.logic.components.game.onlineGame.OnlineGameComponent
 import dev.lounres.halfhat.client.logic.components.game.onlineGame.RealOnlineGameComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.RealGameScreenComponent
@@ -29,12 +28,11 @@ import dev.lounres.kone.collections.map.contains
 import dev.lounres.kone.collections.map.getOrNull
 import dev.lounres.kone.collections.map.setAllFrom
 import dev.lounres.kone.collections.utils.drop
-import dev.lounres.kone.hub.KoneAsynchronousHubView
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.hub.set
 import dev.lounres.kone.hub.value
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
@@ -42,7 +40,7 @@ import kotlinx.serialization.json.Json
 
 
 public class RealOnlineGamePageComponent(
-    override val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, OnlineGamePageComponent.Child, UIComponentContext>, *>,
+    override val childSlot: KoneAsynchronousHub<ChildrenSlot<*, OnlineGamePageComponent.Child, UIComponentContext>>,
 ) : OnlineGamePageComponent {
     @Serializable
     public sealed interface Configuration {
@@ -159,6 +157,11 @@ public suspend fun RealOnlineGamePageComponent(
                                 coroutineScope.launch {
                                     navigation.set(RealOnlineGamePageComponent.Configuration.PreviewScreen)
                                 }
+                            },
+                            availableDictionariesFlow = onlineGameComponent.availableDictionariesFlow,
+                            onLoadServerDictionaries = {
+                                onlineGameComponent.resetAvailableDictionaries()
+                                onlineGameComponent.sendSignal(ClientApi.Signal.OnlineGame.RequestAvailableDictionaries)
                             },
                             onApplySettings = {
                                 onlineGameComponent.sendSignal(ClientApi.Signal.OnlineGame.UpdateSettings(it))

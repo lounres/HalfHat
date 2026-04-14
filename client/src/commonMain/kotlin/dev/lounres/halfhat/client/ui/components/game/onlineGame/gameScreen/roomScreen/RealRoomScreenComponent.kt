@@ -1,6 +1,7 @@
 package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomScreen
 
 import dev.lounres.halfhat.api.onlineGame.ClientApi
+import dev.lounres.halfhat.api.onlineGame.DictionaryId
 import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
@@ -15,15 +16,18 @@ public class RealRoomScreenComponent(
     override val onExitOnlineGame: () -> Unit,
     override val onCopyOnlineGameKey: () -> Unit,
     override val onCopyOnlineGameLink: () -> Unit,
+
+    override val availableDictionaries: StateFlow<KoneList<DictionaryId.WithDescription>?>,
+    override val onLoadServerDictionaries: () -> Unit,
     
     override val onStartGame: () -> Unit,
     
-    onApplySettings: (ClientApi.SettingsBuilder.Patch) -> Unit,
+    onApplySettings: (ClientApi.SettingsBuilderPatch) -> Unit,
 ) : RoomScreenComponent {
     override val onApplySettings: () -> Unit = {
         scope {
             onApplySettings(
-                ClientApi.SettingsBuilder.Patch(
+                ClientApi.SettingsBuilderPatch(
                     preparationTimeSeconds = preparationTimeSeconds.value,
                     explanationTimeSeconds = explanationTimeSeconds.value,
                     finalGuessTimeSeconds = finalGuessTimeSeconds.value,
@@ -35,6 +39,7 @@ public class RealRoomScreenComponent(
                         null -> null
                         RoomScreenComponent.WordsSource.Players -> ClientApi.WordsSource.Players
                         RoomScreenComponent.WordsSource.HostDictionary -> ClientApi.WordsSource.HostDictionary(hostDictionary.value ?: return@scope)
+                        is RoomScreenComponent.WordsSource.ServerDictionary -> ClientApi.WordsSource.ServerDictionary(wordsSource.description.id)
                     },
                 )
             )

@@ -25,7 +25,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlin.random.Random
 
@@ -81,16 +80,16 @@ public actual object DeviceGameWordsProviderRegistry : GameStateMachine.WordsPro
     
     public actual suspend fun list(): KoneList<DeviceGameWordsProviderID> = localWordsProvidersIDs
     
-    actual override suspend operator fun get(providerId: DeviceGameWordsProviderID): GameStateMachine.WordsProviderRegistry.ResultOrReason<NoDeviceGameWordsProviderReason> =
+    actual override suspend fun getWordsProvider(providerId: DeviceGameWordsProviderID): GameStateMachine.WordsProviderRegistry.WordsProviderOrReason<NoDeviceGameWordsProviderReason> =
         when (providerId) {
             is DeviceGameWordsProviderID.Local -> scope {
                 val deferredWordsSet = localWordsProviders.getOrElse(providerId.id) {
-                    return@scope GameStateMachine.WordsProviderRegistry.ResultOrReason.Failure(
+                    return@scope GameStateMachine.WordsProviderRegistry.WordsProviderOrReason.Failure(
                         NoDeviceGameWordsProviderReason.NoSuchWordProvider
                     )
                 }
                 
-                GameStateMachine.WordsProviderRegistry.ResultOrReason.Success(
+                GameStateMachine.WordsProviderRegistry.WordsProviderOrReason.Success(
                     LocalDeviceGameWordsProvider(
                         deferredWordsSet.await()
                     )

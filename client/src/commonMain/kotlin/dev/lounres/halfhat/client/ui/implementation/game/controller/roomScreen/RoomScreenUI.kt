@@ -62,7 +62,7 @@ public fun RoomScreenUI(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.height(16.dp))
-            for ((index, player) in playersList.withIndex()) {
+            for ((val index, val player = value) in playersList.withIndex()) {
                 key(player.id) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically

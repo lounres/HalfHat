@@ -66,7 +66,7 @@ public fun FAQPageUI(
             fontWeight = FontWeight.SemiBold,
         )
 
-        for ((question, answer) in _root_ide_package_.dev.lounres.halfhat.client.ui.components.miscellanea.faq.questionsAndAnswers)
+        for ((question, answer) in questionsAndAnswers)
             Column(
                 modifier = Modifier.padding(vertical = 16.dp)
             ) {

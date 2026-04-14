@@ -15,8 +15,8 @@ import dev.lounres.halfhat.client.storage.settings.settings
 import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.halfhat.client.ui.theming.darkTheme
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.kone.hub.KoneAsynchronousHubView
-import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
+import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.scope
 import dev.lounres.logKube.core.DefaultCurrentPlatformLogWriter
 import dev.lounres.logKube.core.LogAcceptor
@@ -25,13 +25,13 @@ import dev.lounres.logKube.core.Logger
 
 actual class RealMainWindowComponent(
     actual override val globalLifecycle: MutableUIComponentLifecycle,
-    
+
     override val windowState: WindowState = WindowState(),
     override val onWindowCloseRequest: () -> Unit = {},
-    
-    actual override val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>,
-    
-    actual override val pageVariants: KoneAsynchronousHubView<ChildrenVariants<MainWindowComponentConfiguration, MainWindowComponentChild, UIComponentContext>, *>,
+
+    actual override val darkTheme: KoneMutableAsynchronousHub<DarkTheme>,
+
+    actual override val pageVariants: KoneAsynchronousHub<ChildrenVariants<MainWindowComponentConfiguration, MainWindowComponentChild, UIComponentContext>>,
     actual override val openPage: (page: MainWindowComponentConfiguration) -> Unit,
 ): MainWindowComponent
 

@@ -11,7 +11,6 @@ import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.collections.utils.filter
 import dev.lounres.kone.collections.utils.map
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
-import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
 import dev.lounres.kone.hub.value
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,12 +28,12 @@ class RealWordsCollectionComponent(
     
     override val gameState: StateFlow<ServerApi.OnlineGame.State.PlayersWordsCollection>,
 ) : WordsCollectionComponent {
-    override val currentWords: KoneMutableAsynchronousHubView<KoneList<KoneMutableAsynchronousHubView<String, *>>, *> =
+    override val currentWords: KoneMutableAsynchronousHub<KoneList<KoneMutableAsynchronousHub<String>>> =
         KoneMutableAsynchronousHub(KoneList.of(KoneMutableAsynchronousHub("")))
     override val onSubmit: () -> Unit = { onSubmitWords(currentWords.value.map { it.value }.filter { it.isNotEmpty() }) }
     
     override val coroutineScope: CoroutineScope = componentContext.coroutineScope(Dispatchers.Default)
-    override val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *> = componentContext.settings.darkTheme
-    override val openAdditionalCard: KoneMutableAsynchronousHubView<Boolean, *> = KoneMutableAsynchronousHub(false)
-    override val additionalCard: KoneMutableAsynchronousHubView<WordsCollectionComponent.AdditionalCard, *> = KoneMutableAsynchronousHub(WordsCollectionComponent.AdditionalCard.PlayersReadiness)
+    override val darkTheme: KoneMutableAsynchronousHub<DarkTheme> = componentContext.settings.darkTheme
+    override val openAdditionalCard: KoneMutableAsynchronousHub<Boolean> = KoneMutableAsynchronousHub(false)
+    override val additionalCard: KoneMutableAsynchronousHub<WordsCollectionComponent.AdditionalCard> = KoneMutableAsynchronousHub(WordsCollectionComponent.AdditionalCard.PlayersReadiness)
 }

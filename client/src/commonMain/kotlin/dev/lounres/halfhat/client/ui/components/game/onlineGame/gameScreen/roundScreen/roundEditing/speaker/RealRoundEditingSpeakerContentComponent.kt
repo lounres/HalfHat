@@ -5,14 +5,14 @@ import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.toKoneMutableList
-import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
+import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import kotlinx.coroutines.flow.StateFlow
 
 
 class RealRoundEditingSpeakerContentComponent(
     override val userRole: StateFlow<ServerApi.OnlineGame.Role.Round.Editing.RoundRole.Speaker>,
     
-    override val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>,
+    override val darkTheme: KoneMutableAsynchronousHub<DarkTheme>,
     
     onUpdateExplanationResults: (KoneList<GameStateMachine.WordExplanation>) -> Unit,
     override val onConfirm: () -> Unit,

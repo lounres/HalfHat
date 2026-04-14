@@ -15,9 +15,8 @@ import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.halfhat.client.ui.theming.darkTheme
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
-import dev.lounres.kone.hub.KoneAsynchronousHubView
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
-import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,13 +32,13 @@ class RealRoundScreenComponent(
     
     override val gameState: StateFlow<ServerApi.OnlineGame.State.Round>,
     
-    override val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, RoundScreenComponent.Child, UIComponentContext>, *>,
+    override val childSlot: KoneAsynchronousHub<ChildrenSlot<*, RoundScreenComponent.Child, UIComponentContext>>,
     
     override val coroutineScope: CoroutineScope,
-    override val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>,
+    override val darkTheme: KoneMutableAsynchronousHub<DarkTheme>,
 ) : RoundScreenComponent {
-    override val openAdditionalCard: KoneMutableAsynchronousHubView<Boolean, *> = KoneMutableAsynchronousHub(false)
-    override val additionalCard: KoneMutableAsynchronousHubView<RoundScreenComponent.AdditionalCard, *> = KoneMutableAsynchronousHub(RoundScreenComponent.AdditionalCard.Schedule)
+    override val openAdditionalCard: KoneMutableAsynchronousHub<Boolean> = KoneMutableAsynchronousHub(false)
+    override val additionalCard: KoneMutableAsynchronousHub<RoundScreenComponent.AdditionalCard> = KoneMutableAsynchronousHub(RoundScreenComponent.AdditionalCard.Schedule)
     
     public sealed interface Configuration {
         public data class RoundWaiting(

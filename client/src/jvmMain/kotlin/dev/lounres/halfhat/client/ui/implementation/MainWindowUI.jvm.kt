@@ -42,7 +42,7 @@ fun LifecycleController(
             snapshotFlow(windowState::isMinimized),
             snapshotFlow(windowInfo::isWindowFocused),
             ::Pair,
-        ).collect { (isMinimized, isFocused) ->
+        ).collect { [isMinimized, isFocused] ->
             when {
                 isMinimized -> lifecycle.moveTo(UIComponentLifecycleState.Running)
                 isFocused -> lifecycle.moveTo(UIComponentLifecycleState.Foreground)

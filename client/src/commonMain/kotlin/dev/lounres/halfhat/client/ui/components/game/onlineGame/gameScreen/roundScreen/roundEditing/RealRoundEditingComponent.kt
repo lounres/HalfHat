@@ -12,14 +12,14 @@ import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.round
 import dev.lounres.halfhat.client.ui.theming.darkTheme
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
-import dev.lounres.kone.hub.KoneAsynchronousHubView
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 
 public class RealRoundEditingComponent(
-    override val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, RoundEditingComponent.Child, UIComponentContext>, *>
+    override val childSlot: KoneAsynchronousHub<ChildrenSlot<*, RoundEditingComponent.Child, UIComponentContext>>
 ) : RoundEditingComponent {
     public sealed interface Configuration {
         public data class SpeakerContent(

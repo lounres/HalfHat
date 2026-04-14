@@ -44,9 +44,8 @@ import dev.lounres.kone.collections.map.get
 import dev.lounres.kone.collections.set.toKoneSet
 import dev.lounres.kone.collections.utils.drop
 import dev.lounres.kone.collections.utils.firstThatOrNull
-import dev.lounres.kone.hub.KoneAsynchronousHubView
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
-import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
 import dev.lounres.kone.hub.value
 import dev.lounres.kone.registry.correspondsTo
 import dev.lounres.kone.registry.serialization.RegistrySerializableKey
@@ -60,9 +59,9 @@ import kotlinx.serialization.json.Json
 expect class RealMainWindowComponent: MainWindowComponent {
     override val globalLifecycle: MutableUIComponentLifecycle
     
-    override val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>
+    override val darkTheme: KoneMutableAsynchronousHub<DarkTheme>
     
-    override val pageVariants: KoneAsynchronousHubView<ChildrenVariants<MainWindowComponentConfiguration, MainWindowComponentChild, UIComponentContext>, *>
+    override val pageVariants: KoneAsynchronousHub<ChildrenVariants<MainWindowComponentConfiguration, MainWindowComponentChild, UIComponentContext>>
     override val openPage: (page: MainWindowComponentConfiguration) -> Unit
 }
 

@@ -17,7 +17,7 @@ public expect sealed interface DeviceGameWordsProviderID {
 
 public expect class DeviceGameWordsProviderRegistry : GameStateMachine.WordsProviderRegistry<DeviceGameWordsProviderID, NoDeviceGameWordsProviderReason> {
     public suspend fun list(): KoneList<DeviceGameWordsProviderID>
-    public override suspend operator fun get(providerId: DeviceGameWordsProviderID): GameStateMachine.WordsProviderRegistry.ResultOrReason<NoDeviceGameWordsProviderReason>
+    public override suspend fun getWordsProvider(providerId: DeviceGameWordsProviderID): GameStateMachine.WordsProviderRegistry.WordsProviderOrReason<NoDeviceGameWordsProviderReason>
 }
 
 public data object DeviceGameWordsProviderRegistryKey: RegistryKey<DeviceGameWordsProviderRegistry>

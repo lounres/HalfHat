@@ -1,12 +1,12 @@
 package dev.lounres.halfhat.client.ui.components.miscellanea
 
 import dev.lounres.halfhat.client.ui.theming.DarkTheme
-import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
+import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 
 
 interface MiscellaneaComponent {
-    val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>
-    val volumeOn: KoneMutableAsynchronousHubView<Boolean, *>
+    val darkTheme: KoneMutableAsynchronousHub<DarkTheme>
+    val volumeOn: KoneMutableAsynchronousHub<Boolean>
     
     val openSettings: () -> Unit
     val openGameHistory: () -> Unit

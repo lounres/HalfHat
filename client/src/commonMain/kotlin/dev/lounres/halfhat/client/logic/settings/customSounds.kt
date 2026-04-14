@@ -1,13 +1,12 @@
 package dev.lounres.halfhat.client.logic.settings
 
-import dev.lounres.halfhat.Language
 import dev.lounres.halfhat.client.storage.settings.Settings
 import dev.lounres.halfhat.client.storage.settings.get
 import dev.lounres.halfhat.client.utils.DefaultSounds
 import dev.lounres.halfhat.client.utils.play
 import dev.lounres.halfhat.client.utils.toAudio
-import dev.lounres.kone.hub.KoneAsynchronousHubView
-import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
+import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.hub.value
 import dev.lounres.kone.registry.serialization.RegistrySerializableKey
 import kotlinx.serialization.KSerializer
@@ -49,7 +48,7 @@ data class CustomSounds(
 }
 
 val Settings.customSounds: CustomSounds get() = get(CustomSounds.Key)
-val KoneMutableAsynchronousHubView<Settings, *>.customSounds: KoneMutableAsynchronousHubView<CustomSounds, *> get() = get(CustomSounds.Key)
+val KoneMutableAsynchronousHub<Settings>.customSounds: KoneMutableAsynchronousHub<CustomSounds> get() = get(CustomSounds.Key)
 
 data class Sounds(
     public val preparationCountdown: ByteArray,
@@ -93,15 +92,15 @@ suspend fun Settings.playFinalGuessEnd() {
     (customSounds.finalGuessEnd ?: DefaultSounds.finalGuessEnd.await()).toAudio().play()
 }
 
-suspend fun KoneAsynchronousHubView<Settings, *>.playPreparationCountdown() {
+suspend fun KoneAsynchronousHub<Settings>.playPreparationCountdown() {
     value.playPreparationCountdown()
 }
-suspend fun KoneAsynchronousHubView<Settings, *>.playExplanationStart() {
+suspend fun KoneAsynchronousHub<Settings>.playExplanationStart() {
     value.playExplanationStart()
 }
-suspend fun KoneAsynchronousHubView<Settings, *>.playFinalGuessStart() {
+suspend fun KoneAsynchronousHub<Settings>.playFinalGuessStart() {
     value.playFinalGuessStart()
 }
-suspend fun KoneAsynchronousHubView<Settings, *>.playFinalGuessEnd() {
+suspend fun KoneAsynchronousHub<Settings>.playFinalGuessEnd() {
     value.playFinalGuessEnd()
 }

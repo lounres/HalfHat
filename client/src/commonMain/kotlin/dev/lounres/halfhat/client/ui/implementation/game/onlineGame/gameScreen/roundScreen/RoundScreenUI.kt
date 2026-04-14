@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.window.core.layout.WindowSizeClass
+import dev.lounres.halfhat.api.onlineGame.DictionaryId
 import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.RoundScreenComponent
 import dev.lounres.halfhat.client.ui.icons.*
@@ -679,6 +680,9 @@ fun RoundScreenAdditionalCardUI(
                             value = when (val wordsSource = settingsBuilder.wordsSource) {
                                 ServerApi.WordsSource.Players -> "Players"
                                 ServerApi.WordsSource.HostDictionary -> "Host dictionary"
+                                is ServerApi.WordsSource.ServerDictionary -> when (val description = wordsSource.dictionaryIdWithDescription) {
+                                    is DictionaryId.WithDescription.Builtin -> description.name
+                                }
                             },
                             onValueChange = {},
                             readOnly = true,

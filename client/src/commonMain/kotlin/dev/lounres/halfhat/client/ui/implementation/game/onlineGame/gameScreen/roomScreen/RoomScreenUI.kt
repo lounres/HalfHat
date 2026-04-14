@@ -1,6 +1,7 @@
 package dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roomScreen
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.draganddrop.dragAndDropTarget
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -9,6 +10,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -29,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +40,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draganddrop.DragAndDropEvent
+import androidx.compose.ui.draganddrop.DragAndDropTarget
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.PathEffect
@@ -47,6 +52,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.window.core.layout.WindowSizeClass
+import dev.lounres.halfhat.api.onlineGame.DictionaryId
 import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomScreen.RoomScreenComponent
 import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
@@ -61,6 +67,7 @@ import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.iterables.next
+import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.utils.withIndex
 import dev.lounres.kone.scope
 import io.github.vinceglb.filekit.FileKit
@@ -119,7 +126,7 @@ fun RoomScreenRoomCardUI(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             val playersList = gameState.playersList
-            for ((index, player) in playersList.withIndex()) {
+            for ((val index, val player = value) in playersList.withIndex()) {
                 if (index != 0u) Spacer(modifier = Modifier.height(8.dp))
                 Surface(
                     shape = CircleShape,
@@ -429,6 +436,7 @@ fun RoomScreenSettingsCardUI(
                         ?: when (val wordsSource = settingsBuilder.wordsSource) {
                             ServerApi.WordsSource.Players -> RoomScreenComponent.WordsSource.Players
                             ServerApi.WordsSource.HostDictionary -> RoomScreenComponent.WordsSource.HostDictionary
+                            is ServerApi.WordsSource.ServerDictionary -> RoomScreenComponent.WordsSource.ServerDictionary(wordsSource.dictionaryIdWithDescription)
                         }
                     val isChanged = areSettingsChangeable && currentWordSource != null
                     
@@ -444,6 +452,9 @@ fun RoomScreenSettingsCardUI(
                             value = when (actualWordSource) {
                                 RoomScreenComponent.WordsSource.Players -> "Players"
                                 RoomScreenComponent.WordsSource.HostDictionary -> "Host dictionary"
+                                is RoomScreenComponent.WordsSource.ServerDictionary -> when (val description = actualWordSource.description) {
+                                    is DictionaryId.WithDescription.Builtin -> description.name
+                                }
                             },
                             onValueChange = {},
                             readOnly = true,
@@ -479,7 +490,7 @@ fun RoomScreenSettingsCardUI(
                                         selectedTrailingIconColor = MaterialTheme.colorScheme.onSecondary,
                                     )
                             DropdownMenuItem(
-                                selected = actualWordSource == ServerApi.WordsSource.Players,
+                                selected = actualWordSource == RoomScreenComponent.WordsSource.Players,
                                 text = { Text(text = "Players", style = MaterialTheme.typography.bodyLarge) },
                                 onClick = {
                                     component.wordsSource.value = RoomScreenComponent.WordsSource.Players
@@ -490,7 +501,7 @@ fun RoomScreenSettingsCardUI(
                                 colors = itemColors,
                             )
                             DropdownMenuItem(
-                                selected = actualWordSource == ServerApi.WordsSource.HostDictionary,
+                                selected = actualWordSource == RoomScreenComponent.WordsSource.HostDictionary,
                                 text = { Text(text = "Host dictionary", style = MaterialTheme.typography.bodyLarge) },
                                 onClick = {
                                     component.wordsSource.value = RoomScreenComponent.WordsSource.HostDictionary
@@ -500,6 +511,43 @@ fun RoomScreenSettingsCardUI(
                                 shapes = MenuDefaults.itemShapes(),
                                 colors = itemColors,
                             )
+                            val serverDictionaries by component.availableDictionaries.collectAsState()
+                            LaunchedEffect(Unit) {
+                                component.onLoadServerDictionaries()
+                            }
+                            serverDictionaries.let { serverDictionaries ->
+                                if (serverDictionaries == null) {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth(),
+                                    ) {
+                                        ContainedLoadingIndicator(
+                                            modifier = Modifier.align(Alignment.Center),
+                                        )
+                                    }
+                                } else {
+                                    for (description in serverDictionaries) when (description) {
+                                        is DictionaryId.WithDescription.Builtin ->
+                                            DropdownMenuItem(
+                                                selected = actualWordSource is RoomScreenComponent.WordsSource.ServerDictionary && actualWordSource.description.id == description.id,
+                                                text = {
+                                                    Column(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                    ) {
+                                                        Text(text = description.name, style = MaterialTheme.typography.bodyLarge)
+                                                        Text(text = "${description.wordsNumber} words", style = MaterialTheme.typography.bodyMedium)
+                                                    }
+                                                },
+                                                onClick = {
+                                                    component.wordsSource.value = RoomScreenComponent.WordsSource.ServerDictionary(description)
+                                                    wordSourceMenuExpanded = false
+                                                },
+                                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                                shapes = MenuDefaults.itemShapes(),
+                                                colors = itemColors,
+                                            )
+                                    }
+                                }
+                            }
                         }
                     }
                     

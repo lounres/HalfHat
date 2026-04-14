@@ -103,7 +103,7 @@ public fun GameResultsUI(
                         .verticalScroll(scrollState),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    for ((player, explainedScore, guessedScore, sum) in component.results.collectAsState().value) {
+                    for ((player, scoreExplained, scoreGuessed, scoreSum) in component.results.collectAsState().value) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth()
@@ -115,17 +115,17 @@ public fun GameResultsUI(
                             )
                             Text(
                                 modifier = Modifier.weight(1f),
-                                text = explainedScore.toString(),
+                                text = scoreExplained.toString(),
                                 textAlign = TextAlign.Center,
                             )
                             Text(
                                 modifier = Modifier.weight(1f),
-                                text = guessedScore.toString(),
+                                text = scoreGuessed.toString(),
                                 textAlign = TextAlign.Center,
                             )
                             Text(
                                 modifier = Modifier.weight(1f),
-                                text = sum.toString(),
+                                text = scoreSum.toString(),
                                 textAlign = TextAlign.Center,
                                 fontWeight = FontWeight.SemiBold,
                             )

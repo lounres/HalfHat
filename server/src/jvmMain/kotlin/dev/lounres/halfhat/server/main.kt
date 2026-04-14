@@ -1,13 +1,17 @@
 package dev.lounres.halfhat.server
 
 import dev.lounres.halfhat.api.onlineGame.ClientApi
+import dev.lounres.halfhat.api.onlineGame.DictionaryId
 import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.halfhat.logic.server.Room
 import dev.lounres.kone.collections.array.KoneMutableUIntArray
 import dev.lounres.kone.collections.array.generate
+import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.empty
+import dev.lounres.kone.collections.list.getOrNull
+import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.collections.set.*
 import dev.lounres.kone.collections.utils.map
 import dev.lounres.kone.collections.utils.mapIndexed
@@ -49,20 +53,40 @@ data class PlayerMetadata(
     override val id: String get() = name
 }
 
-sealed interface WordsProviderID {
+sealed interface WordsProviderId {
     data class HostDictionary(
         val words: KoneList<String>,
-    ) : WordsProviderID
+    ) : WordsProviderId
+    sealed interface ServerDictionary : WordsProviderId {
+        data class Builtin(
+            val id: UInt,
+        ) : ServerDictionary
+    }
+}
+
+sealed interface WordsProviderDescription : Room.WordsProviderDescription<WordsProviderId> {
+    data class HostDictionary(
+        override val providerId: WordsProviderId.HostDictionary,
+    ) : WordsProviderDescription
+    sealed interface ServerDictionary : WordsProviderDescription {
+        override val providerId: WordsProviderId.ServerDictionary
+        data class Builtin(
+            override val providerId: WordsProviderId.ServerDictionary.Builtin,
+            val name: String,
+            val wordsNumber: UInt,
+        ) : ServerDictionary
+    }
 }
 
 sealed interface NoWordsProviderReason {
     data object CannotFindDictionaryByID : NoWordsProviderReason
 }
 
-object OnlineGameWordsProviderRegistry : GameStateMachine.WordsProviderRegistry<WordsProviderID, NoWordsProviderReason> {
-    private class ResourceDictionary(
+object OnlineGameWordsProviderRegistry : Room.WordsProviderRegistry<WordsProviderId, WordsProviderDescription, NoWordsProviderReason> {
+    private class InMemoryDictionary(
         private val words: KoneSet<String>
     ) : GameStateMachine.WordsProvider {
+        fun wordsNumber(): UInt = words.size
         override fun allWords(): KoneSet<String> = words
         override fun randomWords(number: UInt): KoneSet<String> {
             val number = minOf(number, words.size)
@@ -89,29 +113,85 @@ object OnlineGameWordsProviderRegistry : GameStateMachine.WordsProviderRegistry<
         }
     }
 
-//    private val dictionaries = KoneList
-//        .of("easy", "medium", "hard")
-//        .withIndex()
-//        .associate { (index, name) ->
-//            index.toULong() mapsTo lazy {
-//                ResourceDictionary(
-//                    javaClass.getResourceAsStream("/dictionaries/$name")!!.bufferedReader().readLines().toKoneList().toKoneSet()
-//                )
-//            }
-//        }
-    
-    override suspend fun get(providerId: WordsProviderID): GameStateMachine.WordsProviderRegistry.ResultOrReason<NoWordsProviderReason> =
+    private class ServerDictionary(
+        val name: String,
+        private val words: KoneSet<String>
+    ) : GameStateMachine.WordsProvider {
+        fun wordsNumber(): UInt = words.size
+        override fun allWords(): KoneSet<String> = words
+        override fun randomWords(number: UInt): KoneSet<String> {
+            val number = minOf(number, words.size)
+            if (number == 0u) return KoneSet.empty()
+
+            val indices = KoneMutableUIntArray.generate(number) { Random.nextUInt(words.size - it) }
+            if (number >= 2u) for (i in number - 2u downTo 0u) for (j in number - 1u downTo i + 1u) {
+                if (indices[j] >= indices[i]) indices[j]++
+            }
+
+            indices.sort()
+
+            return KoneSet.build {
+                var indexIndex = 0u
+                var currentIndex = 0u
+                val iterator = words.iterator()
+                while (indexIndex < number) {
+                    repeat(indices[indexIndex] - currentIndex) { iterator.moveNext() }
+                    currentIndex = indices[indexIndex]
+                    add(iterator.getNext())
+                    indexIndex++
+                }
+            }
+        }
+    }
+
+    private val dictionaries = KoneList
+        .of("easy", "medium", "hard")
+        .map {
+            lazy {
+                ServerDictionary(
+                    name = it,
+                    words = javaClass.getResourceAsStream("/dictionaries/$it")!!.bufferedReader().readLines().toKoneList().toKoneSet()
+                )
+            }
+        }
+
+    suspend fun getAllWordsProviderDescriptions(): KoneList<WordsProviderDescription.ServerDictionary> =
+        dictionaries.mapIndexed { index, dictionary ->
+            val dictionary = dictionary.value
+            WordsProviderDescription.ServerDictionary.Builtin(
+                providerId = WordsProviderId.ServerDictionary.Builtin(id = index),
+                name = dictionary.name,
+                wordsNumber = dictionary.wordsNumber()
+            )
+        }
+
+    override suspend fun getWordsProviderDescription(providerId: WordsProviderId): Room.WordsProviderRegistry.WordsProviderDescriptionOrReason<WordsProviderDescription, NoWordsProviderReason> =
         when (providerId) {
-            is WordsProviderID.HostDictionary -> GameStateMachine.WordsProviderRegistry.ResultOrReason.Success(ResourceDictionary(providerId.words.toKoneSet()))
-//            is WordsProviderID.ServerDictionary -> {
-//                val provider = dictionaries.getOrNull(providerId)?.value
-//                if (provider != null) GameStateMachine.WordsProviderRegistry.ResultOrReason.Success(provider)
-//                else GameStateMachine.WordsProviderRegistry.ResultOrReason.Failure(NoWordsProviderReason.CannotFindDictionaryByID)
-//            }
+            is WordsProviderId.HostDictionary -> Room.WordsProviderRegistry.WordsProviderDescriptionOrReason.Success(WordsProviderDescription.HostDictionary(providerId))
+            is WordsProviderId.ServerDictionary.Builtin -> {
+                val dictionary = dictionaries.getOrNull(providerId.id)?.value ?: return Room.WordsProviderRegistry.WordsProviderDescriptionOrReason.Failure(NoWordsProviderReason.CannotFindDictionaryByID)
+                Room.WordsProviderRegistry.WordsProviderDescriptionOrReason.Success(
+                    WordsProviderDescription.ServerDictionary.Builtin(
+                        providerId = providerId,
+                        name = dictionary.name,
+                        wordsNumber = dictionary.wordsNumber(),
+                    )
+                )
+            }
+        }
+    
+    override suspend fun getWordsProvider(providerId: WordsProviderId): GameStateMachine.WordsProviderRegistry.WordsProviderOrReason<NoWordsProviderReason> =
+        when (providerId) {
+            is WordsProviderId.HostDictionary -> GameStateMachine.WordsProviderRegistry.WordsProviderOrReason.Success(InMemoryDictionary(providerId.words.toKoneSet()))
+            is WordsProviderId.ServerDictionary.Builtin -> {
+                val provider = dictionaries.getOrNull(providerId.id)?.value
+                if (provider != null) GameStateMachine.WordsProviderRegistry.WordsProviderOrReason.Success(provider)
+                else GameStateMachine.WordsProviderRegistry.WordsProviderOrReason.Failure(NoWordsProviderReason.CannotFindDictionaryByID)
+            }
         }
 }
 
-typealias ServerRoom = Room<RoomMetadata, String, PlayerMetadata, WordsProviderID, NoWordsProviderReason, Connection>
+typealias ServerRoom = Room<RoomMetadata, String, PlayerMetadata, WordsProviderId, WordsProviderDescription, NoWordsProviderReason, Connection>
 
 val rooms = ConcurrentHashMap<String, ServerRoom>()
 
@@ -137,15 +217,15 @@ fun getRoomByIdOrCreate(id: String): ServerRoom = rooms.computeIfAbsent(id) {
 
 class Connection(
     val socketSession: WebSocketServerSession,
-) : Room.Connection<RoomMetadata, PlayerMetadata, WordsProviderID, NoWordsProviderReason> {
+) : Room.Connection<RoomMetadata, PlayerMetadata, WordsProviderId, WordsProviderDescription, NoWordsProviderReason> {
     val id: Uuid = Uuid.random()
     override fun toString(): String = "Connection#${id.toHexString()}"
     
-    var playerAttachment : Room.Player.Attachment<RoomMetadata, String, PlayerMetadata, WordsProviderID, NoWordsProviderReason, Connection>? = null
+    var playerAttachment : Room.Player.Attachment<RoomMetadata, String, PlayerMetadata, WordsProviderId, WordsProviderDescription, NoWordsProviderReason, Connection>? = null
     val playerAttachmentMutex = Mutex()
     
-    override suspend fun sendNewState(state: Room.Outgoing.State<RoomMetadata, PlayerMetadata, WordsProviderID>) {
-        fun Room.GameSettings.Builder<WordsProviderID>.toServerApi(): ServerApi.Settings.Builder =
+    override suspend fun sendNewState(state: Room.Outgoing.State<RoomMetadata, PlayerMetadata, WordsProviderDescription>) {
+        fun Room.GameSettings.Builder<WordsProviderDescription>.toServerApi(): ServerApi.Settings.Builder =
             ServerApi.Settings.Builder(
                 preparationTimeSeconds = this.preparationTimeSeconds,
                 explanationTimeSeconds = this.explanationTimeSeconds,
@@ -156,13 +236,19 @@ class Connection(
                 gameEndConditionType = this.gameEndConditionType,
                 wordsSource = when (val wordsSource = this.wordsSource) {
                     Room.WordsSource.Players -> ServerApi.WordsSource.Players
-                    is Room.WordsSource.Custom -> when (val id = wordsSource.id) {
-                        is WordsProviderID.HostDictionary -> ServerApi.WordsSource.HostDictionary
-//                        is WordsProviderID.ServerDictionary -> ServerApi.WordsSource.ServerDictionary(id.)
+                    is Room.WordsSource.Custom -> when (val wordsProviderID = wordsSource.description) {
+                        is WordsProviderDescription.HostDictionary -> ServerApi.WordsSource.HostDictionary
+                        is WordsProviderDescription.ServerDictionary.Builtin -> ServerApi.WordsSource.ServerDictionary(
+                            DictionaryId.WithDescription.Builtin(
+                                id = DictionaryId.Builtin(wordsProviderID.providerId.id),
+                                name = wordsProviderID.name,
+                                wordsNumber = wordsProviderID.wordsNumber,
+                            )
+                        )
                     }
                 },
             )
-        fun Room.GameSettings<WordsProviderID>.toServerApi(): ServerApi.Settings =
+        fun Room.GameSettings<WordsProviderDescription>.toServerApi(): ServerApi.Settings =
             ServerApi.Settings(
                 preparationTimeSeconds = this.preparationTimeSeconds,
                 explanationTimeSeconds = this.explanationTimeSeconds,
@@ -171,9 +257,15 @@ class Connection(
                 gameEndCondition = this.gameEndCondition,
                 wordsSource = when (val wordsSource = this.wordsSource) {
                     Room.WordsSource.Players -> ServerApi.WordsSource.Players
-                    is Room.WordsSource.Custom -> when (val id = wordsSource.id) {
-                        is WordsProviderID.HostDictionary -> ServerApi.WordsSource.HostDictionary
-//                        is WordsProviderID.ServerDictionary -> ServerApi.WordsSource.ServerDictionary(id.)
+                    is Room.WordsSource.Custom -> when (val wordsProviderID = wordsSource.description) {
+                        is WordsProviderDescription.HostDictionary -> ServerApi.WordsSource.HostDictionary
+                        is WordsProviderDescription.ServerDictionary.Builtin -> ServerApi.WordsSource.ServerDictionary(
+                            DictionaryId.WithDescription.Builtin(
+                                id = DictionaryId.Builtin(wordsProviderID.providerId.id),
+                                name = wordsProviderID.name,
+                                wordsNumber = wordsProviderID.wordsNumber,
+                            )
+                        )
                     }
                 },
             )
@@ -181,7 +273,7 @@ class Connection(
         socketSession.sendSerialized<ServerApi.Signal>(
             ServerApi.Signal.OnlineGameStateUpdate(
                 when (state) {
-                    is Room.Outgoing.State.GameInitialisation<RoomMetadata, PlayerMetadata, WordsProviderID> ->
+                    is Room.Outgoing.State.GameInitialisation<RoomMetadata, PlayerMetadata, WordsProviderDescription> ->
                         ServerApi.OnlineGame.State.GameInitialisation(
                             roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.GameInitialisation(
@@ -201,7 +293,7 @@ class Connection(
                             },
                             settingsBuilder = state.settingsBuilder.toServerApi(),
                         )
-                    is Room.Outgoing.State.PlayersWordsCollection<RoomMetadata, PlayerMetadata, WordsProviderID> ->
+                    is Room.Outgoing.State.PlayersWordsCollection<RoomMetadata, PlayerMetadata, WordsProviderDescription> ->
                         ServerApi.OnlineGame.State.PlayersWordsCollection(
                             roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.PlayersWordsCollection(
@@ -221,7 +313,7 @@ class Connection(
                             },
                             settings = state.settings.toServerApi(),
                         )
-                    is Room.Outgoing.State.Round.Waiting<RoomMetadata, PlayerMetadata, WordsProviderID> ->
+                    is Room.Outgoing.State.Round.Waiting<RoomMetadata, PlayerMetadata, WordsProviderDescription> ->
                         ServerApi.OnlineGame.State.Round.Waiting(
                             roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.Round.Waiting(
@@ -268,7 +360,7 @@ class Connection(
                             listenerReady = state.listenerReady,
                             leaderboardPermutation = state.leaderboardPermutation,
                         )
-                    is Room.Outgoing.State.Round.Preparation<RoomMetadata, PlayerMetadata, WordsProviderID> ->
+                    is Room.Outgoing.State.Round.Preparation<RoomMetadata, PlayerMetadata, WordsProviderDescription> ->
                         ServerApi.OnlineGame.State.Round.Preparation(
                             roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.Round.Preparation(
@@ -313,7 +405,7 @@ class Connection(
                             millisecondsLeft = state.millisecondsLeft,
                             leaderboardPermutation = state.leaderboardPermutation,
                         )
-                    is Room.Outgoing.State.Round.Explanation<RoomMetadata, PlayerMetadata, WordsProviderID> ->
+                    is Room.Outgoing.State.Round.Explanation<RoomMetadata, PlayerMetadata, WordsProviderDescription> ->
                         ServerApi.OnlineGame.State.Round.Explanation(
                             roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.Round.Explanation(
@@ -358,7 +450,7 @@ class Connection(
                             millisecondsLeft = state.millisecondsLeft,
                             leaderboardPermutation = state.leaderboardPermutation,
                         )
-                    is Room.Outgoing.State.Round.LastGuess<RoomMetadata, PlayerMetadata, WordsProviderID> ->
+                    is Room.Outgoing.State.Round.LastGuess<RoomMetadata, PlayerMetadata, WordsProviderDescription> ->
                         ServerApi.OnlineGame.State.Round.LastGuess(
                             roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.Round.LastGuess(
@@ -403,7 +495,7 @@ class Connection(
                             millisecondsLeft = state.millisecondsLeft,
                             leaderboardPermutation = state.leaderboardPermutation,
                         )
-                    is Room.Outgoing.State.Round.Editing<RoomMetadata, PlayerMetadata, WordsProviderID> ->
+                    is Room.Outgoing.State.Round.Editing<RoomMetadata, PlayerMetadata, WordsProviderDescription> ->
                         ServerApi.OnlineGame.State.Round.Editing(
                             roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.Round.Editing(
@@ -449,7 +541,7 @@ class Connection(
                             wordsStatistic = state.wordsStatistic,
                             leaderboardPermutation = state.leaderboardPermutation,
                         )
-                    is Room.Outgoing.State.GameResults<RoomMetadata, PlayerMetadata, WordsProviderID> ->
+                    is Room.Outgoing.State.GameResults<RoomMetadata, PlayerMetadata, WordsProviderDescription> ->
                         ServerApi.OnlineGame.State.GameResults(
                             roomName = state.roomMetadata.name,
                             role = ServerApi.OnlineGame.Role.GameResults(
@@ -617,6 +709,33 @@ fun main() {
                                 
                                 sendSerialized<ServerApi.Signal>(signal)
                             }
+                            ClientApi.Signal.OnlineGame.RequestAvailableDictionaries -> connection.playerAttachmentMutex.withLock {
+                                if (connection.playerAttachment == null) {
+                                    logger.debug(
+                                        items = {
+                                            mapOf(
+                                                "connection" to this.toString(),
+                                            )
+                                        }
+                                    ) { "Available dictionaries request is allowed only from inside a room." }
+
+                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
+                                    return@withLock
+                                }
+
+                                val descriptions = OnlineGameWordsProviderRegistry.getAllWordsProviderDescriptions()
+                                val serverApiDescriptions = descriptions.map {
+                                    when (it) {
+                                        is WordsProviderDescription.ServerDictionary.Builtin ->
+                                            DictionaryId.WithDescription.Builtin(
+                                                id = DictionaryId.Builtin(it.providerId.id),
+                                                name = it.name,
+                                                wordsNumber = it.wordsNumber,
+                                            )
+                                    }
+                                }
+                                sendSerialized<ServerApi.Signal>(ServerApi.Signal.AvailableDictionariesUpdate(serverApiDescriptions))
+                            }
                             is ClientApi.Signal.OnlineGame.JoinRoom -> connection.playerAttachmentMutex.withLock {
                                 if (connection.playerAttachment != null) {
                                     logger.debug(
@@ -729,8 +848,10 @@ fun main() {
                                         wordsSource = when (val wordsSource = settingsBuilderPatch.wordsSource) {
                                             null -> null
                                             ClientApi.WordsSource.Players -> Room.WordsSource.Players
-                                            is ClientApi.WordsSource.HostDictionary -> Room.WordsSource.Custom(WordsProviderID.HostDictionary(wordsSource.words))
-//                                            is ClientApi.WordsSource.ServerDictionary -> Room.WordsSource.ServerDictionary(wordsSource.id)
+                                            is ClientApi.WordsSource.HostDictionary -> Room.WordsSource.Custom(WordsProviderId.HostDictionary(wordsSource.words))
+                                            is ClientApi.WordsSource.ServerDictionary -> when (val dictionaryId = wordsSource.dictionaryId) {
+                                                is DictionaryId.Builtin -> Room.WordsSource.Custom(WordsProviderId.ServerDictionary.Builtin(id = dictionaryId.id))
+                                            }
                                         },
                                     )
                                 )

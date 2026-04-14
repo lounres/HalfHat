@@ -7,7 +7,7 @@ import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultPossibi
 import dev.lounres.komponentual.navigation.PossibilityNavigationTarget
 import dev.lounres.komponentual.navigation.clear
 import dev.lounres.komponentual.navigation.set
-import dev.lounres.kone.hub.KoneAsynchronousHubView
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.maybe.None
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 public class RealModeSelectionPageComponent(
     private val infoPopupNavigation: PossibilityNavigationTarget<ModeSelectionPageComponent.InfoPopup>,
     
-    override val infoPopup: KoneAsynchronousHubView<ChildrenPossibility<*, ModeSelectionPageComponent.InfoPopup, UIComponentContext>, *>,
+    override val infoPopup: KoneAsynchronousHub<ChildrenPossibility<*, ModeSelectionPageComponent.InfoPopup, UIComponentContext>>,
     
     override val onOnlineGameSelect: () -> Unit,
     override val onLocalGameSelect: () -> Unit,

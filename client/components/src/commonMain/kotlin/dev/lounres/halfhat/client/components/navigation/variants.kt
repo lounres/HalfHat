@@ -37,9 +37,6 @@ public suspend fun <
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
         configurationOrder = configurationOrder,
-        navigationStateEquality = Equality { left, right ->
-            configurationEquality { left.currentVariant eq right.currentVariant }
-        },
         loggerSource = loggerSource,
         navigationControllerSpec = navigationControllerSpec,
         navigationStateSerializer = { VariantsNavigationState.Serializer(it, allVariants) },
@@ -71,7 +68,7 @@ public suspend fun <
                     keyEquality = configurationEquality,
                     keyHashing = configurationHashing,
                     keyOrder = configurationOrder,
-                ) { (_, child) -> child.component },
+                ) { (val child = value) -> child.component },
             )
         },
     )

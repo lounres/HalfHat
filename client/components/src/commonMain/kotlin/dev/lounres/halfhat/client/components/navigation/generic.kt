@@ -70,7 +70,6 @@ public suspend fun <
     configurationEquality: Equality<Configuration> = Equality.defaultFor(),
     configurationHashing: Hashing<Configuration>? = null,
     configurationOrder: Order<Configuration>? = null,
-    navigationStateEquality: Equality<NavigationState> = Equality.defaultFor(),
     loggerSource: String? = null,
     navigationControllerSpec: NavigationControllerSpec<NavigationState, Configuration, Component, UIComponentContext, NavigationPublicState, NavigationEvent>? = null,
     navigationStateSerializer: (KSerializer<Configuration>) -> KSerializer<NavigationState>,
@@ -112,12 +111,6 @@ public suspend fun <
             configurationEquality = configurationEquality,
             configurationHashing = configurationHashing,
             configurationOrder = configurationOrder,
-            navigationStateEquality = navigationStateEquality,
-            childEquality = Equality { left, right ->
-                left.component === right.component
-                        && left.controllingLifecycle === right.controllingLifecycle
-                        && left.navigationNodeController === right.navigationNodeController
-            },
             source = navigationHub,
             initialState = initialState,
             stateConfigurationsMapping = stateConfigurationsMapping,
@@ -407,7 +400,7 @@ public suspend fun <
                         override val context: UIComponentContext = childrenComponentContext
                         
                         override val hub: KoneAsynchronousHub<NavigationPublicState> =
-                            childrenHub.map { navigationStateMapper(it.navigationState, it.children.mapValues { (_, value) -> BuiltChild(value.component, value.context) }) }
+                            childrenHub.map { navigationStateMapper(it.navigationState, it.children.mapValues { (value) -> BuiltChild(value.component, value.context) }) }
                         
                         override suspend fun navigate(event: NavigationEvent) {
                             navigationHub.navigate(event)
@@ -420,7 +413,7 @@ public suspend fun <
             override val context: UIComponentContext = childrenComponentContext
             
             override val hub: KoneAsynchronousHub<NavigationPublicState> =
-                childrenHub.map { navigationStateMapper(it.navigationState, it.children.mapValues { (_, value) -> BuiltChild(value.component, value.context) }) }
+                childrenHub.map { navigationStateMapper(it.navigationState, it.children.mapValues { (value) -> BuiltChild(value.component, value.context) }) }
             
             override suspend fun navigate(event: NavigationEvent) {
                 storingNavigationTarget.navigate(event)

@@ -7,7 +7,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import dev.lounres.halfhat.client.storage.settings.Settings
 import dev.lounres.halfhat.client.storage.settings.get
-import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
+import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.registry.serialization.RegistrySerializableKey
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -262,8 +262,7 @@ enum class DarkTheme {
 }
 
 val Settings.darkTheme: DarkTheme get() = get(DarkTheme.Key)
-val KoneMutableAsynchronousHubView<Settings, *>.darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>
-    get() = get(DarkTheme.Key)
+val KoneMutableAsynchronousHub<Settings>.darkTheme: KoneMutableAsynchronousHub<DarkTheme> get() = get(DarkTheme.Key)
 
 @Composable
 fun HalfhatTheme(

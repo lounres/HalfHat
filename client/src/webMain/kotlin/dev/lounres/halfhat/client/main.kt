@@ -42,7 +42,7 @@ fun application() {
     }
     
     ComposeViewport(document.body!!) {
-        val preloadedFonts = Res.allFontResources.mapValues { (_, resource) -> preloadFont(resource) }
+        val preloadedFonts = Res.allFontResources.mapValues { (val resource = value) -> preloadFont(resource) }
         var soundsAreReady by remember { mutableStateOf(false) }
         var darkTheme by remember { mutableStateOf(defaultDarkThemeMode) }
         var component by remember { mutableStateOf<MainWindowComponent?>(null) }

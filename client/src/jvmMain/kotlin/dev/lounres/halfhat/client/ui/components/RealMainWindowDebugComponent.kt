@@ -13,7 +13,7 @@ import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.halfhat.client.ui.theming.darkTheme
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.utils.map
-import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
+import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.scope
 import dev.lounres.logKube.core.DefaultCurrentPlatformLogWriter
 import dev.lounres.logKube.core.LogAcceptor
@@ -21,7 +21,7 @@ import dev.lounres.logKube.core.Logger
 
 
 class RealMainWindowDebugComponent(
-    override val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>,
+    override val darkTheme: KoneMutableAsynchronousHub<DarkTheme>,
     override val mainComponents: KoneList<MainWindowComponent>,
 ) : MainWindowDebugComponent
 

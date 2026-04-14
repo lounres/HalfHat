@@ -52,7 +52,7 @@ fun RoundEditingSpeakerContentUI(
                 .verticalScroll(rememberScrollState()),
         ) {
             val roundRole = component.userRole.collectAsState().value
-            for ((index, wordExplanation) in roundRole.wordsToEdit.withIndex()) {
+            for ((val index, val wordExplanation = value) in roundRole.wordsToEdit.withIndex()) {
                 if (index != 0u) Spacer(modifier = Modifier.height(16.dp))
                 val (word, state) = wordExplanation
                 Card(

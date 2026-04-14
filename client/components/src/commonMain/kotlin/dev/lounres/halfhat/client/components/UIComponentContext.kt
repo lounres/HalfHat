@@ -16,9 +16,9 @@ import dev.lounres.halfhat.client.components.lifecycle.mergeUIComponentLifecycle
 import dev.lounres.halfhat.client.components.logger.logger
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationContext
 import dev.lounres.halfhat.client.components.navigation.controller.NavigationNodeController
-import dev.lounres.komponentual.lifecycle.subscribe
+import dev.lounres.kone.registry.OwnedRegistry
+import dev.lounres.kone.registry.MutableOwnedRegistry
 import dev.lounres.kone.registry.Registry
-import dev.lounres.kone.registry.RegistryBuilder
 import dev.lounres.kone.registry.build
 import dev.lounres.kone.registry.correspondsTo
 import dev.lounres.logKube.core.debug
@@ -30,13 +30,13 @@ import kotlin.jvm.JvmInline
 
 
 @JvmInline
-public value class UIComponentContext(public val elements: Registry) : Registry by elements
+public value class UIComponentContext(public val elements: OwnedRegistry<UIComponentContext>) : Registry by elements
 
-public inline fun UIComponentContext(builder: RegistryBuilder<UIComponentContext>.() -> Unit): UIComponentContext {
+public inline fun UIComponentContext(builder: MutableOwnedRegistry<UIComponentContext>.() -> Unit): UIComponentContext {
     contract {
         callsInPlace(builder, InvocationKind.EXACTLY_ONCE)
     }
-    return UIComponentContext(Registry.build(builder))
+    return UIComponentContext(OwnedRegistry.build(builder))
 }
 
 public fun UIComponentContext.coroutineScope(context: CoroutineContext): CoroutineScope = lifecycle.coroutineScope(context)

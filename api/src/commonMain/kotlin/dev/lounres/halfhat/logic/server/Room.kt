@@ -1,9 +1,7 @@
 package dev.lounres.halfhat.logic.server
 
 import dev.lounres.halfhat.logic.gameStateMachine.*
-import dev.lounres.halfhat.logic.server.Room.GameStateMachineMetadataTransition.*
-import dev.lounres.halfhat.logic.server.Room.Player.Description
-import dev.lounres.kone.algebraic.context
+import dev.lounres.kone.algebraic.order
 import dev.lounres.kone.automata.*
 import dev.lounres.kone.collections.array.KoneUIntArray
 import dev.lounres.kone.collections.interop.toKoneUIntArray
@@ -31,12 +29,13 @@ public class Room<
     PlayerID,
     PlayerMetadata : Room.Player.Metadata<PlayerID>,
     WordsProviderID,
+    WordsProviderDescription : Room.WordsProviderDescription<WordsProviderID>,
     NoWordsProviderReason,
-    ConnectionType: Room.Connection<RoomMetadata, PlayerMetadata, WordsProviderID, NoWordsProviderReason>,
+    ConnectionType: Room.Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>,
 >(
     public val metadata: RoomMetadata,
-    public val wordsProviderRegistry: GameStateMachine.WordsProviderRegistry<WordsProviderID, NoWordsProviderReason>,
-    initialSettingsBuilder: GameSettings.Builder<WordsProviderID>,
+    public val wordsProviderRegistry: WordsProviderRegistry<WordsProviderID, WordsProviderDescription, NoWordsProviderReason>,
+    initialSettingsBuilder: GameSettings.Builder<WordsProviderDescription>,
     private val initialMetadataFactory: (PlayerID) -> PlayerMetadata,
     private val checkConnectionAttachment: (metadata: PlayerMetadata, isOnline: Boolean, connection: ConnectionType) -> Boolean,
 ) {
@@ -45,10 +44,11 @@ public class Room<
         PlayerID,
         PlayerMetadata : Player.Metadata<PlayerID>,
         WordsProviderID,
+        WordsProviderDescription : Room.WordsProviderDescription<WordsProviderID>,
         NoWordsProviderReason,
-        ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, NoWordsProviderReason>
+        ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>
     > internal constructor(
-        private val room: Room<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>,
+        private val room: Room<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>,
         public val metadata: PlayerMetadata,
     ) {
         public interface Metadata<out ID> {
@@ -60,10 +60,11 @@ public class Room<
             PlayerID,
             PlayerMetadata : Metadata<PlayerID>,
             WordsProviderID,
+            WordsProviderDescription : Room.WordsProviderDescription<WordsProviderID>,
             NoWordsProviderReason,
-            ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, NoWordsProviderReason>
+            ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>
         > internal constructor(
-            public val player: Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>,
+            public val player: Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>,
             private val node: KoneMutableListNode<ConnectionType>,
         ) {
             public suspend fun sever() {
@@ -74,7 +75,7 @@ public class Room<
                         node.remove()
                         TransitionOrReason.Success(
                             when (previousState) {
-                                is GameStateMachine.State.GameInitialisation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> ->
+                                is GameStateMachine.State.GameInitialisation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, WordsProviderDescription, *> ->
                                     GameStateMachine.Transition.UpdateGameSettings(
                                         playersList = previousState.metadata.allPlayersList.filter { it.isOnline },
                                         settingsBuilder = previousState.settingsBuilder,
@@ -104,7 +105,7 @@ public class Room<
                         return@moveMaybe TransitionOrReason.Failure(null)
                     }
                     when (previousState) {
-                        is GameStateMachine.State.GameInitialisation<*, WordsProviderID, *> ->
+                        is GameStateMachine.State.GameInitialisation<*, WordsProviderDescription, *> ->
                             TransitionOrReason.Success(
                                 GameStateMachine.Transition.UpdateGameSettings(
                                     playersList = previousState.playersList,
@@ -119,7 +120,10 @@ public class Room<
                                         wordsSource = when (val wordsSource = settingsBuilderPatch.wordsSource) {
                                             null -> previousState.settingsBuilder.wordsSource
                                             WordsSource.Players -> GameStateMachine.WordsSource.Players
-                                            is WordsSource.Custom<WordsProviderID> -> GameStateMachine.WordsSource.Custom(wordsSource.id)
+                                            is WordsSource.Custom<WordsProviderID> -> when (val wordsProviderId = player.room.wordsProviderRegistry.getWordsProviderDescription(wordsSource.description)) {
+                                                is WordsProviderRegistry.WordsProviderDescriptionOrReason.Failure<NoWordsProviderReason> -> return@moveMaybe TransitionOrReason.Failure(null)
+                                                is WordsProviderRegistry.WordsProviderDescriptionOrReason.Success -> GameStateMachine.WordsSource.Custom(wordsProviderId.result)
+                                            }
                                         },
                                     ),
                                 )
@@ -152,7 +156,10 @@ public class Room<
                     }
                     TransitionOrReason.Success(
                         GameStateMachine.Transition.InitialiseGame(
-                            wordsProviderRegistry = player.room.wordsProviderRegistry,
+                            wordsProviderRegistry = object : GameStateMachine.WordsProviderRegistry<WordsProviderDescription, NoWordsProviderReason> {
+                                override suspend fun getWordsProvider(providerId: WordsProviderDescription): GameStateMachine.WordsProviderRegistry.WordsProviderOrReason<NoWordsProviderReason> =
+                                    player.room.wordsProviderRegistry.getWordsProvider(providerId.providerId)
+                            },
                         )
                     )
                 }
@@ -169,7 +176,7 @@ public class Room<
             public suspend fun submitWords(words: KoneSet<String>) {
                 val result = player.room.gameStateMachine.move { previousState ->
                     GameStateMachine.Transition.SubmitPlayerWords(
-                        playerIndex = (Equality.defaultFor<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>>()) { previousState.playersList.firstIndexOf(player) },
+                        playerIndex = (Equality.defaultFor<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>()) { previousState.playersList.firstIndexOf(player) },
                         playerWords = words,
                     )
                 }
@@ -185,7 +192,7 @@ public class Room<
             public suspend fun speakerReady() {
                 val result = player.room.gameStateMachine.moveMaybe { previousState ->
                     when (previousState) {
-                        is GameStateMachine.State.RoundWaiting<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, *, *> ->
+                        is GameStateMachine.State.RoundWaiting<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, *, *> ->
                             if (previousState.speaker != player) {
                                 node.element.sendError(Outgoing.Error.NotSpeakerSettingSpeakerReadiness)
                                 TransitionOrReason.Failure(null)
@@ -213,7 +220,7 @@ public class Room<
             public suspend fun listenerReady() {
                 val result = player.room.gameStateMachine.moveMaybe { previousState ->
                     when (previousState) {
-                        is GameStateMachine.State.RoundWaiting<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, *, *> ->
+                        is GameStateMachine.State.RoundWaiting<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, *, *> ->
                             if (previousState.listener != player) {
                                 node.element.sendError(Outgoing.Error.NotListenerSettingListenerReadiness)
                                 TransitionOrReason.Failure(null)
@@ -241,12 +248,12 @@ public class Room<
             public suspend fun wordExplanationState(state: GameStateMachine.WordExplanation.State) {
                 val result = player.room.gameStateMachine.moveMaybe { previousState ->
                     when (previousState) {
-                        is GameStateMachine.State.RoundExplanation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, *, *> ->
+                        is GameStateMachine.State.RoundExplanation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, *, *> ->
                             if (previousState.speaker != player) {
                                 node.element.sendError(Outgoing.Error.NotSpeakerSubmittingWordExplanationResult)
                                 TransitionOrReason.Failure(null)
                             } else TransitionOrReason.Success(GameStateMachine.Transition.WordExplanationState(state))
-                        is GameStateMachine.State.RoundLastGuess<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, *, *> ->
+                        is GameStateMachine.State.RoundLastGuess<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, *, *> ->
                             if (previousState.speaker != player) {
                                 node.element.sendError(Outgoing.Error.NotSpeakerSubmittingWordExplanationResult)
                                 TransitionOrReason.Failure(null)
@@ -273,7 +280,7 @@ public class Room<
             public suspend fun updateWordsExplanationResults(newExplanationResults: KoneList<GameStateMachine.WordExplanation>) {
                 val result = player.room.gameStateMachine.moveMaybe { previousState ->
                     when (previousState) {
-                        is GameStateMachine.State.RoundEditing<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, *, *> ->
+                        is GameStateMachine.State.RoundEditing<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, *, *> ->
                             if (previousState.speaker != player) {
                                 node.element.sendError(Outgoing.Error.NotSpeakerUpdatingWordExplanationResults)
                                 TransitionOrReason.Failure(null)
@@ -301,7 +308,7 @@ public class Room<
             public suspend fun confirmWordsExplanationResults() {
                 val result = player.room.gameStateMachine.moveMaybe { previousState ->
                     when (previousState) {
-                        is GameStateMachine.State.RoundEditing<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, *, *> ->
+                        is GameStateMachine.State.RoundEditing<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, *, *> ->
                             if (previousState.speaker != player) {
                                 node.element.sendError(Outgoing.Error.NotSpeakerConfirmingWordExplanationResults)
                                 TransitionOrReason.Failure(null)
@@ -374,27 +381,40 @@ public class Room<
         GameResults,
     }
     
-    public interface Connection<in RoomMetadata, in PlayerMetadata, in WordsProviderID, in NoWordsProviderReason> {
-        public suspend fun sendNewState(state: Outgoing.State<RoomMetadata, PlayerMetadata, WordsProviderID>)
+    public interface Connection<in RoomMetadata, in PlayerMetadata, out WordsProviderID, in WordsProviderDescription: Room.WordsProviderDescription<WordsProviderID>, in NoWordsProviderReason> {
+        public suspend fun sendNewState(state: Outgoing.State<RoomMetadata, PlayerMetadata, WordsProviderDescription>)
         public suspend fun sendError(error: Outgoing.Error<NoWordsProviderReason>)
     }
-    
-    public sealed interface WordsSource<out WordsProviderID> {
+
+    public interface WordsProviderDescription<out WordsProviderId> {
+        public val providerId: WordsProviderId
+    }
+
+    public interface WordsProviderRegistry<WordsProviderId, out WordsProviderDescription: Room.WordsProviderDescription<WordsProviderId>, out Reason> : GameStateMachine.WordsProviderRegistry<WordsProviderId, Reason> {
+        public suspend fun getWordsProviderDescription(providerId: WordsProviderId): WordsProviderDescriptionOrReason<WordsProviderDescription, Reason>
+
+        public sealed interface WordsProviderDescriptionOrReason<out WordsProviderDescription, out Reason> {
+            public data class Success<WordsProviderDescription>(val result: WordsProviderDescription) : WordsProviderDescriptionOrReason<WordsProviderDescription, Nothing>
+            public data class Failure<Reason>(val reason: Reason) : WordsProviderDescriptionOrReason<Nothing, Reason>
+        }
+    }
+
+    public sealed interface WordsSource<out WordsProviderDescription> {
         public data object Players : WordsSource<Nothing>
-        public data class Custom<WordsProviderID>(
-            public val id: WordsProviderID,
-        ) : WordsSource<WordsProviderID>
+        public data class Custom<WordsProviderDescription>(
+            public val description: WordsProviderDescription,
+        ) : WordsSource<WordsProviderDescription>
     }
     
-    public data class GameSettings<out WordsProviderID>(
+    public data class GameSettings<out WordsProviderDescription>(
         val preparationTimeSeconds: UInt,
         val explanationTimeSeconds: UInt,
         val finalGuessTimeSeconds: UInt,
         val strictMode: Boolean,
         val gameEndCondition: GameStateMachine.GameEndCondition,
-        val wordsSource: WordsSource<WordsProviderID>,
+        val wordsSource: WordsSource<WordsProviderDescription>,
     ) {
-        public data class Builder<out WordsProviderID>(
+        public data class Builder<out WordsProviderDescription>(
             val preparationTimeSeconds: UInt,
             val explanationTimeSeconds: UInt,
             val finalGuessTimeSeconds: UInt,
@@ -402,7 +422,7 @@ public class Room<
             val cachedEndConditionWordsNumber: UInt,
             val cachedEndConditionCyclesNumber: UInt,
             val gameEndConditionType: GameStateMachine.GameEndCondition.Type,
-            val wordsSource: WordsSource<WordsProviderID>,
+            val wordsSource: WordsSource<WordsProviderDescription>,
         ) {
             public data class Patch<out WordsProviderID>(
                 val preparationTimeSeconds: UInt?,
@@ -620,28 +640,28 @@ public class Room<
             ) : Role<PlayerMetadata>
         }
         
-        public sealed interface State<out RoomMetadata, out PlayerMetadata, out WordsProviderID> {
+        public sealed interface State<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription> {
             public val roomMetadata: RoomMetadata
             public val role: Role<PlayerMetadata>
             
-            public data class GameInitialisation<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
+            public data class GameInitialisation<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
                 override val roomMetadata: RoomMetadata,
                 override val role: Role.GameInitialisation<PlayerMetadata>,
                 public val playersList: KoneList<PlayerDescription.GameInitialisation<PlayerMetadata>>,
-                public val settingsBuilder: GameSettings.Builder<WordsProviderID>,
-            ) : State<RoomMetadata, PlayerMetadata, WordsProviderID>
+                public val settingsBuilder: GameSettings.Builder<WordsProviderDescription>,
+            ) : State<RoomMetadata, PlayerMetadata, WordsProviderDescription>
             
-            public data class PlayersWordsCollection<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
+            public data class PlayersWordsCollection<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
                 override val roomMetadata: RoomMetadata,
                 override val role: Role.PlayersWordsCollection<PlayerMetadata>,
                 public val playersList: KoneList<PlayerDescription.PlayersWordsCollection<PlayerMetadata>>,
-                public val settings: GameSettings<WordsProviderID>,
-            ) : State<RoomMetadata, PlayerMetadata, WordsProviderID>
+                public val settings: GameSettings<WordsProviderDescription>,
+            ) : State<RoomMetadata, PlayerMetadata, WordsProviderDescription>
             
-            public sealed interface Round<out RoomMetadata, out PlayerMetadata, out WordsProviderID> : State<RoomMetadata, PlayerMetadata, WordsProviderID> {
+            public sealed interface Round<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription> : State<RoomMetadata, PlayerMetadata, WordsProviderDescription> {
                 override val role: Role.Round<PlayerMetadata>
                 public val playersList: KoneList<PlayerDescription.Round<PlayerMetadata>>
-                public val settings: GameSettings<WordsProviderID>
+                public val settings: GameSettings<WordsProviderDescription>
                 public val initialWordsNumber: UInt
                 public val roundNumber: UInt
                 public val cycleNumber: UInt
@@ -654,11 +674,11 @@ public class Room<
                 public val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>
                 public val leaderboardPermutation: KoneUIntArray
                 
-                public data class Waiting<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
+                public data class Waiting<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
                     override val roomMetadata: RoomMetadata,
                     override val role: Role.Round.Waiting<PlayerMetadata>,
                     override val playersList: KoneList<PlayerDescription.Round.Waiting<PlayerMetadata>>,
-                    override val settings: GameSettings<WordsProviderID>,
+                    override val settings: GameSettings<WordsProviderDescription>,
                     override val initialWordsNumber: UInt,
                     override val roundNumber: UInt,
                     override val cycleNumber: UInt,
@@ -672,13 +692,13 @@ public class Room<
                     public val speakerReady: Boolean,
                     public val listenerReady: Boolean,
                     override val leaderboardPermutation: KoneUIntArray,
-                ) : Round<RoomMetadata, PlayerMetadata, WordsProviderID>
+                ) : Round<RoomMetadata, PlayerMetadata, WordsProviderDescription>
                 
-                public data class Preparation<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
+                public data class Preparation<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
                     override val roomMetadata: RoomMetadata,
                     override val role: Role.Round.Preparation<PlayerMetadata>,
                     override val playersList: KoneList<PlayerDescription.Round.Preparation<PlayerMetadata>>,
-                    override val settings: GameSettings<WordsProviderID>,
+                    override val settings: GameSettings<WordsProviderDescription>,
                     override val initialWordsNumber: UInt,
                     override val roundNumber: UInt,
                     override val cycleNumber: UInt,
@@ -691,13 +711,13 @@ public class Room<
                     override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
                     public val millisecondsLeft: UInt,
                     override val leaderboardPermutation: KoneUIntArray,
-                ) : Round<RoomMetadata, PlayerMetadata, WordsProviderID>
+                ) : Round<RoomMetadata, PlayerMetadata, WordsProviderDescription>
                 
-                public data class Explanation<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
+                public data class Explanation<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
                     override val roomMetadata: RoomMetadata,
                     override val role: Role.Round.Explanation<PlayerMetadata>,
                     override val playersList: KoneList<PlayerDescription.Round.Explanation<PlayerMetadata>>,
-                    override val settings: GameSettings<WordsProviderID>,
+                    override val settings: GameSettings<WordsProviderDescription>,
                     override val initialWordsNumber: UInt,
                     override val roundNumber: UInt,
                     override val cycleNumber: UInt,
@@ -710,13 +730,13 @@ public class Room<
                     override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
                     public val millisecondsLeft: UInt,
                     override val leaderboardPermutation: KoneUIntArray,
-                ) : Round<RoomMetadata, PlayerMetadata, WordsProviderID>
+                ) : Round<RoomMetadata, PlayerMetadata, WordsProviderDescription>
                 
-                public data class LastGuess<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
+                public data class LastGuess<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
                     override val roomMetadata: RoomMetadata,
                     override val role: Role.Round.LastGuess<PlayerMetadata>,
                     override val playersList: KoneList<PlayerDescription.Round.LastGuess<PlayerMetadata>>,
-                    override val settings: GameSettings<WordsProviderID>,
+                    override val settings: GameSettings<WordsProviderDescription>,
                     override val initialWordsNumber: UInt,
                     override val roundNumber: UInt,
                     override val cycleNumber: UInt,
@@ -729,13 +749,13 @@ public class Room<
                     override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
                     public val millisecondsLeft: UInt,
                     override val leaderboardPermutation: KoneUIntArray,
-                ) : Round<RoomMetadata, PlayerMetadata, WordsProviderID>
+                ) : Round<RoomMetadata, PlayerMetadata, WordsProviderDescription>
                 
-                public data class Editing<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
+                public data class Editing<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
                     override val roomMetadata: RoomMetadata,
                     override val role: Role.Round.Editing<PlayerMetadata>,
                     override val playersList: KoneList<PlayerDescription.Round.Editing<PlayerMetadata>>,
-                    override val settings: GameSettings<WordsProviderID>,
+                    override val settings: GameSettings<WordsProviderDescription>,
                     override val initialWordsNumber: UInt,
                     override val roundNumber: UInt,
                     override val cycleNumber: UInt,
@@ -747,17 +767,17 @@ public class Room<
                     override val wordsInProgressNumber: UInt,
                     override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
                     override val leaderboardPermutation: KoneUIntArray,
-                ) : Round<RoomMetadata, PlayerMetadata, WordsProviderID>
+                ) : Round<RoomMetadata, PlayerMetadata, WordsProviderDescription>
             }
             
-            public data class GameResults<out RoomMetadata, out PlayerMetadata, out WordsProviderID>(
+            public data class GameResults<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
                 override val roomMetadata: RoomMetadata,
                 override val role: Role.GameResults<PlayerMetadata>,
                 public val playersList: KoneList<PlayerDescription.GameResults<PlayerMetadata>>,
-                public val settings: GameSettings<WordsProviderID>,
+                public val settings: GameSettings<WordsProviderDescription>,
                 public val leaderboardPermutation: KoneUIntArray,
                 public val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
-            ) : State<RoomMetadata, PlayerMetadata, WordsProviderID>
+            ) : State<RoomMetadata, PlayerMetadata, WordsProviderDescription>
         }
         
         public sealed interface Error<out NoWordsProviderReason> {
@@ -810,14 +830,14 @@ public class Room<
         }
     }
     
-    private data class GameStateMachineMetadata<RoomMetadata, PlayerID, PlayerMetadata : Player.Metadata<PlayerID>, WordsProviderID, NoWordsProviderReason, ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, NoWordsProviderReason>>(
-        val allPlayersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>>,
+    private data class GameStateMachineMetadata<RoomMetadata, PlayerID, PlayerMetadata : Player.Metadata<PlayerID>, WordsProviderID, WordsProviderDescription : Room.WordsProviderDescription<WordsProviderID>, NoWordsProviderReason, ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>>(
+        val allPlayersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>,
     )
     
-    private sealed interface GameStateMachineMetadataTransition<RoomMetadata, PlayerID, PlayerMetadata : Player.Metadata<PlayerID>, WordsProviderID, NoWordsProviderReason, ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, NoWordsProviderReason>> {
-        data class UpdateAllPlayersList<RoomMetadata, PlayerID, PlayerMetadata : Player.Metadata<PlayerID>, WordsProviderID, NoWordsProviderReason, ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, NoWordsProviderReason>>(
-            val newAllPlayersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>>,
-        ) : GameStateMachineMetadataTransition<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>
+    private sealed interface GameStateMachineMetadataTransition<RoomMetadata, PlayerID, PlayerMetadata : Player.Metadata<PlayerID>, WordsProviderID, WordsProviderDescription : Room.WordsProviderDescription<WordsProviderID>, NoWordsProviderReason, ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>> {
+        data class UpdateAllPlayersList<RoomMetadata, PlayerID, PlayerMetadata : Player.Metadata<PlayerID>, WordsProviderID, WordsProviderDescription : Room.WordsProviderDescription<WordsProviderID>, NoWordsProviderReason, ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>>(
+            val newAllPlayersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>,
+        ) : GameStateMachineMetadataTransition<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>
     }
     
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Default)
@@ -838,7 +858,7 @@ public class Room<
                     state = it.value.state,
                 )
             }.sortedWith { left, right -> // TODO: Rewrite with comparator utilities
-                val wordsComparisonResult = context(UInt.context, Equality.defaultFor<GameStateMachine.WordStatistic.State>()) {
+                val wordsComparisonResult = context(UInt.order(), Equality.defaultFor<GameStateMachine.WordStatistic.State>()) {
                     wordsStatisticStateOrder.firstIndexOf(left.state) compareWith wordsStatisticStateOrder.firstIndexOf(right.state)
                 }
                 if (wordsComparisonResult != ComparisonResult.Equal) return@sortedWith wordsComparisonResult
@@ -846,13 +866,13 @@ public class Room<
             }
     
     private val gameStateMachine =
-        AsynchronousGameStateMachine.Initialization<_, _, NoWordsProviderReason, _, _, _>(
+        AsynchronousGameStateMachine.Initialization<_, WordsProviderDescription, NoWordsProviderReason, _, _, _>(
             coroutineScope = coroutineScope,
             random = random,
-            metadata = GameStateMachineMetadata<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>(
+            metadata = GameStateMachineMetadata<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>(
                 allPlayersList = KoneGCLinkedSizedList(),
             ),
-            playersList = KoneList.empty<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>>(),
+            playersList = KoneList.empty<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>(),
             settingsBuilder = GameStateMachine.GameSettings.Builder(
                 preparationTimeSeconds = initialSettingsBuilder.preparationTimeSeconds,
                 explanationTimeSeconds = initialSettingsBuilder.explanationTimeSeconds,
@@ -863,12 +883,12 @@ public class Room<
                 gameEndConditionType = initialSettingsBuilder.gameEndConditionType,
                 wordsSource = when (val source = initialSettingsBuilder.wordsSource) {
                     WordsSource.Players -> GameStateMachine.WordsSource.Players
-                    is WordsSource.Custom<WordsProviderID> -> GameStateMachine.WordsSource.Custom(source.id)
+                    is WordsSource.Custom<WordsProviderDescription> -> GameStateMachine.WordsSource.Custom(source.description)
                 },
             ),
-            checkMetadataUpdate = { previousState, metadataTransition: GameStateMachineMetadataTransition<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType> ->
+            checkMetadataUpdate = { previousState, metadataTransition: GameStateMachineMetadataTransition<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType> ->
                 when (metadataTransition) {
-                    is UpdateAllPlayersList -> {
+                    is GameStateMachineMetadataTransition.UpdateAllPlayersList -> {
                         when (previousState) {
                             is GameStateMachine.State.GameInitialisation<*, *, *> ->
                                 CheckResult.Success(
@@ -891,11 +911,11 @@ public class Room<
         ) { _, _, nextState ->
             val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
             val playersList = nextState.playersList.mapIndexed { index, player ->
-                Description(metadata = player.metadata, isOnline = player.isOnline, isHost = index == hostIndex)
+                Player.Description(metadata = player.metadata, isOnline = player.isOnline, isHost = index == hostIndex)
             }
             nextState.playersList.forEachIndexed { index, player ->
                 val gameStateToSend = when (nextState) {
-                    is GameStateMachine.State.GameInitialisation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
+                    is GameStateMachine.State.GameInitialisation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, WordsProviderDescription, *> -> {
                         val gameMachineSettingsBuilder = nextState.settingsBuilder
                         Outgoing.State.GameInitialisation(
                             roomMetadata = metadata,
@@ -924,12 +944,12 @@ public class Room<
                                 gameEndConditionType = gameMachineSettingsBuilder.gameEndConditionType,
                                 wordsSource = when (val wordsSource = gameMachineSettingsBuilder.wordsSource) {
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.Custom(wordsSource.providerId)
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
                                 }
                             )
                         )
                     }
-                    is GameStateMachine.State.PlayersWordsCollection<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
+                    is GameStateMachine.State.PlayersWordsCollection<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, WordsProviderDescription, *> -> {
                         val gameMachineSettings = nextState.settings
                         Outgoing.State.PlayersWordsCollection(
                             roomMetadata = metadata,
@@ -956,12 +976,12 @@ public class Room<
                                 gameEndCondition = gameMachineSettings.gameEndCondition,
                                 wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.Custom(wordsSource.providerId)
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
                                 },
                             ),
                         )
                     }
-                    is GameStateMachine.State.RoundWaiting<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
+                    is GameStateMachine.State.RoundWaiting<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, WordsProviderDescription, *> -> {
                         val gameMachineSettings = nextState.settings
                         Outgoing.State.Round.Waiting(
                             roomMetadata = metadata,
@@ -1002,7 +1022,7 @@ public class Room<
                                 gameEndCondition = gameMachineSettings.gameEndCondition,
                                 wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.Custom(wordsSource.providerId)
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
                                 },
                             ),
                             initialWordsNumber = nextState.initialWordsNumber,
@@ -1023,7 +1043,7 @@ public class Room<
                                 .toKoneUIntArray(),
                         )
                     }
-                    is GameStateMachine.State.RoundPreparation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
+                    is GameStateMachine.State.RoundPreparation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, WordsProviderDescription, *> -> {
                         val gameMachineSettings = nextState.settings
                         Outgoing.State.Round.Preparation(
                             roomMetadata = metadata,
@@ -1063,7 +1083,7 @@ public class Room<
                                 gameEndCondition = gameMachineSettings.gameEndCondition,
                                 wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.Custom(wordsSource.providerId)
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
                                 },
                             ),
                             initialWordsNumber = nextState.initialWordsNumber,
@@ -1083,7 +1103,7 @@ public class Room<
                                 .toKoneUIntArray(),
                         )
                     }
-                    is GameStateMachine.State.RoundExplanation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
+                    is GameStateMachine.State.RoundExplanation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, WordsProviderDescription, *> -> {
                         val gameMachineSettings = nextState.settings
                         Outgoing.State.Round.Explanation(
                             roomMetadata = metadata,
@@ -1123,7 +1143,7 @@ public class Room<
                                 gameEndCondition = gameMachineSettings.gameEndCondition,
                                 wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.Custom(wordsSource.providerId)
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
                                 },
                             ),
                             initialWordsNumber = nextState.initialWordsNumber,
@@ -1143,7 +1163,7 @@ public class Room<
                                 .toKoneUIntArray(),
                         )
                     }
-                    is GameStateMachine.State.RoundLastGuess<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
+                    is GameStateMachine.State.RoundLastGuess<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, WordsProviderDescription, *> -> {
                         val gameMachineSettings = nextState.settings
                         Outgoing.State.Round.LastGuess(
                             roomMetadata = metadata,
@@ -1183,7 +1203,7 @@ public class Room<
                                 gameEndCondition = gameMachineSettings.gameEndCondition,
                                 wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.Custom(wordsSource.providerId)
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
                                 },
                             ),
                             initialWordsNumber = nextState.initialWordsNumber,
@@ -1203,7 +1223,7 @@ public class Room<
                                 .toKoneUIntArray(),
                         )
                     }
-                    is GameStateMachine.State.RoundEditing<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
+                    is GameStateMachine.State.RoundEditing<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, WordsProviderDescription, *> -> {
                         val gameMachineSettings = nextState.settings
                         Outgoing.State.Round.Editing(
                             roomMetadata = metadata,
@@ -1243,7 +1263,7 @@ public class Room<
                                 gameEndCondition = gameMachineSettings.gameEndCondition,
                                 wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.Custom(wordsSource.providerId)
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
                                 },
                             ),
                             initialWordsNumber = nextState.initialWordsNumber,
@@ -1262,7 +1282,7 @@ public class Room<
                                 .toKoneUIntArray(),
                         )
                     }
-                    is GameStateMachine.State.GameResults<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
+                    is GameStateMachine.State.GameResults<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, WordsProviderDescription, *> -> {
                         val gameMachineSettings = nextState.settings
                         Outgoing.State.GameResults(
                             roomMetadata = metadata,
@@ -1290,7 +1310,7 @@ public class Room<
                                 gameEndCondition = gameMachineSettings.gameEndCondition,
                                 wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderID> -> WordsSource.Custom(wordsSource.providerId)
+                                    is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
                                 },
                             ),
                             leaderboardPermutation = playersList
@@ -1310,7 +1330,7 @@ public class Room<
             val state = gameStateMachine.state
             val hostIndex = state.playersList.firstIndexThat { _, player -> player.isOnline }
             val playersList = state.playersList.mapIndexed { index, player ->
-                Description(metadata = player.metadata, isOnline = player.isOnline, isHost = index == hostIndex)
+                Player.Description(metadata = player.metadata, isOnline = player.isOnline, isHost = index == hostIndex)
             }
             return Description(
                 metadata = metadata,
@@ -1329,16 +1349,16 @@ public class Room<
         }
     
     private val GameStateMachine.State<
-        Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>,
-        WordsProviderID,
-        GameStateMachineMetadata<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>
-    >.host: Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>?
+        Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>,
+        WordsProviderDescription,
+        GameStateMachineMetadata<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>
+    >.host: Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>?
         get() = playersList.let { if (it.isEmpty()) null else it.first() }
     
-    public suspend fun attachConnectionToPlayer(connection: ConnectionType, playerID: PlayerID): Player.Attachment<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>? {
+    public suspend fun attachConnectionToPlayer(connection: ConnectionType, playerID: PlayerID): Player.Attachment<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>? {
         val result = gameStateMachine.moveMaybeAndCompute { previousState ->
             when (previousState) {
-                is GameStateMachine.State.GameInitialisation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, NoWordsProviderReason, ConnectionType>, WordsProviderID, *> -> {
+                is GameStateMachine.State.GameInitialisation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, WordsProviderDescription, *> -> {
                     val player = previousState.metadata.allPlayersList.firstThatOrNull { it.metadata.id == playerID }
                     
                     if (player == null) {

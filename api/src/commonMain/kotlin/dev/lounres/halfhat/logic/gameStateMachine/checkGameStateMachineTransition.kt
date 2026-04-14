@@ -307,12 +307,12 @@ internal suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataT
                                 )
                             )
                         is GameStateMachine.WordsSource.Custom -> {
-                            val wordsProviderOrReason = transition.wordsProviderRegistry[wordsSource.providerId]
+                            val wordsProviderOrReason = transition.wordsProviderRegistry.getWordsProvider(wordsSource.providerId)
                             
                             when (wordsProviderOrReason) {
-                                is GameStateMachine.WordsProviderRegistry.ResultOrReason.Failure ->
+                                is GameStateMachine.WordsProviderRegistry.WordsProviderOrReason.Failure ->
                                     CheckResult.Failure(GameStateMachine.NoNextStateReason.NoWordsProvider(wordsProviderOrReason.reason))
-                                is GameStateMachine.WordsProviderRegistry.ResultOrReason.Success -> {
+                                is GameStateMachine.WordsProviderRegistry.WordsProviderOrReason.Success -> {
                                     val restWords = when (settingsBuilder.gameEndConditionType) {
                                         GameStateMachine.GameEndCondition.Type.Words -> wordsProviderOrReason.result.randomWords(settingsBuilder.cachedEndConditionWordsNumber)
                                         GameStateMachine.GameEndCondition.Type.Cycles -> wordsProviderOrReason.result.allWords()

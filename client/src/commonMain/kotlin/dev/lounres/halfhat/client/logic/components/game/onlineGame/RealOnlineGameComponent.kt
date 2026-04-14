@@ -1,6 +1,7 @@
 package dev.lounres.halfhat.client.logic.components.game.onlineGame
 
 import dev.lounres.halfhat.api.onlineGame.ClientApi
+import dev.lounres.halfhat.api.onlineGame.DictionaryId
 import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
@@ -9,6 +10,7 @@ import dev.lounres.halfhat.client.consts.OnlineGameSettings
 import dev.lounres.halfhat.client.logic.settings.*
 import dev.lounres.halfhat.client.storage.settings.settings
 import dev.lounres.halfhat.client.utils.defaultHttpClient
+import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.hub.value
 import dev.lounres.logKube.core.debug
 import dev.lounres.logKube.core.info
@@ -25,6 +27,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 
 public class RealOnlineGameComponent(
@@ -34,6 +37,7 @@ public class RealOnlineGameComponent(
     override val freeRoomIdFlow: MutableSharedFlow<String> = MutableSharedFlow(extraBufferCapacity = 1)
     override val roomDescriptionFlow: MutableSharedFlow<ServerApi.RoomDescription> = MutableSharedFlow(extraBufferCapacity = 1)
     override val gameStateFlow: MutableStateFlow<ServerApi.OnlineGame.State?> = MutableStateFlow(null)
+    override val availableDictionariesFlow: MutableStateFlow<KoneList<DictionaryId.WithDescription>?> = MutableStateFlow(null)
     
     private val outgoingSignals = Channel<ClientApi.Signal>(Channel.UNLIMITED)
     
@@ -41,6 +45,9 @@ public class RealOnlineGameComponent(
     
     override fun resetGameState() {
         gameStateFlow.value = null
+    }
+    override fun resetAvailableDictionaries() {
+        availableDictionariesFlow.value = null
     }
     
     init {
@@ -100,6 +107,8 @@ public class RealOnlineGameComponent(
                             
                             when (signal) {
                                 is ServerApi.Signal.RoomInfo -> roomDescriptionFlow.emit(signal.info)
+                                is ServerApi.Signal.AvailableDictionariesUpdate ->
+                                    availableDictionariesFlow.value = signal.descriptions
                                 is ServerApi.Signal.OnlineGameStateUpdate -> {
                                     val newState = signal.state
                                     val previousState = gameStateFlow.getAndUpdate { newState }
@@ -285,7 +294,7 @@ public class RealOnlineGameComponent(
                 }
                 connectionStatus.value = ConnectionStatus.Disconnected
                 gameStateFlow.value = null
-                delay(1000)
+                delay(1000.milliseconds)
             }
         }
     }

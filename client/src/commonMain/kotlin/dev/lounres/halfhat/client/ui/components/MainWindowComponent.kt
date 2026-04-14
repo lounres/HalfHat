@@ -7,8 +7,8 @@ import dev.lounres.halfhat.client.ui.components.game.GamePageComponent
 import dev.lounres.halfhat.client.ui.components.home.HomePageComponent
 import dev.lounres.halfhat.client.ui.components.miscellanea.MiscellaneaComponent
 import dev.lounres.halfhat.client.ui.theming.DarkTheme
-import dev.lounres.kone.hub.KoneAsynchronousHubView
-import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
+import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import dev.lounres.kone.registry.serialization.RegistrySerializableKey
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -17,9 +17,9 @@ import kotlinx.serialization.Serializable
 expect interface MainWindowComponent {
     val globalLifecycle: MutableUIComponentLifecycle
     
-    val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>
+    val darkTheme: KoneMutableAsynchronousHub<DarkTheme>
     
-    val pageVariants: KoneAsynchronousHubView<ChildrenVariants<MainWindowComponentConfiguration, MainWindowComponentChild, UIComponentContext>, *>
+    val pageVariants: KoneAsynchronousHub<ChildrenVariants<MainWindowComponentConfiguration, MainWindowComponentChild, UIComponentContext>>
     val openPage: (page: MainWindowComponentConfiguration) -> Unit
 }
 

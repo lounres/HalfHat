@@ -1,7 +1,9 @@
 package dev.lounres.halfhat.client.logic.components.game.onlineGame
 
 import dev.lounres.halfhat.api.onlineGame.ClientApi
+import dev.lounres.halfhat.api.onlineGame.DictionaryId
 import dev.lounres.halfhat.api.onlineGame.ServerApi
+import dev.lounres.kone.collections.list.KoneList
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -15,8 +17,10 @@ public interface OnlineGameComponent {
     public val freeRoomIdFlow: SharedFlow<String>
     public val roomDescriptionFlow: SharedFlow<ServerApi.RoomDescription>
     public val gameStateFlow: StateFlow<ServerApi.OnlineGame.State?>
+    public val availableDictionariesFlow: StateFlow<KoneList<DictionaryId.WithDescription>?>
     
     public fun sendSignal(signal: ClientApi.Signal)
     
     public fun resetGameState()
+    public fun resetAvailableDictionaries()
 }

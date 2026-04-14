@@ -5,10 +5,9 @@ import dev.lounres.komponentual.lifecycle.DeferredLifecycle
 import dev.lounres.komponentual.lifecycle.DelicateLifecycleAPI
 import dev.lounres.komponentual.lifecycle.Lifecycle
 import dev.lounres.komponentual.lifecycle.MutableLifecycle
-import dev.lounres.komponentual.lifecycle.buildSubscription
+import dev.lounres.komponentual.lifecycle.buildSubscriptionAtomic
 import dev.lounres.komponentual.lifecycle.childDeferring
 import dev.lounres.komponentual.lifecycle.mergeDeferring
-import dev.lounres.komponentual.lifecycle.subscribe
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.registry.RegistryKey
 import dev.lounres.kone.registry.getOrElse
@@ -79,7 +78,7 @@ internal fun Lifecycle.Companion.mergeUIComponentLifecyclesDeferring(
     )
 
 public fun CoroutineScope.attachTo(lifecycle: UIComponentLifecycle) {
-    lifecycle.buildSubscription {
+    val _ = lifecycle.buildSubscriptionAtomic {
         if (it == UIComponentLifecycleState.Destroyed) cancel()
         else subscribe { transition -> if (transition == UIComponentLifecycleTransition.Destroy) cancel() }
     }

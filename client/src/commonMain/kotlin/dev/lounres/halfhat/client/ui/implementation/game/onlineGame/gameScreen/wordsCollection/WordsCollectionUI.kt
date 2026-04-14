@@ -1,89 +1,26 @@
 package dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.wordsCollection
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FloatingToolbarDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.HorizontalFloatingToolbar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.IconToggleButton
-import androidx.compose.material3.IconToggleButtonShapes
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.ToggleButtonShapes
-import androidx.compose.material3.ToggleFloatingActionButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.window.core.layout.WindowSizeClass
+import dev.lounres.halfhat.api.onlineGame.DictionaryId
 import dev.lounres.halfhat.api.onlineGame.ServerApi
-import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomScreen.RoomScreenComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.wordsCollection.WordsCollectionComponent
-import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
-import dev.lounres.halfhat.client.ui.icons.OnlineGameCopyKeyButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGameCopyLinkButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGameExitRoomButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGameFinishGameButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGameHostMarkIcon
-import dev.lounres.halfhat.client.ui.icons.OnlineGameOpenAdditionalCardButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGamePlayerIcon
-import dev.lounres.halfhat.client.ui.icons.OnlineGamePlayersButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGamePlayersWordsAddWord
-import dev.lounres.halfhat.client.ui.icons.OnlineGamePlayersWordsRemoveWord
-import dev.lounres.halfhat.client.ui.icons.OnlineGameScheduleButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGameSettingsButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGameSettingsIconBetweenTimes
-import dev.lounres.halfhat.client.ui.icons.OnlineGameSpeakerToListenerRightArrow
-import dev.lounres.halfhat.client.ui.icons.OnlineGameWordsButton
+import dev.lounres.halfhat.client.ui.icons.*
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.iterables.isNotEmpty
@@ -167,7 +104,7 @@ fun WordsCollectionGameCardUI(
                     verticalArrangement = Arrangement.Top,
                 ) {
                     val currentWords = component.currentWords.subscribeAsState().value
-                    for ((index, word) in currentWords.withIndex()) {
+                    for ((val index, val word = value) in currentWords.withIndex()) {
                         if (index != 0u) Spacer(modifier = Modifier.height(16.dp))
                         key(word) {
                             Row(
@@ -316,7 +253,7 @@ fun WordsCollectionAdditionalCardUI(
                 val gameState = component.gameState.collectAsState().value
                 when (additionalCard) {
                     WordsCollectionComponent.AdditionalCard.PlayersReadiness -> {
-                        for ((index, player) in gameState.playersList.withIndex()) {
+                        for ((val index, val player = value) in gameState.playersList.withIndex()) {
                             if (index != 0u) Spacer(modifier = Modifier.height(8.dp))
                             Surface(
                                 shape = CircleShape,
@@ -531,6 +468,9 @@ fun WordsCollectionAdditionalCardUI(
                             value = when (val wordsSource = settingsBuilder.wordsSource) {
                                 ServerApi.WordsSource.Players -> "Players"
                                 ServerApi.WordsSource.HostDictionary -> "Host dictionary"
+                                is ServerApi.WordsSource.ServerDictionary -> when (val description = wordsSource.dictionaryIdWithDescription) {
+                                    is DictionaryId.WithDescription.Builtin -> description.name
+                                }
                             },
                             onValueChange = {},
                             readOnly = true,

@@ -7,11 +7,11 @@ import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomS
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.RoundScreenComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.wordsCollection.WordsCollectionComponent
-import dev.lounres.kone.hub.KoneAsynchronousHubView
+import dev.lounres.kone.hub.KoneAsynchronousHub
 
 
 public interface GameScreenComponent {
-    public val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, Child, UIComponentContext>, *>
+    public val childSlot: KoneAsynchronousHub<ChildrenSlot<*, Child, UIComponentContext>>
     
     public sealed interface Child {
         public data class Loading(val component: LoadingComponent) : Child

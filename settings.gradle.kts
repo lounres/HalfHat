@@ -2,6 +2,17 @@ rootProject.name = "HalfHat"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
+val localProperties = java.util.Properties()
+file("local.properties").let { localPropertiesFile ->
+    if (localPropertiesFile.exists()) localPropertiesFile.inputStream().use {
+        localProperties.load(it)
+    }
+}
+
+gradle.projectsLoaded {
+    for ((key, property) in localProperties) gradle.rootProject.extra[key.toString()] = property
+}
+
 val projectProperties = java.util.Properties()
 file("gradle.properties").inputStream().use {
     projectProperties.load(it)
@@ -28,6 +39,7 @@ dependencyResolutionManagement {
 pluginManagement {
     repositories {
         gradlePluginPortal()
+        mavenCentral()
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
         google()
         maven("https://maven.pkg.jetbrains.space/kotlin/p/wasm/experimental")

@@ -9,8 +9,8 @@ import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.round
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundPreparation.RoundPreparationComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundWaiting.RoundWaitingComponent
 import dev.lounres.halfhat.client.ui.theming.DarkTheme
-import dev.lounres.kone.hub.KoneAsynchronousHubView
-import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
+import dev.lounres.kone.hub.KoneAsynchronousHub
+import dev.lounres.kone.hub.KoneMutableAsynchronousHub
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
 
@@ -23,12 +23,12 @@ interface RoundScreenComponent {
     
     public val gameState: StateFlow<ServerApi.OnlineGame.State.Round>
     
-    public val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, Child, UIComponentContext>, *>
+    public val childSlot: KoneAsynchronousHub<ChildrenSlot<*, Child, UIComponentContext>>
     
     public val coroutineScope: CoroutineScope
-    public val darkTheme: KoneMutableAsynchronousHubView<DarkTheme, *>
-    public val openAdditionalCard: KoneMutableAsynchronousHubView<Boolean, *>
-    public val additionalCard: KoneMutableAsynchronousHubView<AdditionalCard, *>
+    public val darkTheme: KoneMutableAsynchronousHub<DarkTheme>
+    public val openAdditionalCard: KoneMutableAsynchronousHub<Boolean>
+    public val additionalCard: KoneMutableAsynchronousHub<AdditionalCard>
     
     public sealed interface Child {
         public data class RoundWaiting(val component: RoundWaitingComponent) : Child

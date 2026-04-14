@@ -3,10 +3,10 @@ package dev.lounres.halfhat.client.storage.settings
 import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
-import dev.lounres.kone.hub.KoneMutableAsynchronousHubView
 import dev.lounres.kone.hub.view
+import dev.lounres.kone.registry.OwnedRegistry
+import dev.lounres.kone.registry.MutableOwnedRegistry
 import dev.lounres.kone.registry.Registry
-import dev.lounres.kone.registry.RegistryBuilder
 import dev.lounres.kone.registry.RegistryKey
 import dev.lounres.kone.registry.build
 import dev.lounres.kone.registry.correspondsTo
@@ -22,15 +22,15 @@ import kotlin.jvm.JvmInline
 
 
 @JvmInline
-value class Settings(val elements: Registry) : Registry by elements {
+value class Settings(val elements: OwnedRegistry<Settings>) : Registry by elements {
     data object Key : RegistryKey<KoneMutableAsynchronousHub<Settings>>
 }
 
-inline fun Settings(builder: RegistryBuilder<Settings>.() -> Unit): Settings {
+inline fun Settings(builder: MutableOwnedRegistry<Settings>.() -> Unit): Settings {
     contract {
         callsInPlace(builder, InvocationKind.EXACTLY_ONCE)
     }
-    return Settings(Registry.build(builder))
+    return Settings(OwnedRegistry.build(builder))
 }
 
 val UIComponentContext.settings: KoneMutableAsynchronousHub<Settings> get() = get(Settings.Key)
@@ -45,10 +45,10 @@ class SettingsSerializer(
         encoder.encodeSerializableValue(registrySerializer, value.elements)
     }
     override fun deserialize(decoder: Decoder): Settings =
-        Settings(decoder.decodeSerializableValue(registrySerializer))
+        Settings(OwnedRegistry(decoder.decodeSerializableValue(registrySerializer)))
 }
 
-operator fun <T> KoneMutableAsynchronousHubView<Settings, *>.get(registryKey: RegistryKey<T>): KoneMutableAsynchronousHubView<T, *> =
+operator fun <T> KoneMutableAsynchronousHub<Settings>.get(registryKey: RegistryKey<T>): KoneMutableAsynchronousHub<T> =
     view(
         get = { it[registryKey] },
         set = { settings, newT ->

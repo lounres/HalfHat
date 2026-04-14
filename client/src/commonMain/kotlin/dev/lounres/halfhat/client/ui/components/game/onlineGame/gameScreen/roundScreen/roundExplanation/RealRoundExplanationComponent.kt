@@ -3,14 +3,14 @@ package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roun
 import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.kone.hub.KoneAsynchronousHubView
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import kotlinx.coroutines.flow.StateFlow
 
 
 public class RealRoundExplanationComponent(
     override val gameState: StateFlow<ServerApi.OnlineGame.State.Round.Explanation>,
     
-    override val darkTheme: KoneAsynchronousHubView<DarkTheme, *>,
+    override val darkTheme: KoneAsynchronousHub<DarkTheme>,
     onExplanationResult: (GameStateMachine.WordExplanation.State) -> Unit,
 ) : RoundExplanationComponent {
     override val onGuessed: () -> Unit = { onExplanationResult(GameStateMachine.WordExplanation.State.Explained) }

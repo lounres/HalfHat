@@ -21,17 +21,16 @@ import dev.lounres.kone.collections.utils.flatMap
 import dev.lounres.kone.collections.utils.groupBy
 import dev.lounres.kone.collections.utils.map
 import dev.lounres.kone.collections.utils.mapTo
-import dev.lounres.kone.hub.KoneAsynchronousHubView
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.relations.Equality
 import dev.lounres.kone.relations.Hashing
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 
 public class RealControllerPageComponent(
-    override val childStack: KoneAsynchronousHubView<ChildrenStack<*, ControllerPageComponent.Child, UIComponentContext>, *>,
+    override val childStack: KoneAsynchronousHub<ChildrenStack<*, ControllerPageComponent.Child, UIComponentContext>>,
 ) : ControllerPageComponent {
     public sealed interface Configuration {
         public data object RoomScreen : Configuration

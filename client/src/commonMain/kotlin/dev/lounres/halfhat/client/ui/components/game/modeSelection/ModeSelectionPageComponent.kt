@@ -3,7 +3,6 @@ package dev.lounres.halfhat.client.ui.components.game.modeSelection
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.navigation.ChildrenPossibility
 import dev.lounres.kone.hub.KoneAsynchronousHub
-import dev.lounres.kone.hub.KoneAsynchronousHubView
 
 
 public interface ModeSelectionPageComponent {
@@ -13,7 +12,7 @@ public interface ModeSelectionPageComponent {
     public val onGameControllerSelect: () -> Unit
     public val onGameTimerSelect: () -> Unit
     
-    public val infoPopup: KoneAsynchronousHubView<ChildrenPossibility<*, InfoPopup, UIComponentContext>, *>
+    public val infoPopup: KoneAsynchronousHub<ChildrenPossibility<*, InfoPopup, UIComponentContext>>
     
     public val onOnlineGameInfo: () -> Unit
     public val onLocalGameInfo: () -> Unit

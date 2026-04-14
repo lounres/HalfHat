@@ -14,35 +14,23 @@ public object ClientApi {
         public data class HostDictionary(
             val words: KoneList<String>,
         ): WordsSource
-//        @Serializable
-//        public data class ServerDictionary(
-//            val id: ULong,
-//        ) : WordsSource
-    }
-    
-    @Serializable
-    public data class SettingsBuilder(
-        val preparationTimeSeconds: UInt,
-        val explanationTimeSeconds: UInt,
-        val finalGuessTimeSeconds: UInt,
-        val strictMode: Boolean,
-        val cachedEndConditionWordsNumber: UInt,
-        val cachedEndConditionCyclesNumber: UInt,
-        val gameEndConditionType: GameStateMachine.GameEndCondition.Type,
-        val wordsSource: WordsSource,
-    ) {
         @Serializable
-        public data class Patch(
-            val preparationTimeSeconds: UInt?,
-            val explanationTimeSeconds: UInt?,
-            val finalGuessTimeSeconds: UInt?,
-            val strictMode: Boolean?,
-            val cachedEndConditionWordsNumber: UInt?,
-            val cachedEndConditionCyclesNumber: UInt?,
-            val gameEndConditionType: GameStateMachine.GameEndCondition.Type?,
-            val wordsSource: WordsSource?,
-        )
+        public data class ServerDictionary(
+            val dictionaryId: DictionaryId,
+        ) : WordsSource
     }
+
+    @Serializable
+    public data class SettingsBuilderPatch(
+        val preparationTimeSeconds: UInt?,
+        val explanationTimeSeconds: UInt?,
+        val finalGuessTimeSeconds: UInt?,
+        val strictMode: Boolean?,
+        val cachedEndConditionWordsNumber: UInt?,
+        val cachedEndConditionCyclesNumber: UInt?,
+        val gameEndConditionType: GameStateMachine.GameEndCondition.Type?,
+        val wordsSource: WordsSource?,
+    )
     
     @Serializable
     public sealed interface Signal {
@@ -60,9 +48,12 @@ public object ClientApi {
             
             @Serializable
             public data object LeaveRoom : OnlineGame
+
+            @Serializable
+            public data object RequestAvailableDictionaries : OnlineGame
             
             @Serializable
-            public data class UpdateSettings(val settingsBuilderPatch: SettingsBuilder.Patch) : OnlineGame
+            public data class UpdateSettings(val settingsBuilderPatch: SettingsBuilderPatch) : OnlineGame
             
             @Serializable
             public data object InitializeGame : OnlineGame

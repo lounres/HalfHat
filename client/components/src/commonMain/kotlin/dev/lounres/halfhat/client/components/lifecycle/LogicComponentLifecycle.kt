@@ -4,12 +4,12 @@ import dev.lounres.halfhat.client.components.LogicComponentContext
 import dev.lounres.komponentual.lifecycle.DeferredLifecycle
 import dev.lounres.komponentual.lifecycle.DelicateLifecycleAPI
 import dev.lounres.komponentual.lifecycle.Lifecycle
-import dev.lounres.komponentual.lifecycle.LifecycleSubscriptionScope
+import dev.lounres.komponentual.lifecycle.LifecycleAtomicSubscriptionScope
+import dev.lounres.komponentual.lifecycle.LifecycleBlockingSubscriptionScope
 import dev.lounres.komponentual.lifecycle.MutableLifecycle
-import dev.lounres.komponentual.lifecycle.buildSubscription
+import dev.lounres.komponentual.lifecycle.buildSubscriptionLocking
 import dev.lounres.komponentual.lifecycle.childDeferring
 import dev.lounres.komponentual.lifecycle.mergeDeferring
-import dev.lounres.komponentual.lifecycle.subscribe
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.registry.RegistryKey
@@ -33,7 +33,8 @@ public typealias LogicComponentLifecycleCallback = suspend (LogicComponentLifecy
 
 public typealias LogicComponentLifecycle = Lifecycle<LogicComponentLifecycleState, LogicComponentLifecycleTransition>
 
-public typealias LogicComponentLifecycleSubscriptionScope = LifecycleSubscriptionScope<LogicComponentLifecycleTransition>
+public typealias LogicComponentLifecycleBlockingSubscriptionScope = LifecycleBlockingSubscriptionScope<LogicComponentLifecycleState, LogicComponentLifecycleTransition>
+public typealias LogicComponentLifecycleAtomicSubscriptionScope = LifecycleAtomicSubscriptionScope<LogicComponentLifecycleState, LogicComponentLifecycleTransition>
 
 public typealias MutableLogicComponentLifecycle = MutableLifecycle<LogicComponentLifecycleState, LogicComponentLifecycleTransition>
 
@@ -41,6 +42,7 @@ public typealias MutableLogicComponentLifecycle = MutableLifecycle<LogicComponen
 internal typealias DeferredLogicComponentLifecycle = DeferredLifecycle<LogicComponentLifecycleState, LogicComponentLifecycleTransition>
 
 // FIXME
+@IgnorableReturnValue
 public /*inline*/ fun LogicComponentLifecycle.subscribe(
     /*crossinline*/ onRun: suspend () -> Unit = {},
     /*crossinline*/ onStop: suspend () -> Unit = {},
@@ -54,7 +56,20 @@ public /*inline*/ fun LogicComponentLifecycle.subscribe(
 }
 
 // FIXME
-public /*inline*/ fun LogicComponentLifecycleSubscriptionScope.subscribe(
+@IgnorableReturnValue
+public /*inline*/ fun LogicComponentLifecycleBlockingSubscriptionScope.subscribe(
+    /*crossinline*/ onRun: suspend () -> Unit = {},
+    /*crossinline*/ onStop: suspend () -> Unit = {},
+    /*crossinline*/ onDestroy: suspend () -> Unit = {},
+): Lifecycle.Subscription = subscribe {
+    when (it) {
+        LogicComponentLifecycleTransition.Run -> onRun()
+        LogicComponentLifecycleTransition.Stop -> onStop()
+        LogicComponentLifecycleTransition.Destroy -> onDestroy()
+    }
+}
+@IgnorableReturnValue
+public /*inline*/ fun LogicComponentLifecycleAtomicSubscriptionScope.subscribe(
     /*crossinline*/ onRun: suspend () -> Unit = {},
     /*crossinline*/ onStop: suspend () -> Unit = {},
     /*crossinline*/ onDestroy: suspend () -> Unit = {},
@@ -147,7 +162,7 @@ internal fun Lifecycle.Companion.mergeLogicComponentLifecyclesDeferring(
     )
 
 public fun CoroutineScope.attachTo(lifecycle: LogicComponentLifecycle) {
-    lifecycle.buildSubscription {
+    val _ = lifecycle.buildSubscriptionLocking {
         if (it == LogicComponentLifecycleState.Destroyed) cancel()
         else subscribe(onStop = { this@attachTo.cancel() }, onDestroy = { this@attachTo.cancel() })
     }

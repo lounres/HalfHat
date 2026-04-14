@@ -43,7 +43,6 @@ public suspend fun <
         configurationEquality = configurationEquality,
         configurationHashing = configurationHashing,
         configurationOrder = configurationOrder,
-        navigationStateEquality = KoneList.equality(configurationEquality),
         loggerSource = loggerSource,
         navigationControllerSpec = navigationControllerSpec,
         navigationStateSerializer = { KoneList.serializer(it) },

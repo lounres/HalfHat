@@ -1,12 +1,12 @@
 package dev.lounres.halfhat.client.components.navigation.controller
 
 import dev.lounres.halfhat.client.components.UIComponentContext
-import dev.lounres.kone.collections.interop.asKotlin
+import dev.lounres.kone.collections.interop.asKotlinCollection
 import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.map.*
-import dev.lounres.kone.registry.RegistryBuilder
+import dev.lounres.kone.registry.MutableOwnedRegistry
 import dev.lounres.kone.registry.RegistryKey
 import dev.lounres.kone.registry.correspondsTo
 import dev.lounres.kone.registry.getOrNull
@@ -43,7 +43,7 @@ private object NavigationNodeStateMapSerializer: KSerializer<KoneReifiedMap<Stri
     
     override val descriptor: SerialDescriptor = mapSerializer.descriptor
     override fun serialize(encoder: Encoder, value: KoneReifiedMap<String, NavigationNodeState>) {
-        encoder.encodeSerializableValue(mapSerializer, value.nodesView.asKotlin().associate { it.key to it.value })
+        encoder.encodeSerializableValue(mapSerializer, value.nodesView.asKotlinCollection().associate { it.key to it.value })
     }
     override fun deserialize(decoder: Decoder): KoneReifiedMap<String, NavigationNodeState> {
         return decoder.decodeSerializableValue(mapSerializer).entries.toKoneList().associateReified { it.key mapsTo it.value }
@@ -169,7 +169,7 @@ public class NavigationNodeController(
         
         val children = this.children
         coroutineScope {
-            for ((configuration, navigationNodeState) in state.children) {
+            for ((val configuration = key, val navigationNodeState = value) in state.children) {
                 val child = children.getOrNull(configuration)
                 if (child != null) launch {
                     child.restore(navigationNodeState)
@@ -322,7 +322,7 @@ public class NavigationRoot(
 
 public data object NavigationControllerStringFormatKey : RegistryKey<StringFormat>
 
-public fun RegistryBuilder<UIComponentContext>.setUpNavigationControl(
+public fun MutableOwnedRegistry<UIComponentContext>.setUpNavigationControl(
     navigationRoot: NavigationRoot,
     stringFormat: StringFormat,
 ) {

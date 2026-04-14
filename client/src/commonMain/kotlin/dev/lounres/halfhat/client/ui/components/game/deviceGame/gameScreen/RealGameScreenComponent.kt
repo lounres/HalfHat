@@ -26,7 +26,7 @@ import dev.lounres.komponentual.navigation.SlotNavigationHub
 import dev.lounres.kone.automata.CheckResult
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.toKoneMutableList
-import dev.lounres.kone.hub.KoneAsynchronousHubView
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.hub.value
 import dev.lounres.logKube.core.debug
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +37,7 @@ import kotlin.random.Random
 
 public class RealGameScreenComponent(
     override val onExitGame: () -> Unit,
-    override val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, GameScreenComponent.Child, UIComponentContext>, *>,
+    override val childSlot: KoneAsynchronousHub<ChildrenSlot<*, GameScreenComponent.Child, UIComponentContext>>,
 ) : GameScreenComponent {
     public sealed interface Configuration {
         public data object GameInitialisation : Configuration

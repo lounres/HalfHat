@@ -85,7 +85,7 @@ public fun RoundEditingUI(
                         .verticalScroll(scrollState),
                 ) {
                     var needsSpace = false
-                    for ((index, wordExplanation) in component.wordsToEdit.collectAsState().value.withIndex()) {
+                    for ((val index, val wordExplanation = value) in component.wordsToEdit.collectAsState().value.withIndex()) {
                         if (needsSpace) Spacer(modifier = Modifier.height(8.dp))
                         needsSpace = true
                         val (word, state) = wordExplanation

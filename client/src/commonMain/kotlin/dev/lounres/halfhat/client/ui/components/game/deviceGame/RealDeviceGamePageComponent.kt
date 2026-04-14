@@ -20,7 +20,7 @@ import dev.lounres.kone.collections.set.KoneSet
 import dev.lounres.kone.collections.set.empty
 import dev.lounres.kone.collections.set.of
 import dev.lounres.kone.collections.utils.*
-import dev.lounres.kone.hub.KoneAsynchronousHubView
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.hub.map
 import dev.lounres.kone.hub.set
 import dev.lounres.kone.hub.value
@@ -32,7 +32,7 @@ import kotlinx.coroutines.launch
 
 
 public class RealDeviceGamePageComponent(
-    override val childStack: KoneAsynchronousHubView<ChildrenStack<*, DeviceGamePageComponent.Child, UIComponentContext>, *>,
+    override val childStack: KoneAsynchronousHub<ChildrenStack<*, DeviceGamePageComponent.Child, UIComponentContext>>,
 ) : DeviceGamePageComponent {
     public sealed interface Configuration {
         public data object RoomScreen : Configuration

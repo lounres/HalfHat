@@ -2,7 +2,7 @@ package dev.lounres.halfhat.client.utils
 
 import dev.lounres.halfhat.client.resources.Res
 import js.buffer.ArrayBuffer
-import js.core.JsPrimitives.toJsByte
+import js.numbers.JsNumbers.toJsByte
 import js.typedarrays.Int8Array
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart

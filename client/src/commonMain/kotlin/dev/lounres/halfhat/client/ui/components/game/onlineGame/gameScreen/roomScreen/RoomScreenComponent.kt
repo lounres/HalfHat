@@ -1,5 +1,6 @@
 package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomScreen
 
+import dev.lounres.halfhat.api.onlineGame.DictionaryId
 import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
@@ -25,6 +26,9 @@ public interface RoomScreenComponent {
     public val gameEndConditionType: MutableStateFlow<GameStateMachine.GameEndCondition.Type?>
     public val wordsSource: MutableStateFlow<WordsSource?>
     public val hostDictionary: MutableStateFlow<KoneList<String>?>
+
+    public val availableDictionaries: StateFlow<KoneList<DictionaryId.WithDescription>?>
+    public val onLoadServerDictionaries: () -> Unit
     
     public val onApplySettings: () -> Unit
     public val onDiscardSettings: () -> Unit
@@ -32,5 +36,8 @@ public interface RoomScreenComponent {
     public sealed interface WordsSource {
         public data object Players : WordsSource
         public data object HostDictionary : WordsSource
+        public data class ServerDictionary(
+            val description: DictionaryId.WithDescription,
+        ) : WordsSource
     }
 }

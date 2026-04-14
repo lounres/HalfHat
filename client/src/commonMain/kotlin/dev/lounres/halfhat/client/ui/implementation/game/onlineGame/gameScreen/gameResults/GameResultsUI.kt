@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.lounres.halfhat.api.onlineGame.DictionaryId
 import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.gameResults.GameResultsComponent
 import dev.lounres.halfhat.client.ui.icons.*
@@ -165,7 +166,7 @@ public fun GameResultsUI(
                                     color = MaterialTheme.colorScheme.outline,
                                 )
                                 val playersList = gameState.playersList
-                                for ((index, player) in playersList.withIndex()) {
+                                for ((val index, val player = value) in playersList.withIndex()) {
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Surface(
                                         shape = CircleShape,
@@ -480,6 +481,9 @@ public fun GameResultsUI(
                                     value = when (val wordsSource = settingsBuilder.wordsSource) {
                                         ServerApi.WordsSource.Players -> "Players"
                                         ServerApi.WordsSource.HostDictionary -> "Host dictionary"
+                                        is ServerApi.WordsSource.ServerDictionary -> when (val description = wordsSource.dictionaryIdWithDescription) {
+                                            is DictionaryId.WithDescription.Builtin -> description.name
+                                        }
                                     },
                                     onValueChange = {},
                                     readOnly = true,

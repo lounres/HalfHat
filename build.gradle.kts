@@ -120,33 +120,43 @@ stal {
             apply(versions.plugins.kotlin.multiplatform)
             configure<KotlinMultiplatformExtension> {
                 compilerOptions {
-                    freeCompilerArgs = freeCompilerArgs.get() + listOf(
+                    progressiveMode = true
+                    freeCompilerArgs.addAll(
 //                        "-Xklib-duplicated-unique-name-strategy=allow-all-with-warning",
+                        "-Xcontext-parameters",
+//                        "-Xvalue-classes",
+//                        "-Xcontract-syntax-v2",
+                        "-Xexplicit-backing-fields",
                         "-Xexpect-actual-classes",
                         "-Xconsistent-data-class-copy-visibility",
+                        "-Xcontext-sensitive-resolution",
+                        "-Xreturn-value-checker=full",
+                        "-Xlocal-type-aliases",
+                        "-Xname-based-destructuring=complete",
                     )
+                    optIn.set(
+                        listOf(
+                            "kotlin.experimental.ExperimentalTypeInference",
+                            "kotlin.contracts.ExperimentalContracts",
+                            "kotlin.ExperimentalStdlibApi",
+                            "kotlin.ExperimentalSubclassOptIn",
+                            "kotlin.ExperimentalUnsignedTypes",
+                            "kotlin.uuid.ExperimentalUuidApi",
+                            "kotlin.concurrent.atomics.ExperimentalAtomicApi",
+                            "kotlinx.serialization.ExperimentalSerializationApi",
+                            "dev.lounres.kone.annotations.UnstableKoneAPI",
+                            "dev.lounres.kone.annotations.ExperimentalKoneAPI",
+                            "kotlin.time.ExperimentalTime",
+                            "kotlin.js.ExperimentalWasmJsInterop",
+                            "androidx.compose.foundation.layout.ExperimentalLayoutApi",
+                            "androidx.compose.material3.ExperimentalMaterial3Api",
+                            "androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
+                            "androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi",
+                        )
+                    )
+                    verbose = true
                 }
                 sourceSets {
-                    all {
-                        languageSettings {
-                            progressiveMode = true
-                            enableLanguageFeature("ContextParameters")
-                            enableLanguageFeature("NestedTypeAliases")
-                            enableLanguageFeature("ValueClasses")
-                            enableLanguageFeature("ContractSyntaxV2")
-                            enableLanguageFeature("ExplicitBackingFields")
-                            optIn("kotlin.time.ExperimentalTime")
-                            optIn("kotlin.contracts.ExperimentalContracts")
-                            optIn("kotlin.ExperimentalStdlibApi")
-                            optIn("kotlin.uuid.ExperimentalUuidApi")
-                            optIn("kotlin.concurrent.atomics.ExperimentalAtomicApi")
-                            optIn("kotlin.js.ExperimentalWasmJsInterop")
-                            optIn("androidx.compose.foundation.layout.ExperimentalLayoutApi")
-                            optIn("androidx.compose.material3.ExperimentalMaterial3Api")
-                            optIn("androidx.compose.material3.ExperimentalMaterial3ExpressiveApi")
-                            optIn("androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi")
-                        }
-                    }
                     commonTest {
                         dependencies {
                             implementation(kotlin("test"))

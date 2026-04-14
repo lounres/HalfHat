@@ -2,15 +2,13 @@ package dev.lounres.halfhat.client.ui.components.game.onlineGame
 
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
-import dev.lounres.halfhat.client.logic.components.game.onlineGame.ConnectionStatus
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.GameScreenComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.previewScreen.PreviewScreenComponent
-import dev.lounres.kone.hub.KoneAsynchronousHubView
-import kotlinx.coroutines.flow.StateFlow
+import dev.lounres.kone.hub.KoneAsynchronousHub
 
 
 public interface OnlineGamePageComponent {
-    public val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, Child, UIComponentContext>, *>
+    public val childSlot: KoneAsynchronousHub<ChildrenSlot<*, Child, UIComponentContext>>
     
     public sealed interface Child {
         public data class PreviewScreen(val component: PreviewScreenComponent) : Child

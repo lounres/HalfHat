@@ -18,11 +18,10 @@ public object ServerApi {
         public data object Players : WordsSource
         @Serializable
         public data object HostDictionary: WordsSource
-//        @Serializable
-//        public data class ServerDictionary(
-//            public val id: ULong,
-////            public val name: String,
-//        ) : WordsSource
+        @Serializable
+        public data class ServerDictionary(
+            val dictionaryIdWithDescription: DictionaryId.WithDescription,
+        ) : WordsSource
     }
     
     @Serializable
@@ -528,6 +527,9 @@ public object ServerApi {
     public sealed interface Signal {
         @Serializable
         public data class RoomInfo(val info: RoomDescription) : Signal
+
+        @Serializable
+        public data class AvailableDictionariesUpdate(val descriptions: KoneList<DictionaryId.WithDescription>) : Signal
         
         @Serializable
         public data class OnlineGameStateUpdate(val state: OnlineGame.State) : Signal

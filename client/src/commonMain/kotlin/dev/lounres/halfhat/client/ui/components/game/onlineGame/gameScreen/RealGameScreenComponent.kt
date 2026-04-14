@@ -1,6 +1,7 @@
 package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen
 
 import dev.lounres.halfhat.api.onlineGame.ClientApi
+import dev.lounres.halfhat.api.onlineGame.DictionaryId
 import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
@@ -17,7 +18,7 @@ import dev.lounres.halfhat.client.ui.theming.darkTheme
 import dev.lounres.halfhat.client.utils.copyToClipboard
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
-import dev.lounres.kone.hub.KoneAsynchronousHubView
+import dev.lounres.kone.hub.KoneAsynchronousHub
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +27,7 @@ import net.thauvin.erik.urlencoder.UrlEncoderUtil
 
 
 public class RealGameScreenComponent(
-    override val childSlot: KoneAsynchronousHubView<ChildrenSlot<*, GameScreenComponent.Child, UIComponentContext>, *>,
+    override val childSlot: KoneAsynchronousHub<ChildrenSlot<*, GameScreenComponent.Child, UIComponentContext>>,
 ) : GameScreenComponent {
     
     public sealed interface Configuration {
@@ -50,7 +51,9 @@ public suspend fun RealGameScreenComponent(
     componentContext: UIComponentContext,
     gameStateFlow: StateFlow<ServerApi.OnlineGame.State?>,
     onExitOnlineGame: () -> Unit,
-    onApplySettings: (ClientApi.SettingsBuilder.Patch) -> Unit,
+    availableDictionariesFlow: StateFlow<KoneList<DictionaryId.WithDescription>?>,
+    onLoadServerDictionaries: () -> Unit,
+    onApplySettings: (ClientApi.SettingsBuilderPatch) -> Unit,
     onStartGame: () -> Unit,
     onFinishGame: () -> Unit,
     onSubmitWords: (KoneList<String>) -> Unit,
@@ -99,6 +102,9 @@ public suspend fun RealGameScreenComponent(
                                     }
                                 }
                             },
+
+                            availableDictionaries = availableDictionariesFlow,
+                            onLoadServerDictionaries = onLoadServerDictionaries,
                             
                             onStartGame = onStartGame,
                             
