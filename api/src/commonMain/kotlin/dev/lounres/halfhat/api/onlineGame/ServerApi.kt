@@ -58,6 +58,8 @@ public object ServerApi {
         public val strictMode: Boolean,
         public val gameEndCondition: GameStateMachine.GameEndCondition,
         public val wordsSource: WordsSource,
+        public val showWordsStatistic: Boolean,
+        public val showLeaderboardPermutation: Boolean,
     ) {
         @Serializable
         public data class Builder(
@@ -69,6 +71,8 @@ public object ServerApi {
             public val cachedEndConditionCyclesNumber: UInt,
             public val gameEndConditionType: GameStateMachine.GameEndCondition.Type,
             public val wordsSource: WordsSource,
+            public val showWordsStatistic: Boolean,
+            public val showLeaderboardPermutation: Boolean,
         )
     }
     
@@ -347,8 +351,8 @@ public object ServerApi {
                 public val nextListenerIndex: UInt
                 public val restWordsNumber: UInt
                 public val wordsInProgressNumber: UInt
-                public val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>
-                public val leaderboardPermutation: KoneUIntArray
+                public val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?
+                public val leaderboardPermutation: KoneUIntArray?
                 
                 @Serializable
                 public data class Waiting(
@@ -365,10 +369,10 @@ public object ServerApi {
                     override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
                     override val wordsInProgressNumber: UInt,
-                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
+                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?,
                     public val speakerReady: Boolean,
                     public val listenerReady: Boolean,
-                    override val leaderboardPermutation: KoneUIntArray,
+                    override val leaderboardPermutation: KoneUIntArray?,
                 ) : Round
                 
                 @Serializable
@@ -386,9 +390,9 @@ public object ServerApi {
                     override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
                     override val wordsInProgressNumber: UInt,
-                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
+                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?,
                     public val millisecondsLeft: UInt,
-                    override val leaderboardPermutation: KoneUIntArray,
+                    override val leaderboardPermutation: KoneUIntArray?,
                 ) : Round
                 
                 @Serializable
@@ -406,9 +410,9 @@ public object ServerApi {
                     override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
                     override val wordsInProgressNumber: UInt,
-                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
+                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?,
                     public val millisecondsLeft: UInt,
-                    override val leaderboardPermutation: KoneUIntArray,
+                    override val leaderboardPermutation: KoneUIntArray?,
                 ) : Round
                 
                 @Serializable
@@ -426,9 +430,9 @@ public object ServerApi {
                     override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
                     override val wordsInProgressNumber: UInt,
-                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
+                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?,
                     public val millisecondsLeft: UInt,
-                    override val leaderboardPermutation: KoneUIntArray,
+                    override val leaderboardPermutation: KoneUIntArray?,
                 ) : Round
                 
                 @Serializable
@@ -446,8 +450,8 @@ public object ServerApi {
                     override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
                     override val wordsInProgressNumber: UInt,
-                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
-                    override val leaderboardPermutation: KoneUIntArray,
+                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?,
+                    override val leaderboardPermutation: KoneUIntArray?,
                 ) : Round
             }
             
@@ -457,8 +461,8 @@ public object ServerApi {
                 override val role: Role.GameResults,
                 public val playersList: KoneList<PlayerDescription.GameResults>,
                 public val settings: Settings,
-                public val leaderboardPermutation: KoneUIntArray,
                 public val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
+                public val leaderboardPermutation: KoneUIntArray,
             ) : State
         }
         

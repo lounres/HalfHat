@@ -515,6 +515,44 @@ public fun GameResultsUI(
                                         fontSize = 20.sp,
                                     )
                                 }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Checkbox(
+                                        enabled = false,
+                                        checked = settingsBuilder.showLeaderboardPermutation,
+                                        onCheckedChange = {},
+                                        colors = CheckboxDefaults.colors()
+                                    )
+
+                                    Text(
+                                        text = "Show leaderboard",
+                                        fontSize = 20.sp,
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Checkbox(
+                                        enabled = false,
+                                        checked = settingsBuilder.showWordsStatistic,
+                                        onCheckedChange = {},
+                                        colors = CheckboxDefaults.colors()
+                                    )
+
+                                    Text(
+                                        text = "Show words statistics",
+                                        fontSize = 20.sp,
+                                    )
+                                }
                             }
                         }
                     }

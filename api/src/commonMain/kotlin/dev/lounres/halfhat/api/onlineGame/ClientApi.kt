@@ -30,6 +30,8 @@ public object ClientApi {
         val cachedEndConditionCyclesNumber: UInt?,
         val gameEndConditionType: GameStateMachine.GameEndCondition.Type?,
         val wordsSource: WordsSource?,
+        val showWordsStatistic: Boolean?,
+        val showLeaderboardPermutation: Boolean?,
     )
     
     @Serializable

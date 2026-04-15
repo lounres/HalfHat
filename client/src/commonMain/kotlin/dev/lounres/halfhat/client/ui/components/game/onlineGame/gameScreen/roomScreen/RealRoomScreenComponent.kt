@@ -41,6 +41,8 @@ public class RealRoomScreenComponent(
                         RoomScreenComponent.WordsSource.HostDictionary -> ClientApi.WordsSource.HostDictionary(hostDictionary.value ?: return@scope)
                         is RoomScreenComponent.WordsSource.ServerDictionary -> ClientApi.WordsSource.ServerDictionary(wordsSource.description.id)
                     },
+                    showWordsStatistic = showWordsStatistic.value,
+                    showLeaderboardPermutation = showLeaderboardPermutation.value,
                 )
             )
             
@@ -53,6 +55,8 @@ public class RealRoomScreenComponent(
             gameEndConditionType.value = null
             wordsSource.value = null
             hostDictionary.value = null
+            showWordsStatistic.value = null
+            showLeaderboardPermutation.value = null
         }
     }
     
@@ -65,6 +69,8 @@ public class RealRoomScreenComponent(
     override val gameEndConditionType: MutableStateFlow<GameStateMachine.GameEndCondition.Type?> = MutableStateFlow(null)
     override val wordsSource: MutableStateFlow<RoomScreenComponent.WordsSource?> = MutableStateFlow(null)
     override val hostDictionary: MutableStateFlow<KoneList<String>?> = MutableStateFlow(null)
+    override val showWordsStatistic: MutableStateFlow<Boolean?> = MutableStateFlow(null)
+    override val showLeaderboardPermutation: MutableStateFlow<Boolean?> = MutableStateFlow(null)
     
     override val onDiscardSettings: () -> Unit = {
         preparationTimeSeconds.value = null
@@ -76,5 +82,7 @@ public class RealRoomScreenComponent(
         gameEndConditionType.value = null
         wordsSource.value = null
         hostDictionary.value = null
+        showWordsStatistic.value = null
+        showLeaderboardPermutation.value = null
     }
 }

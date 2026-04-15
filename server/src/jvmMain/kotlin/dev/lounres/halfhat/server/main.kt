@@ -209,6 +209,8 @@ fun getRoomByIdOrCreate(id: String): ServerRoom = rooms.computeIfAbsent(id) {
             gameEndConditionType = GameStateMachine.GameEndCondition.Type.Words,
 //            wordsSource = Room.WordsSource.Dictionary(2uL),
             wordsSource = Room.WordsSource.Players,
+            showWordsStatistic = false,
+            showLeaderboardPermutation = false,
         ),
         initialMetadataFactory = { PlayerMetadata(it) },
         checkConnectionAttachment = { _, isOnline, _ -> !isOnline }
@@ -247,6 +249,8 @@ class Connection(
                         )
                     }
                 },
+                showWordsStatistic = this.showWordsStatistic,
+                showLeaderboardPermutation = this.showLeaderboardPermutation,
             )
         fun Room.GameSettings<WordsProviderDescription>.toServerApi(): ServerApi.Settings =
             ServerApi.Settings(
@@ -268,6 +272,8 @@ class Connection(
                         )
                     }
                 },
+                showWordsStatistic = this.showWordsStatistic,
+                showLeaderboardPermutation = this.showLeaderboardPermutation,
             )
         
         socketSession.sendSerialized<ServerApi.Signal>(
@@ -853,6 +859,8 @@ fun main() {
                                                 is DictionaryId.Builtin -> Room.WordsSource.Custom(WordsProviderId.ServerDictionary.Builtin(id = dictionaryId.id))
                                             }
                                         },
+                                        showWordsStatistic = settingsBuilderPatch.showWordsStatistic,
+                                        showLeaderboardPermutation = settingsBuilderPatch.showLeaderboardPermutation,
                                     )
                                 )
                             }

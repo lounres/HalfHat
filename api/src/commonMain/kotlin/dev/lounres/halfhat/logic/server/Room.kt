@@ -3,6 +3,7 @@ package dev.lounres.halfhat.logic.server
 import dev.lounres.halfhat.logic.gameStateMachine.*
 import dev.lounres.kone.algebraic.order
 import dev.lounres.kone.automata.*
+import dev.lounres.kone.automata.CheckResult.*
 import dev.lounres.kone.collections.array.KoneUIntArray
 import dev.lounres.kone.collections.interop.toKoneUIntArray
 import dev.lounres.kone.collections.iterables.isEmpty
@@ -36,6 +37,8 @@ public class Room<
     public val metadata: RoomMetadata,
     public val wordsProviderRegistry: WordsProviderRegistry<WordsProviderID, WordsProviderDescription, NoWordsProviderReason>,
     initialSettingsBuilder: GameSettings.Builder<WordsProviderDescription>,
+    initialShowWordsStatistic: Boolean = false,
+    initialShowLeaderboardPermutation: Boolean = false,
     private val initialMetadataFactory: (PlayerID) -> PlayerMetadata,
     private val checkConnectionAttachment: (metadata: PlayerMetadata, isOnline: Boolean, connection: ConnectionType) -> Boolean,
 ) {
@@ -125,6 +128,10 @@ public class Room<
                                                 is WordsProviderRegistry.WordsProviderDescriptionOrReason.Success -> GameStateMachine.WordsSource.Custom(wordsProviderId.result)
                                             }
                                         },
+                                    ),
+                                    metadataTransition = GameStateMachineMetadataTransition.PatchShowSettings(
+                                        showWordsStatistic = settingsBuilderPatch.showWordsStatistic,
+                                        showLeaderboardPermutation = settingsBuilderPatch.showLeaderboardPermutation,
                                     ),
                                 )
                             )
@@ -413,6 +420,8 @@ public class Room<
         val strictMode: Boolean,
         val gameEndCondition: GameStateMachine.GameEndCondition,
         val wordsSource: WordsSource<WordsProviderDescription>,
+        val showWordsStatistic: Boolean,
+        val showLeaderboardPermutation: Boolean,
     ) {
         public data class Builder<out WordsProviderDescription>(
             val preparationTimeSeconds: UInt,
@@ -423,6 +432,8 @@ public class Room<
             val cachedEndConditionCyclesNumber: UInt,
             val gameEndConditionType: GameStateMachine.GameEndCondition.Type,
             val wordsSource: WordsSource<WordsProviderDescription>,
+            val showWordsStatistic: Boolean,
+            val showLeaderboardPermutation: Boolean,
         ) {
             public data class Patch<out WordsProviderID>(
                 val preparationTimeSeconds: UInt?,
@@ -433,6 +444,8 @@ public class Room<
                 val cachedEndConditionCyclesNumber: UInt?,
                 val gameEndConditionType: GameStateMachine.GameEndCondition.Type?,
                 val wordsSource: WordsSource<WordsProviderID>?,
+                val showWordsStatistic: Boolean?,
+                val showLeaderboardPermutation: Boolean?,
             )
         }
     }
@@ -671,8 +684,8 @@ public class Room<
                 public val nextListenerIndex: UInt
                 public val restWordsNumber: UInt
                 public val wordsInProgressNumber: UInt
-                public val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>
-                public val leaderboardPermutation: KoneUIntArray
+                public val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?
+                public val leaderboardPermutation: KoneUIntArray?
                 
                 public data class Waiting<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
                     override val roomMetadata: RoomMetadata,
@@ -688,10 +701,10 @@ public class Room<
                     override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
                     override val wordsInProgressNumber: UInt,
-                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
+                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?,
                     public val speakerReady: Boolean,
                     public val listenerReady: Boolean,
-                    override val leaderboardPermutation: KoneUIntArray,
+                    override val leaderboardPermutation: KoneUIntArray?,
                 ) : Round<RoomMetadata, PlayerMetadata, WordsProviderDescription>
                 
                 public data class Preparation<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
@@ -708,9 +721,9 @@ public class Room<
                     override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
                     override val wordsInProgressNumber: UInt,
-                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
+                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?,
                     public val millisecondsLeft: UInt,
-                    override val leaderboardPermutation: KoneUIntArray,
+                    override val leaderboardPermutation: KoneUIntArray?,
                 ) : Round<RoomMetadata, PlayerMetadata, WordsProviderDescription>
                 
                 public data class Explanation<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
@@ -727,9 +740,9 @@ public class Room<
                     override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
                     override val wordsInProgressNumber: UInt,
-                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
+                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?,
                     public val millisecondsLeft: UInt,
-                    override val leaderboardPermutation: KoneUIntArray,
+                    override val leaderboardPermutation: KoneUIntArray?,
                 ) : Round<RoomMetadata, PlayerMetadata, WordsProviderDescription>
                 
                 public data class LastGuess<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
@@ -746,9 +759,9 @@ public class Room<
                     override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
                     override val wordsInProgressNumber: UInt,
-                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
+                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?,
                     public val millisecondsLeft: UInt,
-                    override val leaderboardPermutation: KoneUIntArray,
+                    override val leaderboardPermutation: KoneUIntArray?,
                 ) : Round<RoomMetadata, PlayerMetadata, WordsProviderDescription>
                 
                 public data class Editing<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
@@ -765,8 +778,8 @@ public class Room<
                     override val nextListenerIndex: UInt,
                     override val restWordsNumber: UInt,
                     override val wordsInProgressNumber: UInt,
-                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
-                    override val leaderboardPermutation: KoneUIntArray,
+                    override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?,
+                    override val leaderboardPermutation: KoneUIntArray?,
                 ) : Round<RoomMetadata, PlayerMetadata, WordsProviderDescription>
             }
             
@@ -832,11 +845,17 @@ public class Room<
     
     private data class GameStateMachineMetadata<RoomMetadata, PlayerID, PlayerMetadata : Player.Metadata<PlayerID>, WordsProviderID, WordsProviderDescription : Room.WordsProviderDescription<WordsProviderID>, NoWordsProviderReason, ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>>(
         val allPlayersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>,
+        val showWordsStatistic: Boolean,
+        val showLeaderboardPermutation: Boolean,
     )
     
     private sealed interface GameStateMachineMetadataTransition<RoomMetadata, PlayerID, PlayerMetadata : Player.Metadata<PlayerID>, WordsProviderID, WordsProviderDescription : Room.WordsProviderDescription<WordsProviderID>, NoWordsProviderReason, ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>> {
         data class UpdateAllPlayersList<RoomMetadata, PlayerID, PlayerMetadata : Player.Metadata<PlayerID>, WordsProviderID, WordsProviderDescription : Room.WordsProviderDescription<WordsProviderID>, NoWordsProviderReason, ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>>(
             val newAllPlayersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>,
+        ) : GameStateMachineMetadataTransition<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>
+        data class PatchShowSettings<RoomMetadata, PlayerID, PlayerMetadata : Player.Metadata<PlayerID>, WordsProviderID, WordsProviderDescription : Room.WordsProviderDescription<WordsProviderID>, NoWordsProviderReason, ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>>(
+            val showWordsStatistic: Boolean?,
+            val showLeaderboardPermutation: Boolean?,
         ) : GameStateMachineMetadataTransition<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>
     }
     
@@ -871,6 +890,8 @@ public class Room<
             random = random,
             metadata = GameStateMachineMetadata<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>(
                 allPlayersList = KoneGCLinkedSizedList(),
+                showWordsStatistic = initialShowWordsStatistic,
+                showLeaderboardPermutation = initialShowLeaderboardPermutation,
             ),
             playersList = KoneList.empty<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>(),
             settingsBuilder = GameStateMachine.GameSettings.Builder(
@@ -891,9 +912,11 @@ public class Room<
                     is GameStateMachineMetadataTransition.UpdateAllPlayersList -> {
                         when (previousState) {
                             is GameStateMachine.State.GameInitialisation<*, *, *> ->
-                                CheckResult.Success(
+                                Success(
                                     GameStateMachineMetadata(
                                         allPlayersList = metadataTransition.newAllPlayersList,
+                                        showWordsStatistic = previousState.metadata.showWordsStatistic,
+                                        showLeaderboardPermutation = previousState.metadata.showLeaderboardPermutation,
                                     )
                                 )
                             is GameStateMachine.State.PlayersWordsCollection<*, *, *>,
@@ -903,7 +926,27 @@ public class Room<
                             is GameStateMachine.State.RoundLastGuess<*, *, *>,
                             is GameStateMachine.State.RoundEditing<*, *, *>,
                             is GameStateMachine.State.GameResults<*, *, *>,
-                                -> CheckResult.Failure(null)
+                                -> Failure(null)
+                        }
+                    }
+                    is GameStateMachineMetadataTransition.PatchShowSettings -> {
+                        when (previousState) {
+                            is GameStateMachine.State.GameInitialisation<*, *, *> ->
+                                Success(
+                                    GameStateMachineMetadata(
+                                        allPlayersList = previousState.metadata.allPlayersList,
+                                        showWordsStatistic = metadataTransition.showWordsStatistic ?: previousState.metadata.showWordsStatistic,
+                                        showLeaderboardPermutation = metadataTransition.showLeaderboardPermutation ?: previousState.metadata.showLeaderboardPermutation,
+                                    )
+                                )
+                            is GameStateMachine.State.PlayersWordsCollection<*, *, *>,
+                            is GameStateMachine.State.RoundWaiting<*, *, *>,
+                            is GameStateMachine.State.RoundPreparation<*, *, *>,
+                            is GameStateMachine.State.RoundExplanation<*, *, *>,
+                            is GameStateMachine.State.RoundLastGuess<*, *, *>,
+                            is GameStateMachine.State.RoundEditing<*, *, *>,
+                            is GameStateMachine.State.GameResults<*, *, *>,
+                                -> Failure(null)
                         }
                     }
                 }
@@ -945,7 +988,9 @@ public class Room<
                                 wordsSource = when (val wordsSource = gameMachineSettingsBuilder.wordsSource) {
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
                                     is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
-                                }
+                                },
+                                showWordsStatistic = nextState.metadata.showWordsStatistic,
+                                showLeaderboardPermutation = nextState.metadata.showLeaderboardPermutation,
                             )
                         )
                     }
@@ -978,6 +1023,8 @@ public class Room<
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
                                     is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
                                 },
+                                showWordsStatistic = nextState.metadata.showWordsStatistic,
+                                showLeaderboardPermutation = nextState.metadata.showLeaderboardPermutation,
                             ),
                         )
                     }
@@ -1024,6 +1071,8 @@ public class Room<
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
                                     is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
                                 },
+                                showWordsStatistic = nextState.metadata.showWordsStatistic,
+                                showLeaderboardPermutation = nextState.metadata.showLeaderboardPermutation,
                             ),
                             initialWordsNumber = nextState.initialWordsNumber,
                             roundNumber =  nextState.roundNumber,
@@ -1034,13 +1083,19 @@ public class Room<
                             nextListenerIndex = nextState.nextListenerIndex,
                             restWordsNumber = nextState.restWords.size,
                             wordsInProgressNumber = 0u,
-                            wordsStatistic = nextState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress },
+                            wordsStatistic =
+                                if (nextState.metadata.showWordsStatistic) nextState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress }
+                                else null,
                             speakerReady = nextState.speakerReady,
                             listenerReady = nextState.listenerReady,
-                            leaderboardPermutation = playersList
-                                .indices
-                                .sortedByDescending { nextState.explanationScores[it] + nextState.guessingScores[it] }
-                                .toKoneUIntArray(),
+                            leaderboardPermutation =
+                                if (nextState.metadata.showLeaderboardPermutation)
+                                    playersList
+                                        .indices
+                                        .sortedByDescending { nextState.explanationScores[it] + nextState.guessingScores[it] }
+                                        .toKoneUIntArray()
+                                else null
+                            ,
                         )
                     }
                     is GameStateMachine.State.RoundPreparation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, WordsProviderDescription, *> -> {
@@ -1085,6 +1140,8 @@ public class Room<
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
                                     is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
                                 },
+                                showWordsStatistic = nextState.metadata.showWordsStatistic,
+                                showLeaderboardPermutation = nextState.metadata.showLeaderboardPermutation,
                             ),
                             initialWordsNumber = nextState.initialWordsNumber,
                             roundNumber =  nextState.roundNumber,
@@ -1095,12 +1152,17 @@ public class Room<
                             nextListenerIndex = nextState.nextListenerIndex,
                             restWordsNumber = nextState.restWords.size,
                             wordsInProgressNumber = nextState.currentExplanationResults.size,
-                            wordsStatistic = nextState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress },
+                            wordsStatistic =
+                                if (nextState.metadata.showWordsStatistic) nextState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress }
+                                else null,
                             millisecondsLeft = nextState.millisecondsLeft,
-                            leaderboardPermutation = playersList
-                                .indices
-                                .sortedByDescending { nextState.explanationScores[it] + nextState.guessingScores[it] }
-                                .toKoneUIntArray(),
+                            leaderboardPermutation =
+                                if (nextState.metadata.showLeaderboardPermutation)
+                                    playersList
+                                        .indices
+                                        .sortedByDescending { nextState.explanationScores[it] + nextState.guessingScores[it] }
+                                        .toKoneUIntArray()
+                                else null,
                         )
                     }
                     is GameStateMachine.State.RoundExplanation<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, WordsProviderDescription, *> -> {
@@ -1145,6 +1207,8 @@ public class Room<
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
                                     is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
                                 },
+                                showWordsStatistic = nextState.metadata.showWordsStatistic,
+                                showLeaderboardPermutation = nextState.metadata.showLeaderboardPermutation,
                             ),
                             initialWordsNumber = nextState.initialWordsNumber,
                             roundNumber =  nextState.roundNumber,
@@ -1155,12 +1219,17 @@ public class Room<
                             nextListenerIndex = nextState.nextListenerIndex,
                             restWordsNumber = nextState.restWords.size,
                             wordsInProgressNumber = nextState.currentExplanationResults.size + 1u,
-                            wordsStatistic = nextState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress },
+                            wordsStatistic =
+                                if (nextState.metadata.showWordsStatistic) nextState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress }
+                                else null,
                             millisecondsLeft = nextState.millisecondsLeft,
-                            leaderboardPermutation = playersList
-                                .indices
-                                .sortedByDescending { nextState.explanationScores[it] + nextState.guessingScores[it] }
-                                .toKoneUIntArray(),
+                            leaderboardPermutation =
+                                if (nextState.metadata.showLeaderboardPermutation)
+                                    playersList
+                                        .indices
+                                        .sortedByDescending { nextState.explanationScores[it] + nextState.guessingScores[it] }
+                                        .toKoneUIntArray()
+                                else null,
                         )
                     }
                     is GameStateMachine.State.RoundLastGuess<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, WordsProviderDescription, *> -> {
@@ -1205,6 +1274,8 @@ public class Room<
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
                                     is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
                                 },
+                                showWordsStatistic = nextState.metadata.showWordsStatistic,
+                                showLeaderboardPermutation = nextState.metadata.showLeaderboardPermutation,
                             ),
                             initialWordsNumber = nextState.initialWordsNumber,
                             roundNumber =  nextState.roundNumber,
@@ -1215,12 +1286,17 @@ public class Room<
                             nextListenerIndex = nextState.nextListenerIndex,
                             restWordsNumber = nextState.restWords.size,
                             wordsInProgressNumber = nextState.currentExplanationResults.size + 1u,
-                            wordsStatistic = nextState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress },
+                            wordsStatistic =
+                                if (nextState.metadata.showWordsStatistic) nextState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress }
+                                else null,
                             millisecondsLeft = nextState.millisecondsLeft,
-                            leaderboardPermutation = playersList
-                                .indices
-                                .sortedByDescending { nextState.explanationScores[it] + nextState.guessingScores[it] }
-                                .toKoneUIntArray(),
+                            leaderboardPermutation =
+                                if (nextState.metadata.showLeaderboardPermutation)
+                                    playersList
+                                        .indices
+                                        .sortedByDescending { nextState.explanationScores[it] + nextState.guessingScores[it] }
+                                        .toKoneUIntArray()
+                                else null,
                         )
                     }
                     is GameStateMachine.State.RoundEditing<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, WordsProviderDescription, *> -> {
@@ -1265,6 +1341,8 @@ public class Room<
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
                                     is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
                                 },
+                                showWordsStatistic = nextState.metadata.showWordsStatistic,
+                                showLeaderboardPermutation = nextState.metadata.showLeaderboardPermutation,
                             ),
                             initialWordsNumber = nextState.initialWordsNumber,
                             roundNumber =  nextState.roundNumber,
@@ -1275,11 +1353,16 @@ public class Room<
                             nextListenerIndex = nextState.nextListenerIndex,
                             restWordsNumber = nextState.restWords.size,
                             wordsInProgressNumber = nextState.currentExplanationResults.size,
-                            wordsStatistic = nextState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress },
-                            leaderboardPermutation = playersList
-                                .indices
-                                .sortedByDescending { nextState.explanationScores[it] + nextState.guessingScores[it] }
-                                .toKoneUIntArray(),
+                            wordsStatistic =
+                                if (nextState.metadata.showWordsStatistic) nextState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress }
+                                else null,
+                            leaderboardPermutation =
+                                if (nextState.metadata.showLeaderboardPermutation)
+                                    playersList
+                                        .indices
+                                        .sortedByDescending { nextState.explanationScores[it] + nextState.guessingScores[it] }
+                                        .toKoneUIntArray()
+                                else null,
                         )
                     }
                     is GameStateMachine.State.GameResults<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>, WordsProviderDescription, *> -> {
@@ -1312,6 +1395,8 @@ public class Room<
                                     GameStateMachine.WordsSource.Players -> WordsSource.Players
                                     is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
                                 },
+                                showWordsStatistic = nextState.metadata.showWordsStatistic,
+                                showLeaderboardPermutation = nextState.metadata.showLeaderboardPermutation,
                             ),
                             leaderboardPermutation = playersList
                                 .indices

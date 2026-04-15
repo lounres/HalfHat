@@ -26,6 +26,8 @@ public interface RoomScreenComponent {
     public val gameEndConditionType: MutableStateFlow<GameStateMachine.GameEndCondition.Type?>
     public val wordsSource: MutableStateFlow<WordsSource?>
     public val hostDictionary: MutableStateFlow<KoneList<String>?>
+    public val showWordsStatistic: MutableStateFlow<Boolean?> // TODO: Use in settings!!!
+    public val showLeaderboardPermutation: MutableStateFlow<Boolean?> // TODO: Use in settings!!!
 
     public val availableDictionaries: StateFlow<KoneList<DictionaryId.WithDescription>?>
     public val onLoadServerDictionaries: () -> Unit

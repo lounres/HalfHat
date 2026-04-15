@@ -3,7 +3,9 @@ package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roun
 import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.components.UIComponentContext
 import dev.lounres.halfhat.client.components.coroutineScope
+import dev.lounres.halfhat.client.components.navigation.ChildrenPossibility
 import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
+import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultPossibilityNode
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotNode
 import dev.lounres.halfhat.client.storage.settings.settings
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundEditing.RealRoundEditingComponent
@@ -17,8 +19,12 @@ import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.hub.KoneAsynchronousHub
 import dev.lounres.kone.hub.KoneMutableAsynchronousHub
+import dev.lounres.kone.hub.update
+import dev.lounres.kone.hub.value
+import dev.lounres.kone.maybe.notNullMaybe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -29,16 +35,18 @@ class RealRoundScreenComponent(
     override val onCopyOnlineGameKey: () -> Unit,
     override val onCopyOnlineGameLink: () -> Unit,
     override val onFinishGame: () -> Unit,
-    
+
     override val gameState: StateFlow<ServerApi.OnlineGame.State.Round>,
-    
-    override val childSlot: KoneAsynchronousHub<ChildrenSlot<*, RoundScreenComponent.Child, UIComponentContext>>,
-    
+
+    override val roundChildSlot: KoneAsynchronousHub<ChildrenSlot<*, RoundScreenComponent.RoundChild, UIComponentContext>>,
+    override val additionalCardButton: KoneAsynchronousHub<RoundScreenComponent.AdditionalCardButtonsChild>,
+    override val onSelectButton: suspend (RoundScreenComponent.AdditionalCardButton) -> Unit,
+    override val additionalCardChildPossibility: KoneAsynchronousHub<ChildrenPossibility<*, RoundScreenComponent.AdditionalCardChild, UIComponentContext>>,
+
     override val coroutineScope: CoroutineScope,
     override val darkTheme: KoneMutableAsynchronousHub<DarkTheme>,
 ) : RoundScreenComponent {
     override val openAdditionalCard: KoneMutableAsynchronousHub<Boolean> = KoneMutableAsynchronousHub(false)
-    override val additionalCard: KoneMutableAsynchronousHub<RoundScreenComponent.AdditionalCard> = KoneMutableAsynchronousHub(RoundScreenComponent.AdditionalCard.Schedule)
     
     public sealed interface Configuration {
         public data class RoundWaiting(
@@ -77,7 +85,7 @@ suspend fun RealRoundScreenComponent(
     onUpdateExplanationResults: (KoneList<GameStateMachine.WordExplanation>) -> Unit,
     onConfirmExplanationResults: () -> Unit,
 ): RealRoundScreenComponent {
-    val childSlot =
+    val roundChildSlot =
         componentContext.uiChildrenDefaultSlotNode(
             initialConfiguration = when(val gameState = gameState.value) {
                 is ServerApi.OnlineGame.State.Round.Waiting -> RealRoundScreenComponent.Configuration.RoundWaiting(MutableStateFlow(gameState))
@@ -89,7 +97,7 @@ suspend fun RealRoundScreenComponent(
         ) { configuration, componentContext, _ ->
             when(configuration) {
                 is RealRoundScreenComponent.Configuration.RoundWaiting ->
-                    RoundScreenComponent.Child.RoundWaiting(
+                    RoundScreenComponent.RoundChild.RoundWaiting(
                         RealRoundWaitingComponent(
                             gameState = configuration.stateFlow,
                             
@@ -98,13 +106,13 @@ suspend fun RealRoundScreenComponent(
                         )
                     )
                 is RealRoundScreenComponent.Configuration.RoundPreparation ->
-                    RoundScreenComponent.Child.RoundPreparation(
+                    RoundScreenComponent.RoundChild.RoundPreparation(
                         RealRoundPreparationComponent(
                             gameState = configuration.stateFlow,
                         )
                     )
                 is RealRoundScreenComponent.Configuration.RoundExplanation ->
-                    RoundScreenComponent.Child.RoundExplanation(
+                    RoundScreenComponent.RoundChild.RoundExplanation(
                         RealRoundExplanationComponent(
                             gameState = configuration.stateFlow,
                             
@@ -113,7 +121,7 @@ suspend fun RealRoundScreenComponent(
                         )
                     )
                 is RealRoundScreenComponent.Configuration.RoundLastGuess ->
-                    RoundScreenComponent.Child.RoundLastGuess(
+                    RoundScreenComponent.RoundChild.RoundLastGuess(
                         RealRoundLastGuessComponent(
                             gameState = configuration.stateFlow,
                             
@@ -123,7 +131,7 @@ suspend fun RealRoundScreenComponent(
                         )
                     )
                 is RealRoundScreenComponent.Configuration.RoundEditing ->
-                    RoundScreenComponent.Child.RoundEditing(
+                    RoundScreenComponent.RoundChild.RoundEditing(
                         RealRoundEditingComponent(
                             componentContext = componentContext,
                             
@@ -135,63 +143,111 @@ suspend fun RealRoundScreenComponent(
                     )
             }
         }
+
+    val additionalCardButton = KoneMutableAsynchronousHub(
+        RoundScreenComponent.AdditionalCardButtonsChild(
+            leaderboardPermutation = gameState.value.leaderboardPermutation,
+            wordsStatistic = gameState.value.wordsStatistic,
+            selectedButtonType = null
+        )
+    )
+
+    val additionalCardChildPossibility =
+        componentContext.uiChildrenDefaultPossibilityNode(
+            initialConfiguration = additionalCardButton.value.selectedButton.notNullMaybe()
+        ) { configuration, _, _ ->
+            when (configuration) {
+                RoundScreenComponent.AdditionalCardButton.Schedule -> RoundScreenComponent.AdditionalCardChild.Schedule
+                is RoundScreenComponent.AdditionalCardButton.PlayersStatistic -> RoundScreenComponent.AdditionalCardChild.PlayersStatistic(configuration.leaderboardPermutation)
+                is RoundScreenComponent.AdditionalCardButton.WordsStatistic -> RoundScreenComponent.AdditionalCardChild.WordsStatistic(configuration.wordsStatistic)
+                RoundScreenComponent.AdditionalCardButton.Settings -> RoundScreenComponent.AdditionalCardChild.Settings
+            }
+        }
+
+    additionalCardButton.subscribe { newButtonChild ->
+        additionalCardChildPossibility.navigate { newButtonChild.selectedButton.notNullMaybe() }
+    }
     
     val coroutineScope = componentContext.coroutineScope(Dispatchers.Default)
     
     coroutineScope.launch {
         gameState.collect { newState ->
-            childSlot.navigate { currentConfiguration ->
-                when (newState) {
-                    is ServerApi.OnlineGame.State.Round.Waiting ->
-                        when (currentConfiguration) {
-                            is RealRoundScreenComponent.Configuration.RoundWaiting ->
-                                currentConfiguration.apply {
-                                    stateFlow.value = newState
+            coroutineScope {
+                launch {
+                    roundChildSlot.navigate { currentConfiguration ->
+                        when (newState) {
+                            is ServerApi.OnlineGame.State.Round.Waiting ->
+                                when (currentConfiguration) {
+                                    is RealRoundScreenComponent.Configuration.RoundWaiting ->
+                                        currentConfiguration.apply {
+                                            stateFlow.value = newState
+                                        }
+
+                                    else -> RealRoundScreenComponent.Configuration.RoundWaiting(
+                                        stateFlow = MutableStateFlow(newState)
+                                    )
                                 }
-                            else -> RealRoundScreenComponent.Configuration.RoundWaiting(
-                                stateFlow = MutableStateFlow(newState)
-                            )
-                        }
-                    is ServerApi.OnlineGame.State.Round.Preparation ->
-                        when (currentConfiguration) {
-                            is RealRoundScreenComponent.Configuration.RoundPreparation ->
-                                currentConfiguration.apply {
-                                    stateFlow.value = newState
+
+                            is ServerApi.OnlineGame.State.Round.Preparation ->
+                                when (currentConfiguration) {
+                                    is RealRoundScreenComponent.Configuration.RoundPreparation ->
+                                        currentConfiguration.apply {
+                                            stateFlow.value = newState
+                                        }
+
+                                    else -> RealRoundScreenComponent.Configuration.RoundPreparation(
+                                        stateFlow = MutableStateFlow(newState)
+                                    )
                                 }
-                            else -> RealRoundScreenComponent.Configuration.RoundPreparation(
-                                stateFlow = MutableStateFlow(newState)
-                            )
-                        }
-                    is ServerApi.OnlineGame.State.Round.Explanation ->
-                        when (currentConfiguration) {
-                            is RealRoundScreenComponent.Configuration.RoundExplanation ->
-                                currentConfiguration.apply {
-                                    stateFlow.value = newState
+
+                            is ServerApi.OnlineGame.State.Round.Explanation ->
+                                when (currentConfiguration) {
+                                    is RealRoundScreenComponent.Configuration.RoundExplanation ->
+                                        currentConfiguration.apply {
+                                            stateFlow.value = newState
+                                        }
+
+                                    else -> RealRoundScreenComponent.Configuration.RoundExplanation(
+                                        stateFlow = MutableStateFlow(newState)
+                                    )
                                 }
-                            else -> RealRoundScreenComponent.Configuration.RoundExplanation(
-                                stateFlow = MutableStateFlow(newState)
-                            )
-                        }
-                    is ServerApi.OnlineGame.State.Round.LastGuess ->
-                        when (currentConfiguration) {
-                            is RealRoundScreenComponent.Configuration.RoundLastGuess ->
-                                currentConfiguration.apply {
-                                    stateFlow.value = newState
+
+                            is ServerApi.OnlineGame.State.Round.LastGuess ->
+                                when (currentConfiguration) {
+                                    is RealRoundScreenComponent.Configuration.RoundLastGuess ->
+                                        currentConfiguration.apply {
+                                            stateFlow.value = newState
+                                        }
+
+                                    else -> RealRoundScreenComponent.Configuration.RoundLastGuess(
+                                        stateFlow = MutableStateFlow(newState)
+                                    )
                                 }
-                            else -> RealRoundScreenComponent.Configuration.RoundLastGuess(
-                                stateFlow = MutableStateFlow(newState)
-                            )
-                        }
-                    is ServerApi.OnlineGame.State.Round.Editing ->
-                        when (currentConfiguration) {
-                            is RealRoundScreenComponent.Configuration.RoundEditing ->
-                                currentConfiguration.apply {
-                                    stateFlow.value = newState
+
+                            is ServerApi.OnlineGame.State.Round.Editing ->
+                                when (currentConfiguration) {
+                                    is RealRoundScreenComponent.Configuration.RoundEditing ->
+                                        currentConfiguration.apply {
+                                            stateFlow.value = newState
+                                        }
+
+                                    else -> RealRoundScreenComponent.Configuration.RoundEditing(
+                                        stateFlow = MutableStateFlow(newState)
+                                    )
                                 }
-                            else -> RealRoundScreenComponent.Configuration.RoundEditing(
-                                stateFlow = MutableStateFlow(newState)
-                            )
                         }
+                    }
+                }
+                launch {
+                    additionalCardButton.update { oldChild ->
+                        val leaderboardPermutation = gameState.value.leaderboardPermutation
+                        val wordsStatistic = gameState.value.wordsStatistic
+                        RoundScreenComponent.AdditionalCardButtonsChild(
+                            leaderboardPermutation = leaderboardPermutation,
+                            wordsStatistic = wordsStatistic,
+                            selectedButtonType = oldChild.selectedButtonType,
+                        )
+                    }
                 }
             }
         }
@@ -206,7 +262,18 @@ suspend fun RealRoundScreenComponent(
         
         gameState = gameState,
         
-        childSlot = childSlot.hub,
+        roundChildSlot = roundChildSlot.hub,
+        additionalCardButton = additionalCardButton,
+        onSelectButton = { button ->
+            additionalCardButton.update {
+                RoundScreenComponent.AdditionalCardButtonsChild(
+                    leaderboardPermutation = it.leaderboardPermutation,
+                    wordsStatistic = it.wordsStatistic,
+                    selectedButtonType = button.type,
+                )
+            }
+        },
+        additionalCardChildPossibility = additionalCardChildPossibility.hub,
         
         coroutineScope = coroutineScope,
         darkTheme = componentContext.settings.darkTheme,

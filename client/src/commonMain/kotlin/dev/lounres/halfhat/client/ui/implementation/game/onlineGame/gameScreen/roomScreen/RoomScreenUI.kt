@@ -1,7 +1,6 @@
 package dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roomScreen
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.draganddrop.dragAndDropTarget
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -40,8 +39,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draganddrop.DragAndDropEvent
-import androidx.compose.ui.draganddrop.DragAndDropTarget
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.PathEffect
@@ -67,7 +64,6 @@ import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.iterables.next
-import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.utils.withIndex
 import dev.lounres.kone.scope
 import io.github.vinceglb.filekit.FileKit
@@ -646,6 +642,64 @@ fun RoomScreenSettingsCardUI(
                         fontSize = 20.sp,
                     )
                 }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    val currentShowLeaderboardPermutation = component.showLeaderboardPermutation.collectAsState().value
+                    Checkbox(
+                        enabled = areSettingsChangeable,
+                        checked = currentShowLeaderboardPermutation.takeIf { areSettingsChangeable } ?: settingsBuilder.showLeaderboardPermutation,
+                        onCheckedChange = { component.showLeaderboardPermutation.value = it },
+                        colors =
+                            if (areSettingsChangeable && currentShowLeaderboardPermutation != null)
+                                CheckboxDefaults.colors(
+                                    checkedCheckmarkColor = MaterialTheme.colorScheme.onTertiary,
+                                    checkedBoxColor = MaterialTheme.colorScheme.tertiary,
+                                    checkedBorderColor = MaterialTheme.colorScheme.tertiary,
+                                    uncheckedBorderColor = MaterialTheme.colorScheme.tertiary,
+                                )
+                            else
+                                CheckboxDefaults.colors()
+                    )
+
+                    Text(
+                        text = "Show leaderboard",
+                        fontSize = 20.sp,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    val currentShowWordsStatistic = component.showWordsStatistic.collectAsState().value
+                    Checkbox(
+                        enabled = areSettingsChangeable,
+                        checked = currentShowWordsStatistic.takeIf { areSettingsChangeable } ?: settingsBuilder.showWordsStatistic,
+                        onCheckedChange = { component.showWordsStatistic.value = it },
+                        colors =
+                            if (areSettingsChangeable && currentShowWordsStatistic != null)
+                                CheckboxDefaults.colors(
+                                    checkedCheckmarkColor = MaterialTheme.colorScheme.onTertiary,
+                                    checkedBoxColor = MaterialTheme.colorScheme.tertiary,
+                                    checkedBorderColor = MaterialTheme.colorScheme.tertiary,
+                                    uncheckedBorderColor = MaterialTheme.colorScheme.tertiary,
+                                )
+                            else
+                                CheckboxDefaults.colors()
+                    )
+
+                    Text(
+                        text = "Show words statistics",
+                        fontSize = 20.sp,
+                    )
+                }
             }
             
             if (
@@ -657,7 +711,9 @@ fun RoomScreenSettingsCardUI(
                     component.cachedEndConditionWordsNumber.collectAsState().value != null ||
                     component.cachedEndConditionCyclesNumber.collectAsState().value != null ||
                     component.gameEndConditionType.collectAsState().value != null ||
-                    component.wordsSource.collectAsState().value != null
+                    component.wordsSource.collectAsState().value != null ||
+                    component.showWordsStatistic.collectAsState().value != null ||
+                    component.showLeaderboardPermutation.collectAsState().value != null
                 )
             ) {
                 Spacer(modifier = Modifier.height(8.dp))

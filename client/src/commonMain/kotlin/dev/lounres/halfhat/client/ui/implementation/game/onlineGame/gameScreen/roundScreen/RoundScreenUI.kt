@@ -29,8 +29,12 @@ import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.r
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.iterables.next
+import dev.lounres.kone.collections.list.lastIndex
+import dev.lounres.kone.collections.utils.withIndex
 import dev.lounres.kone.hub.set
 import dev.lounres.kone.hub.subscribeAsState
+import dev.lounres.kone.maybe.None
+import dev.lounres.kone.maybe.Some
 import kotlinx.coroutines.launch
 
 
@@ -94,12 +98,12 @@ fun RoundScreenGameCardUI(
     Card(
         modifier = modifier,
     ) {
-        when (val child = component.childSlot.subscribeAsState().value.component) {
-            is RoundScreenComponent.Child.RoundWaiting -> RoundWaitingGameCardUI(child.component)
-            is RoundScreenComponent.Child.RoundPreparation -> RoundPreparationGameCardUI(child.component)
-            is RoundScreenComponent.Child.RoundExplanation -> RoundExplanationGameCardUI(child.component)
-            is RoundScreenComponent.Child.RoundLastGuess -> RoundLastGuessGameCardUI(child.component)
-            is RoundScreenComponent.Child.RoundEditing -> RoundEditingGameCardUI(child.component)
+        when (val child = component.roundChildSlot.subscribeAsState().value.component) {
+            is RoundScreenComponent.RoundChild.RoundWaiting -> RoundWaitingGameCardUI(child.component)
+            is RoundScreenComponent.RoundChild.RoundPreparation -> RoundPreparationGameCardUI(child.component)
+            is RoundScreenComponent.RoundChild.RoundExplanation -> RoundExplanationGameCardUI(child.component)
+            is RoundScreenComponent.RoundChild.RoundLastGuess -> RoundLastGuessGameCardUI(child.component)
+            is RoundScreenComponent.RoundChild.RoundEditing -> RoundEditingGameCardUI(child.component)
         }
     }
 }
@@ -119,354 +123,340 @@ fun RoundScreenAdditionalCardUI(
     Column(
         modifier = modifier,
     ) {
-        val additionalCard = component.additionalCard.subscribeAsState().value
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
-            IconToggleButton(
-                checked = additionalCard == RoundScreenComponent.AdditionalCard.Schedule,
-                onCheckedChange = {
-                    if (it) component.coroutineScope.launch {
-                        component.additionalCard.set(RoundScreenComponent.AdditionalCard.Schedule)
+            val additionalCardButtons = component.additionalCardButton.subscribeAsState().value
+            for ((val index, val button = value) in additionalCardButtons.buttonsList.withIndex()) {
+                IconToggleButton(
+                    checked = additionalCardButtons.selectedButtonType == button.type,
+                    onCheckedChange = {
+                        if (it) component.coroutineScope.launch { component.onSelectButton(button) }
+                    },
+                    shapes = when {
+                        additionalCardButtons.buttonsList.size == 1u ->
+                            IconButtonDefaults.toggleableShapes()
+                        index == 0u ->
+                            ButtonGroupDefaults.connectedLeadingButtonShapes().toIconToggleButtonShapes()
+                        index == additionalCardButtons.buttonsList.lastIndex ->
+                            ButtonGroupDefaults.connectedTrailingButtonShapes().toIconToggleButtonShapes()
+                        else ->
+                            ButtonGroupDefaults.connectedMiddleButtonShapes().toIconToggleButtonShapes()
+                    },
+                    colors = IconButtonDefaults.filledTonalIconToggleButtonColors(),
+                ) {
+                    when (button.type) {
+                        RoundScreenComponent.AdditionalCardButton.Type.Schedule ->
+                            Icon(
+                                modifier = commonIconModifier,
+                                imageVector = HalfHatIcon.OnlineGameScheduleButton,
+                                contentDescription = "Open schedule",
+                            )
+                        RoundScreenComponent.AdditionalCardButton.Type.PlayersStatistic ->
+                            Icon(
+                                modifier = commonIconModifier,
+                                imageVector = HalfHatIcon.OnlineGamePlayersButton,
+                                contentDescription = "Open players statistic",
+                            )
+                        RoundScreenComponent.AdditionalCardButton.Type.WordsStatistic ->
+                            Icon(
+                                modifier = commonIconModifier,
+                                imageVector = HalfHatIcon.OnlineGameWordsButton,
+                                contentDescription = "Open words statistic",
+                            )
+                        RoundScreenComponent.AdditionalCardButton.Type.Settings ->
+                            Icon(
+                                modifier = commonIconModifier,
+                                imageVector = HalfHatIcon.OnlineGameSettingsButton,
+                                contentDescription = "Open game settings",
+                            )
                     }
-                },
-                shapes = ButtonGroupDefaults.connectedLeadingButtonShapes().toIconToggleButtonShapes(),
-                colors = IconButtonDefaults.filledTonalIconToggleButtonColors(),
-            ) {
-                Icon(
-                    modifier = commonIconModifier,
-                    imageVector = HalfHatIcon.OnlineGameScheduleButton,
-                    contentDescription = "Open schedule",
-                )
-            }
-            IconToggleButton(
-                checked = additionalCard == RoundScreenComponent.AdditionalCard.PlayersStatistic,
-                onCheckedChange = {
-                    if (it) component.coroutineScope.launch {
-                        component.additionalCard.set(RoundScreenComponent.AdditionalCard.PlayersStatistic)
-                    }
-                },
-                shapes = ButtonGroupDefaults.connectedMiddleButtonShapes().toIconToggleButtonShapes(),
-                colors = IconButtonDefaults.filledTonalIconToggleButtonColors(),
-            ) {
-                Icon(
-                    modifier = commonIconModifier,
-                    imageVector = HalfHatIcon.OnlineGamePlayersButton,
-                    contentDescription = "Open players statistic",
-                )
-            }
-            IconToggleButton(
-                checked = additionalCard == RoundScreenComponent.AdditionalCard.WordsStatistic,
-                onCheckedChange = {
-                    if (it) component.coroutineScope.launch {
-                        component.additionalCard.set(RoundScreenComponent.AdditionalCard.WordsStatistic)
-                    }
-                },
-                shapes = ButtonGroupDefaults.connectedMiddleButtonShapes().toIconToggleButtonShapes(),
-                colors = IconButtonDefaults.filledTonalIconToggleButtonColors(),
-            ) {
-                Icon(
-                    modifier = commonIconModifier,
-                    imageVector = HalfHatIcon.OnlineGameWordsButton,
-                    contentDescription = "Open words statistic",
-                )
-            }
-            IconToggleButton(
-                checked = additionalCard == RoundScreenComponent.AdditionalCard.Settings,
-                onCheckedChange = {
-                    if (it) component.coroutineScope.launch {
-                        component.additionalCard.set(RoundScreenComponent.AdditionalCard.Settings)
-                    }
-                },
-                shapes = ButtonGroupDefaults.connectedTrailingButtonShapes().toIconToggleButtonShapes(),
-                colors = IconButtonDefaults.filledTonalIconToggleButtonColors(),
-            ) {
-                Icon(
-                    modifier = commonIconModifier,
-                    imageVector = HalfHatIcon.OnlineGameSettingsButton,
-                    contentDescription = "Open game settings",
-                )
+                }
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
         Card(
             modifier = Modifier.fillMaxWidth().weight(1f),
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                val gameState = component.gameState.collectAsState().value
-                when (additionalCard) {
-                    RoundScreenComponent.AdditionalCard.Schedule -> {
-                        Text(
-                            text = "Current round",
-                            fontSize = 24.sp,
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth().height(80.dp),
-                        ) {
-                            Card(
-                                modifier = Modifier.fillMaxHeight().weight(2f),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                                ),
-                            ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize().padding(4.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(
-                                        text = gameState.playersList[gameState.speakerIndex].name,
-                                        autoSize = TextAutoSize.StepBased(maxFontSize = 32.sp),
-                                    )
-                                }
-                            }
-                            Box(
-                                modifier = Modifier.fillMaxHeight().weight(1f),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Icon(
-                                    modifier = Modifier.fillMaxSize(1f / 2),
-                                    imageVector = HalfHatIcon.OnlineGameSpeakerToListenerRightArrow,
-                                    contentDescription = null,
-                                )
-                            }
-                            Card(
-                                modifier = Modifier.fillMaxHeight().weight(2f),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                                ),
-                            ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize().padding(4.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(
-                                        text = gameState.playersList[gameState.listenerIndex].name,
-                                        autoSize = TextAutoSize.StepBased(maxFontSize = 32.sp),
-                                    )
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Next round",
-                            fontSize = 24.sp,
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth().height(80.dp),
-                        ) {
-                            Card(
-                                modifier = Modifier.fillMaxHeight().weight(2f),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                                ),
-                            ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize().padding(4.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(
-                                        text = gameState.playersList[gameState.nextSpeakerIndex].name,
-                                        autoSize = TextAutoSize.StepBased(maxFontSize = 32.sp),
-                                    )
-                                }
-                            }
-                            Box(
-                                modifier = Modifier.fillMaxHeight().weight(1f),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Icon(
-                                    modifier = Modifier.fillMaxSize(1f / 2),
-                                    imageVector = HalfHatIcon.OnlineGameSpeakerToListenerRightArrow,
-                                    contentDescription = null,
-                                )
-                            }
-                            Card(
-                                modifier = Modifier.fillMaxHeight().weight(2f),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                                ),
-                            ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize().padding(4.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(
-                                        text = gameState.playersList[gameState.nextListenerIndex].name,
-                                        autoSize = TextAutoSize.StepBased(maxFontSize = 32.sp),
-                                    )
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "You will be speaking in ${gameState.role.roundsBeforeSpeaking} rounds",
-                            fontSize = 20.sp,
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "You will be listening in ${gameState.role.roundsBeforeListening} rounds",
-                            fontSize = 20.sp,
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "${gameState.restWordsNumber + gameState.wordsInProgressNumber} (-${gameState.wordsInProgressNumber}) of ${gameState.initialWordsNumber} words left in the game",
-                            fontSize = 20.sp,
-                        )
-                    }
-                    RoundScreenComponent.AdditionalCard.PlayersStatistic -> {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
-                        ) {
-                            Spacer(modifier = Modifier.width(68.dp))
+            when (val additionalCardChildMaybe = component.additionalCardChildPossibility.subscribeAsState().value) {
+                None -> {
+                    
+                }
+                is Some -> Column(
+                    modifier = Modifier.fillMaxSize().padding(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    val gameState = component.gameState.collectAsState().value
+                    when (val additionalCardChild = additionalCardChildMaybe.value.component) {
+                        RoundScreenComponent.AdditionalCardChild.Schedule -> {
                             Text(
-                                modifier = Modifier.weight(1f),
-                                text = "Player",
-                                fontWeight = FontWeight.SemiBold,
-                                autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
+                                text = "Current round",
+                                fontSize = 24.sp,
                             )
-                            Text(
-                                modifier = Modifier.weight(1f),
-                                text = "Explained",
-                                textAlign = TextAlign.Center,
-                                fontWeight = FontWeight.SemiBold,
-                                autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
-                            )
-                            Text(
-                                modifier = Modifier.weight(1f),
-                                text = "Guessed",
-                                textAlign = TextAlign.Center,
-                                fontWeight = FontWeight.SemiBold,
-                                autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
-                            )
-                            Text(
-                                modifier = Modifier.weight(1f),
-                                text = "Sum",
-                                textAlign = TextAlign.Center,
-                                fontWeight = FontWeight.SemiBold,
-                                autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
-                            )
-                        }
-                        HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outline,
-                        )
-                        for (index in gameState.leaderboardPermutation) {
-                            val player = gameState.playersList[index]
                             Spacer(modifier = Modifier.height(8.dp))
-                            Surface(
-                                shape = CircleShape,
-                                color =
-                                    if (index == gameState.role.userIndex) MaterialTheme.colorScheme.tertiaryContainer
-                                    else MaterialTheme.colorScheme.surface,
+                            Row(
+                                modifier = Modifier.fillMaxWidth().height(80.dp),
                             ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
+                                Card(
+                                    modifier = Modifier.fillMaxHeight().weight(2f),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    ),
                                 ) {
-                                    if (player.isHost)
+                                    Box(
+                                        modifier = Modifier.fillMaxSize().padding(4.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            text = gameState.playersList[gameState.speakerIndex].name,
+                                            autoSize = TextAutoSize.StepBased(maxFontSize = 32.sp),
+                                        )
+                                    }
+                                }
+                                Box(
+                                    modifier = Modifier.fillMaxHeight().weight(1f),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        modifier = Modifier.fillMaxSize(1f / 2),
+                                        imageVector = HalfHatIcon.OnlineGameSpeakerToListenerRightArrow,
+                                        contentDescription = null,
+                                    )
+                                }
+                                Card(
+                                    modifier = Modifier.fillMaxHeight().weight(2f),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    ),
+                                ) {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize().padding(4.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            text = gameState.playersList[gameState.listenerIndex].name,
+                                            autoSize = TextAutoSize.StepBased(maxFontSize = 32.sp),
+                                        )
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Next round",
+                                fontSize = 24.sp,
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth().height(80.dp),
+                            ) {
+                                Card(
+                                    modifier = Modifier.fillMaxHeight().weight(2f),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    ),
+                                ) {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize().padding(4.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            text = gameState.playersList[gameState.nextSpeakerIndex].name,
+                                            autoSize = TextAutoSize.StepBased(maxFontSize = 32.sp),
+                                        )
+                                    }
+                                }
+                                Box(
+                                    modifier = Modifier.fillMaxHeight().weight(1f),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        modifier = Modifier.fillMaxSize(1f / 2),
+                                        imageVector = HalfHatIcon.OnlineGameSpeakerToListenerRightArrow,
+                                        contentDescription = null,
+                                    )
+                                }
+                                Card(
+                                    modifier = Modifier.fillMaxHeight().weight(2f),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    ),
+                                ) {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize().padding(4.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            text = gameState.playersList[gameState.nextListenerIndex].name,
+                                            autoSize = TextAutoSize.StepBased(maxFontSize = 32.sp),
+                                        )
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "You will be speaking in ${gameState.role.roundsBeforeSpeaking} rounds",
+                                fontSize = 20.sp,
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "You will be listening in ${gameState.role.roundsBeforeListening} rounds",
+                                fontSize = 20.sp,
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "${gameState.restWordsNumber + gameState.wordsInProgressNumber} (-${gameState.wordsInProgressNumber}) of ${gameState.initialWordsNumber} words left in the game",
+                                fontSize = 20.sp,
+                            )
+                        }
+                        is RoundScreenComponent.AdditionalCardChild.PlayersStatistic -> {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                            ) {
+                                Spacer(modifier = Modifier.width(68.dp))
+                                Text(
+                                    modifier = Modifier.weight(1f),
+                                    text = "Player",
+                                    fontWeight = FontWeight.SemiBold,
+                                    autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
+                                )
+                                Text(
+                                    modifier = Modifier.weight(1f),
+                                    text = "Explained",
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.SemiBold,
+                                    autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
+                                )
+                                Text(
+                                    modifier = Modifier.weight(1f),
+                                    text = "Guessed",
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.SemiBold,
+                                    autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
+                                )
+                                Text(
+                                    modifier = Modifier.weight(1f),
+                                    text = "Sum",
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.SemiBold,
+                                    autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
+                                )
+                            }
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outline,
+                            )
+                            for (index in additionalCardChild.leaderboardPermutation) {
+                                val player = gameState.playersList[index]
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Surface(
+                                    shape = CircleShape,
+                                    color =
+                                        if (index == gameState.role.userIndex) MaterialTheme.colorScheme.tertiaryContainer
+                                        else MaterialTheme.colorScheme.surface,
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        if (player.isHost)
+                                            Icon(
+                                                imageVector = HalfHatIcon.OnlineGameHostMarkIcon,
+                                                modifier = Modifier.size(24.dp),
+                                                contentDescription = null,
+                                            )
+                                        else
+                                            Spacer(Modifier.width(24.dp))
+                                        Spacer(Modifier.width(4.dp))
                                         Icon(
-                                            imageVector = HalfHatIcon.OnlineGameHostMarkIcon,
+                                            imageVector = when (player.roundRole) {
+                                                ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Speaker -> HalfHatIcon.OnlineGameSpeakerIcon
+                                                ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Listener -> HalfHatIcon.OnlineGameListenerIcon
+                                                ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Player -> HalfHatIcon.OnlineGamePlayerIcon
+                                            },
                                             modifier = Modifier.size(24.dp),
                                             contentDescription = null,
                                         )
-                                    else
-                                        Spacer(Modifier.width(24.dp))
-                                    Spacer(Modifier.width(4.dp))
-                                    Icon(
-                                        imageVector = when (player.roundRole) {
-                                            ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Speaker -> HalfHatIcon.OnlineGameSpeakerIcon
-                                            ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Listener -> HalfHatIcon.OnlineGameListenerIcon
-                                            ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Player -> HalfHatIcon.OnlineGamePlayerIcon
-                                        },
-                                        modifier = Modifier.size(24.dp),
-                                        contentDescription = null,
-                                    )
-                                    Spacer(modifier = Modifier.width(16.dp))
-                                    Text(
-                                        modifier = Modifier.weight(1f),
-                                        text = player.name,
-                                    )
-                                    val additionalPointsString =
-                                        when (player.roundRole) {
-                                            ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Speaker -> " (+${gameState.wordsInProgressNumber})"
-                                            ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Listener -> " (+${gameState.wordsInProgressNumber})"
-                                            ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Player -> ""
-                                        }
-                                    Text(
-                                        modifier = Modifier.weight(1f),
-                                        text = "${player.scoreExplained}${if (player.roundRole == ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Speaker) additionalPointsString else ""}",
-                                        textAlign = TextAlign.Center,
-                                    )
-                                    Text(
-                                        modifier = Modifier.weight(1f),
-                                        text = "${player.scoreGuessed}${if (player.roundRole == ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Listener) additionalPointsString else ""}",
-                                        textAlign = TextAlign.Center,
-                                    )
-                                    Text(
-                                        modifier = Modifier.weight(1f),
-                                        text = "${player.scoreSum}$additionalPointsString",
-                                        textAlign = TextAlign.Center,
-                                    )
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        Text(
+                                            modifier = Modifier.weight(1f),
+                                            text = player.name,
+                                        )
+                                        val additionalPointsString =
+                                            when (player.roundRole) {
+                                                ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Speaker -> " (+${gameState.wordsInProgressNumber})"
+                                                ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Listener -> " (+${gameState.wordsInProgressNumber})"
+                                                ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Player -> ""
+                                            }
+                                        Text(
+                                            modifier = Modifier.weight(1f),
+                                            text = "${player.scoreExplained}${if (player.roundRole == ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Speaker) additionalPointsString else ""}",
+                                            textAlign = TextAlign.Center,
+                                        )
+                                        Text(
+                                            modifier = Modifier.weight(1f),
+                                            text = "${player.scoreGuessed}${if (player.roundRole == ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Listener) additionalPointsString else ""}",
+                                            textAlign = TextAlign.Center,
+                                        )
+                                        Text(
+                                            modifier = Modifier.weight(1f),
+                                            text = "${player.scoreSum}$additionalPointsString",
+                                            textAlign = TextAlign.Center,
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
-                    RoundScreenComponent.AdditionalCard.WordsStatistic -> {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(8.dp).height(IntrinsicSize.Min),
-                        ) {
-//                            Spacer(modifier = Modifier.width(40.dp))
-                            Text(
-                                modifier = Modifier.weight(1f),
-                                text = "Word",
-                                textAlign = TextAlign.Center,
-                                fontWeight = FontWeight.SemiBold,
-                                autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
-                                maxLines = 1,
-                                softWrap = false,
-                            )
-                            Text(
-                                modifier = Modifier.weight(1f),
-                                text = "Time spent",
-                                textAlign = TextAlign.Center,
-                                fontWeight = FontWeight.SemiBold,
-                                autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
-                                maxLines = 1,
-                                softWrap = false,
-                            )
-                        }
-                        HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outline,
-                        )
-                        val useDark = component.darkTheme.subscribeAsState().value.isDark
-                        for ((word, spentTime, state) in gameState.wordsStatistic) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Surface(
-                                shape = CircleShape,
-                                color = when (state) {
-                                    GameStateMachine.WordStatistic.State.Explained -> if (useDark) Color(0xFFB1D18A) else Color(0xFF4C662B)
-                                    GameStateMachine.WordStatistic.State.InProgress -> if (useDark) Color(0xFFAAC7FF) else Color(0xFF415F91)
-                                    GameStateMachine.WordStatistic.State.Mistake -> if (useDark) Color(0xFFFFB5A0) else Color(0xFF8F4C38)
-                                },
-                                contentColor = when (state) {
-                                    GameStateMachine.WordStatistic.State.Explained -> if (useDark) Color(0xFF1F3701) else Color(0xFFFFFFFF)
-                                    GameStateMachine.WordStatistic.State.InProgress -> if (useDark) Color(0xFF0A305F) else Color(0xFFFFFFFF)
-                                    GameStateMachine.WordStatistic.State.Mistake -> if (useDark) Color(0xFF561F0F) else Color(0xFFFFFFFF)
-                                },
+                        is RoundScreenComponent.AdditionalCardChild.WordsStatistic -> {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(8.dp).height(IntrinsicSize.Min),
                             ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
+//                            Spacer(modifier = Modifier.width(40.dp))
+                                Text(
+                                    modifier = Modifier.weight(1f),
+                                    text = "Word",
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.SemiBold,
+                                    autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
+                                    maxLines = 1,
+                                    softWrap = false,
+                                )
+                                Text(
+                                    modifier = Modifier.weight(1f),
+                                    text = "Time spent",
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.SemiBold,
+                                    autoSize = TextAutoSize.StepBased(maxFontSize = 16.sp),
+                                    maxLines = 1,
+                                    softWrap = false,
+                                )
+                            }
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outline,
+                            )
+                            val useDark = component.darkTheme.subscribeAsState().value.isDark
+                            for ((word, spentTime, state) in additionalCardChild.wordsStatistic) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Surface(
+                                    shape = CircleShape,
+                                    color = when (state) {
+                                        GameStateMachine.WordStatistic.State.Explained -> if (useDark) Color(0xFFB1D18A) else Color(0xFF4C662B)
+                                        GameStateMachine.WordStatistic.State.InProgress -> if (useDark) Color(0xFFAAC7FF) else Color(0xFF415F91)
+                                        GameStateMachine.WordStatistic.State.Mistake -> if (useDark) Color(0xFFFFB5A0) else Color(0xFF8F4C38)
+                                    },
+                                    contentColor = when (state) {
+                                        GameStateMachine.WordStatistic.State.Explained -> if (useDark) Color(0xFF1F3701) else Color(0xFFFFFFFF)
+                                        GameStateMachine.WordStatistic.State.InProgress -> if (useDark) Color(0xFF0A305F) else Color(0xFFFFFFFF)
+                                        GameStateMachine.WordStatistic.State.Mistake -> if (useDark) Color(0xFF561F0F) else Color(0xFFFFFFFF)
+                                    },
                                 ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
 //                                    Icon(
 //                                        imageVector = when (player.roundRole) {
 //                                            ServerApi.OnlineGame.PlayerDescription.Round.RoundRole.Speaker -> HalfHatIcon.OnlineGameSpeakerIcon
@@ -477,242 +467,281 @@ fun RoundScreenAdditionalCardUI(
 //                                        contentDescription = null,
 //                                    )
 //                                    Spacer(modifier = Modifier.width(16.dp))
-                                    Text(
-                                        modifier = Modifier.weight(1f),
-                                        text = word,
-                                        textAlign = TextAlign.Center,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                    )
-                                    val allSeconds = spentTime.inWholeSeconds
-                                    val seconds = allSeconds % 60
-                                    val minutes = allSeconds / 60
-                                    Text(
-                                        modifier = Modifier.weight(1f),
-                                        text = "$minutes:${seconds.toString().padStart(2, '0')}",
-                                        textAlign = TextAlign.Center,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                    )
+                                        Text(
+                                            modifier = Modifier.weight(1f),
+                                            text = word,
+                                            textAlign = TextAlign.Center,
+                                            maxLines = 1,
+                                            softWrap = false,
+                                        )
+                                        val allSeconds = spentTime.inWholeSeconds
+                                        val seconds = allSeconds % 60
+                                        val minutes = allSeconds / 60
+                                        Text(
+                                            modifier = Modifier.weight(1f),
+                                            text = "$minutes:${seconds.toString().padStart(2, '0')}",
+                                            textAlign = TextAlign.Center,
+                                            maxLines = 1,
+                                            softWrap = false,
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
-                    RoundScreenComponent.AdditionalCard.Settings -> {
-                        val gameState = component.gameState.collectAsState().value
-                        val settingsBuilder = gameState.settings
-                        
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.Bottom,
-                        ) {
-                            OutlinedTextField(
-                                modifier = Modifier.weight(1f),
-                                enabled = false,
-                                value = settingsBuilder.preparationTimeSeconds.toString(),
-                                onValueChange = {},
-                                label = {
-                                    Text(
-                                        text = "Preparation",
-                                    )
-                                },
-                                singleLine = true,
-                                textStyle = TextStyle(textAlign = TextAlign.Center),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    errorCursorColor = MaterialTheme.colorScheme.tertiary,
-                                    errorBorderColor = MaterialTheme.colorScheme.tertiary,
-                                    errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
-                                    errorLabelColor = MaterialTheme.colorScheme.tertiary,
-                                    errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
-                                ),
-                            )
-                            
-                            Column {
-                                Icon(
-                                    modifier = commonIconModifier,
-                                    imageVector = HalfHatIcon.OnlineGameSettingsIconBetweenTimes,
-                                    contentDescription = null,
+                        RoundScreenComponent.AdditionalCardChild.Settings -> {
+                            val gameState = component.gameState.collectAsState().value
+                            val settingsBuilder = gameState.settings
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.Bottom,
+                            ) {
+                                OutlinedTextField(
+                                    modifier = Modifier.weight(1f),
+                                    enabled = false,
+                                    value = settingsBuilder.preparationTimeSeconds.toString(),
+                                    onValueChange = {},
+                                    label = {
+                                        Text(
+                                            text = "Preparation",
+                                        )
+                                    },
+                                    singleLine = true,
+                                    textStyle = TextStyle(textAlign = TextAlign.Center),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                        errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                        errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                        errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                                        errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                    ),
                                 )
-                                Spacer(modifier = Modifier.height(16.dp))
-                            }
-                            
-                            OutlinedTextField(
-                                modifier = Modifier.weight(1f),
-                                enabled = false,
-                                value = settingsBuilder.explanationTimeSeconds.toString(),
-                                onValueChange = {},
-                                label = {
-                                    Text(
-                                        text = "Explanation",
+
+                                Column {
+                                    Icon(
+                                        modifier = commonIconModifier,
+                                        imageVector = HalfHatIcon.OnlineGameSettingsIconBetweenTimes,
+                                        contentDescription = null,
                                     )
-                                },
-                                singleLine = true,
-                                textStyle = TextStyle(textAlign = TextAlign.Center),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    errorCursorColor = MaterialTheme.colorScheme.tertiary,
-                                    errorBorderColor = MaterialTheme.colorScheme.tertiary,
-                                    errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
-                                    errorLabelColor = MaterialTheme.colorScheme.tertiary,
-                                    errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
-                                ),
-                            )
-                            
-                            Column {
-                                Icon(
-                                    modifier = commonIconModifier,
-                                    imageVector = HalfHatIcon.OnlineGameSettingsIconBetweenTimes,
-                                    contentDescription = null,
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                }
+
+                                OutlinedTextField(
+                                    modifier = Modifier.weight(1f),
+                                    enabled = false,
+                                    value = settingsBuilder.explanationTimeSeconds.toString(),
+                                    onValueChange = {},
+                                    label = {
+                                        Text(
+                                            text = "Explanation",
+                                        )
+                                    },
+                                    singleLine = true,
+                                    textStyle = TextStyle(textAlign = TextAlign.Center),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                        errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                        errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                        errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                                        errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                    ),
                                 )
-                                Spacer(modifier = Modifier.height(16.dp))
-                            }
-                            
-                            OutlinedTextField(
-                                modifier = Modifier.weight(1f),
-                                enabled = false,
-                                value = settingsBuilder.finalGuessTimeSeconds.toString(),
-                                onValueChange = {},
-                                label = {
-                                    Text(
-                                        text = "Final guess",
+
+                                Column {
+                                    Icon(
+                                        modifier = commonIconModifier,
+                                        imageVector = HalfHatIcon.OnlineGameSettingsIconBetweenTimes,
+                                        contentDescription = null,
                                     )
-                                },
-                                singleLine = true,
-                                textStyle = TextStyle(textAlign = TextAlign.Center),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    errorCursorColor = MaterialTheme.colorScheme.tertiary,
-                                    errorBorderColor = MaterialTheme.colorScheme.tertiary,
-                                    errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
-                                    errorLabelColor = MaterialTheme.colorScheme.tertiary,
-                                    errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
-                                ),
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.Bottom,
-                        ) {
-                            val actualGameEndConditionType = settingsBuilder.gameEndCondition
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                }
+
+                                OutlinedTextField(
+                                    modifier = Modifier.weight(1f),
+                                    enabled = false,
+                                    value = settingsBuilder.finalGuessTimeSeconds.toString(),
+                                    onValueChange = {},
+                                    label = {
+                                        Text(
+                                            text = "Final guess",
+                                        )
+                                    },
+                                    singleLine = true,
+                                    textStyle = TextStyle(textAlign = TextAlign.Center),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                        errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                        errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                        errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                                        errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                    ),
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.Bottom,
+                            ) {
+                                val actualGameEndConditionType = settingsBuilder.gameEndCondition
+                                OutlinedTextField(
+                                    modifier = Modifier.weight(1f),
+                                    enabled = false,
+                                    value = when (actualGameEndConditionType) {
+                                        is GameStateMachine.GameEndCondition.Words -> "Words"
+                                        is GameStateMachine.GameEndCondition.Cycles -> "Cycles"
+                                    },
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    singleLine = true,
+                                    label = {
+                                        Text(
+                                            text = "Game end condition",
+                                        )
+                                    },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
+                                    textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
+                                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                        errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                        errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                        errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                        errorLabelColor = MaterialTheme.colorScheme.tertiary,
+//                                        errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                    ),
+                                )
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
+                                when (val gameEndCondition = settingsBuilder.gameEndCondition) {
+                                    is GameStateMachine.GameEndCondition.Words -> {
+                                        OutlinedTextField(
+                                            modifier = Modifier.weight(1f),
+                                            enabled = false,
+                                            value = gameEndCondition.number.toString(),
+                                            onValueChange = {},
+                                            label = {
+                                                Text(
+                                                    text = "The number of words",
+                                                )
+                                            },
+                                            textStyle = TextStyle(textAlign = TextAlign.Center),
+                                            singleLine = true,
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                                errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                                errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                                errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                                                errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                            ),
+                                        )
+                                    }
+
+                                    is GameStateMachine.GameEndCondition.Cycles -> {
+                                        OutlinedTextField(
+                                            modifier = Modifier.weight(1f),
+                                            enabled = false,
+                                            value = gameEndCondition.number.toString(),
+                                            onValueChange = {},
+                                            label = {
+                                                Text(
+                                                    text = "The number of cycles",
+                                                )
+                                            },
+                                            textStyle = TextStyle(textAlign = TextAlign.Center),
+                                            singleLine = true,
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                errorCursorColor = MaterialTheme.colorScheme.tertiary,
+                                                errorBorderColor = MaterialTheme.colorScheme.tertiary,
+                                                errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
+                                                errorLabelColor = MaterialTheme.colorScheme.tertiary,
+                                                errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
+                                            ),
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
                             OutlinedTextField(
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.fillMaxWidth(),
                                 enabled = false,
-                                value = when (actualGameEndConditionType) {
-                                    is GameStateMachine.GameEndCondition.Words -> "Words"
-                                    is GameStateMachine.GameEndCondition.Cycles -> "Cycles"
+                                value = when (val wordsSource = settingsBuilder.wordsSource) {
+                                    ServerApi.WordsSource.Players -> "Players"
+                                    ServerApi.WordsSource.HostDictionary -> "Host dictionary"
+                                    is ServerApi.WordsSource.ServerDictionary -> when (val description = wordsSource.dictionaryIdWithDescription) {
+                                        is DictionaryId.WithDescription.Builtin -> description.name
+                                    }
                                 },
                                 onValueChange = {},
                                 readOnly = true,
                                 singleLine = true,
                                 label = {
                                     Text(
-                                        text = "Game end condition",
+                                        text = "Words source",
                                     )
                                 },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
                                 textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
-                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
-                                    errorCursorColor = MaterialTheme.colorScheme.tertiary,
-                                    errorBorderColor = MaterialTheme.colorScheme.tertiary,
-                                    errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
-                                    errorLabelColor = MaterialTheme.colorScheme.tertiary,
-//                                        errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
-                                ),
                             )
-                            
-                            Spacer(modifier = Modifier.width(8.dp))
-                            
-                            when (val gameEndCondition = settingsBuilder.gameEndCondition) {
-                                is GameStateMachine.GameEndCondition.Words -> {
-                                    OutlinedTextField(
-                                        modifier = Modifier.weight(1f),
-                                        enabled = false,
-                                        value = gameEndCondition.number.toString(),
-                                        onValueChange = {},
-                                        label = {
-                                            Text(
-                                                text = "The number of words",
-                                            )
-                                        },
-                                        textStyle = TextStyle(textAlign = TextAlign.Center),
-                                        singleLine = true,
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            errorCursorColor = MaterialTheme.colorScheme.tertiary,
-                                            errorBorderColor = MaterialTheme.colorScheme.tertiary,
-                                            errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
-                                            errorLabelColor = MaterialTheme.colorScheme.tertiary,
-                                            errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
-                                        ),
-                                    )
-                                }
-                                
-                                is GameStateMachine.GameEndCondition.Cycles -> {
-                                    OutlinedTextField(
-                                        modifier = Modifier.weight(1f),
-                                        enabled = false,
-                                        value = gameEndCondition.number.toString(),
-                                        onValueChange = {},
-                                        label = {
-                                            Text(
-                                                text = "The number of cycles",
-                                            )
-                                        },
-                                        textStyle = TextStyle(textAlign = TextAlign.Center),
-                                        singleLine = true,
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            errorCursorColor = MaterialTheme.colorScheme.tertiary,
-                                            errorBorderColor = MaterialTheme.colorScheme.tertiary,
-                                            errorTrailingIconColor = MaterialTheme.colorScheme.tertiary,
-                                            errorLabelColor = MaterialTheme.colorScheme.tertiary,
-                                            errorSupportingTextColor = MaterialTheme.colorScheme.tertiary,
-                                        ),
-                                    )
-                                }
-                            }
-                        }
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        OutlinedTextField(
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = false,
-                            value = when (val wordsSource = settingsBuilder.wordsSource) {
-                                ServerApi.WordsSource.Players -> "Players"
-                                ServerApi.WordsSource.HostDictionary -> "Host dictionary"
-                                is ServerApi.WordsSource.ServerDictionary -> when (val description = wordsSource.dictionaryIdWithDescription) {
-                                    is DictionaryId.WithDescription.Builtin -> description.name
-                                }
-                            },
-                            onValueChange = {},
-                            readOnly = true,
-                            singleLine = true,
-                            label = {
-                                Text(
-                                    text = "Words source",
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Checkbox(
+                                    enabled = false,
+                                    checked = settingsBuilder.strictMode,
+                                    onCheckedChange = {},
+                                    colors = CheckboxDefaults.colors()
                                 )
-                            },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = false) },
-                            textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
-                        )
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Checkbox(
-                                enabled = false,
-                                checked = settingsBuilder.strictMode,
-                                onCheckedChange = {},
-                                colors = CheckboxDefaults.colors()
-                            )
-                            
-                            Text(
-                                text = "Strict mode",
-                                fontSize = 20.sp,
-                            )
+
+                                Text(
+                                    text = "Strict mode",
+                                    fontSize = 20.sp,
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Checkbox(
+                                    enabled = false,
+                                    checked = settingsBuilder.showLeaderboardPermutation,
+                                    onCheckedChange = {},
+                                    colors = CheckboxDefaults.colors()
+                                )
+
+                                Text(
+                                    text = "Show leaderboard",
+                                    fontSize = 20.sp,
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Checkbox(
+                                    enabled = false,
+                                    checked = settingsBuilder.showWordsStatistic,
+                                    onCheckedChange = {},
+                                    colors = CheckboxDefaults.colors()
+                                )
+
+                                Text(
+                                    text = "Show words statistics",
+                                    fontSize = 20.sp,
+                                )
+                            }
                         }
                     }
                 }
