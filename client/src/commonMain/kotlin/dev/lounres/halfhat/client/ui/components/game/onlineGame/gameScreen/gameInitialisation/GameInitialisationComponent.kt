@@ -1,4 +1,4 @@
-package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomScreen
+package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.gameInitialisation
 
 import dev.lounres.halfhat.api.onlineGame.DictionaryId
 import dev.lounres.halfhat.api.onlineGame.ServerApi
@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 
-public interface RoomScreenComponent {
+public interface GameInitialisationComponent {
     public val onExitOnlineGame: () -> Unit
     public val onCopyOnlineGameKey: () -> Unit
     public val onCopyOnlineGameLink: () -> Unit

@@ -113,9 +113,27 @@ public class RealOnlineGameComponent(
                                     val newState = signal.state
                                     val previousState = gameStateFlow.getAndUpdate { newState }
                                     if (volumeOn.value) when (newState) {
+                                        is ServerApi.OnlineGame.State.RoomPlayersGathering ->
+                                            when (previousState) {
+                                                null -> {}
+                                                is ServerApi.OnlineGame.State.RoomPlayersGathering -> {}
+                                                is ServerApi.OnlineGame.State.GameInitialisation -> {}
+                                                is ServerApi.OnlineGame.State.PlayersWordsCollection -> {}
+                                                is ServerApi.OnlineGame.State.Round.Waiting -> {}
+                                                is ServerApi.OnlineGame.State.Round.Preparation ->
+                                                    launch { settings.playFinalGuessEnd() }
+                                                is ServerApi.OnlineGame.State.Round.Explanation ->
+                                                    launch { settings.playFinalGuessEnd() }
+                                                is ServerApi.OnlineGame.State.Round.LastGuess ->
+                                                    if (previousState.millisecondsLeft > 0u)
+                                                        launch { settings.playFinalGuessEnd() }
+                                                is ServerApi.OnlineGame.State.Round.Editing -> {}
+                                                is ServerApi.OnlineGame.State.GameResults -> {}
+                                            }
                                         is ServerApi.OnlineGame.State.GameInitialisation ->
                                             when (previousState) {
                                                 null -> {}
+                                                is ServerApi.OnlineGame.State.RoomPlayersGathering -> {}
                                                 is ServerApi.OnlineGame.State.GameInitialisation -> {}
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection -> {}
                                                 is ServerApi.OnlineGame.State.Round.Waiting -> {}
@@ -132,6 +150,7 @@ public class RealOnlineGameComponent(
                                         is ServerApi.OnlineGame.State.PlayersWordsCollection ->
                                             when (previousState) {
                                                 null -> {}
+                                                is ServerApi.OnlineGame.State.RoomPlayersGathering -> {}
                                                 is ServerApi.OnlineGame.State.GameInitialisation -> {}
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection -> {}
                                                 is ServerApi.OnlineGame.State.Round.Waiting -> {}
@@ -148,6 +167,7 @@ public class RealOnlineGameComponent(
                                         is ServerApi.OnlineGame.State.Round.Waiting ->
                                             when (previousState) {
                                                 null -> {}
+                                                is ServerApi.OnlineGame.State.RoomPlayersGathering -> {}
                                                 is ServerApi.OnlineGame.State.GameInitialisation -> {}
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection -> {}
                                                 is ServerApi.OnlineGame.State.Round.Waiting -> {}
@@ -164,6 +184,8 @@ public class RealOnlineGameComponent(
                                         is ServerApi.OnlineGame.State.Round.Preparation ->
                                             when (previousState) {
                                                 null -> {}
+                                                is ServerApi.OnlineGame.State.RoomPlayersGathering ->
+                                                    launch { settings.playPreparationCountdown() }
                                                 is ServerApi.OnlineGame.State.GameInitialisation ->
                                                     launch { settings.playPreparationCountdown() }
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection ->
@@ -185,6 +207,8 @@ public class RealOnlineGameComponent(
                                         is ServerApi.OnlineGame.State.Round.Explanation ->
                                             when (previousState) {
                                                 null -> {}
+                                                is ServerApi.OnlineGame.State.RoomPlayersGathering ->
+                                                    launch { settings.playExplanationStart() }
                                                 is ServerApi.OnlineGame.State.GameInitialisation ->
                                                     launch { settings.playExplanationStart() }
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection ->
@@ -206,6 +230,11 @@ public class RealOnlineGameComponent(
                                         is ServerApi.OnlineGame.State.Round.LastGuess ->
                                             when (previousState) {
                                                 null -> {}
+                                                is ServerApi.OnlineGame.State.RoomPlayersGathering ->
+                                                    if (newState.millisecondsLeft > 0u)
+                                                        launch { settings.playFinalGuessStart() }
+                                                    else
+                                                        launch { settings.playFinalGuessEnd() }
                                                 is ServerApi.OnlineGame.State.GameInitialisation ->
                                                     if (newState.millisecondsLeft > 0u)
                                                         launch { settings.playFinalGuessStart() }
@@ -252,6 +281,7 @@ public class RealOnlineGameComponent(
                                         is ServerApi.OnlineGame.State.Round.Editing ->
                                             when (previousState) {
                                                 null -> {}
+                                                is ServerApi.OnlineGame.State.RoomPlayersGathering -> {}
                                                 is ServerApi.OnlineGame.State.GameInitialisation -> {}
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection -> {}
                                                 is ServerApi.OnlineGame.State.Round.Waiting -> {}
@@ -268,6 +298,7 @@ public class RealOnlineGameComponent(
                                         is ServerApi.OnlineGame.State.GameResults ->
                                             when (previousState) {
                                                 null -> {}
+                                                is ServerApi.OnlineGame.State.RoomPlayersGathering -> {}
                                                 is ServerApi.OnlineGame.State.GameInitialisation -> {}
                                                 is ServerApi.OnlineGame.State.PlayersWordsCollection -> {}
                                                 is ServerApi.OnlineGame.State.Round.Waiting -> {}

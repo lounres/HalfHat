@@ -1,4 +1,4 @@
-package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomScreen
+package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.gameInitialisation
 
 import dev.lounres.halfhat.api.onlineGame.ClientApi
 import dev.lounres.halfhat.api.onlineGame.DictionaryId
@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 
-public class RealRoomScreenComponent(
+public class RealGameInitialisationComponent(
     override val gameState: StateFlow<ServerApi.OnlineGame.State.GameInitialisation>,
     
     override val onExitOnlineGame: () -> Unit,
@@ -23,7 +23,7 @@ public class RealRoomScreenComponent(
     override val onStartGame: () -> Unit,
     
     onApplySettings: (ClientApi.SettingsBuilderPatch) -> Unit,
-) : RoomScreenComponent {
+) : GameInitialisationComponent {
     override val onApplySettings: () -> Unit = {
         scope {
             onApplySettings(
@@ -37,9 +37,9 @@ public class RealRoomScreenComponent(
                     gameEndConditionType = gameEndConditionType.value,
                     wordsSource = when (val wordsSource = wordsSource.value) {
                         null -> null
-                        RoomScreenComponent.WordsSource.Players -> ClientApi.WordsSource.Players
-                        RoomScreenComponent.WordsSource.HostDictionary -> ClientApi.WordsSource.HostDictionary(hostDictionary.value ?: return@scope)
-                        is RoomScreenComponent.WordsSource.ServerDictionary -> ClientApi.WordsSource.ServerDictionary(wordsSource.description.id)
+                        GameInitialisationComponent.WordsSource.Players -> ClientApi.WordsSource.Players
+                        GameInitialisationComponent.WordsSource.HostDictionary -> ClientApi.WordsSource.HostDictionary(hostDictionary.value ?: return@scope)
+                        is GameInitialisationComponent.WordsSource.ServerDictionary -> ClientApi.WordsSource.ServerDictionary(wordsSource.description.id)
                     },
                     showWordsStatistic = showWordsStatistic.value,
                     showLeaderboardPermutation = showLeaderboardPermutation.value,
@@ -67,7 +67,7 @@ public class RealRoomScreenComponent(
     override val cachedEndConditionWordsNumber: MutableStateFlow<UInt?> = MutableStateFlow(null)
     override val cachedEndConditionCyclesNumber: MutableStateFlow<UInt?> = MutableStateFlow(null)
     override val gameEndConditionType: MutableStateFlow<GameStateMachine.GameEndCondition.Type?> = MutableStateFlow(null)
-    override val wordsSource: MutableStateFlow<RoomScreenComponent.WordsSource?> = MutableStateFlow(null)
+    override val wordsSource: MutableStateFlow<GameInitialisationComponent.WordsSource?> = MutableStateFlow(null)
     override val hostDictionary: MutableStateFlow<KoneList<String>?> = MutableStateFlow(null)
     override val showWordsStatistic: MutableStateFlow<Boolean?> = MutableStateFlow(null)
     override val showLeaderboardPermutation: MutableStateFlow<Boolean?> = MutableStateFlow(null)

@@ -166,6 +166,9 @@ public suspend fun RealOnlineGamePageComponent(
                             onApplySettings = {
                                 onlineGameComponent.sendSignal(ClientApi.Signal.OnlineGame.UpdateSettings(it))
                             },
+                            onFixRoom = {
+                                onlineGameComponent.sendSignal(ClientApi.Signal.OnlineGame.FixRoom)
+                            },
                             onStartGame = {
                                 onlineGameComponent.sendSignal(ClientApi.Signal.OnlineGame.InitializeGame)
                             },

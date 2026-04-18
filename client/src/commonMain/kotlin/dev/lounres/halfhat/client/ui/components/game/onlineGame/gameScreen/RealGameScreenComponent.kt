@@ -9,9 +9,10 @@ import dev.lounres.halfhat.client.components.navigation.ChildrenSlot
 import dev.lounres.halfhat.client.components.navigation.uiChildrenDefaultSlotNode
 import dev.lounres.halfhat.client.consts.OnlineGameSettings
 import dev.lounres.halfhat.client.storage.settings.settings
+import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.gameInitialisation.RealGameInitialisationComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.gameResults.RealGameResultsComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.loading.RealLoadingComponent
-import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomScreen.RealRoomScreenComponent
+import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomGathering.RealRoomGatheringComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.RealRoundScreenComponent
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.wordsCollection.RealWordsCollectionComponent
 import dev.lounres.halfhat.client.ui.theming.darkTheme
@@ -32,7 +33,10 @@ public class RealGameScreenComponent(
     
     public sealed interface Configuration {
         public data object Loading : Configuration
-        public data class RoomScreen(
+        public data class RoomGathering(
+            val stateFlow: MutableStateFlow<ServerApi.OnlineGame.State.RoomPlayersGathering>,
+        ) : Configuration
+        public data class GameInitialisation(
             val stateFlow: MutableStateFlow<ServerApi.OnlineGame.State.GameInitialisation>,
         ) : Configuration
         public data class PlayersWordsCollection(
@@ -54,6 +58,7 @@ public suspend fun RealGameScreenComponent(
     availableDictionariesFlow: StateFlow<KoneList<DictionaryId.WithDescription>?>,
     onLoadServerDictionaries: () -> Unit,
     onApplySettings: (ClientApi.SettingsBuilderPatch) -> Unit,
+    onFixRoom: () -> Unit,
     onStartGame: () -> Unit,
     onFinishGame: () -> Unit,
     onSubmitWords: (KoneList<String>) -> Unit,
@@ -69,7 +74,8 @@ public suspend fun RealGameScreenComponent(
         componentContext.uiChildrenDefaultSlotNode(
             initialConfiguration = when(val gameState = gameStateFlow.value) {
                 null -> RealGameScreenComponent.Configuration.Loading
-                is ServerApi.OnlineGame.State.GameInitialisation -> RealGameScreenComponent.Configuration.RoomScreen(MutableStateFlow(gameState))
+                is ServerApi.OnlineGame.State.RoomPlayersGathering -> RealGameScreenComponent.Configuration.RoomGathering(MutableStateFlow(gameState))
+                is ServerApi.OnlineGame.State.GameInitialisation -> RealGameScreenComponent.Configuration.GameInitialisation(MutableStateFlow(gameState))
                 is ServerApi.OnlineGame.State.PlayersWordsCollection -> RealGameScreenComponent.Configuration.PlayersWordsCollection(MutableStateFlow(gameState))
                 is ServerApi.OnlineGame.State.Round -> RealGameScreenComponent.Configuration.RoundScreen(MutableStateFlow(gameState))
                 is ServerApi.OnlineGame.State.GameResults -> RealGameScreenComponent.Configuration.GameResults(MutableStateFlow(gameState))
@@ -82,11 +88,35 @@ public suspend fun RealGameScreenComponent(
                             onExitOnlineGame = onExitOnlineGame,
                         )
                     )
-                is RealGameScreenComponent.Configuration.RoomScreen ->
-                    GameScreenComponent.Child.RoomScreen(
-                        RealRoomScreenComponent(
+                is RealGameScreenComponent.Configuration.RoomGathering ->
+                    GameScreenComponent.Child.RoomGathering(
+                        RealRoomGatheringComponent(
                             gameState = configuration.stateFlow,
-                            
+
+                            onExitOnlineGame = onExitOnlineGame,
+                            onCopyOnlineGameKey = {
+                                coroutineScope.launch {
+                                    val gameState = gameStateFlow.value
+                                    if (gameState != null) copyToClipboard(gameState.roomName)
+                                }
+                            },
+                            onCopyOnlineGameLink = {
+                                coroutineScope.launch {
+                                    val gameState = gameStateFlow.value
+                                    if (gameState != null) {
+                                        copyToClipboard("${OnlineGameSettings.linkBase}game/online/${UrlEncoderUtil.encode(gameState.roomName)}")
+                                    }
+                                }
+                            },
+
+                            onFixRoom = onFixRoom,
+                        )
+                    )
+                is RealGameScreenComponent.Configuration.GameInitialisation ->
+                    GameScreenComponent.Child.GameInitialisation(
+                        RealGameInitialisationComponent(
+                            gameState = configuration.stateFlow,
+
                             onExitOnlineGame = onExitOnlineGame,
                             onCopyOnlineGameKey = {
                                 coroutineScope.launch {
@@ -105,9 +135,9 @@ public suspend fun RealGameScreenComponent(
 
                             availableDictionaries = availableDictionariesFlow,
                             onLoadServerDictionaries = onLoadServerDictionaries,
-                            
+
                             onStartGame = onStartGame,
-                            
+
                             onApplySettings = {
                                 onApplySettings(it)
                             },
@@ -191,13 +221,23 @@ public suspend fun RealGameScreenComponent(
             childSlot.navigate { currentConfiguration ->
                 when (newState) {
                     null -> RealGameScreenComponent.Configuration.Loading
-                    is ServerApi.OnlineGame.State.GameInitialisation ->
+                    is ServerApi.OnlineGame.State.RoomPlayersGathering ->
                         when (currentConfiguration) {
-                            is RealGameScreenComponent.Configuration.RoomScreen ->
+                            is RealGameScreenComponent.Configuration.RoomGathering ->
                                 currentConfiguration.apply {
                                     stateFlow.value = newState
                                 }
-                            else -> RealGameScreenComponent.Configuration.RoomScreen(
+                            else -> RealGameScreenComponent.Configuration.RoomGathering(
+                                stateFlow = MutableStateFlow(newState),
+                            )
+                        }
+                    is ServerApi.OnlineGame.State.GameInitialisation ->
+                        when (currentConfiguration) {
+                            is RealGameScreenComponent.Configuration.GameInitialisation ->
+                                currentConfiguration.apply {
+                                    stateFlow.value = newState
+                                }
+                            else -> RealGameScreenComponent.Configuration.GameInitialisation(
                                 stateFlow = MutableStateFlow(newState),
                             )
                         }

@@ -84,13 +84,11 @@ public suspend fun RealGameScreenComponent(
     val intermediateNavigation = SlotNavigationHub<RealGameScreenComponent.Configuration>()
     
     // TODO: Move the logic to logic package
-    val gameStateMachine = AsynchronousGameStateMachine.Initialization<String, DeviceGameWordsProviderID, NoDeviceGameWordsProviderReason, Nothing?, Nothing, Nothing?>(
-        metadata = null,
+    val gameStateMachine = AsynchronousGameStateMachine.Initialization<String, DeviceGameWordsProviderID, NoDeviceGameWordsProviderReason>(
         playersList = playersList,
         settingsBuilder = settingsBuilder,
         coroutineScope = coroutineScope,
         random = Random, // TODO: Move the variable upward
-        checkMetadataUpdate = { _, _ -> CheckResult.Failure(null) }
     ) { previousState, transition, newState ->
         logger.debug(
             source = "dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
@@ -106,116 +104,116 @@ public suspend fun RealGameScreenComponent(
             is GameStateMachine.State.GameInitialisation ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation -> {}
-                    is GameStateMachine.State.PlayersWordsCollection -> {}
-                    is GameStateMachine.State.RoundWaiting -> {}
-                    is GameStateMachine.State.RoundPreparation ->
+                    is GameStateMachine.State.GameInitialised.PlayersWordsCollection -> {}
+                    is GameStateMachine.State.GameInitialised.Round.RoundWaiting -> {}
+                    is GameStateMachine.State.GameInitialised.Round.RoundPreparation ->
                         coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundExplanation ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundExplanation ->
                         coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundLastGuess ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundLastGuess ->
                         if (previousState.millisecondsLeft > 0u)
                             coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundEditing -> {}
-                    is GameStateMachine.State.GameResults -> {}
+                    is GameStateMachine.State.GameInitialised.Round.RoundEditing -> {}
+                    is GameStateMachine.State.GameInitialised.GameResults -> {}
                 }
-            is GameStateMachine.State.PlayersWordsCollection ->
+            is GameStateMachine.State.GameInitialised.PlayersWordsCollection ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation -> {}
-                    is GameStateMachine.State.PlayersWordsCollection -> {}
-                    is GameStateMachine.State.RoundWaiting -> {}
-                    is GameStateMachine.State.RoundPreparation ->
+                    is GameStateMachine.State.GameInitialised.PlayersWordsCollection -> {}
+                    is GameStateMachine.State.GameInitialised.Round.RoundWaiting -> {}
+                    is GameStateMachine.State.GameInitialised.Round.RoundPreparation ->
                         coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundExplanation ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundExplanation ->
                         coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundLastGuess ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundLastGuess ->
                         if (previousState.millisecondsLeft > 0u)
                             coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundEditing -> {}
-                    is GameStateMachine.State.GameResults -> {}
+                    is GameStateMachine.State.GameInitialised.Round.RoundEditing -> {}
+                    is GameStateMachine.State.GameInitialised.GameResults -> {}
                 }
-            is GameStateMachine.State.RoundWaiting ->
+            is GameStateMachine.State.GameInitialised.Round.RoundWaiting ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation -> {}
-                    is GameStateMachine.State.PlayersWordsCollection -> {}
-                    is GameStateMachine.State.RoundWaiting -> {}
-                    is GameStateMachine.State.RoundPreparation ->
+                    is GameStateMachine.State.GameInitialised.PlayersWordsCollection -> {}
+                    is GameStateMachine.State.GameInitialised.Round.RoundWaiting -> {}
+                    is GameStateMachine.State.GameInitialised.Round.RoundPreparation ->
                         coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundExplanation ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundExplanation ->
                         coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundLastGuess ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundLastGuess ->
                         if (previousState.millisecondsLeft > 0u)
                             coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundEditing -> {}
-                    is GameStateMachine.State.GameResults -> {}
+                    is GameStateMachine.State.GameInitialised.Round.RoundEditing -> {}
+                    is GameStateMachine.State.GameInitialised.GameResults -> {}
                 }
-            is GameStateMachine.State.RoundPreparation ->
+            is GameStateMachine.State.GameInitialised.Round.RoundPreparation ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation ->
                         coroutineScope.launch { settings.playPreparationCountdown() }
-                    is GameStateMachine.State.PlayersWordsCollection ->
+                    is GameStateMachine.State.GameInitialised.PlayersWordsCollection ->
                         coroutineScope.launch { settings.playPreparationCountdown() }
-                    is GameStateMachine.State.RoundWaiting ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundWaiting ->
                         coroutineScope.launch { settings.playPreparationCountdown() }
-                    is GameStateMachine.State.RoundPreparation ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundPreparation ->
                         if (previousState.roundNumber != newState.roundNumber || (previousState.millisecondsLeft / 1000u) != (newState.millisecondsLeft / 1000u))
                             coroutineScope.launch { settings.playPreparationCountdown() }
-                    is GameStateMachine.State.RoundExplanation ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundExplanation ->
                         coroutineScope.launch { settings.playPreparationCountdown() }
-                    is GameStateMachine.State.RoundLastGuess ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundLastGuess ->
                         coroutineScope.launch { settings.playPreparationCountdown() }
-                    is GameStateMachine.State.RoundEditing ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundEditing ->
                         coroutineScope.launch { settings.playPreparationCountdown() }
-                    is GameStateMachine.State.GameResults ->
+                    is GameStateMachine.State.GameInitialised.GameResults ->
                         coroutineScope.launch { settings.playPreparationCountdown() }
                 }
-            is GameStateMachine.State.RoundExplanation ->
+            is GameStateMachine.State.GameInitialised.Round.RoundExplanation ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation ->
                         coroutineScope.launch { settings.playExplanationStart() }
-                    is GameStateMachine.State.PlayersWordsCollection ->
+                    is GameStateMachine.State.GameInitialised.PlayersWordsCollection ->
                         coroutineScope.launch { settings.playExplanationStart() }
-                    is GameStateMachine.State.RoundWaiting ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundWaiting ->
                         coroutineScope.launch { settings.playExplanationStart() }
-                    is GameStateMachine.State.RoundPreparation ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundPreparation ->
                         coroutineScope.launch { settings.playExplanationStart() }
-                    is GameStateMachine.State.RoundExplanation ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundExplanation ->
                         if (previousState.roundNumber != newState.roundNumber)
                             coroutineScope.launch { settings.playExplanationStart() }
-                    is GameStateMachine.State.RoundLastGuess ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundLastGuess ->
                         coroutineScope.launch { settings.playExplanationStart() }
-                    is GameStateMachine.State.RoundEditing ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundEditing ->
                         coroutineScope.launch { settings.playExplanationStart() }
-                    is GameStateMachine.State.GameResults ->
+                    is GameStateMachine.State.GameInitialised.GameResults ->
                         coroutineScope.launch { settings.playExplanationStart() }
                 }
-            is GameStateMachine.State.RoundLastGuess ->
+            is GameStateMachine.State.GameInitialised.Round.RoundLastGuess ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation ->
                         if (newState.millisecondsLeft > 0u)
                             coroutineScope.launch { settings.playFinalGuessStart() }
                         else
                             coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.PlayersWordsCollection ->
+                    is GameStateMachine.State.GameInitialised.PlayersWordsCollection ->
                         if (newState.millisecondsLeft > 0u)
                             coroutineScope.launch { settings.playFinalGuessStart() }
                         else
                             coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundWaiting ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundWaiting ->
                         if (newState.millisecondsLeft > 0u)
                             coroutineScope.launch { settings.playFinalGuessStart() }
                         else
                             coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundPreparation ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundPreparation ->
                         if (newState.millisecondsLeft > 0u)
                             coroutineScope.launch { settings.playFinalGuessStart() }
                         else
                             coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundExplanation ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundExplanation ->
                         if (newState.millisecondsLeft > 0u)
                             coroutineScope.launch { settings.playFinalGuessStart() }
                         else
                             coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundLastGuess ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundLastGuess ->
                         if (newState.millisecondsLeft == 0u) {
                             if (newState.roundNumber != previousState.roundNumber)
                                 coroutineScope.launch { settings.playFinalGuessEnd() }
@@ -223,55 +221,55 @@ public suspend fun RealGameScreenComponent(
                             if (newState.roundNumber != previousState.roundNumber)
                                 coroutineScope.launch { settings.playFinalGuessStart() }
                         }
-                    is GameStateMachine.State.RoundEditing ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundEditing ->
                         if (newState.millisecondsLeft > 0u)
                             coroutineScope.launch { settings.playFinalGuessStart() }
                         else
                             coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.GameResults ->
+                    is GameStateMachine.State.GameInitialised.GameResults ->
                         if (newState.millisecondsLeft > 0u)
                             coroutineScope.launch { settings.playFinalGuessStart() }
                         else
                             coroutineScope.launch { settings.playFinalGuessEnd() }
                 }
-            is GameStateMachine.State.RoundEditing ->
+            is GameStateMachine.State.GameInitialised.Round.RoundEditing ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation -> {}
-                    is GameStateMachine.State.PlayersWordsCollection -> {}
-                    is GameStateMachine.State.RoundWaiting -> {}
-                    is GameStateMachine.State.RoundPreparation ->
+                    is GameStateMachine.State.GameInitialised.PlayersWordsCollection -> {}
+                    is GameStateMachine.State.GameInitialised.Round.RoundWaiting -> {}
+                    is GameStateMachine.State.GameInitialised.Round.RoundPreparation ->
                         coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundExplanation ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundExplanation ->
                         coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundLastGuess ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundLastGuess ->
                         if (previousState.millisecondsLeft > 0u)
                             coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundEditing -> {}
-                    is GameStateMachine.State.GameResults -> {}
+                    is GameStateMachine.State.GameInitialised.Round.RoundEditing -> {}
+                    is GameStateMachine.State.GameInitialised.GameResults -> {}
                 }
-            is GameStateMachine.State.GameResults ->
+            is GameStateMachine.State.GameInitialised.GameResults ->
                 when (previousState) {
                     is GameStateMachine.State.GameInitialisation -> {}
-                    is GameStateMachine.State.PlayersWordsCollection -> {}
-                    is GameStateMachine.State.RoundWaiting -> {}
-                    is GameStateMachine.State.RoundPreparation ->
+                    is GameStateMachine.State.GameInitialised.PlayersWordsCollection -> {}
+                    is GameStateMachine.State.GameInitialised.Round.RoundWaiting -> {}
+                    is GameStateMachine.State.GameInitialised.Round.RoundPreparation ->
                         coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundExplanation ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundExplanation ->
                         coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundLastGuess ->
+                    is GameStateMachine.State.GameInitialised.Round.RoundLastGuess ->
                         if (previousState.millisecondsLeft > 0u)
                             coroutineScope.launch { settings.playFinalGuessEnd() }
-                    is GameStateMachine.State.RoundEditing -> {}
-                    is GameStateMachine.State.GameResults -> {}
+                    is GameStateMachine.State.GameInitialised.Round.RoundEditing -> {}
+                    is GameStateMachine.State.GameInitialised.GameResults -> {}
                 }
         }
         intermediateNavigation.navigate { currentConfiguration ->
             when (newState) {
                 is GameStateMachine.State.GameInitialisation ->
                     RealGameScreenComponent.Configuration.GameInitialisation
-                is GameStateMachine.State.PlayersWordsCollection ->
+                is GameStateMachine.State.GameInitialised.PlayersWordsCollection ->
                     RealGameScreenComponent.Configuration.PlayersWordsCollection
-                is GameStateMachine.State.RoundWaiting ->
+                is GameStateMachine.State.GameInitialised.Round.RoundWaiting ->
                     if (currentConfiguration is RealGameScreenComponent.Configuration.RoundWaiting)
                         currentConfiguration.apply {
                             speaker.value = newState.speaker
@@ -283,7 +281,7 @@ public suspend fun RealGameScreenComponent(
                             listener = MutableStateFlow(newState.listener),
                         )
                 
-                is GameStateMachine.State.RoundPreparation ->
+                is GameStateMachine.State.GameInitialised.Round.RoundPreparation ->
                     if (currentConfiguration is RealGameScreenComponent.Configuration.RoundPreparation)
                         currentConfiguration.apply {
                             speaker.value = newState.speaker
@@ -297,7 +295,7 @@ public suspend fun RealGameScreenComponent(
                             millisecondsLeft = MutableStateFlow(newState.millisecondsLeft),
                         )
                 
-                is GameStateMachine.State.RoundExplanation ->
+                is GameStateMachine.State.GameInitialised.Round.RoundExplanation ->
                     if (currentConfiguration is RealGameScreenComponent.Configuration.RoundExplanation)
                         currentConfiguration.apply {
                             speaker.value = newState.speaker
@@ -313,7 +311,7 @@ public suspend fun RealGameScreenComponent(
                             word = MutableStateFlow(newState.currentWord),
                         )
                 
-                is GameStateMachine.State.RoundLastGuess ->
+                is GameStateMachine.State.GameInitialised.Round.RoundLastGuess ->
                     if (currentConfiguration is RealGameScreenComponent.Configuration.RoundLastGuess)
                         currentConfiguration.apply {
                             speaker.value = newState.speaker
@@ -329,7 +327,7 @@ public suspend fun RealGameScreenComponent(
                             word = MutableStateFlow(newState.currentWord),
                         )
                 
-                is GameStateMachine.State.RoundEditing ->
+                is GameStateMachine.State.GameInitialised.Round.RoundEditing ->
                     if (currentConfiguration is RealGameScreenComponent.Configuration.RoundEditing)
                         currentConfiguration.apply {
                             wordsToEdit.value = newState.currentExplanationResults
@@ -339,7 +337,7 @@ public suspend fun RealGameScreenComponent(
                             wordsToEdit = MutableStateFlow(newState.currentExplanationResults),
                         )
                 
-                is GameStateMachine.State.GameResults ->
+                is GameStateMachine.State.GameInitialised.GameResults ->
                     if (currentConfiguration is RealGameScreenComponent.Configuration.GameResults)
                         currentConfiguration.apply {
                             results.value = newState.personalResults
@@ -372,40 +370,40 @@ public suspend fun RealGameScreenComponent(
         componentContext.uiChildrenDefaultSlotNode(
             loggerSource = "dev.lounres.halfhat.client.ui.components.game.deviceGame.gameScreen.RealGameScreenComponent",
             initialConfiguration = when(val state = gameStateMachine.state) {
-                is GameStateMachine.State.GameInitialisation<*, *, *> ->
+                is GameStateMachine.State.GameInitialisation ->
                     RealGameScreenComponent.Configuration.GameInitialisation
-                is GameStateMachine.State.PlayersWordsCollection<*, *, *> ->
+                is GameStateMachine.State.GameInitialised.PlayersWordsCollection ->
                     RealGameScreenComponent.Configuration.PlayersWordsCollection
-                is GameStateMachine.State.RoundWaiting<String, *, *> ->
+                is GameStateMachine.State.GameInitialised.Round.RoundWaiting ->
                     RealGameScreenComponent.Configuration.RoundWaiting(
                         speaker = MutableStateFlow(state.speaker),
                         listener = MutableStateFlow(state.listener),
                     )
-                is GameStateMachine.State.RoundPreparation<String, *, *> ->
+                is GameStateMachine.State.GameInitialised.Round.RoundPreparation ->
                     RealGameScreenComponent.Configuration.RoundPreparation(
                         speaker = MutableStateFlow(state.speaker),
                         listener = MutableStateFlow(state.listener),
                         millisecondsLeft = MutableStateFlow(state.millisecondsLeft),
                     )
-                is GameStateMachine.State.RoundExplanation<String, *, *> ->
+                is GameStateMachine.State.GameInitialised.Round.RoundExplanation ->
                     RealGameScreenComponent.Configuration.RoundExplanation(
                         speaker = MutableStateFlow(state.speaker),
                         listener = MutableStateFlow(state.listener),
                         millisecondsLeft = MutableStateFlow(state.millisecondsLeft),
                         word = MutableStateFlow(state.currentWord),
                     )
-                is GameStateMachine.State.RoundLastGuess<String, *, *> ->
+                is GameStateMachine.State.GameInitialised.Round.RoundLastGuess ->
                     RealGameScreenComponent.Configuration.RoundLastGuess(
                         speaker = MutableStateFlow(state.speaker),
                         listener = MutableStateFlow(state.listener),
                         millisecondsLeft = MutableStateFlow(state.millisecondsLeft),
                         word = MutableStateFlow(state.currentWord),
                     )
-                is GameStateMachine.State.RoundEditing<String, *, *> ->
+                is GameStateMachine.State.GameInitialised.Round.RoundEditing ->
                     RealGameScreenComponent.Configuration.RoundEditing(
                         wordsToEdit = MutableStateFlow(state.currentExplanationResults),
                     )
-                is GameStateMachine.State.GameResults<String, *, *> ->
+                is GameStateMachine.State.GameInitialised.GameResults ->
                     RealGameScreenComponent.Configuration.GameResults(
                         results = MutableStateFlow(state.personalResults),
                     )

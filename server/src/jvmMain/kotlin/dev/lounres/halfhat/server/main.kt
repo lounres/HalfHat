@@ -4,7 +4,7 @@ import dev.lounres.halfhat.api.onlineGame.ClientApi
 import dev.lounres.halfhat.api.onlineGame.DictionaryId
 import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.halfhat.logic.server.Room
+import dev.lounres.halfhat.logic.gameRoom.Room
 import dev.lounres.kone.collections.array.KoneMutableUIntArray
 import dev.lounres.kone.collections.array.generate
 import dev.lounres.kone.collections.interop.toKoneList
@@ -279,6 +279,24 @@ class Connection(
         socketSession.sendSerialized<ServerApi.Signal>(
             ServerApi.Signal.OnlineGameStateUpdate(
                 when (state) {
+                    is Room.Outgoing.State.RoomPlayersGathering ->
+                        ServerApi.OnlineGame.State.RoomPlayersGathering(
+                            roomName = state.roomMetadata.name,
+                            role = ServerApi.OnlineGame.Role.RoomPlayersGathering(
+                                name = state.role.metadata.name,
+                                userIndex = state.role.userIndex,
+                                isHost = state.role.isHost,
+                                isRoomFixable = state.role.isRoomFixable,
+                            ),
+                            playersList = state.playersList.mapIndexed { index, player ->
+                                ServerApi.OnlineGame.PlayerDescription.RoomPlayersGathering(
+                                    name = player.metadata.name,
+                                    userIndex = index,
+                                    isOnline = player.isOnline,
+                                    isHost = player.isHost,
+                                )
+                            },
+                        )
                     is Room.Outgoing.State.GameInitialisation<RoomMetadata, PlayerMetadata, WordsProviderDescription> ->
                         ServerApi.OnlineGame.State.GameInitialisation(
                             roomName = state.roomMetadata.name,
@@ -583,7 +601,11 @@ class Connection(
                 }
             Room.Outgoing.Error.AttachmentIsDenied -> ServerApi.OnlineGame.Error.AttachmentIsDenied
             Room.Outgoing.Error.AttachmentIsAlreadySevered -> ServerApi.OnlineGame.Error.AttachmentIsAlreadySevered
+            Room.Outgoing.Error.RoomIsAlreadyFixed -> ServerApi.OnlineGame.Error.RoomIsAlreadyFixed
+            Room.Outgoing.Error.NoGameSettingsToChange -> ServerApi.OnlineGame.Error.NoGameSettingsToChange
+            Room.Outgoing.Error.UnableToApplyGameStateMachineTransition -> ServerApi.OnlineGame.Error.UnableToApplyGameStateMachineTransition
             Room.Outgoing.Error.NotHostChangingGameSettings -> ServerApi.OnlineGame.Error.NotHostChangingGameSettings
+            Room.Outgoing.Error.CannotInitializeGameNotDuringGameInitialisation -> ServerApi.OnlineGame.Error.CannotInitializeGameNotDuringGameInitialisation
             Room.Outgoing.Error.CannotUpdateGameSettingsAfterInitialization -> ServerApi.OnlineGame.Error.CannotUpdateGameSettingsAfterInitialization
             Room.Outgoing.Error.NotEnoughPlayersForInitialization -> ServerApi.OnlineGame.Error.NotEnoughPlayersForInitialization
             Room.Outgoing.Error.CannotInitializeGameAfterInitialization -> ServerApi.OnlineGame.Error.CannotInitializeGameAfterInitialization
@@ -593,7 +615,8 @@ class Connection(
             Room.Outgoing.Error.NotSpeakerSettingSpeakerReadiness -> ServerApi.OnlineGame.Error.NotSpeakerSettingSpeakerReadiness
             Room.Outgoing.Error.CannotSetListenerReadinessNotDuringRoundWaiting -> ServerApi.OnlineGame.Error.CannotSetListenerReadinessNotDuringRoundWaiting
             Room.Outgoing.Error.NotListenerSettingListenerReadiness -> ServerApi.OnlineGame.Error.NotListenerSettingListenerReadiness
-            Room.Outgoing.Error.CannotSetSpeakerAndListenerReadinessNotDuringRoundWaiting -> ServerApi.OnlineGame.Error.CannotSetSpeakerAndListenerReadinessNotDuringRoundWaiting
+            Room.Outgoing.Error.ForbiddenSpeakerAndListenerReadyTransition -> ServerApi.OnlineGame.Error.ForbiddenSpeakerAndListenerReadyTransition
+            Room.Outgoing.Error.ForbiddenUpdateRoundInfoTransition -> ServerApi.OnlineGame.Error.ForbiddenUpdateRoundInfoTransition
             Room.Outgoing.Error.CannotUpdateRoundInfoNotDuringTheRound -> ServerApi.OnlineGame.Error.CannotUpdateRoundInfoNotDuringTheRound
             Room.Outgoing.Error.CannotSubmitWordExplanationResultNotDuringExplanationOrLastGuess -> ServerApi.OnlineGame.Error.CannotSubmitWordExplanationResultNotDuringExplanationOrLastGuess
             Room.Outgoing.Error.NotSpeakerSubmittingWordExplanationResult -> ServerApi.OnlineGame.Error.NotSpeakerSubmittingWordExplanationResult
@@ -686,6 +709,7 @@ fun main() {
                                                         )
                                                     },
                                                     state = when (it.stateType) {
+                                                        Room.StateType.RoomPlayersGathering -> ServerApi.RoomStateType.RoomPlayersGathering
                                                         Room.StateType.GameInitialisation -> ServerApi.RoomStateType.GameInitialisation
                                                         Room.StateType.PlayersWordsCollection -> ServerApi.RoomStateType.PlayersWordsCollection
                                                         Room.StateType.RoundWaiting -> ServerApi.RoomStateType.RoundWaiting
@@ -822,6 +846,25 @@ fun main() {
                                         )
                                     }
                                 ) { "Attachment is successfully severed" }
+                            }
+
+                            ClientApi.Signal.OnlineGame.FixRoom -> connection.playerAttachmentMutex.withLock {
+                                val attachment = connection.playerAttachment
+
+                                if (attachment == null) {
+                                    logger.debug(
+                                        items = {
+                                            mapOf(
+                                                "connection" to this.toString(),
+                                            )
+                                        }
+                                    ) { "No attachment when it is needed" }
+
+                                    sendSerialized<ServerApi.Signal>(ServerApi.Signal.OnlineGameError(ServerApi.OnlineGame.Error.NoAttachmentWhenItIsNeeded))
+                                    return@withLock
+                                }
+
+                                attachment.fixRoom()
                             }
                             
                             is ClientApi.Signal.OnlineGame.UpdateSettings -> connection.playerAttachmentMutex.withLock {

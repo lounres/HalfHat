@@ -40,6 +40,7 @@ public object ServerApi {
     
     @Serializable
     public enum class RoomStateType {
+        RoomPlayersGathering,
         GameInitialisation,
         PlayersWordsCollection,
         RoundWaiting,
@@ -83,6 +84,14 @@ public object ServerApi {
             public val userIndex: UInt
             public val isOnline: Boolean
             public val isHost: Boolean
+
+            @Serializable
+            public data class RoomPlayersGathering(
+                override val name: String,
+                override val userIndex: UInt,
+                override val isOnline: Boolean,
+                override val isHost: Boolean,
+            ) : PlayerDescription
             
             @Serializable
             public data class GameInitialisation(
@@ -191,6 +200,14 @@ public object ServerApi {
             public val name: String
             public val userIndex: UInt
             public val isHost: Boolean
+
+            @Serializable
+            public data class RoomPlayersGathering(
+                override val name: String,
+                override val userIndex: UInt,
+                override val isHost: Boolean,
+                public val isRoomFixable: Boolean,
+            ) : Role
             
             @Serializable
             public data class GameInitialisation(
@@ -320,6 +337,13 @@ public object ServerApi {
         public sealed interface State {
             public val roomName: String
             public val role: Role
+
+            @Serializable
+            public data class RoomPlayersGathering(
+                override val roomName: String,
+                override val role: Role.RoomPlayersGathering,
+                public val playersList: KoneList<PlayerDescription.RoomPlayersGathering>,
+            ) : State
             
             @Serializable
             public data class GameInitialisation(
@@ -477,11 +501,19 @@ public object ServerApi {
             @Serializable
             public data object AttachmentIsDenied : Error
             @Serializable
-            public data object AttachmentIsAlreadySevered : Error
-            @Serializable
             public data object NoAttachmentWhenItIsNeeded : Error
             @Serializable
+            public data object AttachmentIsAlreadySevered : Error
+            @Serializable
+            public data object RoomIsAlreadyFixed : Error
+            @Serializable
+            public data object NoGameSettingsToChange : Error
+            @Serializable
+            public data object UnableToApplyGameStateMachineTransition : Error
+            @Serializable
             public data object NotHostChangingGameSettings : Error
+            @Serializable
+            public data object CannotInitializeGameNotDuringGameInitialisation : Error
             @Serializable
             public data object CannotUpdateGameSettingsAfterInitialization : Error
             @Serializable
@@ -503,7 +535,9 @@ public object ServerApi {
             @Serializable
             public data object NotListenerSettingListenerReadiness : Error
             @Serializable
-            public data object CannotSetSpeakerAndListenerReadinessNotDuringRoundWaiting : Error
+            public data object ForbiddenSpeakerAndListenerReadyTransition : Error
+            @Serializable
+            public data object ForbiddenUpdateRoundInfoTransition : Error
             @Serializable
             public data object CannotUpdateRoundInfoNotDuringTheRound : Error
             @Serializable

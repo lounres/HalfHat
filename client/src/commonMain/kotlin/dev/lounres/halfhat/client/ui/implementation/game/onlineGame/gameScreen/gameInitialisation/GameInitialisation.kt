@@ -1,4 +1,4 @@
-package dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roomScreen
+package dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.gameInitialisation
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -51,7 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.window.core.layout.WindowSizeClass
 import dev.lounres.halfhat.api.onlineGame.DictionaryId
 import dev.lounres.halfhat.api.onlineGame.ServerApi
-import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomScreen.RoomScreenComponent
+import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.gameInitialisation.GameInitialisationComponent
 import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.icons.OnlineGameCopyKeyButton
 import dev.lounres.halfhat.client.ui.icons.OnlineGameCopyLinkButton
@@ -74,8 +74,8 @@ import kotlinx.coroutines.launch
 import kotlin.text.ifEmpty
 
 
-fun RoomScreenToolbarContentUI(
-    component: RoomScreenComponent,
+fun GameInitialisationToolbarContentUI(
+    component: GameInitialisationComponent,
 ): @Composable RowScope.() -> Unit = {
     IconButton(
         onClick = component.onExitOnlineGame
@@ -109,8 +109,8 @@ fun RoomScreenToolbarContentUI(
 val toolbarColors @Composable get() = FloatingToolbarDefaults.vibrantFloatingToolbarColors()
 
 @Composable
-fun RoomScreenRoomCardUI(
-    component: RoomScreenComponent,
+fun GameInitialisationRoomCardUI(
+    component: GameInitialisationComponent,
     modifier: Modifier,
 ) {
     val gameState = component.gameState.collectAsState().value
@@ -158,8 +158,8 @@ fun RoomScreenRoomCardUI(
 }
 
 @Composable
-fun RoomScreenSettingsCardUI(
-    component: RoomScreenComponent,
+fun GameInitialisationSettingsCardUI(
+    component: GameInitialisationComponent,
     modifier: Modifier,
 ) {
     Card(
@@ -430,9 +430,9 @@ fun RoomScreenSettingsCardUI(
                     val currentWordSource = component.wordsSource.collectAsState().value
                     val actualWordSource = currentWordSource.takeIf { areSettingsChangeable }
                         ?: when (val wordsSource = settingsBuilder.wordsSource) {
-                            ServerApi.WordsSource.Players -> RoomScreenComponent.WordsSource.Players
-                            ServerApi.WordsSource.HostDictionary -> RoomScreenComponent.WordsSource.HostDictionary
-                            is ServerApi.WordsSource.ServerDictionary -> RoomScreenComponent.WordsSource.ServerDictionary(wordsSource.dictionaryIdWithDescription)
+                            ServerApi.WordsSource.Players -> GameInitialisationComponent.WordsSource.Players
+                            ServerApi.WordsSource.HostDictionary -> GameInitialisationComponent.WordsSource.HostDictionary
+                            is ServerApi.WordsSource.ServerDictionary -> GameInitialisationComponent.WordsSource.ServerDictionary(wordsSource.dictionaryIdWithDescription)
                         }
                     val isChanged = areSettingsChangeable && currentWordSource != null
                     
@@ -446,9 +446,9 @@ fun RoomScreenSettingsCardUI(
                             enabled = areSettingsChangeable,
                             isError = isChanged,
                             value = when (actualWordSource) {
-                                RoomScreenComponent.WordsSource.Players -> "Players"
-                                RoomScreenComponent.WordsSource.HostDictionary -> "Host dictionary"
-                                is RoomScreenComponent.WordsSource.ServerDictionary -> when (val description = actualWordSource.description) {
+                                GameInitialisationComponent.WordsSource.Players -> "Players"
+                                GameInitialisationComponent.WordsSource.HostDictionary -> "Host dictionary"
+                                is GameInitialisationComponent.WordsSource.ServerDictionary -> when (val description = actualWordSource.description) {
                                     is DictionaryId.WithDescription.Builtin -> description.name
                                 }
                             },
@@ -486,10 +486,10 @@ fun RoomScreenSettingsCardUI(
                                         selectedTrailingIconColor = MaterialTheme.colorScheme.onSecondary,
                                     )
                             DropdownMenuItem(
-                                selected = actualWordSource == RoomScreenComponent.WordsSource.Players,
+                                selected = actualWordSource == GameInitialisationComponent.WordsSource.Players,
                                 text = { Text(text = "Players", style = MaterialTheme.typography.bodyLarge) },
                                 onClick = {
-                                    component.wordsSource.value = RoomScreenComponent.WordsSource.Players
+                                    component.wordsSource.value = GameInitialisationComponent.WordsSource.Players
                                     wordSourceMenuExpanded = false
                                 },
                                 contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
@@ -497,10 +497,10 @@ fun RoomScreenSettingsCardUI(
                                 colors = itemColors,
                             )
                             DropdownMenuItem(
-                                selected = actualWordSource == RoomScreenComponent.WordsSource.HostDictionary,
+                                selected = actualWordSource == GameInitialisationComponent.WordsSource.HostDictionary,
                                 text = { Text(text = "Host dictionary", style = MaterialTheme.typography.bodyLarge) },
                                 onClick = {
-                                    component.wordsSource.value = RoomScreenComponent.WordsSource.HostDictionary
+                                    component.wordsSource.value = GameInitialisationComponent.WordsSource.HostDictionary
                                     wordSourceMenuExpanded = false
                                 },
                                 contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
@@ -524,7 +524,7 @@ fun RoomScreenSettingsCardUI(
                                     for (description in serverDictionaries) when (description) {
                                         is DictionaryId.WithDescription.Builtin ->
                                             DropdownMenuItem(
-                                                selected = actualWordSource is RoomScreenComponent.WordsSource.ServerDictionary && actualWordSource.description.id == description.id,
+                                                selected = actualWordSource is GameInitialisationComponent.WordsSource.ServerDictionary && actualWordSource.description.id == description.id,
                                                 text = {
                                                     Column(
                                                         modifier = Modifier.fillMaxWidth(),
@@ -534,7 +534,7 @@ fun RoomScreenSettingsCardUI(
                                                     }
                                                 },
                                                 onClick = {
-                                                    component.wordsSource.value = RoomScreenComponent.WordsSource.ServerDictionary(description)
+                                                    component.wordsSource.value = GameInitialisationComponent.WordsSource.ServerDictionary(description)
                                                     wordSourceMenuExpanded = false
                                                 },
                                                 contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
@@ -547,7 +547,7 @@ fun RoomScreenSettingsCardUI(
                         }
                     }
                     
-                    if (actualWordSource is RoomScreenComponent.WordsSource.HostDictionary) {
+                    if (actualWordSource is GameInitialisationComponent.WordsSource.HostDictionary) {
                         Spacer(modifier = Modifier.height(8.dp))
                         
                         val coroutineScope = rememberCoroutineScope()
@@ -748,8 +748,8 @@ fun RoomScreenSettingsCardUI(
 }
 
 @Composable
-fun ColumnScope.RoomScreenCompactUI(
-    component: RoomScreenComponent,
+fun ColumnScope.GameInitialisationCompactUI(
+    component: GameInitialisationComponent,
 ) {
     var openSettings by remember { mutableStateOf(false) }
     HorizontalFloatingToolbar(
@@ -774,14 +774,14 @@ fun ColumnScope.RoomScreenCompactUI(
                 }
             }
         },
-        content = RoomScreenToolbarContentUI(component),
+        content = GameInitialisationToolbarContentUI(component),
     )
     
     Spacer(modifier = Modifier.height(8.dp))
     
     val cardModifier = Modifier.widthIn(max = 420.dp).fillMaxWidth().weight(1f)
-    if (openSettings) RoomScreenSettingsCardUI(component, cardModifier)
-    else RoomScreenRoomCardUI(component, cardModifier)
+    if (openSettings) GameInitialisationSettingsCardUI(component, cardModifier)
+    else GameInitialisationRoomCardUI(component, cardModifier)
     
     Spacer(modifier = Modifier.height(16.dp))
     
@@ -794,8 +794,8 @@ fun ColumnScope.RoomScreenCompactUI(
 }
 
 @Composable
-fun ColumnScope.RoomScreenLargeUI(
-    component: RoomScreenComponent,
+fun ColumnScope.GameInitialisationLargeUI(
+    component: GameInitialisationComponent,
 ) {
     var openSettings by remember { mutableStateOf(false) }
     HorizontalFloatingToolbar(
@@ -820,7 +820,7 @@ fun ColumnScope.RoomScreenLargeUI(
                 }
             }
         },
-        content = RoomScreenToolbarContentUI(component),
+        content = GameInitialisationToolbarContentUI(component),
     )
     
     Spacer(modifier = Modifier.height(16.dp))
@@ -830,10 +830,10 @@ fun ColumnScope.RoomScreenLargeUI(
         horizontalArrangement = Arrangement.Center,
     ) {
         val cardModifier = Modifier.fillMaxHeight().weight(1f, false).widthIn(max = 420.dp)
-        RoomScreenRoomCardUI(component, cardModifier)
+        GameInitialisationRoomCardUI(component, cardModifier)
         if (openSettings) {
             Spacer(modifier = Modifier.width(32.dp))
-            RoomScreenSettingsCardUI(component, cardModifier)
+            GameInitialisationSettingsCardUI(component, cardModifier)
         }
     }
     
@@ -848,8 +848,8 @@ fun ColumnScope.RoomScreenLargeUI(
 }
 
 @Composable
-public fun RoomScreenUI(
-    component: RoomScreenComponent,
+public fun GameInitialisationUI(
+    component: GameInitialisationComponent,
     windowSizeClass: WindowSizeClass,
 ) {
     Column(
@@ -863,11 +863,11 @@ public fun RoomScreenUI(
         )
         val minWidthDp = windowSizeClass.minWidthDp
         when {
-            minWidthDp >= WindowSizeClass.WIDTH_DP_EXTRA_LARGE_LOWER_BOUND -> RoomScreenLargeUI(component) // Extra-large width
-            minWidthDp >= WindowSizeClass.WIDTH_DP_LARGE_LOWER_BOUND -> RoomScreenLargeUI(component) // Large width
-            minWidthDp >= WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND -> RoomScreenCompactUI(component) // Expanded width
-            minWidthDp >= WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND -> RoomScreenCompactUI(component) // Medium width
-            else -> RoomScreenCompactUI(component) // Compact width
+            minWidthDp >= WindowSizeClass.WIDTH_DP_EXTRA_LARGE_LOWER_BOUND -> GameInitialisationLargeUI(component) // Extra-large width
+            minWidthDp >= WindowSizeClass.WIDTH_DP_LARGE_LOWER_BOUND -> GameInitialisationLargeUI(component) // Large width
+            minWidthDp >= WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND -> GameInitialisationCompactUI(component) // Expanded width
+            minWidthDp >= WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND -> GameInitialisationCompactUI(component) // Medium width
+            else -> GameInitialisationCompactUI(component) // Compact width
         }
     }
 }

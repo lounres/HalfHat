@@ -14,89 +14,87 @@ import dev.lounres.kone.automata.moveMaybeAndCompute
 import dev.lounres.kone.collections.list.KoneList
 
 
-public suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition : Any, NoTransitionReason, NoMetadataTransitionReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.moveMaybe(
-    transition: suspend (GameStateMachine.State<P, WPID, Metadata>) -> TransitionOrReason<GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, NoTransitionReason>
-): MovementMaybeResult<GameStateMachine.State<P, WPID, Metadata>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, NoTransitionReason, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason, NoWordsProviderReason>> = automaton.moveMaybe(transition)
+@IgnorableReturnValue
+public suspend inline fun <P, WPID, NoWordsProviderReason, NoTransitionReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason>.moveMaybe(
+    transition: suspend (GameStateMachine.State<P, WPID>) -> TransitionOrReason<GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, NoTransitionReason>
+): MovementMaybeResult<GameStateMachine.State<P, WPID>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, NoTransitionReason, GameStateMachine.NoNextStateReason<NoWordsProviderReason>> = automaton.moveMaybe(transition)
 
-public suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition : Any, NoMetadataTransitionReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.move(
-    transition: suspend (GameStateMachine.State<P, WPID, Metadata>) -> GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>
-): MovementResult<GameStateMachine.State<P, WPID, Metadata>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason, NoWordsProviderReason>> = automaton.move(transition)
+@IgnorableReturnValue
+public suspend inline fun <P, WPID, NoWordsProviderReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason>.move(
+    transition: suspend (GameStateMachine.State<P, WPID>) -> GameStateMachine.Transition<P, WPID, NoWordsProviderReason>
+): MovementResult<GameStateMachine.State<P, WPID>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, GameStateMachine.NoNextStateReason<NoWordsProviderReason>> = automaton.move(transition)
 
-public suspend fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition : Any, NoTransitionReason, NoMetadataTransitionReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.moveMaybe(
-    transition: TransitionOrReason<GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, NoTransitionReason>
-): MovementMaybeResult<GameStateMachine.State<P, WPID, Metadata>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, NoTransitionReason, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason, NoWordsProviderReason>> = automaton.moveMaybe(transition)
+@IgnorableReturnValue
+public suspend fun <P, WPID, NoWordsProviderReason, NoTransitionReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason>.moveMaybe(
+    transition: TransitionOrReason<GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, NoTransitionReason>
+): MovementMaybeResult<GameStateMachine.State<P, WPID>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, NoTransitionReason, GameStateMachine.NoNextStateReason<NoWordsProviderReason>> = automaton.moveMaybe(transition)
 
-public suspend fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition : Any, NoMetadataTransitionReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.move(
-    transition: GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>
-): MovementResult<GameStateMachine.State<P, WPID, Metadata>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason, NoWordsProviderReason>> = automaton.move(transition)
+@IgnorableReturnValue
+public suspend fun <P, WPID, NoWordsProviderReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason>.move(
+    transition: GameStateMachine.Transition<P, WPID, NoWordsProviderReason>
+): MovementResult<GameStateMachine.State<P, WPID>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, GameStateMachine.NoNextStateReason<NoWordsProviderReason>> = automaton.move(transition)
 
-public suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition : Any, NoTransitionReason, NoMetadataTransitionReason, Computation> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.moveMaybeAndCompute(
-    transition: suspend (GameStateMachine.State<P, WPID, Metadata>) -> TransitionOrReasonAndComputation<GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, NoTransitionReason, Computation>
-): MovementMaybeAndComputationResult<GameStateMachine.State<P, WPID, Metadata>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, NoTransitionReason, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason, NoWordsProviderReason>, Computation> = automaton.moveMaybeAndCompute(transition)
+@IgnorableReturnValue
+public suspend inline fun <P, WPID, NoWordsProviderReason, NoTransitionReason, Computation> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason>.moveMaybeAndCompute(
+    transition: suspend (GameStateMachine.State<P, WPID>) -> TransitionOrReasonAndComputation<GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, NoTransitionReason, Computation>
+): MovementMaybeAndComputationResult<GameStateMachine.State<P, WPID>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, NoTransitionReason, GameStateMachine.NoNextStateReason<NoWordsProviderReason>, Computation> = automaton.moveMaybeAndCompute(transition)
 
-public suspend inline fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition : Any, NoMetadataTransitionReason, Computation> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.moveAndCompute(
-    transition: suspend (GameStateMachine.State<P, WPID, Metadata>) -> TransitionAndComputation<GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, Computation>
-): MovementAndComputationResult<GameStateMachine.State<P, WPID, Metadata>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason, NoWordsProviderReason>, Computation> = automaton.moveAndCompute(transition)
+@IgnorableReturnValue
+public suspend inline fun <P, WPID, NoWordsProviderReason, Computation> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason>.moveAndCompute(
+    transition: suspend (GameStateMachine.State<P, WPID>) -> TransitionAndComputation<GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, Computation>
+): MovementAndComputationResult<GameStateMachine.State<P, WPID>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, GameStateMachine.NoNextStateReason<NoWordsProviderReason>, Computation> = automaton.moveAndCompute(transition)
 
-public suspend fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition : Any, NoMetadataTransitionReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.updateGameSettings(
+@IgnorableReturnValue
+public suspend fun <P, WPID, NoWordsProviderReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason>.updateGameSettings(
     playersList: KoneList<P>,
     settingsBuilder: GameStateMachine.GameSettings.Builder<WPID>,
-    metadataTransition: MetadataTransition? = null,
-): MovementResult<GameStateMachine.State<P, WPID, Metadata>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason, NoWordsProviderReason>> = automaton.move(
+): MovementResult<GameStateMachine.State<P, WPID>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, GameStateMachine.NoNextStateReason<NoWordsProviderReason>> = automaton.move(
     GameStateMachine.Transition.UpdateGameSettings(
         playersList = playersList,
         settingsBuilder = settingsBuilder,
-        metadataTransition = metadataTransition,
     )
 )
 
-public suspend fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition : Any, NoMetadataTransitionReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.initialiseGame(
+@IgnorableReturnValue
+public suspend fun <P, WPID, NoWordsProviderReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason>.initialiseGame(
     wordsProviderRegistry: GameStateMachine.WordsProviderRegistry<WPID, NoWordsProviderReason>,
-    metadataTransition: MetadataTransition? = null,
-): MovementResult<GameStateMachine.State<P, WPID, Metadata>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason, NoWordsProviderReason>> =
-    automaton.move(GameStateMachine.Transition.InitialiseGame(wordsProviderRegistry, metadataTransition))
+): MovementResult<GameStateMachine.State<P, WPID>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, GameStateMachine.NoNextStateReason<NoWordsProviderReason>> =
+    automaton.move(GameStateMachine.Transition.InitialiseGame(wordsProviderRegistry))
 
-public suspend fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition : Any, NoMetadataTransitionReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.speakerReady(
-    metadataTransition: MetadataTransition? = null
-): MovementResult<GameStateMachine.State<P, WPID, Metadata>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason, NoWordsProviderReason>> =
-    automaton.move(GameStateMachine.Transition.SpeakerReady(metadataTransition))
+@IgnorableReturnValue
+public suspend fun <P, WPID, NoWordsProviderReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason>.speakerReady(): MovementResult<GameStateMachine.State<P, WPID>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, GameStateMachine.NoNextStateReason<NoWordsProviderReason>> =
+    automaton.move(GameStateMachine.Transition.SpeakerReady)
 
-public suspend fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition : Any, NoMetadataTransitionReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.listenerReady(
-    metadataTransition: MetadataTransition? = null
-): MovementResult<GameStateMachine.State<P, WPID, Metadata>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason, NoWordsProviderReason>> =
-    automaton.move(GameStateMachine.Transition.ListenerReady(metadataTransition))
+@IgnorableReturnValue
+public suspend fun <P, WPID, NoWordsProviderReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason>.listenerReady(): MovementResult<GameStateMachine.State<P, WPID>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, GameStateMachine.NoNextStateReason<NoWordsProviderReason>> =
+    automaton.move(GameStateMachine.Transition.ListenerReady)
 
-public suspend fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition : Any, NoMetadataTransitionReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.speakerAndListenerReady(
-    metadataTransition: MetadataTransition? = null
-): MovementResult<GameStateMachine.State<P, WPID, Metadata>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason, NoWordsProviderReason>> =
-    automaton.move(GameStateMachine.Transition.SpeakerAndListenerReady(metadataTransition))
+@IgnorableReturnValue
+public suspend fun <P, WPID, NoWordsProviderReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason>.speakerAndListenerReady(): MovementResult<GameStateMachine.State<P, WPID>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, GameStateMachine.NoNextStateReason<NoWordsProviderReason>> =
+    automaton.move(GameStateMachine.Transition.SpeakerAndListenerReady)
 
-public suspend fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition : Any, NoMetadataTransitionReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.wordExplanationState(
+@IgnorableReturnValue
+public suspend fun <P, WPID, NoWordsProviderReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason>.wordExplanationState(
     wordState: GameStateMachine.WordExplanation.State,
-    metadataTransition: MetadataTransition? = null
-): MovementResult<GameStateMachine.State<P, WPID, Metadata>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason, NoWordsProviderReason>> = automaton.move(
+): MovementResult<GameStateMachine.State<P, WPID>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, GameStateMachine.NoNextStateReason<NoWordsProviderReason>> = automaton.move(
     GameStateMachine.Transition.WordExplanationState(
         wordState = wordState,
-        metadataTransition = metadataTransition,
     )
 )
 
-public suspend fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition : Any, NoMetadataTransitionReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.updateWordsExplanationResults(
+@IgnorableReturnValue
+public suspend fun <P, WPID, NoWordsProviderReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason>.updateWordsExplanationResults(
     newExplanationResults: KoneList<GameStateMachine.WordExplanation>,
-    metadataTransition: MetadataTransition? = null
-): MovementResult<GameStateMachine.State<P, WPID, Metadata>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason, NoWordsProviderReason>> = automaton.move(
+): MovementResult<GameStateMachine.State<P, WPID>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, GameStateMachine.NoNextStateReason<NoWordsProviderReason>> = automaton.move(
     GameStateMachine.Transition.UpdateWordsExplanationResults(
         newExplanationResults = newExplanationResults,
-        metadataTransition = metadataTransition,
     )
 )
 
-public suspend fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition : Any, NoMetadataTransitionReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.confirmWordsExplanationResults(
-    metadataTransition: MetadataTransition? = null
-): MovementResult<GameStateMachine.State<P, WPID, Metadata>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason, NoWordsProviderReason>> =
-    automaton.move(GameStateMachine.Transition.ConfirmWordsExplanationResults(metadataTransition))
+@IgnorableReturnValue
+public suspend fun <P, WPID, NoWordsProviderReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason>.confirmWordsExplanationResults(): MovementResult<GameStateMachine.State<P, WPID>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, GameStateMachine.NoNextStateReason<NoWordsProviderReason>> =
+    automaton.move(GameStateMachine.Transition.ConfirmWordsExplanationResults)
 
-public suspend fun <P, WPID, NoWordsProviderReason, Metadata, MetadataTransition : Any, NoMetadataTransitionReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason, Metadata, MetadataTransition, NoMetadataTransitionReason>.finishGame(
-    metadataTransition: MetadataTransition? = null
-): MovementResult<GameStateMachine.State<P, WPID, Metadata>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason, MetadataTransition>, GameStateMachine.NoNextStateReason<NoMetadataTransitionReason, NoWordsProviderReason>> =
-    automaton.move(GameStateMachine.Transition.FinishGame(metadataTransition))
+@IgnorableReturnValue
+public suspend fun <P, WPID, NoWordsProviderReason> AsynchronousGameStateMachine<P, WPID, NoWordsProviderReason>.finishGame(): MovementResult<GameStateMachine.State<P, WPID>, GameStateMachine.Transition<P, WPID, NoWordsProviderReason>, GameStateMachine.NoNextStateReason<NoWordsProviderReason>> =
+    automaton.move(GameStateMachine.Transition.FinishGame)

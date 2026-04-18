@@ -52,6 +52,9 @@ public object ClientApi {
             public data object LeaveRoom : OnlineGame
 
             @Serializable
+            public data object FixRoom : OnlineGame
+
+            @Serializable
             public data object RequestAvailableDictionaries : OnlineGame
             
             @Serializable
