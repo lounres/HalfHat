@@ -22,6 +22,8 @@ import dev.lounres.halfhat.client.ui.icons.*
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.iterables.next
+import dev.lounres.kone.collections.list.indices
+import dev.lounres.kone.collections.utils.filter
 import dev.lounres.kone.collections.utils.withIndex
 import dev.lounres.kone.hub.set
 import dev.lounres.kone.hub.subscribeAsState
@@ -122,6 +124,9 @@ public fun GameResultsUI(
                         val gameState = component.gameState.collectAsState().value
                         when (section) {
                             GameResultsComponent.Section.PlayersStatistic -> {
+                                val gameState = component.gameState.collectAsState().value
+                                val players = gameState.playersList.withIndex().filter { it.value.globalRole is ServerApi.OnlineGame.PlayerDescription.GameResults.GlobalRole.Player }
+                                val nonPlayers = gameState.playersList.withIndex().filter { it.value.globalRole !is ServerApi.OnlineGame.PlayerDescription.GameResults.GlobalRole.Player }
                                 Row(
                                     modifier = Modifier.fillMaxWidth().padding(8.dp),
                                 ) {
@@ -165,13 +170,18 @@ public fun GameResultsUI(
                                 HorizontalDivider(
                                     color = MaterialTheme.colorScheme.outline,
                                 )
-                                val playersList = gameState.playersList
-                                for ((val index, val player = value) in playersList.withIndex()) {
+                                val leaderboard = gameState.leaderboard
+                                for (index in leaderboard.permutation.indices) {
+                                    (val userIndex = index, val player = value) = players[index]
+                                    val globalRole = player.globalRole as ServerApi.OnlineGame.PlayerDescription.GameResults.GlobalRole.Player
+                                    val scoreExplained = leaderboard.scoreExplained[index]
+                                    val scoreGuessed = leaderboard.scoreGuessed[index]
+                                    val scoreSum = leaderboard.scoreSum[index]
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Surface(
                                         shape = CircleShape,
                                         color =
-                                            if (index == gameState.role.userIndex) MaterialTheme.colorScheme.tertiaryContainer
+                                            if (userIndex == gameState.selfRole.userIndex) MaterialTheme.colorScheme.tertiaryContainer
                                             else MaterialTheme.colorScheme.surface,
                                     ) {
                                         Row(
@@ -199,19 +209,57 @@ public fun GameResultsUI(
                                             )
                                             Text(
                                                 modifier = Modifier.weight(1f),
-                                                text = "${player.scoreExplained}",
+                                                text = "$scoreExplained",
                                                 textAlign = TextAlign.Center,
                                             )
                                             Text(
                                                 modifier = Modifier.weight(1f),
-                                                text = "${player.scoreGuessed}",
+                                                text = "$scoreGuessed",
                                                 textAlign = TextAlign.Center,
                                             )
                                             Text(
                                                 modifier = Modifier.weight(1f),
-                                                text = "${player.scoreSum}",
+                                                text = "$scoreSum",
                                                 textAlign = TextAlign.Center,
                                             )
+                                        }
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.outline,
+                                )
+                                FlowRow(
+                                    modifier = Modifier.fillMaxWidth().padding(4.dp),
+                                    horizontalArrangement = Arrangement.SpaceAround,
+                                ) {
+                                    for ((val player = value, val userIndex = index) in nonPlayers) {
+                                        Surface(
+                                            modifier = Modifier.padding(4.dp)/*.width(IntrinsicSize.Min)*/,
+                                            shape = CircleShape,
+                                            color =
+                                                if (userIndex == gameState.selfRole.userIndex) MaterialTheme.colorScheme.tertiaryContainer
+                                                else MaterialTheme.colorScheme.surface,
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(8.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                Icon(
+                                                    imageVector = when (player.globalRole) {
+                                                        is ServerApi.OnlineGame.PlayerDescription.GameResults.GlobalRole.Player -> error(TODO())
+                                                        is ServerApi.OnlineGame.PlayerDescription.GameResults.GlobalRole.Spectator -> HalfHatIcon.OnlineGameSpectatorIcon
+                                                    },
+                                                    modifier = Modifier.size(24.dp),
+                                                    contentDescription = null,
+                                                )
+                                                Spacer(Modifier.width(4.dp))
+                                                Text(
+                                                    modifier = Modifier,
+                                                    text = player.name,
+                                                )
+                                                Spacer(Modifier.width(4.dp))
+                                            }
                                         }
                                     }
                                 }
@@ -302,6 +350,7 @@ public fun GameResultsUI(
                             GameResultsComponent.Section.Settings -> {
                                 val gameState = component.gameState.collectAsState().value
                                 val settingsBuilder = gameState.settings
+                                val extraSettings = gameState.extraSettings
                                 
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -524,7 +573,7 @@ public fun GameResultsUI(
                                 ) {
                                     Checkbox(
                                         enabled = false,
-                                        checked = settingsBuilder.showLeaderboardPermutation,
+                                        checked = extraSettings.showLeaderboardPermutation,
                                         onCheckedChange = {},
                                         colors = CheckboxDefaults.colors()
                                     )
@@ -543,7 +592,7 @@ public fun GameResultsUI(
                                 ) {
                                     Checkbox(
                                         enabled = false,
-                                        checked = settingsBuilder.showWordsStatistic,
+                                        checked = extraSettings.showWordsStatistic,
                                         onCheckedChange = {},
                                         colors = CheckboxDefaults.colors()
                                     )

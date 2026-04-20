@@ -60,6 +60,7 @@ import dev.lounres.halfhat.client.ui.icons.OnlineGameHostMarkIcon
 import dev.lounres.halfhat.client.ui.icons.OnlineGamePlayerIcon
 import dev.lounres.halfhat.client.ui.icons.OnlineGameSettingsButton
 import dev.lounres.halfhat.client.ui.icons.OnlineGameSettingsIconBetweenTimes
+import dev.lounres.halfhat.client.ui.icons.OnlineGameSpectatorIcon
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.interop.toKoneList
@@ -127,7 +128,7 @@ fun GameInitialisationRoomCardUI(
                 Surface(
                     shape = CircleShape,
                     color =
-                        if (index == gameState.role.userIndex) MaterialTheme.colorScheme.tertiaryContainer
+                        if (index == gameState.selfRole.userIndex) MaterialTheme.colorScheme.tertiaryContainer
                         else MaterialTheme.colorScheme.surface,
                 ) {
                     Row(
@@ -144,7 +145,10 @@ fun GameInitialisationRoomCardUI(
                             Spacer(Modifier.width(24.dp))
                         Spacer(Modifier.width(4.dp))
                         Icon(
-                            imageVector = HalfHatIcon.OnlineGamePlayerIcon,
+                            imageVector = when (player.globalRole) {
+                                is ServerApi.OnlineGame.PlayerDescription.GameInitialisation.GlobalRole.Player -> HalfHatIcon.OnlineGamePlayerIcon
+                                is ServerApi.OnlineGame.PlayerDescription.GameInitialisation.GlobalRole.Spectator -> HalfHatIcon.OnlineGameSpectatorIcon
+                            },
                             modifier = Modifier.size(24.dp),
                             contentDescription = null,
                         )
@@ -171,7 +175,8 @@ fun GameInitialisationSettingsCardUI(
         ) {
             val gameState = component.gameState.collectAsState().value
             val settingsBuilder = gameState.settingsBuilder
-            val areSettingsChangeable = gameState.role.areSettingsChangeable
+            val extraSettings = gameState.extraSettings
+            val areSettingsChangeable = gameState.selfRole.areSettingsChangeable
             
             Column(
                 modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()),
@@ -652,7 +657,7 @@ fun GameInitialisationSettingsCardUI(
                     val currentShowLeaderboardPermutation = component.showLeaderboardPermutation.collectAsState().value
                     Checkbox(
                         enabled = areSettingsChangeable,
-                        checked = currentShowLeaderboardPermutation.takeIf { areSettingsChangeable } ?: settingsBuilder.showLeaderboardPermutation,
+                        checked = currentShowLeaderboardPermutation.takeIf { areSettingsChangeable } ?: extraSettings.showLeaderboardPermutation,
                         onCheckedChange = { component.showLeaderboardPermutation.value = it },
                         colors =
                             if (areSettingsChangeable && currentShowLeaderboardPermutation != null)
@@ -681,7 +686,7 @@ fun GameInitialisationSettingsCardUI(
                     val currentShowWordsStatistic = component.showWordsStatistic.collectAsState().value
                     Checkbox(
                         enabled = areSettingsChangeable,
-                        checked = currentShowWordsStatistic.takeIf { areSettingsChangeable } ?: settingsBuilder.showWordsStatistic,
+                        checked = currentShowWordsStatistic.takeIf { areSettingsChangeable } ?: extraSettings.showWordsStatistic,
                         onCheckedChange = { component.showWordsStatistic.value = it },
                         colors =
                             if (areSettingsChangeable && currentShowWordsStatistic != null)
@@ -786,7 +791,7 @@ fun ColumnScope.GameInitialisationCompactUI(
     Spacer(modifier = Modifier.height(16.dp))
     
     Button(
-        enabled = component.gameState.collectAsState().value.role.isStartAvailable,
+        enabled = component.gameState.collectAsState().value.selfRole.isStartAvailable,
         onClick = component.onStartGame
     ) {
         Text("START", fontSize = 32.sp)
@@ -840,7 +845,7 @@ fun ColumnScope.GameInitialisationLargeUI(
     Spacer(modifier = Modifier.height(16.dp))
     
     Button(
-        enabled = component.gameState.collectAsState().value.role.isStartAvailable,
+        enabled = component.gameState.collectAsState().value.selfRole.isStartAvailable,
         onClick = component.onStartGame
     ) {
         Text("START", fontSize = 32.sp)

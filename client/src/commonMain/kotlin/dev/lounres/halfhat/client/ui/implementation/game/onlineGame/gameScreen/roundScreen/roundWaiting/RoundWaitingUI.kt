@@ -131,64 +131,68 @@ fun RoundWaitingGameCardUI(
                 }
             }
         }
-        when (gameState.role.roundRole) {
-            ServerApi.OnlineGame.Role.Round.Waiting.RoundRole.Speaker -> {
-                Spacer(modifier = Modifier.height(32.dp))
-                if (!gameState.speakerReady)
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = CircleShape,
-                        onClick = component.onSpeakerReady,
-                    ) {
-                        Text(
-                            text = "I am ready",
-                            maxLines = 1,
-                            fontSize = 32.sp,
-                        )
+        when (val globalRole = gameState.selfRole.globalRole) {
+            is ServerApi.OnlineGame.SelfRole.Round.Waiting.GlobalRole.Player ->
+                when (val roundRole = globalRole.roundRole) {
+                    ServerApi.OnlineGame.SelfRole.Round.Waiting.GlobalRole.Player.RoundRole.Speaker -> {
+                        Spacer(modifier = Modifier.height(32.dp))
+                        if (!gameState.speakerReady)
+                            Button(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = CircleShape,
+                                onClick = component.onSpeakerReady,
+                            ) {
+                                Text(
+                                    text = "I am ready",
+                                    maxLines = 1,
+                                    fontSize = 32.sp,
+                                )
+                            }
+                        else
+                            Button(
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = false,
+                                shape = CircleShape,
+                                onClick = component.onSpeakerReady,
+                            ) {
+                                Text(
+                                    text = "Wait for your partner",
+                                    maxLines = 1,
+                                    fontSize = 32.sp,
+                                )
+                            }
                     }
-                else
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = false,
-                        shape = CircleShape,
-                        onClick = component.onSpeakerReady,
-                    ) {
-                        Text(
-                            text = "Wait for your partner",
-                            maxLines = 1,
-                            fontSize = 32.sp,
-                        )
+                    ServerApi.OnlineGame.SelfRole.Round.Waiting.GlobalRole.Player.RoundRole.Listener -> {
+                        Spacer(modifier = Modifier.height(32.dp))
+                        if (!gameState.listenerReady)
+                            Button(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = CircleShape,
+                                onClick = component.onListenerReady,
+                            ) {
+                                Text(
+                                    text = "I am ready",
+                                    maxLines = 1,
+                                    fontSize = 32.sp,
+                                )
+                            }
+                        else
+                            Button(
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = false,
+                                shape = CircleShape,
+                                onClick = component.onListenerReady,
+                            ) {
+                                Text(
+                                    text = "Wait for your partner",
+                                    maxLines = 1,
+                                    fontSize = 32.sp,
+                                )
+                            }
                     }
-            }
-            ServerApi.OnlineGame.Role.Round.Waiting.RoundRole.Listener -> {
-                Spacer(modifier = Modifier.height(32.dp))
-                if (!gameState.listenerReady)
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = CircleShape,
-                        onClick = component.onListenerReady,
-                    ) {
-                        Text(
-                            text = "I am ready",
-                            maxLines = 1,
-                            fontSize = 32.sp,
-                        )
-                    }
-                else
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = false,
-                        shape = CircleShape,
-                        onClick = component.onListenerReady,
-                    ) {
-                        Text(
-                            text = "Wait for your partner",
-                            maxLines = 1,
-                            fontSize = 32.sp,
-                        )
-                    }
-            }
-            ServerApi.OnlineGame.Role.Round.Waiting.RoundRole.Player -> {}
+                    null -> {}
+                }
+            is ServerApi.OnlineGame.SelfRole.Round.Waiting.GlobalRole.Spectator -> {}
         }
     }
 }

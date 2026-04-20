@@ -24,7 +24,7 @@ public object GameStateMachine {
     }
     
     public interface WordsProvider {
-        // Maybe not exactly this `number` of words but no more than this number.
+        // TODO: Maybe not exactly this `number` of words but no more than this number.
         public fun randomWords(number: UInt): KoneSet<String>
         public fun allWords(): KoneSet<String>
     }
@@ -73,58 +73,6 @@ public object GameStateMachine {
             val spentTime: Duration,
             val state: State,
         )
-
-//        public typealias WordsStatistic = @Serializable(with = WordsStatisticSerializer::class) KoneMap<String, WordStatistic>
-//
-//        public object WordsStatisticSerializer : KSerializer<KoneMap<String, WordStatistic>> {
-//            @OptIn(InternalSerializationApi::class)
-//            override val descriptor: SerialDescriptor = buildSerialDescriptor("dev.lounres.kone.registry.serialization.RegistrySerializer", StructureKind.MAP) {
-//                element(
-//                    elementName = "key",
-//                    descriptor = String.serializer().descriptor,
-//                )
-//                element(
-//                    elementName = "value",
-//                    descriptor = WordStatistic.serializer().descriptor,
-//                )
-//            }
-//
-//            override fun serialize(encoder: Encoder, value: KoneMap<String, WordStatistic>) {
-//                encoder.encodeStructure(descriptor) {
-//                    var registrationIndex = 0
-//                    for ((key, value) in value.nodesView) {
-//                        encodeSerializableElement(descriptor, registrationIndex++, String.serializer(), key)
-//                        encodeSerializableElement(descriptor, registrationIndex++, WordStatistic.serializer(), value)
-//                    }
-//                }
-//            }
-//
-//            @OptIn(ExperimentalSerializationApi::class)
-//            override fun deserialize(decoder: Decoder): KoneMap<String, WordStatistic> =
-//                decoder.decodeStructure(descriptor) {
-//                    val result = KoneMutableMap.of<String, WordStatistic>()
-//                    if (decodeSequentially()) {
-//                        val size = decodeCollectionSize(descriptor)
-//                        repeat(size) {
-//                            val key = decodeSerializableElement(descriptor, it * 2, String.serializer())
-//                            val value = decodeSerializableElement(descriptor, it * 2 + 1, WordStatistic.serializer())
-//                            result[key] = value
-//                        }
-//                    } else {
-//                        while (true) {
-//                            val keyIndex = decodeElementIndex(descriptor)
-//                            if (keyIndex == CompositeDecoder.DECODE_DONE) break
-//                            val key = decodeSerializableElement(descriptor, keyIndex, String.serializer())
-//                            decodeElementIndex(descriptor).also {
-//                                require(it == keyIndex + 1) { "Value must follow key in a map, index for key: $keyIndex, returned index for value: $it" }
-//                            }
-//                            val value = decodeSerializableElement(descriptor, keyIndex + 1, WordStatistic.serializer())
-//                            result[key] = value
-//                        }
-//                    }
-//                    result
-//                }
-//        }
     }
 
     public data class GameSettings<out WPD>(
@@ -321,7 +269,8 @@ public object GameStateMachine {
             public data class GameResults<out P, out WPD>(
                 override val playersList: KoneList<P>,
                 override val settings: GameSettings<WPD>,
-                val results: KoneList<GameResult>,
+                val explanationScores: KoneList<UInt>,
+                val guessingScores: KoneList<UInt>,
                 val wordsStatistic: KoneMap<String, WordStatistic>,
             ) : GameInitialised<P, WPD>
         }

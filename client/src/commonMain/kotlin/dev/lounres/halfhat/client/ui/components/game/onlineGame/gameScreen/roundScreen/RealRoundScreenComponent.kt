@@ -146,7 +146,7 @@ suspend fun RealRoundScreenComponent(
 
     val additionalCardButton = KoneMutableAsynchronousHub(
         RoundScreenComponent.AdditionalCardButtonsChild(
-            leaderboardPermutation = gameState.value.leaderboardPermutation,
+            leaderboard = gameState.value.leaderboard,
             wordsStatistic = gameState.value.wordsStatistic,
             selectedButtonType = null
         )
@@ -240,11 +240,9 @@ suspend fun RealRoundScreenComponent(
                 }
                 launch {
                     additionalCardButton.update { oldChild ->
-                        val leaderboardPermutation = gameState.value.leaderboardPermutation
-                        val wordsStatistic = gameState.value.wordsStatistic
                         RoundScreenComponent.AdditionalCardButtonsChild(
-                            leaderboardPermutation = leaderboardPermutation,
-                            wordsStatistic = wordsStatistic,
+                            leaderboard = gameState.value.leaderboard,
+                            wordsStatistic = gameState.value.wordsStatistic,
                             selectedButtonType = oldChild.selectedButtonType,
                         )
                     }
@@ -267,7 +265,7 @@ suspend fun RealRoundScreenComponent(
         onSelectButton = { button ->
             additionalCardButton.update {
                 RoundScreenComponent.AdditionalCardButtonsChild(
-                    leaderboardPermutation = it.leaderboardPermutation,
+                    leaderboard = it.leaderboard,
                     wordsStatistic = it.wordsStatistic,
                     selectedButtonType = button.type,
                 )

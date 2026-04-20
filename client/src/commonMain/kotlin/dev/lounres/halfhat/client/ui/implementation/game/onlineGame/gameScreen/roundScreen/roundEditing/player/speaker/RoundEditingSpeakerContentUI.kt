@@ -1,10 +1,9 @@
-package dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundScreen.roundEditing.speaker
+package dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundScreen.roundEditing.player.speaker
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,10 +26,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundEditing.speaker.RoundEditingSpeakerContentComponent
+import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundEditing.player.speaker.RoundEditingSpeakerContentComponent
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.utils.withIndex
@@ -51,7 +49,7 @@ fun RoundEditingSpeakerContentUI(
                 .weight(1f)
                 .verticalScroll(rememberScrollState()),
         ) {
-            val roundRole = component.userRole.collectAsState().value
+            val roundRole = component.roundRole.collectAsState().value
             for ((val index, val wordExplanation = value) in roundRole.wordsToEdit.withIndex()) {
                 if (index != 0u) Spacer(modifier = Modifier.height(16.dp))
                 val (word, state) = wordExplanation

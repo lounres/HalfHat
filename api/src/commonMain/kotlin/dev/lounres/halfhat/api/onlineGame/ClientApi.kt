@@ -30,9 +30,21 @@ public object ClientApi {
         val cachedEndConditionCyclesNumber: UInt?,
         val gameEndConditionType: GameStateMachine.GameEndCondition.Type?,
         val wordsSource: WordsSource?,
+    )
+
+    @Serializable
+    public data class ExtraSettingsPatch(
         val showWordsStatistic: Boolean?,
         val showLeaderboardPermutation: Boolean?,
     )
+
+    @Serializable
+    public sealed interface GlobalRole {
+        @Serializable
+        public data object Player : GlobalRole
+        @Serializable
+        public data object Spectator : GlobalRole
+    }
     
     @Serializable
     public sealed interface Signal {
@@ -58,7 +70,11 @@ public object ClientApi {
             public data object RequestAvailableDictionaries : OnlineGame
             
             @Serializable
-            public data class UpdateSettings(val settingsBuilderPatch: SettingsBuilderPatch) : OnlineGame
+            public data class UpdateSettings(
+                val newGlobalRoles: KoneList<GlobalRole>,
+                val settingsBuilderPatch: SettingsBuilderPatch,
+                val extraSettingsPatch: ExtraSettingsPatch,
+            ) : OnlineGame
             
             @Serializable
             public data object InitializeGame : OnlineGame

@@ -27,84 +27,88 @@ fun RoundPreparationGameCardUI(
         modifier = Modifier.fillMaxSize().padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        when (gameState.role.roundRole) {
-            ServerApi.OnlineGame.Role.Round.Preparation.RoundRole.Speaker ->
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        text = "You explain",
-                        fontSize = 48.sp,
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "${gameState.playersList[gameState.listenerIndex].name} guesses"
-                    )
-                }
-            ServerApi.OnlineGame.Role.Round.Preparation.RoundRole.Listener ->
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        text = "You guess",
-                        fontSize = 48.sp,
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "${gameState.playersList[gameState.speakerIndex].name} explains"
-                    )
-                }
-            ServerApi.OnlineGame.Role.Round.Preparation.RoundRole.Player ->
-                Row(
-                    modifier = Modifier.fillMaxWidth().height(80.dp),
-                ) {
-                    Card(
-                        modifier = Modifier.fillMaxHeight().weight(2f),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                        ),
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize().padding(4.dp),
-                            contentAlignment = Alignment.Center,
+        when (val globalRole = gameState.selfRole.globalRole) {
+            is ServerApi.OnlineGame.SelfRole.Round.Preparation.GlobalRole.Player ->
+                when (val roundRole = globalRole.roundRole) {
+                    ServerApi.OnlineGame.SelfRole.Round.Preparation.GlobalRole.Player.RoundRole.Speaker ->
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             Text(
-                                text = gameState.playersList[gameState.speakerIndex].name,
-                                autoSize = TextAutoSize.StepBased(maxFontSize = 32.sp),
+                                text = "You explain",
+                                fontSize = 48.sp,
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "${gameState.playersList[gameState.listenerIndex].name} guesses"
                             )
                         }
-                    }
-                    Box(
-                        modifier = Modifier.fillMaxHeight().weight(1f),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            modifier = Modifier.fillMaxSize(1f / 2),
-                            imageVector = HalfHatIcon.OnlineGameSpeakerToListenerRightArrow,
-                            contentDescription = null,
-                        )
-                    }
-                    Card(
-                        modifier = Modifier.fillMaxHeight().weight(2f),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                        ),
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize().padding(4.dp),
-                            contentAlignment = Alignment.Center,
+                    ServerApi.OnlineGame.SelfRole.Round.Preparation.GlobalRole.Player.RoundRole.Listener ->
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             Text(
-                                text = gameState.playersList[gameState.listenerIndex].name,
-                                autoSize = TextAutoSize.StepBased(maxFontSize = 32.sp),
+                                text = "You guess",
+                                fontSize = 48.sp,
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "${gameState.playersList[gameState.speakerIndex].name} explains"
                             )
                         }
-                    }
+                    null ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().height(80.dp),
+                        ) {
+                            Card(
+                                modifier = Modifier.fillMaxHeight().weight(2f),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                                ),
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize().padding(4.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        text = gameState.playersList[gameState.speakerIndex].name,
+                                        autoSize = TextAutoSize.StepBased(maxFontSize = 32.sp),
+                                    )
+                                }
+                            }
+                            Box(
+                                modifier = Modifier.fillMaxHeight().weight(1f),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    modifier = Modifier.fillMaxSize(1f / 2),
+                                    imageVector = HalfHatIcon.OnlineGameSpeakerToListenerRightArrow,
+                                    contentDescription = null,
+                                )
+                            }
+                            Card(
+                                modifier = Modifier.fillMaxHeight().weight(2f),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                                ),
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize().padding(4.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        text = gameState.playersList[gameState.listenerIndex].name,
+                                        autoSize = TextAutoSize.StepBased(maxFontSize = 32.sp),
+                                    )
+                                }
+                            }
+                        }
                 }
+            is ServerApi.OnlineGame.SelfRole.Round.Preparation.GlobalRole.Spectator -> {}
         }
         Column(
             modifier = Modifier.fillMaxWidth().weight(1f),
@@ -122,54 +126,58 @@ fun RoundPreparationGameCardUI(
                 ),
             )
         }
-        when (gameState.role.roundRole) {
-            ServerApi.OnlineGame.Role.Round.Preparation.RoundRole.Speaker ->
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Button(
-                            modifier = Modifier.weight(1f),
-                            shape = CircleShape,
-                            enabled = false,
-                            onClick = {},
+        when (val globalRole = gameState.selfRole.globalRole) {
+            is ServerApi.OnlineGame.SelfRole.Round.Preparation.GlobalRole.Player ->
+                when (val roundRole = globalRole.roundRole) {
+                    ServerApi.OnlineGame.SelfRole.Round.Preparation.GlobalRole.Player.RoundRole.Speaker ->
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            Text(
-                                text = "Not guessed",
-                                fontSize = 16.sp,
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Button(
+                                    modifier = Modifier.weight(1f),
+                                    shape = CircleShape,
+                                    enabled = false,
+                                    onClick = {},
+                                ) {
+                                    Text(
+                                        text = "Not guessed",
+                                        fontSize = 16.sp,
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Button(
+                                    modifier = Modifier.weight(1f),
+                                    shape = CircleShape,
+                                    enabled = false,
+                                    onClick = {},
+                                ) {
+                                    Text(
+                                        text = "Mistake",
+                                        fontSize = 16.sp,
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = CircleShape,
+                                enabled = false,
+                                onClick = {},
+                            ) {
+                                Text(
+                                    text = "Guessed",
+                                    fontSize = 32.sp,
+                                )
+                            }
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Button(
-                            modifier = Modifier.weight(1f),
-                            shape = CircleShape,
-                            enabled = false,
-                            onClick = {},
-                        ) {
-                            Text(
-                                text = "Mistake",
-                                fontSize = 16.sp,
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = CircleShape,
-                        enabled = false,
-                        onClick = {},
-                    ) {
-                        Text(
-                            text = "Guessed",
-                            fontSize = 32.sp,
-                        )
-                    }
+                    ServerApi.OnlineGame.SelfRole.Round.Preparation.GlobalRole.Player.RoundRole.Listener -> {}
+                    null -> {}
                 }
-            ServerApi.OnlineGame.Role.Round.Preparation.RoundRole.Listener -> {}
-            ServerApi.OnlineGame.Role.Round.Preparation.RoundRole.Player -> {}
+            is ServerApi.OnlineGame.SelfRole.Round.Preparation.GlobalRole.Spectator -> {}
         }
     }
 }

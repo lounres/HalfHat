@@ -5,6 +5,8 @@ import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
 import dev.lounres.kone.algebraic.order
 import dev.lounres.kone.automata.*
 import dev.lounres.kone.collections.array.KoneUIntArray
+import dev.lounres.kone.collections.array.generate
+import dev.lounres.kone.collections.array.toKoneUIntArray
 import dev.lounres.kone.collections.interop.toKoneUIntArray
 import dev.lounres.kone.collections.iterables.isNotEmpty
 import dev.lounres.kone.collections.list.*
@@ -18,7 +20,10 @@ import dev.lounres.kone.relations.*
 import dev.lounres.kone.scope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.serialization.Serializable
 import kotlin.random.Random
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -35,7 +40,10 @@ public class Room<
 >(
     public val metadata: RoomMetadata,
     public val wordsProviderRegistry: WordsProviderRegistry<WordsProviderID, WordsProviderDescription, NoWordsProviderReason>,
+    initialPlayersList: KoneList<PlayerMetadata>,
+    initialGlobalRoles: KoneList<GlobalRole>,
     initialSettingsBuilder: GameSettings.Builder<WordsProviderDescription>,
+    initialExtraSettings: ExtraSettings,
     private val initialMetadataFactory: (PlayerID) -> PlayerMetadata,
     private val checkConnectionAttachment: (metadata: PlayerMetadata, isOnline: Boolean, connection: ConnectionType) -> Boolean,
 ) {
@@ -89,9 +97,17 @@ public class Room<
                 }
             }
             
-            public suspend fun updateGameSettings(settingsBuilderPatch: GameSettings.Builder.Patch<WordsProviderID>) {
+            public suspend fun updateGameSettings(
+                newGlobalRoles: KoneList<GlobalRole>,
+                settingsBuilderPatch: GameSettings.Builder.Patch<WordsProviderID>,
+                extraSettingsPatch: ExtraSettings.Patch,
+            ) {
                 val result = player.room.stateMachine.move(
-                    Transition.UpdateGameSettings(gameSettingsBuilderPatch = settingsBuilderPatch)
+                    Transition.UpdateGameSettings(
+                        newGlobalRoles = newGlobalRoles,
+                        gameSettingsBuilderPatch = settingsBuilderPatch,
+                        extraSettingsPatch = extraSettingsPatch,
+                    )
                 )
                 when (result) {
                     is MovementResult.NoNextState -> node.element.sendError(result.noNextStateReason)
@@ -114,7 +130,7 @@ public class Room<
                     Transition.GameInProgressTransition(
                         player,
                         GameStateMachine.Transition.SubmitPlayerWords(
-                            playerIndex = (Equality.defaultFor<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>()) { previousState.appearedPlayersList.firstIndexOf(player) },
+                            playerIndex = (Equality.defaultFor<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>()) { previousState.playersList.firstIndexOf(player) },
                             playerWords = words,
                         )
                     )
@@ -183,6 +199,24 @@ public class Room<
         
         internal val connectionsRegistry: KoneMutableNoddedList<ConnectionType> = KoneGCLinkedSizedList()
         public val isOnline: Boolean get() = connectionsRegistry.isNotEmpty()
+        public suspend fun sendNewState(state: Outgoing.State<RoomMetadata, PlayerMetadata, WordsProviderDescription>) {
+            supervisorScope {
+                connectionsRegistry.forEach {
+                    launch {
+                        it.sendNewState(state)
+                    }
+                }
+            }
+        }
+        public suspend fun sendError(error: Outgoing.Error<NoWordsProviderReason>) {
+            supervisorScope {
+                connectionsRegistry.forEach {
+                    launch {
+                        it.sendError(error)
+                    }
+                }
+            }
+        }
     }
     
     public data class Description<out RoomMetadata, out PlayerMetadata>(
@@ -235,8 +269,6 @@ public class Room<
         val strictMode: Boolean,
         val gameEndCondition: GameStateMachine.GameEndCondition,
         val wordsSource: WordsSource<WordsProviderDescription>,
-        val showWordsStatistic: Boolean,
-        val showLeaderboardPermutation: Boolean,
     ) {
         public data class Builder<out WordsProviderDescription>(
             val preparationTimeSeconds: UInt,
@@ -247,8 +279,6 @@ public class Room<
             val cachedEndConditionCyclesNumber: UInt,
             val gameEndConditionType: GameStateMachine.GameEndCondition.Type,
             val wordsSource: WordsSource<WordsProviderDescription>,
-            val showWordsStatistic: Boolean,
-            val showLeaderboardPermutation: Boolean,
         ) {
             public data class Patch<out WordsProviderID>(
                 val preparationTimeSeconds: UInt?,
@@ -259,10 +289,23 @@ public class Room<
                 val cachedEndConditionCyclesNumber: UInt?,
                 val gameEndConditionType: GameStateMachine.GameEndCondition.Type?,
                 val wordsSource: WordsSource<WordsProviderID>?,
-                val showWordsStatistic: Boolean?,
-                val showLeaderboardPermutation: Boolean?,
             )
         }
+    }
+
+    public data class ExtraSettings(
+        val showWordsStatistic: Boolean,
+        val showLeaderboardPermutation: Boolean,
+    ) {
+        public data class Patch(
+            val showWordsStatistic: Boolean?,
+            val showLeaderboardPermutation: Boolean?,
+        )
+    }
+
+    public sealed interface GlobalRole {
+        public data object Player : GlobalRole
+        public data object Spectator : GlobalRole
     }
 
     private sealed interface State<
@@ -275,7 +318,7 @@ public class Room<
         ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>
     > {
         val roomMetadata: RoomMetadata
-        val appearedPlayersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>
+        val playersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>
 
         data class RoomPlayersGathering<
             RoomMetadata,
@@ -287,7 +330,7 @@ public class Room<
             ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>
         >(
             override val roomMetadata: RoomMetadata,
-            override val appearedPlayersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>,
+            override val playersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>,
         ) : State<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>
 
         data class GameInitialization<
@@ -300,9 +343,10 @@ public class Room<
             ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>
         >(
             override val roomMetadata: RoomMetadata,
-            override val appearedPlayersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>,
-            val actualPlayersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>,
+            override val playersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>,
+            val globalRoles: KoneList<GlobalRole>,
             val gameSettingsBuilder: GameSettings.Builder<WordsProviderDescription>,
+            val extraSettings: ExtraSettings,
         ) : State<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>
 
         data class GameInProgress<
@@ -315,8 +359,10 @@ public class Room<
             ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>
         >(
             override val roomMetadata: RoomMetadata,
-            override val appearedPlayersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>,
+            override val playersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>,
+            val globalRoles: KoneList<GlobalRole>,
             val gameSettingsBuilder: GameSettings.Builder<WordsProviderDescription>,
+            val extraSettings: ExtraSettings,
             val gameState: GameStateMachine.State.GameInitialised<
                 Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>,
                 WordsProviderDescription,
@@ -371,7 +417,9 @@ public class Room<
             NoWordsProviderReason,
             ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>
         >(
+            val newGlobalRoles: KoneList<GlobalRole>,
             val gameSettingsBuilderPatch: GameSettings.Builder.Patch<WordsProviderID>,
+            val extraSettingsPatch: ExtraSettings.Patch,
         ) : Transition<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>
         class InitialiseGame<
             RoomMetadata,
@@ -416,6 +464,13 @@ public class Room<
     }
     
     public object Outgoing {
+        public data class Leaderboard(
+            val permutation: KoneUIntArray,
+            val scoreExplained: KoneUIntArray,
+            val scoreGuessed: KoneUIntArray,
+            val scoreSum: KoneUIntArray,
+        )
+
         public sealed interface PlayerDescription<out PlayerMetadata> {
             public val metadata: PlayerMetadata
             public val userIndex: UInt
@@ -434,24 +489,42 @@ public class Room<
                 override val userIndex: UInt,
                 override val isOnline: Boolean,
                 override val isHost: Boolean,
-            ) : PlayerDescription<PlayerMetadata>
+                public val globalRole: GlobalRole,
+            ) : PlayerDescription<PlayerMetadata> {
+                public sealed interface GlobalRole {
+                    public data object Player : GlobalRole
+                    public data object Spectator : GlobalRole
+                }
+            }
             
             public data class PlayersWordsCollection<out PlayerMetadata>(
                 override val metadata: PlayerMetadata,
                 override val userIndex: UInt,
                 override val isOnline: Boolean,
                 override val isHost: Boolean,
-                public val finishedWordsCollection: Boolean,
-            ) : PlayerDescription<PlayerMetadata>
+                public val globalRole: GlobalRole,
+            ) : PlayerDescription<PlayerMetadata> {
+                public sealed interface GlobalRole {
+                    public data class Player(
+                        public val finishedWordsCollection: Boolean,
+                    ) : GlobalRole
+                    public data object Spectator : GlobalRole
+                }
+            }
             
             public sealed interface Round<out PlayerMetadata> : PlayerDescription<PlayerMetadata> {
-                public val roundRole: RoundRole
-                public val scoreExplained: UInt
-                public val scoreGuessed: UInt
-                public val scoreSum: UInt
-                
-                public enum class RoundRole {
-                    Player, Speaker, Listener,
+                public val globalRole: GlobalRole
+
+                @Serializable
+                public sealed interface GlobalRole {
+                    public data class Player(
+                        public val roundRole: RoundRole?,
+                    ) : GlobalRole {
+                        public enum class RoundRole {
+                            Speaker, Listener,
+                        }
+                    }
+                    public data object Spectator : GlobalRole
                 }
                 
                 public data class Waiting<out PlayerMetadata>(
@@ -459,10 +532,7 @@ public class Room<
                     override val userIndex: UInt,
                     override val isOnline: Boolean,
                     override val isHost: Boolean,
-                    override val roundRole: RoundRole,
-                    override val scoreExplained: UInt,
-                    override val scoreGuessed: UInt,
-                    override val scoreSum: UInt,
+                    override val globalRole: GlobalRole,
                 ) : Round<PlayerMetadata>
                 
                 public data class Preparation<out PlayerMetadata>(
@@ -470,10 +540,7 @@ public class Room<
                     override val userIndex: UInt,
                     override val isOnline: Boolean,
                     override val isHost: Boolean,
-                    override val roundRole: RoundRole,
-                    override val scoreExplained: UInt,
-                    override val scoreGuessed: UInt,
-                    override val scoreSum: UInt,
+                    override val globalRole: GlobalRole,
                 ) : Round<PlayerMetadata>
                 
                 public data class Explanation<out PlayerMetadata>(
@@ -481,10 +548,7 @@ public class Room<
                     override val userIndex: UInt,
                     override val isOnline: Boolean,
                     override val isHost: Boolean,
-                    override val roundRole: RoundRole,
-                    override val scoreExplained: UInt,
-                    override val scoreGuessed: UInt,
-                    override val scoreSum: UInt,
+                    override val globalRole: GlobalRole,
                 ) : Round<PlayerMetadata>
                 
                 public data class LastGuess<out PlayerMetadata>(
@@ -492,10 +556,7 @@ public class Room<
                     override val userIndex: UInt,
                     override val isOnline: Boolean,
                     override val isHost: Boolean,
-                    override val roundRole: RoundRole,
-                    override val scoreExplained: UInt,
-                    override val scoreGuessed: UInt,
-                    override val scoreSum: UInt,
+                    override val globalRole: GlobalRole,
                 ) : Round<PlayerMetadata>
                 
                 public data class Editing<out PlayerMetadata>(
@@ -503,10 +564,7 @@ public class Room<
                     override val userIndex: UInt,
                     override val isOnline: Boolean,
                     override val isHost: Boolean,
-                    override val roundRole: RoundRole,
-                    override val scoreExplained: UInt,
-                    override val scoreGuessed: UInt,
-                    override val scoreSum: UInt,
+                    override val globalRole: GlobalRole,
                 ) : Round<PlayerMetadata>
             }
             
@@ -515,13 +573,16 @@ public class Room<
                 override val userIndex: UInt,
                 override val isOnline: Boolean,
                 override val isHost: Boolean,
-                public val scoreExplained: UInt,
-                public val scoreGuessed: UInt,
-                public val scoreSum: UInt,
-            ) : PlayerDescription<PlayerMetadata>
+                public val globalRole: GlobalRole,
+            ) : PlayerDescription<PlayerMetadata> {
+                public sealed interface GlobalRole {
+                    public data object Player : GlobalRole
+                    public data object Spectator : GlobalRole
+                }
+            }
         }
         
-        public sealed interface Role<out PlayerMetadata> {
+        public sealed interface SelfRole<out PlayerMetadata> {
             public val metadata: PlayerMetadata
             public val userIndex: UInt
             public val isHost: Boolean
@@ -531,38 +592,56 @@ public class Room<
                 override val userIndex: UInt,
                 override val isHost: Boolean,
                 public val isRoomFixable: Boolean,
-            ) : Role<PlayerMetadata>
+            ) : SelfRole<PlayerMetadata>
             
             public data class GameInitialisation<out PlayerMetadata>(
                 override val metadata: PlayerMetadata,
                 override val userIndex: UInt,
                 override val isHost: Boolean,
+                public val globalRole: GlobalRole,
                 public val isStartAvailable: Boolean,
                 public val areSettingsChangeable: Boolean,
-            ) : Role<PlayerMetadata>
+            ) : SelfRole<PlayerMetadata> {
+                public sealed interface GlobalRole {
+                    public data object Player : GlobalRole
+                    public data object Spectator : GlobalRole
+                }
+            }
             
             public data class PlayersWordsCollection<out PlayerMetadata>(
                 override val metadata: PlayerMetadata,
                 override val userIndex: UInt,
                 override val isHost: Boolean,
-                public val finishedWordsCollection: Boolean,
-            ) : Role<PlayerMetadata>
+                public val globalRole: GlobalRole,
+            ) : SelfRole<PlayerMetadata> {
+                public sealed interface GlobalRole {
+                    public data class Player(
+                        public val finishedWordsCollection: Boolean,
+                    ) : GlobalRole
+                    public data object Spectator : GlobalRole
+                }
+            }
             
-            public sealed interface Round<out PlayerMetadata> : Role<PlayerMetadata> {
-                public val roundsBeforeSpeaking: UInt
-                public val roundsBeforeListening: UInt
-                
+            public sealed interface Round<out PlayerMetadata> : SelfRole<PlayerMetadata> {
                 public data class Waiting<out PlayerMetadata>(
                     override val metadata: PlayerMetadata,
                     override val userIndex: UInt,
                     override val isHost: Boolean,
-                    public val roundRole: RoundRole,
+                    public val globalRole: GlobalRole,
                     public val isGameFinishable: Boolean,
-                    override val roundsBeforeSpeaking: UInt,
-                    override val roundsBeforeListening: UInt,
                 ) : Round<PlayerMetadata> {
-                    public enum class RoundRole {
-                        Player, Speaker, Listener,
+                    public sealed interface GlobalRole {
+                        public data class Player(
+                            public val roundRole: RoundRole?,
+                            public val roundsBeforeSpeaking: UInt,
+                            public val roundsBeforeListening: UInt,
+                        ) : GlobalRole {
+                            @Serializable
+                            public enum class RoundRole {
+                                Speaker, Listener,
+                            }
+                        }
+                        public data object Spectator : GlobalRole
                     }
                 }
                 
@@ -570,12 +649,20 @@ public class Room<
                     override val metadata: PlayerMetadata,
                     override val userIndex: UInt,
                     override val isHost: Boolean,
-                    public val roundRole: RoundRole,
-                    override val roundsBeforeSpeaking: UInt,
-                    override val roundsBeforeListening: UInt,
+                    public val globalRole: GlobalRole,
                 ) : Round<PlayerMetadata> {
-                    public enum class RoundRole {
-                        Player, Speaker, Listener,
+                    public sealed interface GlobalRole {
+                        public data class Player(
+                            public val roundRole: RoundRole?,
+                            public val roundsBeforeSpeaking: UInt,
+                            public val roundsBeforeListening: UInt,
+                        ) : GlobalRole {
+                            @Serializable
+                            public enum class RoundRole {
+                                Speaker, Listener,
+                            }
+                        }
+                        public data object Spectator : GlobalRole
                     }
                 }
                 
@@ -583,14 +670,23 @@ public class Room<
                     override val metadata: PlayerMetadata,
                     override val userIndex: UInt,
                     override val isHost: Boolean,
-                    public val roundRole: RoundRole,
-                    override val roundsBeforeSpeaking: UInt,
-                    override val roundsBeforeListening: UInt,
+                    public val globalRole: GlobalRole,
                 ) : Round<PlayerMetadata> {
-                    public sealed interface RoundRole {
-                        public data object Player : RoundRole
-                        public data class Speaker(val currentWord: String) : RoundRole
-                        public data object Listener : RoundRole
+                    public sealed interface GlobalRole {
+                        public data class Player(
+                            public val roundRole: RoundRole?,
+                            public val roundsBeforeSpeaking: UInt,
+                            public val roundsBeforeListening: UInt,
+                        ) : GlobalRole {
+                            @Serializable
+                            public sealed interface RoundRole {
+                                @Serializable
+                                public data class Speaker(val currentWord: String) : RoundRole
+                                @Serializable
+                                public data object Listener : RoundRole
+                            }
+                        }
+                        public data object Spectator : GlobalRole
                     }
                 }
                 
@@ -598,14 +694,23 @@ public class Room<
                     override val metadata: PlayerMetadata,
                     override val userIndex: UInt,
                     override val isHost: Boolean,
-                    public val roundRole: RoundRole,
-                    override val roundsBeforeSpeaking: UInt,
-                    override val roundsBeforeListening: UInt,
+                    public val globalRole: GlobalRole,
                 ) : Round<PlayerMetadata> {
-                    public sealed interface RoundRole {
-                        public data object Player : RoundRole
-                        public data class Speaker(val currentWord: String) : RoundRole
-                        public data object Listener : RoundRole
+                    public sealed interface GlobalRole {
+                        public data class Player(
+                            public val roundRole: RoundRole?,
+                            public val roundsBeforeSpeaking: UInt,
+                            public val roundsBeforeListening: UInt,
+                        ) : GlobalRole {
+                            @Serializable
+                            public sealed interface RoundRole {
+                                @Serializable
+                                public data class Speaker(val currentWord: String) : RoundRole
+                                @Serializable
+                                public data object Listener : RoundRole
+                            }
+                        }
+                        public data object Spectator : GlobalRole
                     }
                 }
                 
@@ -613,14 +718,25 @@ public class Room<
                     override val metadata: PlayerMetadata,
                     override val userIndex: UInt,
                     override val isHost: Boolean,
-                    public val roundRole: RoundRole,
-                    override val roundsBeforeSpeaking: UInt,
-                    override val roundsBeforeListening: UInt,
+                    public val globalRole: GlobalRole,
                 ) : Round<PlayerMetadata> {
-                    public sealed interface RoundRole {
-                        public data object Player : RoundRole
-                        public data class Speaker(public val wordsToEdit: KoneList<GameStateMachine.WordExplanation>) : RoundRole
-                        public data object Listener : RoundRole
+                    public sealed interface GlobalRole {
+                        public data class Player(
+                            public val roundRole: RoundRole?,
+                            public val roundsBeforeSpeaking: UInt,
+                            public val roundsBeforeListening: UInt,
+                        ) : GlobalRole {
+                            @Serializable
+                            public sealed interface RoundRole {
+                                @Serializable
+                                public data class Speaker(
+                                    public val wordsToEdit: KoneList<GameStateMachine.WordExplanation>,
+                                ) : RoundRole
+                                @Serializable
+                                public data object Listener : RoundRole
+                            }
+                        }
+                        public data object Spectator : GlobalRole
                     }
                 }
             }
@@ -629,38 +745,47 @@ public class Room<
                 override val metadata: PlayerMetadata,
                 override val userIndex: UInt,
                 override val isHost: Boolean,
-            ) : Role<PlayerMetadata>
+                public val globalRole: GlobalRole,
+            ) : SelfRole<PlayerMetadata> {
+                public sealed interface GlobalRole {
+                    public data object Player: GlobalRole
+                    public data object Spectator : GlobalRole
+                }
+            }
         }
         
         public sealed interface State<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription> {
             public val roomMetadata: RoomMetadata
-            public val role: Role<PlayerMetadata>
+            public val selfRole: SelfRole<PlayerMetadata>
             public val playersList: KoneList<PlayerDescription<PlayerMetadata>>
 
-            public data class RoomPlayersGathering<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
+            public data class RoomPlayersGathering<out RoomMetadata, out PlayerMetadata>(
                 override val roomMetadata: RoomMetadata,
-                override val role: Role.RoomPlayersGathering<PlayerMetadata>,
+                override val selfRole: SelfRole.RoomPlayersGathering<PlayerMetadata>,
                 override val playersList: KoneList<PlayerDescription.RoomPlayersGathering<PlayerMetadata>>,
-            ) : State<RoomMetadata, PlayerMetadata, WordsProviderDescription>
+            ) : State<RoomMetadata, PlayerMetadata, Nothing>
             
             public data class GameInitialisation<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
                 override val roomMetadata: RoomMetadata,
-                override val role: Role.GameInitialisation<PlayerMetadata>,
+                override val selfRole: SelfRole.GameInitialisation<PlayerMetadata>,
                 override val playersList: KoneList<PlayerDescription.GameInitialisation<PlayerMetadata>>,
                 public val settingsBuilder: GameSettings.Builder<WordsProviderDescription>,
+                public val extraSettings: ExtraSettings,
             ) : State<RoomMetadata, PlayerMetadata, WordsProviderDescription>
             
             public data class PlayersWordsCollection<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
                 override val roomMetadata: RoomMetadata,
-                override val role: Role.PlayersWordsCollection<PlayerMetadata>,
+                override val selfRole: SelfRole.PlayersWordsCollection<PlayerMetadata>,
                 override val playersList: KoneList<PlayerDescription.PlayersWordsCollection<PlayerMetadata>>,
                 public val settings: GameSettings<WordsProviderDescription>,
+                public val extraSettings: ExtraSettings,
             ) : State<RoomMetadata, PlayerMetadata, WordsProviderDescription>
             
             public sealed interface Round<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription> : State<RoomMetadata, PlayerMetadata, WordsProviderDescription> {
-                override val role: Role.Round<PlayerMetadata>
+                override val selfRole: SelfRole.Round<PlayerMetadata>
                 override val playersList: KoneList<PlayerDescription.Round<PlayerMetadata>>
                 public val settings: GameSettings<WordsProviderDescription>
+                public val extraSettings: ExtraSettings
                 public val initialWordsNumber: UInt
                 public val roundNumber: UInt
                 public val cycleNumber: UInt
@@ -671,13 +796,14 @@ public class Room<
                 public val restWordsNumber: UInt
                 public val wordsInProgressNumber: UInt
                 public val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?
-                public val leaderboardPermutation: KoneUIntArray?
+                public val leaderboard: Leaderboard?
                 
                 public data class Waiting<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
                     override val roomMetadata: RoomMetadata,
-                    override val role: Role.Round.Waiting<PlayerMetadata>,
+                    override val selfRole: SelfRole.Round.Waiting<PlayerMetadata>,
                     override val playersList: KoneList<PlayerDescription.Round.Waiting<PlayerMetadata>>,
                     override val settings: GameSettings<WordsProviderDescription>,
+                    override val extraSettings: ExtraSettings,
                     override val initialWordsNumber: UInt,
                     override val roundNumber: UInt,
                     override val cycleNumber: UInt,
@@ -690,14 +816,15 @@ public class Room<
                     override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?,
                     public val speakerReady: Boolean,
                     public val listenerReady: Boolean,
-                    override val leaderboardPermutation: KoneUIntArray?,
+                    override val leaderboard: Leaderboard?,
                 ) : Round<RoomMetadata, PlayerMetadata, WordsProviderDescription>
                 
                 public data class Preparation<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
                     override val roomMetadata: RoomMetadata,
-                    override val role: Role.Round.Preparation<PlayerMetadata>,
+                    override val selfRole: SelfRole.Round.Preparation<PlayerMetadata>,
                     override val playersList: KoneList<PlayerDescription.Round.Preparation<PlayerMetadata>>,
                     override val settings: GameSettings<WordsProviderDescription>,
+                    override val extraSettings: ExtraSettings,
                     override val initialWordsNumber: UInt,
                     override val roundNumber: UInt,
                     override val cycleNumber: UInt,
@@ -709,14 +836,15 @@ public class Room<
                     override val wordsInProgressNumber: UInt,
                     override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?,
                     public val millisecondsLeft: UInt,
-                    override val leaderboardPermutation: KoneUIntArray?,
+                    override val leaderboard: Leaderboard?,
                 ) : Round<RoomMetadata, PlayerMetadata, WordsProviderDescription>
                 
                 public data class Explanation<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
                     override val roomMetadata: RoomMetadata,
-                    override val role: Role.Round.Explanation<PlayerMetadata>,
+                    override val selfRole: SelfRole.Round.Explanation<PlayerMetadata>,
                     override val playersList: KoneList<PlayerDescription.Round.Explanation<PlayerMetadata>>,
                     override val settings: GameSettings<WordsProviderDescription>,
+                    override val extraSettings: ExtraSettings,
                     override val initialWordsNumber: UInt,
                     override val roundNumber: UInt,
                     override val cycleNumber: UInt,
@@ -728,14 +856,15 @@ public class Room<
                     override val wordsInProgressNumber: UInt,
                     override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?,
                     public val millisecondsLeft: UInt,
-                    override val leaderboardPermutation: KoneUIntArray?,
+                    override val leaderboard: Leaderboard?,
                 ) : Round<RoomMetadata, PlayerMetadata, WordsProviderDescription>
                 
                 public data class LastGuess<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
                     override val roomMetadata: RoomMetadata,
-                    override val role: Role.Round.LastGuess<PlayerMetadata>,
+                    override val selfRole: SelfRole.Round.LastGuess<PlayerMetadata>,
                     override val playersList: KoneList<PlayerDescription.Round.LastGuess<PlayerMetadata>>,
                     override val settings: GameSettings<WordsProviderDescription>,
+                    override val extraSettings: ExtraSettings,
                     override val initialWordsNumber: UInt,
                     override val roundNumber: UInt,
                     override val cycleNumber: UInt,
@@ -747,14 +876,15 @@ public class Room<
                     override val wordsInProgressNumber: UInt,
                     override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?,
                     public val millisecondsLeft: UInt,
-                    override val leaderboardPermutation: KoneUIntArray?,
+                    override val leaderboard: Leaderboard?,
                 ) : Round<RoomMetadata, PlayerMetadata, WordsProviderDescription>
                 
                 public data class Editing<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
                     override val roomMetadata: RoomMetadata,
-                    override val role: Role.Round.Editing<PlayerMetadata>,
+                    override val selfRole: SelfRole.Round.Editing<PlayerMetadata>,
                     override val playersList: KoneList<PlayerDescription.Round.Editing<PlayerMetadata>>,
                     override val settings: GameSettings<WordsProviderDescription>,
+                    override val extraSettings: ExtraSettings,
                     override val initialWordsNumber: UInt,
                     override val roundNumber: UInt,
                     override val cycleNumber: UInt,
@@ -765,17 +895,18 @@ public class Room<
                     override val restWordsNumber: UInt,
                     override val wordsInProgressNumber: UInt,
                     override val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>?,
-                    override val leaderboardPermutation: KoneUIntArray?,
+                    override val leaderboard: Leaderboard?,
                 ) : Round<RoomMetadata, PlayerMetadata, WordsProviderDescription>
             }
             
             public data class GameResults<out RoomMetadata, out PlayerMetadata, out WordsProviderDescription>(
                 override val roomMetadata: RoomMetadata,
-                override val role: Role.GameResults<PlayerMetadata>,
+                override val selfRole: SelfRole.GameResults<PlayerMetadata>,
                 override val playersList: KoneList<PlayerDescription.GameResults<PlayerMetadata>>,
-                public val settings: GameSettings<WordsProviderDescription>,
-                public val leaderboardPermutation: KoneUIntArray,
-                public val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
+                val settings: GameSettings<WordsProviderDescription>,
+                val extraSettings: ExtraSettings,
+                val leaderboard: Leaderboard,
+                val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
             ) : State<RoomMetadata, PlayerMetadata, WordsProviderDescription>
         }
         
@@ -786,6 +917,7 @@ public class Room<
             public data object NoGameSettingsToChange : Error<Nothing>
             public data object UnableToApplyGameStateMachineTransition : Error<Nothing>
             public data object NotHostChangingGameSettings : Error<Nothing>
+            public data object IncorrectNumberOfGlobalRoles : Error<Nothing>
             public data object CannotInitializeGameNotDuringGameInitialisation : Error<Nothing>
             public data object CannotUpdateGameSettingsAfterInitialization : Error<Nothing>
             public data object NotEnoughPlayersForInitialization : Error<Nothing>
@@ -867,7 +999,7 @@ public class Room<
         mutex = Mutex(),
         initialState = State.RoomPlayersGathering(
             roomMetadata = metadata,
-            appearedPlayersList = KoneGCLinkedSizedList(),
+            playersList = initialPlayersList.map { Player(this, it) },
         ),
         checkTransition = checkTransition@ { state, transition ->
             when (transition) {
@@ -876,39 +1008,59 @@ public class Room<
                         CheckResult.Success(
                             State.RoomPlayersGathering(
                                 roomMetadata = state.roomMetadata,
-                                appearedPlayersList = KoneList.build {
-                                    addAllFrom(state.appearedPlayersList)
+                                playersList = KoneList.build {
+                                    addAllFrom(state.playersList)
                                     +transition.newPlayer
                                 }
                             )
                         )
-                    is State.GameInitialization,
-                    is State.GameInProgress,
-                        -> CheckResult.Failure(Outgoing.Error.AttachmentIsDenied)
+                    is State.GameInitialization -> CheckResult.Failure(Outgoing.Error.AttachmentIsDenied)
+                    is State.GameInProgress -> {
+                        CheckResult.Success(
+                            State.GameInProgress(
+                                roomMetadata = state.roomMetadata,
+                                playersList = KoneList.build {
+                                    addAllFrom(state.playersList)
+                                    +transition.newPlayer
+                                },
+                                globalRoles = KoneList.build {
+                                    addAllFrom(state.globalRoles)
+                                    +GlobalRole.Spectator
+                                },
+                                gameSettingsBuilder = state.gameSettingsBuilder,
+                                extraSettings = state.extraSettings,
+                                gameState = state.gameState,
+                            )
+                        )
+                    }
                 }
                 is Transition.UpdatePlayersState -> CheckResult.Success(state)
                 is Transition.FixRoom -> when (state) {
-                    is State.RoomPlayersGathering ->
+                    is State.RoomPlayersGathering -> {
+                        val onlinePlayersIndices = state.playersList.withIndex().filter { it.value.isOnline }.map { it.index }.toKoneUIntArray()
                         CheckResult.Success(
                             State.GameInitialization(
                                 roomMetadata = state.roomMetadata,
-                                appearedPlayersList = state.appearedPlayersList,
-                                actualPlayersList = state.appearedPlayersList.filter { it.isOnline },
+                                playersList = onlinePlayersIndices.map { state.playersList[it] },
+                                globalRoles = onlinePlayersIndices.map { initialGlobalRoles.getOrNull(it) ?: GlobalRole.Player },
                                 gameSettingsBuilder = initialSettingsBuilder,
+                                extraSettings = initialExtraSettings,
                             )
                         )
+                    }
                     is State.GameInitialization -> CheckResult.Failure(Outgoing.Error.RoomIsAlreadyFixed)
                     is State.GameInProgress -> CheckResult.Failure(Outgoing.Error.RoomIsAlreadyFixed)
                 }
                 is Transition.UpdateGameSettings -> when (state) {
-                    is State.RoomPlayersGathering,
-                        -> CheckResult.Failure(Outgoing.Error.NoGameSettingsToChange)
+                    is State.RoomPlayersGathering -> CheckResult.Failure(Outgoing.Error.NoGameSettingsToChange)
                     is State.GameInitialization ->
                         CheckResult.Success(
                             State.GameInitialization(
                                 roomMetadata = state.roomMetadata,
-                                appearedPlayersList = state.appearedPlayersList,
-                                actualPlayersList = state.actualPlayersList,
+                                playersList = state.playersList,
+                                globalRoles = transition.newGlobalRoles.also {
+                                    if (it.size != state.playersList.size) return@checkTransition CheckResult.Failure(Outgoing.Error.IncorrectNumberOfGlobalRoles)
+                                },
                                 gameSettingsBuilder = GameSettings.Builder(
                                     preparationTimeSeconds = transition.gameSettingsBuilderPatch.preparationTimeSeconds ?: state.gameSettingsBuilder.preparationTimeSeconds,
                                     explanationTimeSeconds = transition.gameSettingsBuilderPatch.explanationTimeSeconds ?: state.gameSettingsBuilder.explanationTimeSeconds,
@@ -925,9 +1077,11 @@ public class Room<
                                             is WordsProviderRegistry.WordsProviderDescriptionOrReason.Success -> WordsSource.Custom(wordsProviderId.result)
                                         }
                                     },
-                                    showWordsStatistic = transition.gameSettingsBuilderPatch.showWordsStatistic ?: state.gameSettingsBuilder.showWordsStatistic,
-                                    showLeaderboardPermutation = transition.gameSettingsBuilderPatch.showLeaderboardPermutation ?: state.gameSettingsBuilder.showLeaderboardPermutation,
-                                )
+                                ),
+                                extraSettings = ExtraSettings(
+                                    showWordsStatistic = transition.extraSettingsPatch.showWordsStatistic ?: state.extraSettings.showWordsStatistic,
+                                    showLeaderboardPermutation = transition.extraSettingsPatch.showLeaderboardPermutation ?: state.extraSettings.showLeaderboardPermutation,
+                                ),
                             )
                         )
                     is State.GameInProgress -> CheckResult.Failure(Outgoing.Error.CannotUpdateGameSettingsAfterInitialization)
@@ -935,20 +1089,23 @@ public class Room<
                 is Transition.InitialiseGame -> when (state) {
                     is State.RoomPlayersGathering -> CheckResult.Failure(Outgoing.Error.CannotInitializeGameNotDuringGameInitialisation)
                     is State.GameInitialization -> scope {
-                        val playersList = state.actualPlayersList
+                        val playersList = state.playersList
+                        val roles = state.globalRoles
                         val settingsBuilder = state.gameSettingsBuilder
 
-                        if (playersList.size < 2u) return@scope CheckResult.Failure(Outgoing.Error.NotEnoughPlayersForInitialization)
+                        if (roles.count { it is GlobalRole.Player } < 2u) return@scope CheckResult.Failure(Outgoing.Error.NotEnoughPlayersForInitialization)
 
                         when (val wordsSource = settingsBuilder.wordsSource) {
                             WordsSource.Players ->
                                 CheckResult.Success(
                                     State.GameInProgress(
                                         roomMetadata = state.roomMetadata,
-                                        appearedPlayersList = state.appearedPlayersList,
-                                        gameSettingsBuilder = state.gameSettingsBuilder,
+                                        playersList = playersList,
+                                        globalRoles = roles,
+                                        gameSettingsBuilder = settingsBuilder,
+                                        extraSettings = state.extraSettings,
                                         gameState = GameStateMachine.State.GameInitialised.PlayersWordsCollection(
-                                            playersList = playersList,
+                                            playersList = playersList.withIndex().filter { roles[it.index] == GlobalRole.Player }.map { it.value },
                                             settings = GameStateMachine.GameSettings(
                                                 preparationTimeSeconds = settingsBuilder.preparationTimeSeconds,
                                                 explanationTimeSeconds = settingsBuilder.explanationTimeSeconds,
@@ -964,7 +1121,7 @@ public class Room<
                                                 },
                                             ),
                                             playersWords = KoneList.generate(playersList.size) { null }
-                                        )
+                                        ),
                                     )
                                 )
                             is WordsSource.Custom -> {
@@ -983,10 +1140,12 @@ public class Room<
                                         CheckResult.Success(
                                             State.GameInProgress(
                                                 roomMetadata = state.roomMetadata,
-                                                appearedPlayersList = state.appearedPlayersList,
-                                                gameSettingsBuilder = state.gameSettingsBuilder,
+                                                playersList = playersList,
+                                                globalRoles = roles,
+                                                gameSettingsBuilder = settingsBuilder,
+                                                extraSettings = state.extraSettings,
                                                 gameState = GameStateMachine.State.GameInitialised.Round.RoundWaiting(
-                                                    playersList = playersList,
+                                                    playersList = playersList.withIndex().filter { roles[it.index] == GlobalRole.Player }.map { it.value },
                                                     settings = GameStateMachine.GameSettings(
                                                         preparationTimeSeconds = settingsBuilder.preparationTimeSeconds,
                                                         explanationTimeSeconds = settingsBuilder.explanationTimeSeconds,
@@ -1016,7 +1175,7 @@ public class Room<
                                                     wordsStatistic = KoneMap.of(),
                                                     speakerReady = false,
                                                     listenerReady = false,
-                                                )
+                                                ),
                                             )
                                         )
                                     }
@@ -1033,12 +1192,12 @@ public class Room<
                     is State.GameInProgress -> {
                         when (val gameTransition = transition.gameStateMachineTransition) {
                             is GameStateMachine.Transition.UpdateGameSettings -> {
-                                if (state.appearedPlayersList.firstThat { it.isOnline } != transition.playerApplier) {
+                                if (state.playersList.firstThat { it.isOnline } != transition.playerApplier) {
                                     return@checkTransition CheckResult.Failure(Outgoing.Error.NotHostChangingGameSettings)
                                 }
                             }
-                            is GameStateMachine.Transition.InitialiseGame<*, *> -> {
-                                if (state.appearedPlayersList.firstThat { it.isOnline } != transition.playerApplier) {
+                            is GameStateMachine.Transition.InitialiseGame -> {
+                                if (state.playersList.firstThat { it.isOnline } != transition.playerApplier) {
                                     return@checkTransition CheckResult.Failure(Outgoing.Error.NotHostChangingGameSettings)
                                 }
                             }
@@ -1124,7 +1283,7 @@ public class Room<
                                 }
                             }
                             GameStateMachine.Transition.FinishGame -> {
-                                if (state.appearedPlayersList.firstThat { it.isOnline } != transition.playerApplier) {
+                                if (state.playersList.firstThat { it.isOnline } != transition.playerApplier) {
                                     return@checkTransition CheckResult.Failure(Outgoing.Error.NotHostFinishingGame)
                                 }
                             }
@@ -1143,8 +1302,10 @@ public class Room<
                             is CheckResult.Success -> CheckResult.Success(
                                 State.GameInProgress(
                                     roomMetadata = state.roomMetadata,
-                                    appearedPlayersList = state.appearedPlayersList,
+                                    playersList = state.playersList,
+                                    globalRoles = state.globalRoles,
                                     gameSettingsBuilder = state.gameSettingsBuilder,
+                                    extraSettings = state.extraSettings,
                                     gameState = gameMoveCheckResult.nextState,
                                 )
                             )
@@ -1170,8 +1331,10 @@ public class Room<
                             is CheckResult.Success -> CheckResult.Success(
                                 State.GameInProgress(
                                     roomMetadata = state.roomMetadata,
-                                    appearedPlayersList = state.appearedPlayersList,
+                                    playersList = state.playersList,
+                                    globalRoles = state.globalRoles,
                                     gameSettingsBuilder = state.gameSettingsBuilder,
+                                    extraSettings = state.extraSettings,
                                     gameState = gameMoveCheckResult.nextState,
                                 )
                             )
@@ -1181,472 +1344,638 @@ public class Room<
             }
         },
     ) { _, _, nextState ->
-        val hostIndex = nextState.appearedPlayersList.firstIndexThat { _, player -> player.isOnline }
-        val playersList = nextState.appearedPlayersList.mapIndexed { index, player ->
-            Player.Description(metadata = player.metadata, isOnline = player.isOnline, isHost = index == hostIndex)
-        }
-        nextState.appearedPlayersList.forEachIndexed { index, player ->
-            val gameStateToSend = when (nextState) {
-                is State.RoomPlayersGathering -> Outgoing.State.RoomPlayersGathering(
-                    roomMetadata = nextState.roomMetadata,
-                    role = Outgoing.Role.RoomPlayersGathering(
+        when (nextState) {
+            is State.RoomPlayersGathering -> {
+                val onlinePlayersList = nextState.playersList.filter { it.isOnline }
+                val hostIndex = 0u
+                val playersList = onlinePlayersList.mapIndexed { index, player ->
+                    Outgoing.PlayerDescription.RoomPlayersGathering(
                         metadata = player.metadata,
                         userIndex = index,
+                        isOnline = player.isOnline,
                         isHost = index == hostIndex,
-                        isRoomFixable = index == hostIndex,
-                    ),
-                    playersList = playersList.mapIndexed { index, player ->
-                        Outgoing.PlayerDescription.RoomPlayersGathering(
-                            metadata = player.metadata,
-                            userIndex = index,
-                            isOnline = player.isOnline,
-                            isHost = player.isHost,
+                    )
+                }
+                nextState.playersList.forEachIndexed { index, player ->
+                    player.sendNewState(
+                        Outgoing.State.RoomPlayersGathering(
+                            roomMetadata = nextState.roomMetadata,
+                            selfRole = Outgoing.SelfRole.RoomPlayersGathering(
+                                metadata = player.metadata,
+                                userIndex = index,
+                                isHost = index == hostIndex,
+                                isRoomFixable = index == hostIndex,
+                            ),
+                            playersList = playersList,
                         )
-                    },
-                )
-                is State.GameInitialization ->
-                    Outgoing.State.GameInitialisation(
-                        roomMetadata = metadata,
-                        role = Outgoing.Role.GameInitialisation(
-                            metadata = player.metadata,
-                            userIndex = index,
-                            isHost = index == hostIndex,
-                            isStartAvailable = index == hostIndex && playersList.count { it.isOnline } >= 2u,
-                            areSettingsChangeable = index == hostIndex,
-                        ),
-                        playersList = playersList.mapIndexed { index, player ->
-                            Outgoing.PlayerDescription.GameInitialisation(
+                    )
+                }
+            }
+            is State.GameInitialization -> {
+                val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
+                val isStartAvailable = nextState.globalRoles.count { it == GlobalRole.Player } >= 2u
+                val playersList = nextState.playersList.mapIndexed { index, player ->
+                    Outgoing.PlayerDescription.GameInitialisation(
+                        metadata = player.metadata,
+                        userIndex = index,
+                        isOnline = player.isOnline,
+                        isHost = index == hostIndex,
+                        globalRole = when (val globalRole = nextState.globalRoles[index]) {
+                            GlobalRole.Player -> Outgoing.PlayerDescription.GameInitialisation.GlobalRole.Player
+                            GlobalRole.Spectator -> Outgoing.PlayerDescription.GameInitialisation.GlobalRole.Spectator
+                        },
+                    )
+                }
+                nextState.playersList.forEachIndexed { index, player ->
+                    player.sendNewState(
+                        Outgoing.State.GameInitialisation(
+                            roomMetadata = metadata,
+                            selfRole = Outgoing.SelfRole.GameInitialisation(
+                                metadata = player.metadata,
+                                userIndex = index,
+                                isHost = index == hostIndex,
+                                globalRole = when (val globalRole = nextState.globalRoles[index]) {
+                                    GlobalRole.Player -> Outgoing.SelfRole.GameInitialisation.GlobalRole.Player
+                                    GlobalRole.Spectator -> Outgoing.SelfRole.GameInitialisation.GlobalRole.Spectator
+                                },
+                                isStartAvailable = isStartAvailable && index == hostIndex,
+                                areSettingsChangeable = index == hostIndex,
+                            ),
+                            playersList = playersList,
+                            settingsBuilder = nextState.gameSettingsBuilder,
+                            extraSettings = nextState.extraSettings,
+                        )
+                    )
+                }
+            }
+            is State.GameInProgress -> when (val nextGameState = nextState.gameState) {
+                is GameStateMachine.State.GameInitialised.PlayersWordsCollection -> {
+                    val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
+                    val playersList = scope {
+                        var playingPlayerIndex = 0u
+                        nextState.playersList.mapIndexed { index, player ->
+                            Outgoing.PlayerDescription.PlayersWordsCollection(
                                 metadata = player.metadata,
                                 userIndex = index,
                                 isOnline = player.isOnline,
-                                isHost = player.isHost,
+                                isHost = index == hostIndex,
+                                globalRole = when (val globalRole = nextState.globalRoles[index]) {
+                                    GlobalRole.Player -> Outgoing.PlayerDescription.PlayersWordsCollection.GlobalRole.Player(nextGameState.playersWords[playingPlayerIndex] != null).also { playingPlayerIndex++ }
+                                    GlobalRole.Spectator -> Outgoing.PlayerDescription.PlayersWordsCollection.GlobalRole.Spectator
+                                },
                             )
+                        }
+                    }
+                    val settings = GameSettings(
+                        preparationTimeSeconds = nextGameState.settings.preparationTimeSeconds,
+                        explanationTimeSeconds = nextGameState.settings.explanationTimeSeconds,
+                        finalGuessTimeSeconds = nextGameState.settings.finalGuessTimeSeconds,
+                        strictMode = nextGameState.settings.strictMode,
+                        gameEndCondition = nextGameState.settings.gameEndCondition,
+                        wordsSource = when (val wordsSource = nextGameState.settings.wordsSource) {
+                            GameStateMachine.WordsSource.Players -> WordsSource.Players
+                            is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
                         },
-                        settingsBuilder = nextState.gameSettingsBuilder,
                     )
-                is State.GameInProgress -> when (val nextGameState = nextState.gameState) {
-                    is GameStateMachine.State.GameInitialised.PlayersWordsCollection -> {
-                        val gameMachineSettings = nextGameState.settings
-                        Outgoing.State.PlayersWordsCollection(
-                            roomMetadata = metadata,
-                            role = Outgoing.Role.PlayersWordsCollection(
-                                metadata = player.metadata,
-                                userIndex = index,
-                                isHost = index == hostIndex,
-                                finishedWordsCollection = nextGameState.playersWords[index] != null,
-                            ),
-                            playersList = playersList.mapIndexed { index, player ->
-                                Outgoing.PlayerDescription.PlayersWordsCollection(
+                    var playingPlayerIndex = 0u
+                    nextState.playersList.forEachIndexed { index, player ->
+                        player.sendNewState(
+                            Outgoing.State.PlayersWordsCollection(
+                                roomMetadata = metadata,
+                                selfRole = Outgoing.SelfRole.PlayersWordsCollection(
                                     metadata = player.metadata,
                                     userIndex = index,
-                                    isOnline = player.isOnline,
-                                    isHost = player.isHost,
-                                    finishedWordsCollection = nextGameState.playersWords[index] != null,
-                                )
-                            },
-                            settings = GameSettings(
-                                preparationTimeSeconds = gameMachineSettings.preparationTimeSeconds,
-                                explanationTimeSeconds = gameMachineSettings.explanationTimeSeconds,
-                                finalGuessTimeSeconds = gameMachineSettings.finalGuessTimeSeconds,
-                                strictMode = gameMachineSettings.strictMode,
-                                gameEndCondition = gameMachineSettings.gameEndCondition,
-                                wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
-                                    GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
-                                },
-                                showWordsStatistic = nextState.gameSettingsBuilder.showWordsStatistic,
-                                showLeaderboardPermutation = nextState.gameSettingsBuilder.showLeaderboardPermutation,
-                            ),
-                        )
-                    }
-                    is GameStateMachine.State.GameInitialised.Round.RoundWaiting -> {
-                        val gameMachineSettings = nextGameState.settings
-                        Outgoing.State.Round.Waiting(
-                            roomMetadata = metadata,
-                            role = Outgoing.Role.Round.Waiting(
-                                metadata = player.metadata,
-                                userIndex = index,
-                                isHost = index == hostIndex,
-                                roundRole = when (index) {
-                                    nextGameState.speakerIndex -> Outgoing.Role.Round.Waiting.RoundRole.Speaker
-                                    nextGameState.listenerIndex -> Outgoing.Role.Round.Waiting.RoundRole.Listener
-                                    else -> Outgoing.Role.Round.Waiting.RoundRole.Player
-                                },
-                                isGameFinishable = index == hostIndex,
-                                roundsBeforeSpeaking = nextGameState.playersRoundsBeforeSpeaking[index],
-                                roundsBeforeListening = nextGameState.playersRoundsBeforeListening[index],
-                            ),
-                            playersList = playersList.mapIndexed { index, player ->
-                                Outgoing.PlayerDescription.Round.Waiting(
-                                    metadata = player.metadata,
-                                    userIndex = index,
-                                    isOnline = player.isOnline,
-                                    isHost = player.isHost,
-                                    roundRole = when (index) {
-                                        nextGameState.speakerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Speaker
-                                        nextGameState.listenerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Listener
-                                        else -> Outgoing.PlayerDescription.Round.RoundRole.Player
+                                    isHost = index == hostIndex,
+                                    globalRole = when (val globalRole = nextState.globalRoles[index]) {
+                                        GlobalRole.Player -> Outgoing.SelfRole.PlayersWordsCollection.GlobalRole.Player(nextGameState.playersWords[playingPlayerIndex] != null).also { playingPlayerIndex++ }
+                                        GlobalRole.Spectator -> Outgoing.SelfRole.PlayersWordsCollection.GlobalRole.Spectator
                                     },
-                                    scoreExplained = nextGameState.explanationScores[index],
-                                    scoreGuessed = nextGameState.guessingScores[index],
-                                    scoreSum = nextGameState.explanationScores[index] + nextGameState.guessingScores[index],
-                                )
-                            },
-                            settings = GameSettings(
-                                preparationTimeSeconds = gameMachineSettings.preparationTimeSeconds,
-                                explanationTimeSeconds = gameMachineSettings.explanationTimeSeconds,
-                                finalGuessTimeSeconds = gameMachineSettings.finalGuessTimeSeconds,
-                                strictMode = gameMachineSettings.strictMode,
-                                gameEndCondition = gameMachineSettings.gameEndCondition,
-                                wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
-                                    GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
-                                },
-                                showWordsStatistic = nextState.gameSettingsBuilder.showWordsStatistic,
-                                showLeaderboardPermutation = nextState.gameSettingsBuilder.showLeaderboardPermutation,
-                            ),
-                            initialWordsNumber = nextGameState.initialWordsNumber,
-                            roundNumber =  nextGameState.roundNumber,
-                            cycleNumber = nextGameState.cycleNumber,
-                            speakerIndex = nextGameState.speakerIndex,
-                            listenerIndex = nextGameState.listenerIndex,
-                            nextSpeakerIndex = nextGameState.nextSpeakerIndex,
-                            nextListenerIndex = nextGameState.nextListenerIndex,
-                            restWordsNumber = nextGameState.restWords.size,
-                            wordsInProgressNumber = 0u,
-                            wordsStatistic =
-                                if (nextState.gameSettingsBuilder.showWordsStatistic) nextGameState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress }
-                                else null,
-                            speakerReady = nextGameState.speakerReady,
-                            listenerReady = nextGameState.listenerReady,
-                            leaderboardPermutation =
-                                if (nextState.gameSettingsBuilder.showLeaderboardPermutation)
-                                    playersList
-                                        .indices
-                                        .sortedByDescending { nextGameState.explanationScores[it] + nextGameState.guessingScores[it] }
-                                        .toKoneUIntArray()
-                                else null
-                            ,
+                                ),
+                                playersList = playersList,
+                                settings = settings,
+                                extraSettings = nextState.extraSettings,
+                            )
                         )
                     }
-                    is GameStateMachine.State.GameInitialised.Round.RoundPreparation -> {
-                        val gameMachineSettings = nextGameState.settings
-                        Outgoing.State.Round.Preparation(
-                            roomMetadata = metadata,
-                            role = Outgoing.Role.Round.Preparation(
+                }
+                is GameStateMachine.State.GameInitialised.Round.RoundWaiting -> {
+                val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
+                    val playersList = scope {
+                        var playingPlayerIndex = 0u
+                        nextState.playersList.mapIndexed { index, player ->
+                            Outgoing.PlayerDescription.Round.Waiting(
                                 metadata = player.metadata,
                                 userIndex = index,
+                                isOnline = player.isOnline,
                                 isHost = index == hostIndex,
-                                roundRole = when (index) {
-                                    nextGameState.speakerIndex -> Outgoing.Role.Round.Preparation.RoundRole.Speaker
-                                    nextGameState.listenerIndex -> Outgoing.Role.Round.Preparation.RoundRole.Listener
-                                    else -> Outgoing.Role.Round.Preparation.RoundRole.Player
+                                globalRole = when (val globalRole = nextState.globalRoles[index]) {
+                                    GlobalRole.Player -> Outgoing.PlayerDescription.Round.GlobalRole.Player(
+                                        when (playingPlayerIndex) {
+                                            nextGameState.speakerIndex -> Outgoing.PlayerDescription.Round.GlobalRole.Player.RoundRole.Speaker
+                                            nextGameState.listenerIndex -> Outgoing.PlayerDescription.Round.GlobalRole.Player.RoundRole.Listener
+                                            else -> null
+                                        },
+                                    ).also { playingPlayerIndex++ }
+                                    GlobalRole.Spectator -> Outgoing.PlayerDescription.Round.GlobalRole.Spectator
                                 },
-                                roundsBeforeSpeaking = nextGameState.playersRoundsBeforeSpeaking[index],
-                                roundsBeforeListening = nextGameState.playersRoundsBeforeListening[index],
-                            ),
-                            playersList = playersList.mapIndexed { index, player ->
-                                Outgoing.PlayerDescription.Round.Preparation(
+                            )
+                        }
+                    }
+                    val settings = GameSettings(
+                        preparationTimeSeconds = nextGameState.settings.preparationTimeSeconds,
+                        explanationTimeSeconds = nextGameState.settings.explanationTimeSeconds,
+                        finalGuessTimeSeconds = nextGameState.settings.finalGuessTimeSeconds,
+                        strictMode = nextGameState.settings.strictMode,
+                        gameEndCondition = nextGameState.settings.gameEndCondition,
+                        wordsSource = when (val wordsSource = nextGameState.settings.wordsSource) {
+                            GameStateMachine.WordsSource.Players -> WordsSource.Players
+                            is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
+                        },
+                    )
+                    var playingPlayerIndex = 0u
+                    nextState.playersList.forEachIndexed { index, player ->
+                        player.sendNewState(
+                            Outgoing.State.Round.Waiting(
+                                roomMetadata = metadata,
+                                selfRole = Outgoing.SelfRole.Round.Waiting(
                                     metadata = player.metadata,
                                     userIndex = index,
-                                    isOnline = player.isOnline,
-                                    isHost = player.isHost,
-                                    roundRole = when (index) {
-                                        nextGameState.speakerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Speaker
-                                        nextGameState.listenerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Listener
-                                        else -> Outgoing.PlayerDescription.Round.RoundRole.Player
+                                    isHost = index == hostIndex,
+                                    globalRole = when (val globalRole = nextState.globalRoles[index]) {
+                                        GlobalRole.Player -> Outgoing.SelfRole.Round.Waiting.GlobalRole.Player(
+                                            when (playingPlayerIndex) {
+                                                nextGameState.speakerIndex -> Outgoing.SelfRole.Round.Waiting.GlobalRole.Player.RoundRole.Speaker
+                                                nextGameState.listenerIndex -> Outgoing.SelfRole.Round.Waiting.GlobalRole.Player.RoundRole.Listener
+                                                else -> null
+                                            },
+                                            roundsBeforeSpeaking = nextGameState.playersRoundsBeforeSpeaking[playingPlayerIndex],
+                                            roundsBeforeListening = nextGameState.playersRoundsBeforeListening[playingPlayerIndex],
+                                        ).also { playingPlayerIndex++ }
+                                        GlobalRole.Spectator -> Outgoing.SelfRole.Round.Waiting.GlobalRole.Spectator
                                     },
-                                    scoreExplained = nextGameState.explanationScores[index],
-                                    scoreGuessed = nextGameState.guessingScores[index],
-                                    scoreSum = nextGameState.explanationScores[index] + nextGameState.guessingScores[index],
-                                )
-                            },
-                            settings = GameSettings(
-                                preparationTimeSeconds = gameMachineSettings.preparationTimeSeconds,
-                                explanationTimeSeconds = gameMachineSettings.explanationTimeSeconds,
-                                finalGuessTimeSeconds = gameMachineSettings.finalGuessTimeSeconds,
-                                strictMode = gameMachineSettings.strictMode,
-                                gameEndCondition = gameMachineSettings.gameEndCondition,
-                                wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
-                                    GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
-                                },
-                                showWordsStatistic = nextState.gameSettingsBuilder.showWordsStatistic,
-                                showLeaderboardPermutation = nextState.gameSettingsBuilder.showLeaderboardPermutation,
-                            ),
-                            initialWordsNumber = nextGameState.initialWordsNumber,
-                            roundNumber =  nextGameState.roundNumber,
-                            cycleNumber = nextGameState.cycleNumber,
-                            speakerIndex = nextGameState.speakerIndex,
-                            listenerIndex = nextGameState.listenerIndex,
-                            nextSpeakerIndex = nextGameState.nextSpeakerIndex,
-                            nextListenerIndex = nextGameState.nextListenerIndex,
-                            restWordsNumber = nextGameState.restWords.size,
-                            wordsInProgressNumber = nextGameState.currentExplanationResults.size,
-                            wordsStatistic =
-                                if (nextState.gameSettingsBuilder.showWordsStatistic) nextGameState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress }
-                                else null,
-                            millisecondsLeft = nextGameState.millisecondsLeft,
-                            leaderboardPermutation =
-                                if (nextState.gameSettingsBuilder.showLeaderboardPermutation)
-                                    playersList
-                                        .indices
-                                        .sortedByDescending { nextGameState.explanationScores[it] + nextGameState.guessingScores[it] }
-                                        .toKoneUIntArray()
-                                else null,
+                                    isGameFinishable = index == hostIndex,
+                                ),
+                                playersList = playersList,
+                                settings = settings,
+                                extraSettings = nextState.extraSettings,
+                                initialWordsNumber = nextGameState.initialWordsNumber,
+                                roundNumber =  nextGameState.roundNumber,
+                                cycleNumber = nextGameState.cycleNumber,
+                                speakerIndex = nextGameState.speakerIndex,
+                                listenerIndex = nextGameState.listenerIndex,
+                                nextSpeakerIndex = nextGameState.nextSpeakerIndex,
+                                nextListenerIndex = nextGameState.nextListenerIndex,
+                                restWordsNumber = nextGameState.restWords.size,
+                                wordsInProgressNumber = 0u,
+                                wordsStatistic =
+                                    if (nextState.extraSettings.showWordsStatistic) nextGameState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress }
+                                    else null,
+                                speakerReady = nextGameState.speakerReady,
+                                listenerReady = nextGameState.listenerReady,
+                                leaderboard =
+                                    if (nextState.extraSettings.showLeaderboardPermutation)
+                                        Outgoing.Leaderboard(
+                                            permutation =
+                                                nextGameState.explanationScores
+                                                    .indices
+                                                    .sortedByDescending { nextGameState.explanationScores[it] + nextGameState.guessingScores[it] }
+                                                    .toKoneUIntArray(),
+                                            scoreExplained = nextGameState.explanationScores.toKoneUIntArray(),
+                                            scoreGuessed = nextGameState.guessingScores.toKoneUIntArray(),
+                                            scoreSum = KoneUIntArray.generate(playersList.size) { nextGameState.explanationScores[it] + nextGameState.guessingScores[it] },
+                                        )
+                                    else null
+                                ,
+                            )
                         )
                     }
-                    is GameStateMachine.State.GameInitialised.Round.RoundExplanation -> {
-                        val gameMachineSettings = nextGameState.settings
-                        Outgoing.State.Round.Explanation(
-                            roomMetadata = metadata,
-                            role = Outgoing.Role.Round.Explanation(
+                }
+                is GameStateMachine.State.GameInitialised.Round.RoundPreparation -> {
+                val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
+                    val playersList = scope {
+                        var playingPlayerIndex = 0u
+                        nextState.playersList.mapIndexed { index, player ->
+                            Outgoing.PlayerDescription.Round.Preparation(
                                 metadata = player.metadata,
                                 userIndex = index,
+                                isOnline = player.isOnline,
                                 isHost = index == hostIndex,
-                                roundRole = when (index) {
-                                    nextGameState.speakerIndex -> Outgoing.Role.Round.Explanation.RoundRole.Speaker(nextGameState.currentWord)
-                                    nextGameState.listenerIndex -> Outgoing.Role.Round.Explanation.RoundRole.Listener
-                                    else -> Outgoing.Role.Round.Explanation.RoundRole.Player
+                                globalRole = when (val globalRole = nextState.globalRoles[index]) {
+                                    GlobalRole.Player -> Outgoing.PlayerDescription.Round.GlobalRole.Player(
+                                        when (playingPlayerIndex) {
+                                            nextGameState.speakerIndex -> Outgoing.PlayerDescription.Round.GlobalRole.Player.RoundRole.Speaker
+                                            nextGameState.listenerIndex -> Outgoing.PlayerDescription.Round.GlobalRole.Player.RoundRole.Listener
+                                            else -> null
+                                        },
+                                    ).also { playingPlayerIndex++ }
+                                    GlobalRole.Spectator -> Outgoing.PlayerDescription.Round.GlobalRole.Spectator
                                 },
-                                roundsBeforeSpeaking = nextGameState.playersRoundsBeforeSpeaking[index],
-                                roundsBeforeListening = nextGameState.playersRoundsBeforeListening[index],
-                            ),
-                            playersList = playersList.mapIndexed { index, player ->
-                                Outgoing.PlayerDescription.Round.Explanation(
+                            )
+                        }
+                    }
+                    val settings = GameSettings(
+                        preparationTimeSeconds = nextGameState.settings.preparationTimeSeconds,
+                        explanationTimeSeconds = nextGameState.settings.explanationTimeSeconds,
+                        finalGuessTimeSeconds = nextGameState.settings.finalGuessTimeSeconds,
+                        strictMode = nextGameState.settings.strictMode,
+                        gameEndCondition = nextGameState.settings.gameEndCondition,
+                        wordsSource = when (val wordsSource = nextGameState.settings.wordsSource) {
+                            GameStateMachine.WordsSource.Players -> WordsSource.Players
+                            is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
+                        },
+                    )
+                    var playingPlayerIndex = 0u
+                    nextState.playersList.forEachIndexed { index, player ->
+                        player.sendNewState(
+                            Outgoing.State.Round.Preparation(
+                                roomMetadata = metadata,
+                                selfRole = Outgoing.SelfRole.Round.Preparation(
                                     metadata = player.metadata,
                                     userIndex = index,
-                                    isOnline = player.isOnline,
-                                    isHost = player.isHost,
-                                    roundRole = when (index) {
-                                        nextGameState.speakerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Speaker
-                                        nextGameState.listenerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Listener
-                                        else -> Outgoing.PlayerDescription.Round.RoundRole.Player
+                                    isHost = index == hostIndex,
+                                    globalRole = when (val globalRole = nextState.globalRoles[index]) {
+                                        GlobalRole.Player -> Outgoing.SelfRole.Round.Preparation.GlobalRole.Player(
+                                            when (playingPlayerIndex) {
+                                                nextGameState.speakerIndex -> Outgoing.SelfRole.Round.Preparation.GlobalRole.Player.RoundRole.Speaker
+                                                nextGameState.listenerIndex -> Outgoing.SelfRole.Round.Preparation.GlobalRole.Player.RoundRole.Listener
+                                                else -> null
+                                            },
+                                            roundsBeforeSpeaking = nextGameState.playersRoundsBeforeSpeaking[playingPlayerIndex],
+                                            roundsBeforeListening = nextGameState.playersRoundsBeforeListening[playingPlayerIndex],
+                                        ).also { playingPlayerIndex++ }
+                                        GlobalRole.Spectator -> Outgoing.SelfRole.Round.Preparation.GlobalRole.Spectator
                                     },
-                                    scoreExplained = nextGameState.explanationScores[index],
-                                    scoreGuessed = nextGameState.guessingScores[index],
-                                    scoreSum = nextGameState.explanationScores[index] + nextGameState.guessingScores[index],
-                                )
-                            },
-                            settings = GameSettings(
-                                preparationTimeSeconds = gameMachineSettings.preparationTimeSeconds,
-                                explanationTimeSeconds = gameMachineSettings.explanationTimeSeconds,
-                                finalGuessTimeSeconds = gameMachineSettings.finalGuessTimeSeconds,
-                                strictMode = gameMachineSettings.strictMode,
-                                gameEndCondition = gameMachineSettings.gameEndCondition,
-                                wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
-                                    GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
-                                },
-                                showWordsStatistic = nextState.gameSettingsBuilder.showWordsStatistic,
-                                showLeaderboardPermutation = nextState.gameSettingsBuilder.showLeaderboardPermutation,
-                            ),
-                            initialWordsNumber = nextGameState.initialWordsNumber,
-                            roundNumber =  nextGameState.roundNumber,
-                            cycleNumber = nextGameState.cycleNumber,
-                            speakerIndex = nextGameState.speakerIndex,
-                            listenerIndex = nextGameState.listenerIndex,
-                            nextSpeakerIndex = nextGameState.nextSpeakerIndex,
-                            nextListenerIndex = nextGameState.nextListenerIndex,
-                            restWordsNumber = nextGameState.restWords.size,
-                            wordsInProgressNumber = nextGameState.currentExplanationResults.size + 1u,
-                            wordsStatistic =
-                                if (nextState.gameSettingsBuilder.showWordsStatistic) nextGameState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress }
-                                else null,
-                            millisecondsLeft = nextGameState.millisecondsLeft,
-                            leaderboardPermutation =
-                                if (nextState.gameSettingsBuilder.showLeaderboardPermutation)
-                                    playersList
-                                        .indices
-                                        .sortedByDescending { nextGameState.explanationScores[it] + nextGameState.guessingScores[it] }
-                                        .toKoneUIntArray()
-                                else null,
+                                ),
+                                playersList = playersList,
+                                settings = settings,
+                                extraSettings = nextState.extraSettings,
+                                initialWordsNumber = nextGameState.initialWordsNumber,
+                                roundNumber =  nextGameState.roundNumber,
+                                cycleNumber = nextGameState.cycleNumber,
+                                speakerIndex = nextGameState.speakerIndex,
+                                listenerIndex = nextGameState.listenerIndex,
+                                nextSpeakerIndex = nextGameState.nextSpeakerIndex,
+                                nextListenerIndex = nextGameState.nextListenerIndex,
+                                restWordsNumber = nextGameState.restWords.size,
+                                wordsInProgressNumber = 0u,
+                                wordsStatistic =
+                                    if (nextState.extraSettings.showWordsStatistic) nextGameState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress }
+                                    else null,
+                                millisecondsLeft = nextGameState.millisecondsLeft,
+                                leaderboard =
+                                    if (nextState.extraSettings.showLeaderboardPermutation)
+                                        Outgoing.Leaderboard(
+                                            permutation =
+                                                playersList
+                                                    .indices
+                                                    .sortedByDescending { nextGameState.explanationScores[it] + nextGameState.guessingScores[it] }
+                                                    .toKoneUIntArray(),
+                                            scoreExplained = nextGameState.explanationScores.toKoneUIntArray(),
+                                            scoreGuessed = nextGameState.guessingScores.toKoneUIntArray(),
+                                            scoreSum = KoneUIntArray.generate(playersList.size) { nextGameState.explanationScores[it] + nextGameState.guessingScores[it] },
+                                        )
+                                    else null
+                                ,
+                            )
                         )
                     }
-                    is GameStateMachine.State.GameInitialised.Round.RoundLastGuess -> {
-                        val gameMachineSettings = nextGameState.settings
-                        Outgoing.State.Round.LastGuess(
-                            roomMetadata = metadata,
-                            role = Outgoing.Role.Round.LastGuess(
+                }
+                is GameStateMachine.State.GameInitialised.Round.RoundExplanation -> {
+                val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
+                    val playersList = scope {
+                        var playingPlayerIndex = 0u
+                        nextState.playersList.mapIndexed { index, player ->
+                            Outgoing.PlayerDescription.Round.Explanation(
                                 metadata = player.metadata,
                                 userIndex = index,
+                                isOnline = player.isOnline,
                                 isHost = index == hostIndex,
-                                roundRole = when (index) {
-                                    nextGameState.speakerIndex -> Outgoing.Role.Round.LastGuess.RoundRole.Speaker(nextGameState.currentWord)
-                                    nextGameState.listenerIndex -> Outgoing.Role.Round.LastGuess.RoundRole.Listener
-                                    else -> Outgoing.Role.Round.LastGuess.RoundRole.Player
+                                globalRole = when (val globalRole = nextState.globalRoles[index]) {
+                                    GlobalRole.Player -> Outgoing.PlayerDescription.Round.GlobalRole.Player(
+                                        when (playingPlayerIndex) {
+                                            nextGameState.speakerIndex -> Outgoing.PlayerDescription.Round.GlobalRole.Player.RoundRole.Speaker
+                                            nextGameState.listenerIndex -> Outgoing.PlayerDescription.Round.GlobalRole.Player.RoundRole.Listener
+                                            else -> null
+                                        },
+                                    ).also { playingPlayerIndex++ }
+                                    GlobalRole.Spectator -> Outgoing.PlayerDescription.Round.GlobalRole.Spectator
                                 },
-                                roundsBeforeSpeaking = nextGameState.playersRoundsBeforeSpeaking[index],
-                                roundsBeforeListening = nextGameState.playersRoundsBeforeListening[index],
-                            ),
-                            playersList = playersList.mapIndexed { index, player ->
-                                Outgoing.PlayerDescription.Round.LastGuess(
+                            )
+                        }
+                    }
+                    val settings = GameSettings(
+                        preparationTimeSeconds = nextGameState.settings.preparationTimeSeconds,
+                        explanationTimeSeconds = nextGameState.settings.explanationTimeSeconds,
+                        finalGuessTimeSeconds = nextGameState.settings.finalGuessTimeSeconds,
+                        strictMode = nextGameState.settings.strictMode,
+                        gameEndCondition = nextGameState.settings.gameEndCondition,
+                        wordsSource = when (val wordsSource = nextGameState.settings.wordsSource) {
+                            GameStateMachine.WordsSource.Players -> WordsSource.Players
+                            is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
+                        },
+                    )
+                    var playingPlayerIndex = 0u
+                    nextState.playersList.forEachIndexed { index, player ->
+                        player.sendNewState(
+                            Outgoing.State.Round.Explanation(
+                                roomMetadata = metadata,
+                                selfRole = Outgoing.SelfRole.Round.Explanation(
                                     metadata = player.metadata,
                                     userIndex = index,
-                                    isOnline = player.isOnline,
-                                    isHost = player.isHost,
-                                    roundRole = when (index) {
-                                        nextGameState.speakerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Speaker
-                                        nextGameState.listenerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Listener
-                                        else -> Outgoing.PlayerDescription.Round.RoundRole.Player
+                                    isHost = index == hostIndex,
+                                    globalRole = when (val globalRole = nextState.globalRoles[index]) {
+                                        GlobalRole.Player -> Outgoing.SelfRole.Round.Explanation.GlobalRole.Player(
+                                            roundRole = when (playingPlayerIndex) {
+                                                nextGameState.speakerIndex -> Outgoing.SelfRole.Round.Explanation.GlobalRole.Player.RoundRole.Speaker(nextGameState.currentWord)
+                                                nextGameState.listenerIndex -> Outgoing.SelfRole.Round.Explanation.GlobalRole.Player.RoundRole.Listener
+                                                else -> null
+                                            },
+                                            roundsBeforeSpeaking = nextGameState.playersRoundsBeforeSpeaking[playingPlayerIndex],
+                                            roundsBeforeListening = nextGameState.playersRoundsBeforeListening[playingPlayerIndex],
+                                        ).also { playingPlayerIndex++ }
+                                        GlobalRole.Spectator -> Outgoing.SelfRole.Round.Explanation.GlobalRole.Spectator
                                     },
-                                    scoreExplained = nextGameState.explanationScores[index],
-                                    scoreGuessed = nextGameState.guessingScores[index],
-                                    scoreSum = nextGameState.explanationScores[index] + nextGameState.guessingScores[index],
-                                )
-                            },
-                            settings = GameSettings(
-                                preparationTimeSeconds = gameMachineSettings.preparationTimeSeconds,
-                                explanationTimeSeconds = gameMachineSettings.explanationTimeSeconds,
-                                finalGuessTimeSeconds = gameMachineSettings.finalGuessTimeSeconds,
-                                strictMode = gameMachineSettings.strictMode,
-                                gameEndCondition = gameMachineSettings.gameEndCondition,
-                                wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
-                                    GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
-                                },
-                                showWordsStatistic = nextState.gameSettingsBuilder.showWordsStatistic,
-                                showLeaderboardPermutation = nextState.gameSettingsBuilder.showLeaderboardPermutation,
-                            ),
-                            initialWordsNumber = nextGameState.initialWordsNumber,
-                            roundNumber =  nextGameState.roundNumber,
-                            cycleNumber = nextGameState.cycleNumber,
-                            speakerIndex = nextGameState.speakerIndex,
-                            listenerIndex = nextGameState.listenerIndex,
-                            nextSpeakerIndex = nextGameState.nextSpeakerIndex,
-                            nextListenerIndex = nextGameState.nextListenerIndex,
-                            restWordsNumber = nextGameState.restWords.size,
-                            wordsInProgressNumber = nextGameState.currentExplanationResults.size + 1u,
-                            wordsStatistic =
-                                if (nextState.gameSettingsBuilder.showWordsStatistic) nextGameState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress }
-                                else null,
-                            millisecondsLeft = nextGameState.millisecondsLeft,
-                            leaderboardPermutation =
-                                if (nextState.gameSettingsBuilder.showLeaderboardPermutation)
-                                    playersList
-                                        .indices
-                                        .sortedByDescending { nextGameState.explanationScores[it] + nextGameState.guessingScores[it] }
-                                        .toKoneUIntArray()
-                                else null,
+                                ),
+                                playersList = playersList,
+                                settings = settings,
+                                extraSettings = nextState.extraSettings,
+                                initialWordsNumber = nextGameState.initialWordsNumber,
+                                roundNumber =  nextGameState.roundNumber,
+                                cycleNumber = nextGameState.cycleNumber,
+                                speakerIndex = nextGameState.speakerIndex,
+                                listenerIndex = nextGameState.listenerIndex,
+                                nextSpeakerIndex = nextGameState.nextSpeakerIndex,
+                                nextListenerIndex = nextGameState.nextListenerIndex,
+                                restWordsNumber = nextGameState.restWords.size,
+                                wordsInProgressNumber = 0u,
+                                wordsStatistic =
+                                    if (nextState.extraSettings.showWordsStatistic) nextGameState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress }
+                                    else null,
+                                millisecondsLeft = nextGameState.millisecondsLeft,
+                                leaderboard =
+                                    if (nextState.extraSettings.showLeaderboardPermutation)
+                                        Outgoing.Leaderboard(
+                                            permutation =
+                                                playersList
+                                                    .indices
+                                                    .sortedByDescending { nextGameState.explanationScores[it] + nextGameState.guessingScores[it] }
+                                                    .toKoneUIntArray(),
+                                            scoreExplained = nextGameState.explanationScores.toKoneUIntArray(),
+                                            scoreGuessed = nextGameState.guessingScores.toKoneUIntArray(),
+                                            scoreSum = KoneUIntArray.generate(playersList.size) { nextGameState.explanationScores[it] + nextGameState.guessingScores[it] },
+                                        )
+                                    else null
+                                ,
+                            )
                         )
                     }
-                    is GameStateMachine.State.GameInitialised.Round.RoundEditing -> {
-                        val gameMachineSettings = nextGameState.settings
-                        Outgoing.State.Round.Editing(
-                            roomMetadata = metadata,
-                            role = Outgoing.Role.Round.Editing(
+                }
+                is GameStateMachine.State.GameInitialised.Round.RoundLastGuess -> {
+                val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
+                    val playersList = scope {
+                        var playingPlayerIndex = 0u
+                        nextState.playersList.mapIndexed { index, player ->
+                            Outgoing.PlayerDescription.Round.LastGuess(
                                 metadata = player.metadata,
                                 userIndex = index,
+                                isOnline = player.isOnline,
                                 isHost = index == hostIndex,
-                                roundRole = when (index) {
-                                    nextGameState.speakerIndex -> Outgoing.Role.Round.Editing.RoundRole.Speaker(nextGameState.currentExplanationResults)
-                                    nextGameState.listenerIndex -> Outgoing.Role.Round.Editing.RoundRole.Listener
-                                    else -> Outgoing.Role.Round.Editing.RoundRole.Player
+                                globalRole = when (val globalRole = nextState.globalRoles[index]) {
+                                    GlobalRole.Player -> Outgoing.PlayerDescription.Round.GlobalRole.Player(
+                                        when (playingPlayerIndex) {
+                                            nextGameState.speakerIndex -> Outgoing.PlayerDescription.Round.GlobalRole.Player.RoundRole.Speaker
+                                            nextGameState.listenerIndex -> Outgoing.PlayerDescription.Round.GlobalRole.Player.RoundRole.Listener
+                                            else -> null
+                                        },
+                                    ).also { playingPlayerIndex++ }
+                                    GlobalRole.Spectator -> Outgoing.PlayerDescription.Round.GlobalRole.Spectator
                                 },
-                                roundsBeforeSpeaking = nextGameState.playersRoundsBeforeSpeaking[index],
-                                roundsBeforeListening = nextGameState.playersRoundsBeforeListening[index],
-                            ),
-                            playersList = playersList.mapIndexed { index, player ->
-                                Outgoing.PlayerDescription.Round.Editing(
+                            )
+                        }
+                    }
+                    val settings = GameSettings(
+                        preparationTimeSeconds = nextGameState.settings.preparationTimeSeconds,
+                        explanationTimeSeconds = nextGameState.settings.explanationTimeSeconds,
+                        finalGuessTimeSeconds = nextGameState.settings.finalGuessTimeSeconds,
+                        strictMode = nextGameState.settings.strictMode,
+                        gameEndCondition = nextGameState.settings.gameEndCondition,
+                        wordsSource = when (val wordsSource = nextGameState.settings.wordsSource) {
+                            GameStateMachine.WordsSource.Players -> WordsSource.Players
+                            is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
+                        },
+                    )
+                    var playingPlayerIndex = 0u
+                    nextState.playersList.forEachIndexed { index, player ->
+                        player.sendNewState(
+                            Outgoing.State.Round.LastGuess(
+                                roomMetadata = metadata,
+                                selfRole = Outgoing.SelfRole.Round.LastGuess(
                                     metadata = player.metadata,
                                     userIndex = index,
-                                    isOnline = player.isOnline,
-                                    isHost = player.isHost,
-                                    roundRole = when (index) {
-                                        nextGameState.speakerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Speaker
-                                        nextGameState.listenerIndex -> Outgoing.PlayerDescription.Round.RoundRole.Listener
-                                        else -> Outgoing.PlayerDescription.Round.RoundRole.Player
+                                    isHost = index == hostIndex,
+                                    globalRole = when (val globalRole = nextState.globalRoles[index]) {
+                                        GlobalRole.Player -> Outgoing.SelfRole.Round.LastGuess.GlobalRole.Player(
+                                            roundRole = when (playingPlayerIndex) {
+                                                nextGameState.speakerIndex -> Outgoing.SelfRole.Round.LastGuess.GlobalRole.Player.RoundRole.Speaker(nextGameState.currentWord)
+                                                nextGameState.listenerIndex -> Outgoing.SelfRole.Round.LastGuess.GlobalRole.Player.RoundRole.Listener
+                                                else -> null
+                                            },
+                                            roundsBeforeSpeaking = nextGameState.playersRoundsBeforeSpeaking[playingPlayerIndex],
+                                            roundsBeforeListening = nextGameState.playersRoundsBeforeListening[playingPlayerIndex],
+                                        ).also { playingPlayerIndex++ }
+                                        GlobalRole.Spectator -> Outgoing.SelfRole.Round.LastGuess.GlobalRole.Spectator
                                     },
-                                    scoreExplained = nextGameState.explanationScores[index],
-                                    scoreGuessed = nextGameState.guessingScores[index],
-                                    scoreSum = nextGameState.explanationScores[index] + nextGameState.guessingScores[index],
-                                )
-                            },
-                            settings = GameSettings(
-                                preparationTimeSeconds = gameMachineSettings.preparationTimeSeconds,
-                                explanationTimeSeconds = gameMachineSettings.explanationTimeSeconds,
-                                finalGuessTimeSeconds = gameMachineSettings.finalGuessTimeSeconds,
-                                strictMode = gameMachineSettings.strictMode,
-                                gameEndCondition = gameMachineSettings.gameEndCondition,
-                                wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
-                                    GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
-                                },
-                                showWordsStatistic = nextState.gameSettingsBuilder.showWordsStatistic,
-                                showLeaderboardPermutation = nextState.gameSettingsBuilder.showLeaderboardPermutation,
-                            ),
-                            initialWordsNumber = nextGameState.initialWordsNumber,
-                            roundNumber =  nextGameState.roundNumber,
-                            cycleNumber = nextGameState.cycleNumber,
-                            speakerIndex = nextGameState.speakerIndex,
-                            listenerIndex = nextGameState.listenerIndex,
-                            nextSpeakerIndex = nextGameState.nextSpeakerIndex,
-                            nextListenerIndex = nextGameState.nextListenerIndex,
-                            restWordsNumber = nextGameState.restWords.size,
-                            wordsInProgressNumber = nextGameState.currentExplanationResults.size,
-                            wordsStatistic =
-                                if (nextState.gameSettingsBuilder.showWordsStatistic) nextGameState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress }
-                                else null,
-                            leaderboardPermutation =
-                                if (nextState.gameSettingsBuilder.showLeaderboardPermutation)
-                                    playersList
-                                        .indices
-                                        .sortedByDescending { nextGameState.explanationScores[it] + nextGameState.guessingScores[it] }
-                                        .toKoneUIntArray()
-                                else null,
+                                ),
+                                playersList = playersList,
+                                settings = settings,
+                                extraSettings = nextState.extraSettings,
+                                initialWordsNumber = nextGameState.initialWordsNumber,
+                                roundNumber =  nextGameState.roundNumber,
+                                cycleNumber = nextGameState.cycleNumber,
+                                speakerIndex = nextGameState.speakerIndex,
+                                listenerIndex = nextGameState.listenerIndex,
+                                nextSpeakerIndex = nextGameState.nextSpeakerIndex,
+                                nextListenerIndex = nextGameState.nextListenerIndex,
+                                restWordsNumber = nextGameState.restWords.size,
+                                wordsInProgressNumber = 0u,
+                                wordsStatistic =
+                                    if (nextState.extraSettings.showWordsStatistic) nextGameState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress }
+                                    else null,
+                                millisecondsLeft = nextGameState.millisecondsLeft,
+                                leaderboard =
+                                    if (nextState.extraSettings.showLeaderboardPermutation)
+                                        Outgoing.Leaderboard(
+                                            permutation =
+                                                playersList
+                                                    .indices
+                                                    .sortedByDescending { nextGameState.explanationScores[it] + nextGameState.guessingScores[it] }
+                                                    .toKoneUIntArray(),
+                                            scoreExplained = nextGameState.explanationScores.toKoneUIntArray(),
+                                            scoreGuessed = nextGameState.guessingScores.toKoneUIntArray(),
+                                            scoreSum = KoneUIntArray.generate(playersList.size) { nextGameState.explanationScores[it] + nextGameState.guessingScores[it] },
+                                        )
+                                    else null
+                                ,
+                            )
                         )
                     }
-                    is GameStateMachine.State.GameInitialised.GameResults -> {
-                        val gameMachineSettings = nextGameState.settings
-                        Outgoing.State.GameResults(
-                            roomMetadata = metadata,
-                            role = Outgoing.Role.GameResults(
+                }
+                is GameStateMachine.State.GameInitialised.Round.RoundEditing -> {
+                val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
+                    val playersList = scope {
+                        var playingPlayerIndex = 0u
+                        nextState.playersList.mapIndexed { index, player ->
+                            Outgoing.PlayerDescription.Round.Editing(
                                 metadata = player.metadata,
                                 userIndex = index,
+                                isOnline = player.isOnline,
                                 isHost = index == hostIndex,
-                            ),
-                            playersList = playersList.mapIndexed { index, player ->
-                                Outgoing.PlayerDescription.GameResults(
+                                globalRole = when (val globalRole = nextState.globalRoles[index]) {
+                                    GlobalRole.Player -> Outgoing.PlayerDescription.Round.GlobalRole.Player(
+                                        when (playingPlayerIndex) {
+                                            nextGameState.speakerIndex -> Outgoing.PlayerDescription.Round.GlobalRole.Player.RoundRole.Speaker
+                                            nextGameState.listenerIndex -> Outgoing.PlayerDescription.Round.GlobalRole.Player.RoundRole.Listener
+                                            else -> null
+                                        },
+                                    ).also { playingPlayerIndex++ }
+                                    GlobalRole.Spectator -> Outgoing.PlayerDescription.Round.GlobalRole.Spectator
+                                },
+                            )
+                        }
+                    }
+                    val settings = GameSettings(
+                        preparationTimeSeconds = nextGameState.settings.preparationTimeSeconds,
+                        explanationTimeSeconds = nextGameState.settings.explanationTimeSeconds,
+                        finalGuessTimeSeconds = nextGameState.settings.finalGuessTimeSeconds,
+                        strictMode = nextGameState.settings.strictMode,
+                        gameEndCondition = nextGameState.settings.gameEndCondition,
+                        wordsSource = when (val wordsSource = nextGameState.settings.wordsSource) {
+                            GameStateMachine.WordsSource.Players -> WordsSource.Players
+                            is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
+                        },
+                    )
+                    var playingPlayerIndex = 0u
+                    nextState.playersList.forEachIndexed { index, player ->
+                        player.sendNewState(
+                            Outgoing.State.Round.Editing(
+                                roomMetadata = metadata,
+                                selfRole = Outgoing.SelfRole.Round.Editing(
                                     metadata = player.metadata,
                                     userIndex = index,
-                                    isOnline = player.isOnline,
-                                    isHost = player.isHost,
-                                    scoreExplained = nextGameState.results[index].scoreExplained,
-                                    scoreGuessed = nextGameState.results[index].scoreGuessed,
-                                    scoreSum = nextGameState.results[index].scoreSum,
-                                )
-                            },
-                            settings = GameSettings(
-                                preparationTimeSeconds = gameMachineSettings.preparationTimeSeconds,
-                                explanationTimeSeconds = gameMachineSettings.explanationTimeSeconds,
-                                finalGuessTimeSeconds = gameMachineSettings.finalGuessTimeSeconds,
-                                strictMode = gameMachineSettings.strictMode,
-                                gameEndCondition = gameMachineSettings.gameEndCondition,
-                                wordsSource = when (val wordsSource = gameMachineSettings.wordsSource) {
-                                    GameStateMachine.WordsSource.Players -> WordsSource.Players
-                                    is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
+                                    isHost = index == hostIndex,
+                                    globalRole = when (val globalRole = nextState.globalRoles[index]) {
+                                        GlobalRole.Player -> Outgoing.SelfRole.Round.Editing.GlobalRole.Player(
+                                            roundRole = when (playingPlayerIndex) {
+                                                nextGameState.speakerIndex -> Outgoing.SelfRole.Round.Editing.GlobalRole.Player.RoundRole.Speaker(nextGameState.currentExplanationResults)
+                                                nextGameState.listenerIndex -> Outgoing.SelfRole.Round.Editing.GlobalRole.Player.RoundRole.Listener
+                                                else -> null
+                                            },
+                                            roundsBeforeSpeaking = nextGameState.playersRoundsBeforeSpeaking[playingPlayerIndex],
+                                            roundsBeforeListening = nextGameState.playersRoundsBeforeListening[playingPlayerIndex],
+                                        ).also { playingPlayerIndex++ }
+                                        GlobalRole.Spectator -> Outgoing.SelfRole.Round.Editing.GlobalRole.Spectator
+                                    },
+                                ),
+                                playersList = playersList,
+                                settings = settings,
+                                extraSettings = nextState.extraSettings,
+                                initialWordsNumber = nextGameState.initialWordsNumber,
+                                roundNumber =  nextGameState.roundNumber,
+                                cycleNumber = nextGameState.cycleNumber,
+                                speakerIndex = nextGameState.speakerIndex,
+                                listenerIndex = nextGameState.listenerIndex,
+                                nextSpeakerIndex = nextGameState.nextSpeakerIndex,
+                                nextListenerIndex = nextGameState.nextListenerIndex,
+                                restWordsNumber = nextGameState.restWords.size,
+                                wordsInProgressNumber = 0u,
+                                wordsStatistic =
+                                    if (nextState.extraSettings.showWordsStatistic) nextGameState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress }
+                                    else null,
+                                leaderboard =
+                                    if (nextState.extraSettings.showLeaderboardPermutation)
+                                        Outgoing.Leaderboard(
+                                            permutation =
+                                                playersList
+                                                    .indices
+                                                    .sortedByDescending { nextGameState.explanationScores[it] + nextGameState.guessingScores[it] }
+                                                    .toKoneUIntArray(),
+                                            scoreExplained = nextGameState.explanationScores.toKoneUIntArray(),
+                                            scoreGuessed = nextGameState.guessingScores.toKoneUIntArray(),
+                                            scoreSum = KoneUIntArray.generate(playersList.size) { nextGameState.explanationScores[it] + nextGameState.guessingScores[it] },
+                                        )
+                                    else null
+                                ,
+                            )
+                        )
+                    }
+                }
+                is GameStateMachine.State.GameInitialised.GameResults -> {
+                val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
+                    val playersList = scope {
+                        nextState.playersList.mapIndexed { index, player ->
+                            Outgoing.PlayerDescription.GameResults(
+                                metadata = player.metadata,
+                                userIndex = index,
+                                isOnline = player.isOnline,
+                                isHost = index == hostIndex,
+                                globalRole = when (val globalRole = nextState.globalRoles[index]) {
+                                    GlobalRole.Player -> Outgoing.PlayerDescription.GameResults.GlobalRole.Player
+                                    GlobalRole.Spectator -> Outgoing.PlayerDescription.GameResults.GlobalRole.Spectator
                                 },
-                                showWordsStatistic = nextState.gameSettingsBuilder.showWordsStatistic,
-                                showLeaderboardPermutation = nextState.gameSettingsBuilder.showLeaderboardPermutation,
-                            ),
-                            leaderboardPermutation = playersList
-                                .indices
-                                .sortedByDescending { nextGameState.results[it].scoreSum }
-                                .toKoneUIntArray(),
-                            wordsStatistic = nextGameState.wordsStatistic.toOutgoingAPI(),
+                            )
+                        }
+                    }
+                    val settings = GameSettings(
+                        preparationTimeSeconds = nextGameState.settings.preparationTimeSeconds,
+                        explanationTimeSeconds = nextGameState.settings.explanationTimeSeconds,
+                        finalGuessTimeSeconds = nextGameState.settings.finalGuessTimeSeconds,
+                        strictMode = nextGameState.settings.strictMode,
+                        gameEndCondition = nextGameState.settings.gameEndCondition,
+                        wordsSource = when (val wordsSource = nextGameState.settings.wordsSource) {
+                            GameStateMachine.WordsSource.Players -> WordsSource.Players
+                            is GameStateMachine.WordsSource.Custom<WordsProviderDescription> -> WordsSource.Custom(wordsSource.providerId)
+                        },
+                    )
+                    nextState.playersList.forEachIndexed { index, player ->
+                        player.sendNewState(
+                            Outgoing.State.GameResults(
+                                roomMetadata = metadata,
+                                selfRole = Outgoing.SelfRole.GameResults(
+                                    metadata = player.metadata,
+                                    userIndex = index,
+                                    isHost = index == hostIndex,
+                                    globalRole = when (val globalRole = nextState.globalRoles[index]) {
+                                        GlobalRole.Player -> Outgoing.SelfRole.GameResults.GlobalRole.Player
+                                        GlobalRole.Spectator -> Outgoing.SelfRole.GameResults.GlobalRole.Spectator
+                                    },
+                                ),
+                                playersList = playersList,
+                                settings = settings,
+                                extraSettings = nextState.extraSettings,
+                                wordsStatistic = nextGameState.wordsStatistic.toOutgoingAPI().filter { it.state != GameStateMachine.WordStatistic.State.InProgress },
+                                leaderboard = Outgoing.Leaderboard(
+                                    permutation =
+                                        playersList
+                                            .indices
+                                            .sortedByDescending { nextGameState.explanationScores[it] + nextGameState.guessingScores[it] }
+                                            .toKoneUIntArray(),
+                                    scoreExplained = nextGameState.explanationScores.toKoneUIntArray(),
+                                    scoreGuessed = nextGameState.guessingScores.toKoneUIntArray(),
+                                    scoreSum = KoneUIntArray.generate(playersList.size) { nextGameState.explanationScores[it] + nextGameState.guessingScores[it] },
+                                ),
+                            )
                         )
                     }
                 }
             }
-            player.connectionsRegistry.forEach { it.sendNewState(gameStateToSend) }
         }
     }
     
     public val description: Description<RoomMetadata, PlayerMetadata>
         get() {
             val state = stateMachine.state
-            val hostIndex = state.appearedPlayersList.firstIndexThat { _, player -> player.isOnline }
-            val playersList = state.appearedPlayersList.mapIndexed { index, player ->
+            val hostIndex = state.playersList.firstIndexThat { _, player -> player.isOnline }
+            val playersList = state.playersList.mapIndexed { index, player ->
                 Player.Description(metadata = player.metadata, isOnline = player.isOnline, isHost = index == hostIndex)
             }
             return Description(
@@ -1670,67 +1999,46 @@ public class Room<
     
     public suspend fun attachConnectionToPlayer(connection: ConnectionType, playerID: PlayerID): Player.Attachment<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>? {
         val result = stateMachine.moveMaybeAndCompute { previousState ->
-            when (previousState) {
-                is State.RoomPlayersGathering -> {
-                    val player = previousState.appearedPlayersList.firstThatOrNull { it.metadata.id == playerID }
+            val player = previousState.playersList.firstThatOrNull { it.metadata.id == playerID }
 
-                    if (player == null) {
-                        val metadata = initialMetadataFactory(playerID)
-                        if (checkConnectionAttachment(metadata, false, connection)) {
-                            val newPlayer = Player(this, metadata)
-                            val node = newPlayer.connectionsRegistry.addNode(connection)
-                            val attachment = Player.Attachment(newPlayer, node)
+            if (player == null) {
+                val metadata = initialMetadataFactory(playerID)
+                if (checkConnectionAttachment(metadata, false, connection)) {
+                    val newPlayer = Player(this, metadata)
+                    val node = newPlayer.connectionsRegistry.addNode(connection)
+                    val attachment = Player.Attachment(newPlayer, node)
 
-                            TransitionOrReasonAndComputation.Success(
-                                Transition.AddPlayer(newPlayer = newPlayer),
-                                attachment,
-                            )
-                        } else {
-                            connection.sendError(Outgoing.Error.AttachmentIsDenied)
-
-                            TransitionOrReasonAndComputation.Failure(null, null)
-                        }
-                    } else {
-                        if (checkConnectionAttachment(player.metadata, player.isOnline, connection)) {
-                            val node = player.connectionsRegistry.addNode(connection)
-                            val attachment = Player.Attachment(player, node)
-
-                            TransitionOrReasonAndComputation.Success(
-                                Transition.UpdatePlayersState(),
-                                attachment,
-                            )
-                        } else {
-                            connection.sendError(Outgoing.Error.AttachmentIsDenied)
-
-                            TransitionOrReasonAndComputation.Failure(null, null)
-                        }
-                    }
+                    TransitionOrReasonAndComputation.Success(
+                        Transition.AddPlayer(newPlayer = newPlayer),
+                        attachment,
+                    )
+                } else {
+                    TransitionOrReasonAndComputation.Failure(Outgoing.Error.AttachmentIsDenied, null)
                 }
-                is State.GameInProgress,
-                is State.GameInitialization,
-                    -> {
-                    val player = previousState.appearedPlayersList.firstThatOrNull { it.metadata.id == playerID }
-                    if (player == null || !checkConnectionAttachment(player.metadata, player.isOnline, connection)) {
-                        connection.sendError(Outgoing.Error.AttachmentIsDenied)
+            } else {
+                if (checkConnectionAttachment(player.metadata, player.isOnline, connection)) {
+                    val node = player.connectionsRegistry.addNode(connection)
+                    val attachment = Player.Attachment(player, node)
 
-                        TransitionOrReasonAndComputation.Failure(null, null)
-                    } else {
-                        val node = player.connectionsRegistry.addNode(connection)
-                        val attachment = Player.Attachment(player, node)
-
-                        TransitionOrReasonAndComputation.Success(
-                            Transition.UpdatePlayersState(),
-                            attachment,
-                        )
-                    }
+                    TransitionOrReasonAndComputation.Success(
+                        Transition.UpdatePlayersState(),
+                        attachment,
+                    )
+                } else {
+                    TransitionOrReasonAndComputation.Failure(Outgoing.Error.AttachmentIsDenied, null)
                 }
             }
         }
-        when (result) {
-            is MovementMaybeAndComputationResult.NoTransition -> {}
-            is MovementMaybeAndComputationResult.NoNextState -> {} // TODO: Log transition denial
-            is MovementMaybeAndComputationResult.Success -> {}
+        return when (result) {
+            is MovementMaybeAndComputationResult.NoTransition -> {
+                connection.sendError(result.noTransitionReason)
+                null
+            }
+            is MovementMaybeAndComputationResult.NoNextState -> {
+                connection.sendError(result.noNextStateReason)
+                null
+            }
+            is MovementMaybeAndComputationResult.Success -> result.computation
         }
-        return result.computation
     }
 }

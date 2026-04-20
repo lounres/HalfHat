@@ -6,8 +6,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-val HalfHatIcon.OnlineGameSpeakerToListenerRightArrow: ImageVector by
-        lazy(LazyThreadSafetyMode.NONE) {
+val HalfHatIcon.OnlineGameSpeakerToListenerRightArrow: ImageVector by lazy(LazyThreadSafetyMode.NONE) {
     ImageVector.Builder(
         name = "OnlineGameSpeakerToListenerRightArrow",
         defaultWidth = 24.dp,

@@ -1,4 +1,4 @@
-package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundEditing.speaker
+package dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundEditing.player.speaker
 
 import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.ui.theming.DarkTheme
@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 
 interface RoundEditingSpeakerContentComponent {
-    public val userRole: StateFlow<ServerApi.OnlineGame.Role.Round.Editing.RoundRole.Speaker>
+    public val roundRole: StateFlow<ServerApi.OnlineGame.SelfRole.Round.Editing.GlobalRole.Player.RoundRole.Speaker>
     
     public val darkTheme: KoneMutableAsynchronousHub<DarkTheme>
     

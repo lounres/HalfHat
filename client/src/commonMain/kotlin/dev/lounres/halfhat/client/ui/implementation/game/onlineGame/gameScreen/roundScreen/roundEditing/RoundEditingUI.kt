@@ -12,9 +12,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundEditing.RoundEditingComponent
-import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundScreen.roundEditing.listener.RoundEditingListenerContentUI
-import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundScreen.roundEditing.player.RoundEditingPlayerContentUI
-import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundScreen.roundEditing.speaker.RoundEditingSpeakerContentUI
+import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundScreen.roundEditing.player.RoundEditingForPlayerGameCardUI
+import dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roundScreen.roundEditing.spectator.RoundEditingForSpectatorContentUI
 import dev.lounres.kone.hub.subscribeAsState
 
 
@@ -35,9 +34,8 @@ fun RoundEditingGameCardUI(
         )
         
         when (val child = component.childSlot.subscribeAsState().value.component) {
-            is RoundEditingComponent.Child.Speaker -> RoundEditingSpeakerContentUI(child.component)
-            is RoundEditingComponent.Child.Listener -> RoundEditingListenerContentUI(child.component)
-            is RoundEditingComponent.Child.Player -> RoundEditingPlayerContentUI(child.component)
+            is RoundEditingComponent.Child.Player -> RoundEditingForPlayerGameCardUI(child.component)
+            is RoundEditingComponent.Child.Spectator -> RoundEditingForSpectatorContentUI(child.component)
         }
     }
 }

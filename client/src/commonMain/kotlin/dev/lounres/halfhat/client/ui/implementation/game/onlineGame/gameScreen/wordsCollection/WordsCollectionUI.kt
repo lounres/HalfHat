@@ -85,105 +85,114 @@ fun WordsCollectionGameCardUI(
             verticalArrangement = Arrangement.Center,
         ) {
             val gameState = component.gameState.collectAsState().value
-            if (gameState.role.finishedWordsCollection) {
-                Text(
-                    text = "Your words are submitted successfully",
-                    fontSize = 36.sp,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 40.sp,
-                )
-                Text(
-                    text = "You can see submitting status of other players in players menu",
-                    fontSize = 16.sp,
-                    textAlign = TextAlign.Center,
-                )
-            } else {
-                Column(
-                    modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Top,
-                ) {
-                    val currentWords = component.currentWords.subscribeAsState().value
-                    for ((val index, val word = value) in currentWords.withIndex()) {
-                        if (index != 0u) Spacer(modifier = Modifier.height(16.dp))
-                        key(word) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    modifier = Modifier.width(36.dp),
-                                    text = (index + 1u).toString(),
-                                    textAlign = TextAlign.End,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                OutlinedTextField(
-                                    modifier = Modifier.weight(1f),
-                                    value = word.subscribeAsState().value,
-                                    onValueChange = {
-                                        component.coroutineScope.launch {
-                                            word.set(it)
+            when (val globalRole = gameState.selfRole.globalRole) {
+                is ServerApi.OnlineGame.SelfRole.PlayersWordsCollection.GlobalRole.Player ->
+                    if (globalRole.finishedWordsCollection) {
+                        Text(
+                            text = "Your words are submitted successfully",
+                            fontSize = 36.sp,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 40.sp,
+                        )
+                        Text(
+                            text = "You can see submitting status of other players in players menu",
+                            fontSize = 16.sp,
+                            textAlign = TextAlign.Center,
+                        )
+                    } else {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Top,
+                        ) {
+                            val currentWords = component.currentWords.subscribeAsState().value
+                            for ((val index, val word = value) in currentWords.withIndex()) {
+                                if (index != 0u) Spacer(modifier = Modifier.height(16.dp))
+                                key(word) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(
+                                            modifier = Modifier.width(36.dp),
+                                            text = (index + 1u).toString(),
+                                            textAlign = TextAlign.End,
+                                            maxLines = 1,
+                                            softWrap = false,
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        OutlinedTextField(
+                                            modifier = Modifier.weight(1f),
+                                            value = word.subscribeAsState().value,
+                                            onValueChange = {
+                                                component.coroutineScope.launch {
+                                                    word.set(it)
+                                                }
+                                            },
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        IconButton(
+                                            onClick = {
+                                                component.coroutineScope.launch {
+                                                    component.currentWords.update { words ->
+                                                        words.filter { it !== word }
+                                                    }
+                                                }
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = HalfHatIcon.OnlineGamePlayersWordsRemoveWord,
+                                                contentDescription = "Remove word",
+                                            )
                                         }
-                                    },
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                IconButton(
-                                    onClick = {
-                                        component.coroutineScope.launch {
-                                            component.currentWords.update { words ->
-                                                words.filter { it !== word }
+                                    }
+                                }
+                            }
+                            if (currentWords.isNotEmpty()) Spacer(modifier = Modifier.height(8.dp))
+                            TextButton(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = {
+                                    component.coroutineScope.launch {
+                                        component.currentWords.update { words ->
+                                            KoneList.build {
+                                                addAllFrom(words)
+                                                +KoneMutableAsynchronousHub("")
                                             }
                                         }
                                     }
-                                ) {
-                                    Icon(
-                                        imageVector = HalfHatIcon.OnlineGamePlayersWordsRemoveWord,
-                                        contentDescription = "Remove word",
-                                    )
                                 }
+                            ) {
+                                Icon(
+                                    imageVector = HalfHatIcon.OnlineGamePlayersWordsAddWord,
+                                    modifier = Modifier.size(24.dp),
+                                    contentDescription = null,
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Add new word",
+                                )
                             }
                         }
-                    }
-                    if (currentWords.isNotEmpty()) Spacer(modifier = Modifier.height(8.dp))
-                    TextButton(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = {
-                            component.coroutineScope.launch {
-                                component.currentWords.update { words ->
-                                    KoneList.build {
-                                        addAllFrom(words)
-                                        +KoneMutableAsynchronousHub("")
-                                    }
-                                }
-                            }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = CircleShape,
+                            onClick = component.onSubmit,
+                        ) {
+                            Text(
+                                text = "Submit",
+                                fontSize = 32.sp,
+                                maxLines = 1,
+                                softWrap = false,
+                            )
                         }
-                    ) {
-                        Icon(
-                            imageVector = HalfHatIcon.OnlineGamePlayersWordsAddWord,
-                            modifier = Modifier.size(24.dp),
-                            contentDescription = null,
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Add new word",
-                        )
                     }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = CircleShape,
-                    onClick = component.onSubmit,
-                ) {
+                ServerApi.OnlineGame.SelfRole.PlayersWordsCollection.GlobalRole.Spectator ->
                     Text(
-                        text = "Submit",
-                        fontSize = 32.sp,
-                        maxLines = 1,
-                        softWrap = false,
+                        text = "You can see submitting status of other players in players menu",
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center,
                     )
-                }
             }
         }
     }
@@ -253,16 +262,20 @@ fun WordsCollectionAdditionalCardUI(
                 val gameState = component.gameState.collectAsState().value
                 when (additionalCard) {
                     WordsCollectionComponent.AdditionalCard.PlayersReadiness -> {
-                        for ((val index, val player = value) in gameState.playersList.withIndex()) {
+                        val players = gameState.playersList.withIndex().filter { it.value.globalRole is ServerApi.OnlineGame.PlayerDescription.PlayersWordsCollection.GlobalRole.Player }
+                        val nonPlayers = gameState.playersList.withIndex().filter { it.value.globalRole !is ServerApi.OnlineGame.PlayerDescription.PlayersWordsCollection.GlobalRole.Player }
+                        for ((val index, val indexedPlayer = value) in players.withIndex()) {
+                            (val userIndex = index, val player = value) = indexedPlayer
+                            val globalRole = player.globalRole as ServerApi.OnlineGame.PlayerDescription.PlayersWordsCollection.GlobalRole.Player
                             if (index != 0u) Spacer(modifier = Modifier.height(8.dp))
                             Surface(
                                 shape = CircleShape,
                                 color =
-                                    if (index == gameState.role.userIndex) {
-                                        if (player.finishedWordsCollection) MaterialTheme.colorScheme.tertiary
+                                    if (userIndex == gameState.selfRole.userIndex) {
+                                        if (globalRole.finishedWordsCollection) MaterialTheme.colorScheme.tertiary
                                         else MaterialTheme.colorScheme.tertiaryContainer
                                     } else {
-                                        if (player.finishedWordsCollection) MaterialTheme.colorScheme.inverseSurface
+                                        if (globalRole.finishedWordsCollection) MaterialTheme.colorScheme.inverseSurface
                                         else MaterialTheme.colorScheme.surface
                                     },
                             ) {
@@ -289,6 +302,44 @@ fun WordsCollectionAdditionalCardUI(
                                         modifier = Modifier.weight(1f),
                                         text = player.name,
                                     )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outline,
+                        )
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth().padding(4.dp),
+                            horizontalArrangement = Arrangement.SpaceAround,
+                        ) {
+                            for ((val player = value, val userIndex = index) in nonPlayers) {
+                                Surface(
+                                    modifier = Modifier.padding(4.dp),
+                                    shape = CircleShape,
+                                    color =
+                                        if (userIndex == gameState.selfRole.userIndex) MaterialTheme.colorScheme.tertiaryContainer
+                                        else MaterialTheme.colorScheme.surface,
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Icon(
+                                            imageVector = when (player.globalRole) {
+                                                is ServerApi.OnlineGame.PlayerDescription.PlayersWordsCollection.GlobalRole.Player -> error(TODO())
+                                                is ServerApi.OnlineGame.PlayerDescription.PlayersWordsCollection.GlobalRole.Spectator -> HalfHatIcon.OnlineGameSpectatorIcon
+                                            },
+                                            modifier = Modifier.size(24.dp),
+                                            contentDescription = null,
+                                        )
+                                        Spacer(Modifier.width(4.dp))
+                                        Text(
+                                            modifier = Modifier,
+                                            text = player.name,
+                                        )
+                                        Spacer(Modifier.width(4.dp))
+                                    }
                                 }
                             }
                         }

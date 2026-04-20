@@ -163,8 +163,14 @@ public suspend fun RealOnlineGamePageComponent(
                                 onlineGameComponent.resetAvailableDictionaries()
                                 onlineGameComponent.sendSignal(ClientApi.Signal.OnlineGame.RequestAvailableDictionaries)
                             },
-                            onApplySettings = {
-                                onlineGameComponent.sendSignal(ClientApi.Signal.OnlineGame.UpdateSettings(it))
+                            onApplySettings = { newGlobalRoles, settingsBuilderPatch, extraSettingsPatch ->
+                                onlineGameComponent.sendSignal(
+                                    ClientApi.Signal.OnlineGame.UpdateSettings(
+                                        newGlobalRoles = newGlobalRoles,
+                                        settingsBuilderPatch = settingsBuilderPatch,
+                                        extraSettingsPatch = extraSettingsPatch,
+                                    )
+                                )
                             },
                             onFixRoom = {
                                 onlineGameComponent.sendSignal(ClientApi.Signal.OnlineGame.FixRoom)

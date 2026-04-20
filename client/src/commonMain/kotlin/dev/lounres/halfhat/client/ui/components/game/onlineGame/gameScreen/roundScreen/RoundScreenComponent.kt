@@ -11,7 +11,6 @@ import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.round
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roundScreen.roundWaiting.RoundWaitingComponent
 import dev.lounres.halfhat.client.ui.theming.DarkTheme
 import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.kone.collections.array.KoneUIntArray
 import dev.lounres.kone.collections.list.KoneList
 import dev.lounres.kone.collections.list.of
 import dev.lounres.kone.collections.utils.filter
@@ -53,7 +52,7 @@ interface RoundScreenComponent {
         public data object Schedule : AdditionalCardButton {
             override val type: Type get() = Type.Schedule
         }
-        public data class PlayersStatistic(val leaderboardPermutation: KoneUIntArray) : AdditionalCardButton {
+        public data class PlayersStatistic(val leaderboardPermutation: ServerApi.Leaderboard?) : AdditionalCardButton {
             override val type: Type get() = Type.PlayersStatistic
         }
         public data class WordsStatistic(val wordsStatistic:  KoneList<GameStateMachine.WordStatistic.AndWord>) : AdditionalCardButton {
@@ -69,14 +68,14 @@ interface RoundScreenComponent {
     }
 
     public data class AdditionalCardButtonsChild(
-        val leaderboardPermutation: KoneUIntArray?,
+        val leaderboard: ServerApi.Leaderboard?,
         val wordsStatistic:  KoneList<GameStateMachine.WordStatistic.AndWord>?,
         val selectedButtonType: AdditionalCardButton.Type?,
     ) {
         @Suppress("UNCHECKED_CAST")
         val buttonsList = KoneList.of(
             AdditionalCardButton.Schedule,
-            leaderboardPermutation?.let { AdditionalCardButton.PlayersStatistic(it) },
+            AdditionalCardButton.PlayersStatistic(leaderboard),
             wordsStatistic?.let { AdditionalCardButton.WordsStatistic(it) },
             AdditionalCardButton.Settings,
         ).filter { it != null } as KoneList<AdditionalCardButton>
@@ -86,7 +85,7 @@ interface RoundScreenComponent {
 
     public sealed interface AdditionalCardChild {
         public data object Schedule : AdditionalCardChild
-        public data class PlayersStatistic(val leaderboardPermutation: KoneUIntArray) : AdditionalCardChild
+        public data class PlayersStatistic(val leaderboard: ServerApi.Leaderboard?) : AdditionalCardChild
         public data class WordsStatistic(val wordsStatistic:  KoneList<GameStateMachine.WordStatistic.AndWord>) : AdditionalCardChild
         public data object Settings : AdditionalCardChild
     }

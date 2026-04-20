@@ -9,7 +9,6 @@ import dev.lounres.kone.collections.iterables.isEmpty
 import dev.lounres.kone.collections.iterables.isNotEmpty
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.list.KoneList
-import dev.lounres.kone.collections.list.KoneSettableList
 import dev.lounres.kone.collections.list.empty
 import dev.lounres.kone.collections.list.generate
 import dev.lounres.kone.collections.list.indices
@@ -428,14 +427,8 @@ internal inline fun <P, WPID, NoWordsProviderReason, GSM> GSM.checkGameStateMach
                         GameStateMachine.State.GameInitialised.GameResults(
                             playersList = previousState.playersList,
                             settings = previousState.settings,
-                            results = KoneSettableList.generate(previousState.playersList.size) {
-                                GameStateMachine.GameResult(
-                                    player = it,
-                                    scoreExplained = previousState.explanationScores[it],
-                                    scoreGuessed = previousState.guessingScores[it],
-                                    scoreSum = previousState.explanationScores[it] + previousState.guessingScores[it],
-                                )
-                            }.apply { sortByDescending { it.scoreSum } },
+                            explanationScores = previousState.explanationScores,
+                            guessingScores = previousState.guessingScores,
                             wordsStatistic = previousState.wordsStatistic,
                         )
                     )
@@ -1133,14 +1126,8 @@ internal inline fun <P, WPID, NoWordsProviderReason, GSM> GSM.checkGameStateMach
                             GameStateMachine.State.GameInitialised.GameResults(
                                 playersList = previousState.playersList,
                                 settings = previousState.settings,
-                                results = KoneSettableList.generate(previousState.playersList.size) {
-                                    GameStateMachine.GameResult(
-                                        it,
-                                        explanationScores[it],
-                                        guessingScores[it],
-                                        explanationScores[it] + guessingScores[it],
-                                    )
-                                }.apply { sortByDescending { it.scoreSum } },
+                                explanationScores = previousState.explanationScores,
+                                guessingScores = previousState.guessingScores,
                                 wordsStatistic = newWordsStatistic,
                             )
                         )

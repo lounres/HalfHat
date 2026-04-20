@@ -57,7 +57,7 @@ public suspend fun RealGameScreenComponent(
     onExitOnlineGame: () -> Unit,
     availableDictionariesFlow: StateFlow<KoneList<DictionaryId.WithDescription>?>,
     onLoadServerDictionaries: () -> Unit,
-    onApplySettings: (ClientApi.SettingsBuilderPatch) -> Unit,
+    onApplySettings: (KoneList<ClientApi.GlobalRole>, ClientApi.SettingsBuilderPatch, ClientApi.ExtraSettingsPatch) -> Unit,
     onFixRoom: () -> Unit,
     onStartGame: () -> Unit,
     onFinishGame: () -> Unit,
@@ -138,9 +138,7 @@ public suspend fun RealGameScreenComponent(
 
                             onStartGame = onStartGame,
 
-                            onApplySettings = {
-                                onApplySettings(it)
-                            },
+                            onApplySettings = onApplySettings,
                         )
                     )
                 is RealGameScreenComponent.Configuration.PlayersWordsCollection ->

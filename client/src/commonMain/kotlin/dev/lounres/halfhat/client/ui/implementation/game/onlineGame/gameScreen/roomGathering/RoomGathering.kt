@@ -1,56 +1,25 @@
 package dev.lounres.halfhat.client.ui.implementation.game.onlineGame.gameScreen.roomGathering
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.ContainedLoadingIndicator
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.ToggleFloatingActionButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.window.core.layout.WindowSizeClass
-import dev.lounres.halfhat.api.onlineGame.DictionaryId
-import dev.lounres.halfhat.api.onlineGame.ServerApi
 import dev.lounres.halfhat.client.ui.components.game.onlineGame.gameScreen.roomGathering.RoomGatheringComponent
 import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.icons.OnlineGameCopyKeyButton
@@ -58,20 +27,9 @@ import dev.lounres.halfhat.client.ui.icons.OnlineGameCopyLinkButton
 import dev.lounres.halfhat.client.ui.icons.OnlineGameExitRoomButton
 import dev.lounres.halfhat.client.ui.icons.OnlineGameHostMarkIcon
 import dev.lounres.halfhat.client.ui.icons.OnlineGamePlayerIcon
-import dev.lounres.halfhat.client.ui.icons.OnlineGameSettingsButton
-import dev.lounres.halfhat.client.ui.icons.OnlineGameSettingsIconBetweenTimes
 import dev.lounres.halfhat.client.ui.utils.commonIconModifier
-import dev.lounres.halfhat.logic.gameStateMachine.GameStateMachine
-import dev.lounres.kone.collections.interop.toKoneList
 import dev.lounres.kone.collections.iterables.next
 import dev.lounres.kone.collections.utils.withIndex
-import dev.lounres.kone.scope
-import io.github.vinceglb.filekit.FileKit
-import io.github.vinceglb.filekit.dialogs.FileKitType
-import io.github.vinceglb.filekit.dialogs.openFilePicker
-import io.github.vinceglb.filekit.readString
-import kotlinx.coroutines.launch
-import kotlin.text.ifEmpty
 
 
 fun RoomGatheringToolbarContentUI(
@@ -127,7 +85,7 @@ fun RoomGatheringRoomCardUI(
                 Surface(
                     shape = CircleShape,
                     color =
-                        if (index == gameState.role.userIndex) MaterialTheme.colorScheme.tertiaryContainer
+                        if (index == gameState.selfRole.userIndex) MaterialTheme.colorScheme.tertiaryContainer
                         else MaterialTheme.colorScheme.surface,
                 ) {
                     Row(
@@ -175,7 +133,7 @@ fun ColumnScope.RoomGatheringCompactUI(
     Spacer(modifier = Modifier.height(16.dp))
     
     Button(
-        enabled = component.gameState.collectAsState().value.role.isRoomFixable,
+        enabled = component.gameState.collectAsState().value.selfRole.isRoomFixable,
         onClick = component.onFixRoom
     ) {
         Text("FIX ROOM", fontSize = 32.sp)
@@ -200,7 +158,7 @@ fun ColumnScope.RoomGatheringLargeUI(
     Spacer(modifier = Modifier.height(16.dp))
 
     Button(
-        enabled = component.gameState.collectAsState().value.role.isRoomFixable,
+        enabled = component.gameState.collectAsState().value.selfRole.isRoomFixable,
         onClick = component.onFixRoom
     ) {
         Text("FIX ROOM", fontSize = 32.sp)

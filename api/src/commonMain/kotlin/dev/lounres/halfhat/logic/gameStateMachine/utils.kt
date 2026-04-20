@@ -1,7 +1,8 @@
 package dev.lounres.halfhat.logic.gameStateMachine
 
 import dev.lounres.kone.collections.list.KoneList
-import dev.lounres.kone.collections.utils.map
+import dev.lounres.kone.collections.utils.mapIndexed
+import dev.lounres.kone.collections.utils.sortedBy
 import kotlin.random.Random
 
 
@@ -26,4 +27,6 @@ public val <P> GameStateMachine.State.GameInitialised.Round.RoundEditing<P, *>.s
 public val <P> GameStateMachine.State.GameInitialised.Round.RoundEditing<P, *>.listener: P get() = playersList[listenerIndex]
 
 public val <P> GameStateMachine.State.GameInitialised.GameResults<P, *>.personalResults: KoneList<GameStateMachine.PersonalResult<P>>
-    get() = results.map { GameStateMachine.PersonalResult(playersList[it.player], it.scoreExplained, it.scoreGuessed, it.scoreSum) }
+    get() = playersList
+        .mapIndexed { index, player -> GameStateMachine.PersonalResult(player, explanationScores[index], guessingScores[index], explanationScores[index] + guessingScores[index]) }
+        .sortedBy { it.scoreSum }
