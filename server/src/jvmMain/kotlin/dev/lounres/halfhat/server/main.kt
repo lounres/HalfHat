@@ -831,7 +831,7 @@ fun main() {
                                             ?: ServerApi.RoomDescription(
                                                 name = signal.roomId,
                                                 playersList = KoneList.empty(),
-                                                state = ServerApi.RoomStateType.GameInitialisation
+                                                state = ServerApi.RoomStateType.RoomPlayersGathering
                                             )
                                     )
                                 

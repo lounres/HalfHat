@@ -327,7 +327,7 @@ fun WordsCollectionAdditionalCardUI(
                                     ) {
                                         Icon(
                                             imageVector = when (player.globalRole) {
-                                                is ServerApi.OnlineGame.PlayerDescription.PlayersWordsCollection.GlobalRole.Player -> error(TODO())
+                                                is ServerApi.OnlineGame.PlayerDescription.PlayersWordsCollection.GlobalRole.Player -> error("Reached unreachable code.")
                                                 is ServerApi.OnlineGame.PlayerDescription.PlayersWordsCollection.GlobalRole.Spectator -> HalfHatIcon.OnlineGameSpectatorIcon
                                             },
                                             modifier = Modifier.size(24.dp),

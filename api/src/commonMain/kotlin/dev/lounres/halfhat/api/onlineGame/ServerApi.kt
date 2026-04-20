@@ -102,6 +102,19 @@ public object ServerApi {
                 override val isOnline: Boolean,
                 override val isHost: Boolean,
             ) : PlayerDescription
+
+            @Serializable
+            public sealed interface RoomPlayersGathered : PlayerDescription {
+                public val globalRole: GlobalRole
+
+                @Serializable
+                public sealed interface GlobalRole {
+                    @Serializable
+                    public sealed interface Player : GlobalRole
+                    @Serializable
+                    public sealed interface Spectator : GlobalRole
+                }
+            }
             
             @Serializable
             public data class GameInitialisation(
@@ -109,14 +122,27 @@ public object ServerApi {
                 override val userIndex: UInt,
                 override val isOnline: Boolean,
                 override val isHost: Boolean,
-                public val globalRole: GlobalRole,
-            ) : PlayerDescription {
+                override val globalRole: GlobalRole,
+            ) : RoomPlayersGathered {
                 @Serializable
-                public sealed interface GlobalRole {
+                public sealed interface GlobalRole : RoomPlayersGathered.GlobalRole {
                     @Serializable
-                    public data object Player : GlobalRole
+                    public data object Player : GlobalRole, RoomPlayersGathered.GlobalRole.Player
                     @Serializable
-                    public data object Spectator : GlobalRole
+                    public data object Spectator : GlobalRole, RoomPlayersGathered.GlobalRole.Spectator
+                }
+            }
+
+            @Serializable
+            public sealed interface GameInitialised : RoomPlayersGathered {
+                override val globalRole: GlobalRole
+
+                @Serializable
+                public sealed interface GlobalRole : RoomPlayersGathered.GlobalRole {
+                    @Serializable
+                    public sealed interface Player : GlobalRole, RoomPlayersGathered.GlobalRole.Player
+                    @Serializable
+                    public sealed interface Spectator : GlobalRole, RoomPlayersGathered.GlobalRole.Spectator
                 }
             }
             
@@ -126,36 +152,36 @@ public object ServerApi {
                 override val userIndex: UInt,
                 override val isOnline: Boolean,
                 override val isHost: Boolean,
-                public val globalRole: GlobalRole,
-            ) : PlayerDescription {
+                override val globalRole: GlobalRole,
+            ) : GameInitialised {
                 @Serializable
-                public sealed interface GlobalRole {
+                public sealed interface GlobalRole : GameInitialised.GlobalRole {
                     @Serializable
                     public data class Player(
                         public val finishedWordsCollection: Boolean,
-                    ) : GlobalRole
+                    ) : GlobalRole, GameInitialised.GlobalRole.Player
                     @Serializable
-                    public data object Spectator : GlobalRole
+                    public data object Spectator : GlobalRole, GameInitialised.GlobalRole.Spectator
                 }
             }
             
             @Serializable
-            public sealed interface Round : PlayerDescription {
-                public val globalRole: GlobalRole
+            public sealed interface Round : GameInitialised {
+                override val globalRole: GlobalRole
                 
                 @Serializable
-                public sealed interface GlobalRole {
+                public sealed interface GlobalRole : GameInitialised.GlobalRole {
                     @Serializable
                     public data class Player(
                         public val roundRole: RoundRole?,
-                    ) : GlobalRole {
+                    ) : GlobalRole, GameInitialised.GlobalRole.Player {
                         @Serializable
                         public enum class RoundRole {
                             Speaker, Listener,
                         }
                     }
                     @Serializable
-                    public data object Spectator : GlobalRole
+                    public data object Spectator : GlobalRole, GameInitialised.GlobalRole.Spectator
                 }
                 
                 @Serializable
@@ -210,14 +236,14 @@ public object ServerApi {
                 override val userIndex: UInt,
                 override val isOnline: Boolean,
                 override val isHost: Boolean,
-                public val globalRole: GlobalRole,
-            ) : PlayerDescription {
+                override val globalRole: GlobalRole,
+            ) : GameInitialised {
                 @Serializable
-                public sealed interface GlobalRole {
+                public sealed interface GlobalRole : GameInitialised.GlobalRole {
                     @Serializable
-                    public data object Player : GlobalRole
+                    public data object Player : GlobalRole, GameInitialised.GlobalRole.Player
                     @Serializable
-                    public data object Spectator : GlobalRole
+                    public data object Spectator : GlobalRole, GameInitialised.GlobalRole.Spectator
                 }
             }
         }
@@ -237,20 +263,46 @@ public object ServerApi {
             ) : SelfRole
 
             @Serializable
+            public sealed interface RoomPlayersGathered : SelfRole {
+                public val globalRole: GlobalRole
+
+                @Serializable
+                public sealed interface GlobalRole {
+                    @Serializable
+                    public sealed interface Player : GlobalRole
+                    @Serializable
+                    public sealed interface Spectator : GlobalRole
+                }
+            }
+
+            @Serializable
             public data class GameInitialisation(
                 override val name: String,
                 override val userIndex: UInt,
                 override val isHost: Boolean,
-                public val globalRole: GlobalRole,
+                override val globalRole: GlobalRole,
                 public val isStartAvailable: Boolean,
                 public val areSettingsChangeable: Boolean,
-            ) : SelfRole {
+            ) : RoomPlayersGathered {
                 @Serializable
-                public sealed interface GlobalRole {
+                public sealed interface GlobalRole : RoomPlayersGathered.GlobalRole {
                     @Serializable
-                    public data object Player : GlobalRole
+                    public data object Player : GlobalRole, RoomPlayersGathered.GlobalRole.Player
                     @Serializable
-                    public data object Spectator : GlobalRole
+                    public data object Spectator : GlobalRole, RoomPlayersGathered.GlobalRole.Spectator
+                }
+            }
+
+            @Serializable
+            public sealed interface GameInitialised : RoomPlayersGathered {
+                override val globalRole: GlobalRole
+
+                @Serializable
+                public sealed interface GlobalRole : RoomPlayersGathered.GlobalRole {
+                    @Serializable
+                    public sealed interface Player : GlobalRole, RoomPlayersGathered.GlobalRole.Player
+                    @Serializable
+                    public sealed interface Spectator : GlobalRole, RoomPlayersGathered.GlobalRole.Spectator
                 }
             }
 
@@ -259,44 +311,69 @@ public object ServerApi {
                 override val name: String,
                 override val userIndex: UInt,
                 override val isHost: Boolean,
-                public val globalRole: GlobalRole,
-            ) : SelfRole {
+                override val globalRole: GlobalRole,
+            ) : GameInitialised {
                 @Serializable
-                public sealed interface GlobalRole {
+                public sealed interface GlobalRole : GameInitialised.GlobalRole {
                     @Serializable
                     public data class Player(
                         public val finishedWordsCollection: Boolean,
-                    ) : GlobalRole
+                    ) : GlobalRole, GameInitialised.GlobalRole.Player
                     @Serializable
-                    public data object Spectator : GlobalRole
+                    public data object Spectator : GlobalRole, GameInitialised.GlobalRole.Spectator
                 }
             }
 
             @Serializable
-            public sealed interface Round : SelfRole {
+            public sealed interface Round : GameInitialised {
+                override val globalRole: GlobalRole
+
+                @Serializable
+                public sealed interface GlobalRole : GameInitialised.GlobalRole {
+                    @Serializable
+                    public sealed interface Player : GlobalRole, GameInitialised.GlobalRole.Player {
+                        public val roundRole: RoundRole?
+                        public val roundsBeforeSpeaking: UInt
+                        public val roundsBeforeListening: UInt
+
+                        @Serializable
+                        public sealed interface RoundRole {
+                            @Serializable
+                            public sealed interface Speaker : RoundRole
+                            @Serializable
+                            public sealed interface Listener : RoundRole
+                        }
+                    }
+                    @Serializable
+                    public sealed interface Spectator : GlobalRole, GameInitialised.GlobalRole.Spectator
+                }
+
                 @Serializable
                 public data class Waiting(
                     override val name: String,
                     override val userIndex: UInt,
                     override val isHost: Boolean,
-                    public val globalRole: GlobalRole,
+                    override val globalRole: GlobalRole,
                     public val isGameFinishable: Boolean,
                 ) : Round {
                     @Serializable
-                    public sealed interface GlobalRole {
+                    public sealed interface GlobalRole : Round.GlobalRole {
                         @Serializable
                         public data class Player(
-                            public val roundRole: RoundRole?,
-                            public val roundsBeforeSpeaking: UInt,
-                            public val roundsBeforeListening: UInt,
-                        ) : GlobalRole {
+                            override val roundRole: RoundRole?,
+                            override val roundsBeforeSpeaking: UInt,
+                            override val roundsBeforeListening: UInt,
+                        ) : GlobalRole, Round.GlobalRole.Player {
                             @Serializable
-                            public enum class RoundRole {
-                                Speaker, Listener,
+                            public sealed interface RoundRole : Round.GlobalRole.Player.RoundRole {
+                                @Serializable
+                                public data object Speaker : RoundRole, Round.GlobalRole.Player.RoundRole.Speaker
+                                @Serializable
+                                public data object Listener : RoundRole, Round.GlobalRole.Player.RoundRole.Listener
                             }
                         }
                         @Serializable
-                        public data object Spectator : GlobalRole
+                        public data object Spectator : GlobalRole, Round.GlobalRole.Spectator
                     }
                 }
 
@@ -305,23 +382,26 @@ public object ServerApi {
                     override val name: String,
                     override val userIndex: UInt,
                     override val isHost: Boolean,
-                    public val globalRole: GlobalRole,
+                    override val globalRole: GlobalRole,
                 ) : Round {
                     @Serializable
-                    public sealed interface GlobalRole {
+                    public sealed interface GlobalRole : Round.GlobalRole {
                         @Serializable
                         public data class Player(
-                            public val roundRole: RoundRole?,
-                            public val roundsBeforeSpeaking: UInt,
-                            public val roundsBeforeListening: UInt,
-                        ) : GlobalRole {
+                            override val roundRole: RoundRole?,
+                            override val roundsBeforeSpeaking: UInt,
+                            override val roundsBeforeListening: UInt,
+                        ) : GlobalRole, Round.GlobalRole.Player {
                             @Serializable
-                            public enum class RoundRole {
-                                Speaker, Listener,
+                            public sealed interface RoundRole : Round.GlobalRole.Player.RoundRole {
+                                @Serializable
+                                public data object Speaker : RoundRole, Round.GlobalRole.Player.RoundRole.Speaker
+                                @Serializable
+                                public data object Listener : RoundRole, Round.GlobalRole.Player.RoundRole.Listener
                             }
                         }
                         @Serializable
-                        public data object Spectator : GlobalRole
+                        public data object Spectator : GlobalRole, Round.GlobalRole.Spectator
                     }
                 }
 
@@ -330,26 +410,26 @@ public object ServerApi {
                     override val name: String,
                     override val userIndex: UInt,
                     override val isHost: Boolean,
-                    public val globalRole: GlobalRole,
+                    override val globalRole: GlobalRole,
                 ) : Round {
                     @Serializable
-                    public sealed interface GlobalRole {
+                    public sealed interface GlobalRole : Round.GlobalRole {
                         @Serializable
                         public data class Player(
-                            public val roundRole: RoundRole?,
-                            public val roundsBeforeSpeaking: UInt,
-                            public val roundsBeforeListening: UInt,
-                        ) : GlobalRole {
+                            override val roundRole: RoundRole?,
+                            override val roundsBeforeSpeaking: UInt,
+                            override val roundsBeforeListening: UInt,
+                        ) : GlobalRole, Round.GlobalRole.Player {
                             @Serializable
-                            public sealed interface RoundRole {
+                            public sealed interface RoundRole : Round.GlobalRole.Player.RoundRole {
                                 @Serializable
-                                public data class Speaker(val currentWord: String) : RoundRole
+                                public data class Speaker(val currentWord: String) : RoundRole, Round.GlobalRole.Player.RoundRole.Speaker
                                 @Serializable
-                                public data object Listener : RoundRole
+                                public data object Listener : RoundRole, Round.GlobalRole.Player.RoundRole.Listener
                             }
                         }
                         @Serializable
-                        public data object Spectator : GlobalRole
+                        public data object Spectator : GlobalRole, Round.GlobalRole.Spectator
                     }
                 }
 
@@ -358,26 +438,26 @@ public object ServerApi {
                     override val name: String,
                     override val userIndex: UInt,
                     override val isHost: Boolean,
-                    public val globalRole: GlobalRole,
+                    override val globalRole: GlobalRole,
                 ) : Round {
                     @Serializable
-                    public sealed interface GlobalRole {
+                    public sealed interface GlobalRole : Round.GlobalRole {
                         @Serializable
                         public data class Player(
-                            public val roundRole: RoundRole?,
-                            public val roundsBeforeSpeaking: UInt,
-                            public val roundsBeforeListening: UInt,
-                        ) : GlobalRole {
+                            override val roundRole: RoundRole?,
+                            override val roundsBeforeSpeaking: UInt,
+                            override val roundsBeforeListening: UInt,
+                        ) : GlobalRole, Round.GlobalRole.Player {
                             @Serializable
-                            public sealed interface RoundRole {
+                            public sealed interface RoundRole : Round.GlobalRole.Player.RoundRole {
                                 @Serializable
-                                public data class Speaker(val currentWord: String) : RoundRole
+                                public data class Speaker(val currentWord: String) : RoundRole, Round.GlobalRole.Player.RoundRole.Speaker
                                 @Serializable
-                                public data object Listener : RoundRole
+                                public data object Listener : RoundRole, Round.GlobalRole.Player.RoundRole.Listener
                             }
                         }
                         @Serializable
-                        public data object Spectator : GlobalRole
+                        public data object Spectator : GlobalRole, Round.GlobalRole.Spectator
                     }
                 }
 
@@ -386,28 +466,28 @@ public object ServerApi {
                     override val name: String,
                     override val userIndex: UInt,
                     override val isHost: Boolean,
-                    public val globalRole: GlobalRole,
+                    override val globalRole: GlobalRole,
                 ) : Round {
                     @Serializable
-                    public sealed interface GlobalRole {
+                    public sealed interface GlobalRole : Round.GlobalRole {
                         @Serializable
                         public data class Player(
-                            public val roundRole: RoundRole?,
-                            public val roundsBeforeSpeaking: UInt,
-                            public val roundsBeforeListening: UInt,
-                        ) : GlobalRole {
+                            override val roundRole: RoundRole?,
+                            override val roundsBeforeSpeaking: UInt,
+                            override val roundsBeforeListening: UInt,
+                        ) : GlobalRole, Round.GlobalRole.Player {
                             @Serializable
-                            public sealed interface RoundRole {
+                            public sealed interface RoundRole : Round.GlobalRole.Player.RoundRole {
                                 @Serializable
                                 public data class Speaker(
-                                    public val wordsToEdit: KoneList<GameStateMachine.WordExplanation>,
-                                ) : RoundRole
+                                    val wordsToEdit: KoneList<GameStateMachine.WordExplanation>,
+                                ) : RoundRole, Round.GlobalRole.Player.RoundRole.Speaker
                                 @Serializable
-                                public data object Listener : RoundRole
+                                public data object Listener : RoundRole, Round.GlobalRole.Player.RoundRole.Listener
                             }
                         }
                         @Serializable
-                        public data object Spectator : GlobalRole
+                        public data object Spectator : GlobalRole, Round.GlobalRole.Spectator
                     }
                 }
             }
@@ -417,14 +497,14 @@ public object ServerApi {
                 override val name: String,
                 override val userIndex: UInt,
                 override val isHost: Boolean,
-                public val globalRole: GlobalRole,
-            ) : SelfRole {
+                override val globalRole: GlobalRole,
+            ) : GameInitialised {
                 @Serializable
-                public sealed interface GlobalRole {
+                public sealed interface GlobalRole : GameInitialised.GlobalRole {
                     @Serializable
-                    public data object Player: GlobalRole
+                    public data object Player: GlobalRole, GameInitialised.GlobalRole.Player
                     @Serializable
-                    public data object Spectator : GlobalRole
+                    public data object Spectator : GlobalRole, GameInitialised.GlobalRole.Spectator
                 }
             }
         }
@@ -443,29 +523,41 @@ public object ServerApi {
             ) : State
 
             @Serializable
+            public sealed interface RoomPlayersGathered : State {
+                override val playersList: KoneList<PlayerDescription.RoomPlayersGathered>
+                public val extraSettings: ExtraSettings
+            }
+
+            @Serializable
             public data class GameInitialisation(
                 override val roomName: String,
                 override val selfRole: SelfRole.GameInitialisation,
                 override val playersList: KoneList<PlayerDescription.GameInitialisation>,
                 public val settingsBuilder: Settings.Builder,
-                public val extraSettings: ExtraSettings,
-            ) : State
+                override val extraSettings: ExtraSettings,
+            ) : RoomPlayersGathered
+
+            @Serializable
+            public sealed interface GameInitialised : RoomPlayersGathered {
+                override val playersList: KoneList<PlayerDescription.GameInitialised>
+                public val settings: Settings
+            }
 
             @Serializable
             public data class PlayersWordsCollection(
                 override val roomName: String,
                 override val selfRole: SelfRole.PlayersWordsCollection,
                 override val playersList: KoneList<PlayerDescription.PlayersWordsCollection>,
-                public val settings: Settings,
-                public val extraSettings: ExtraSettings,
-            ) : State
+                override val settings: Settings,
+                override val extraSettings: ExtraSettings,
+            ) : GameInitialised
 
             @Serializable
-            public sealed interface Round : State {
+            public sealed interface Round : GameInitialised {
                 override val selfRole: SelfRole.Round
                 override val playersList: KoneList<PlayerDescription.Round>
-                public val settings: Settings
-                public val extraSettings: ExtraSettings
+                override val settings: Settings
+                override val extraSettings: ExtraSettings
                 public val initialWordsNumber: UInt
                 public val roundNumber: UInt
                 public val cycleNumber: UInt
@@ -589,11 +681,11 @@ public object ServerApi {
                 override val roomName: String,
                 override val selfRole: SelfRole.GameResults,
                 override val playersList: KoneList<PlayerDescription.GameResults>,
-                public val settings: Settings,
-                public val extraSettings: ExtraSettings,
+                override val settings: Settings,
+                override val extraSettings: ExtraSettings,
                 public val wordsStatistic: KoneList<GameStateMachine.WordStatistic.AndWord>,
                 public val leaderboard: Leaderboard,
-            ) : State
+            ) : GameInitialised
         }
         
         @Serializable

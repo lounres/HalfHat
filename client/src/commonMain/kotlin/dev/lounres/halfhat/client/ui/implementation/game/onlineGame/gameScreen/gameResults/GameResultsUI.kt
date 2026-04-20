@@ -247,7 +247,7 @@ public fun GameResultsUI(
                                             ) {
                                                 Icon(
                                                     imageVector = when (player.globalRole) {
-                                                        is ServerApi.OnlineGame.PlayerDescription.GameResults.GlobalRole.Player -> error(TODO())
+                                                        is ServerApi.OnlineGame.PlayerDescription.GameResults.GlobalRole.Player -> error("Reached unreachable code.")
                                                         is ServerApi.OnlineGame.PlayerDescription.GameResults.GlobalRole.Spectator -> HalfHatIcon.OnlineGameSpectatorIcon
                                                     },
                                                     modifier = Modifier.size(24.dp),

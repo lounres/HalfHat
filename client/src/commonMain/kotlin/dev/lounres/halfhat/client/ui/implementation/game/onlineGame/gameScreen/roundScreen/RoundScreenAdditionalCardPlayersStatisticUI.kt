@@ -225,7 +225,7 @@ fun RoundScreenAdditionalCardPlayersStatisticUI(
                     ) {
                         Icon(
                             imageVector = when (player.globalRole) {
-                                is ServerApi.OnlineGame.PlayerDescription.Round.GlobalRole.Player -> error(TODO())
+                                is ServerApi.OnlineGame.PlayerDescription.Round.GlobalRole.Player -> error("Reached unreachable code.")
                                 is ServerApi.OnlineGame.PlayerDescription.Round.GlobalRole.Spectator -> HalfHatIcon.OnlineGameSpectatorIcon
                             },
                             modifier = Modifier.size(24.dp),

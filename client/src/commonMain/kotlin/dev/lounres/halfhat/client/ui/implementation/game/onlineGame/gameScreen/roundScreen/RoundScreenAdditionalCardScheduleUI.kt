@@ -144,82 +144,20 @@ fun RoundScreenAdditionalCardScheduleUI(
                 }
             }
         }
-        when (val selfRole = gameState.selfRole) { // TODO: Deduplicate the code
-            is ServerApi.OnlineGame.SelfRole.Round.Waiting -> when (val globalRole = selfRole.globalRole) {
-                is ServerApi.OnlineGame.SelfRole.Round.Waiting.GlobalRole.Player -> {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "You will be speaking in ${globalRole.roundsBeforeSpeaking} rounds",
-                        fontSize = 20.sp,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "You will be listening in ${globalRole.roundsBeforeListening} rounds",
-                        fontSize = 20.sp,
-                    )
-                }
-                ServerApi.OnlineGame.SelfRole.Round.Waiting.GlobalRole.Spectator -> {}
+        when (val globalRole = gameState.selfRole.globalRole) {
+            is ServerApi.OnlineGame.SelfRole.Round.GlobalRole.Player -> {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "You will be speaking in ${globalRole.roundsBeforeSpeaking} rounds",
+                    fontSize = 20.sp,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "You will be listening in ${globalRole.roundsBeforeListening} rounds",
+                    fontSize = 20.sp,
+                )
             }
-            is ServerApi.OnlineGame.SelfRole.Round.Preparation -> when (val globalRole = selfRole.globalRole) {
-                is ServerApi.OnlineGame.SelfRole.Round.Preparation.GlobalRole.Player -> {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "You will be speaking in ${globalRole.roundsBeforeSpeaking} rounds",
-                        fontSize = 20.sp,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "You will be listening in ${globalRole.roundsBeforeListening} rounds",
-                        fontSize = 20.sp,
-                    )
-                }
-                ServerApi.OnlineGame.SelfRole.Round.Preparation.GlobalRole.Spectator -> {}
-            }
-            is ServerApi.OnlineGame.SelfRole.Round.Explanation -> when (val globalRole = selfRole.globalRole) {
-                is ServerApi.OnlineGame.SelfRole.Round.Explanation.GlobalRole.Player -> {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "You will be speaking in ${globalRole.roundsBeforeSpeaking} rounds",
-                        fontSize = 20.sp,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "You will be listening in ${globalRole.roundsBeforeListening} rounds",
-                        fontSize = 20.sp,
-                    )
-                }
-                ServerApi.OnlineGame.SelfRole.Round.Explanation.GlobalRole.Spectator -> {}
-            }
-            is ServerApi.OnlineGame.SelfRole.Round.LastGuess -> when (val globalRole = selfRole.globalRole) {
-                is ServerApi.OnlineGame.SelfRole.Round.LastGuess.GlobalRole.Player -> {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "You will be speaking in ${globalRole.roundsBeforeSpeaking} rounds",
-                        fontSize = 20.sp,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "You will be listening in ${globalRole.roundsBeforeListening} rounds",
-                        fontSize = 20.sp,
-                    )
-                }
-                ServerApi.OnlineGame.SelfRole.Round.LastGuess.GlobalRole.Spectator -> {}
-            }
-            is ServerApi.OnlineGame.SelfRole.Round.Editing -> when (val globalRole = selfRole.globalRole) {
-                is ServerApi.OnlineGame.SelfRole.Round.Editing.GlobalRole.Player -> {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "You will be speaking in ${globalRole.roundsBeforeSpeaking} rounds",
-                        fontSize = 20.sp,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "You will be listening in ${globalRole.roundsBeforeListening} rounds",
-                        fontSize = 20.sp,
-                    )
-                }
-                ServerApi.OnlineGame.SelfRole.Round.Editing.GlobalRole.Spectator -> {}
-            }
+            is ServerApi.OnlineGame.SelfRole.GameInitialised.GlobalRole.Spectator -> {}
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
