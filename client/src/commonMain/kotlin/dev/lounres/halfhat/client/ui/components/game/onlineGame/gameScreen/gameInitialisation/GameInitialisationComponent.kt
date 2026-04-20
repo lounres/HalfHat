@@ -16,6 +16,8 @@ public interface GameInitialisationComponent {
     public val gameState: StateFlow<ServerApi.OnlineGame.State.GameInitialisation>
     
     public val onStartGame: () -> Unit
+
+    public val onUpdateRoles: (UInt, ServerApi.OnlineGame.PlayerDescription.GameInitialisation.GlobalRole) -> Unit
     
     public val preparationTimeSeconds: MutableStateFlow<UInt?>
     public val explanationTimeSeconds: MutableStateFlow<UInt?>

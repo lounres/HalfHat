@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -16,6 +17,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -56,6 +58,8 @@ import dev.lounres.halfhat.client.ui.icons.HalfHatIcon
 import dev.lounres.halfhat.client.ui.icons.OnlineGameCopyKeyButton
 import dev.lounres.halfhat.client.ui.icons.OnlineGameCopyLinkButton
 import dev.lounres.halfhat.client.ui.icons.OnlineGameExitRoomButton
+import dev.lounres.halfhat.client.ui.icons.OnlineGameGameInitialisationPlayerMenuClose
+import dev.lounres.halfhat.client.ui.icons.OnlineGameGameInitialisationPlayerMenuOpen
 import dev.lounres.halfhat.client.ui.icons.OnlineGameHostMarkIcon
 import dev.lounres.halfhat.client.ui.icons.OnlineGamePlayerIcon
 import dev.lounres.halfhat.client.ui.icons.OnlineGameSettingsButton
@@ -126,34 +130,156 @@ fun GameInitialisationRoomCardUI(
             for ((val index, val player = value) in playersList.withIndex()) {
                 if (index != 0u) Spacer(modifier = Modifier.height(8.dp))
                 Surface(
-                    shape = CircleShape,
+                    shape = RoundedCornerShape(8.dp),
                     color =
                         if (index == gameState.selfRole.userIndex) MaterialTheme.colorScheme.tertiaryContainer
                         else MaterialTheme.colorScheme.surface,
                 ) {
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth().padding(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        if (player.isHost)
+                        var descriptionIsOpen by remember { mutableStateOf(false) }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (player.isHost)
+                                Icon(
+                                    imageVector = HalfHatIcon.OnlineGameHostMarkIcon,
+                                    modifier = Modifier.size(24.dp),
+                                    contentDescription = null,
+                                )
+                            else
+                                Spacer(Modifier.width(24.dp))
+                            Spacer(Modifier.width(4.dp))
                             Icon(
-                                imageVector = HalfHatIcon.OnlineGameHostMarkIcon,
+                                imageVector = when (player.globalRole) {
+                                    is ServerApi.OnlineGame.PlayerDescription.GameInitialisation.GlobalRole.Player -> HalfHatIcon.OnlineGamePlayerIcon
+                                    is ServerApi.OnlineGame.PlayerDescription.GameInitialisation.GlobalRole.Spectator -> HalfHatIcon.OnlineGameSpectatorIcon
+                                },
                                 modifier = Modifier.size(24.dp),
                                 contentDescription = null,
                             )
-                        else
-                            Spacer(Modifier.width(24.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Icon(
-                            imageVector = when (player.globalRole) {
-                                is ServerApi.OnlineGame.PlayerDescription.GameInitialisation.GlobalRole.Player -> HalfHatIcon.OnlineGamePlayerIcon
-                                is ServerApi.OnlineGame.PlayerDescription.GameInitialisation.GlobalRole.Spectator -> HalfHatIcon.OnlineGameSpectatorIcon
-                            },
-                            modifier = Modifier.size(24.dp),
-                            contentDescription = null,
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(text = player.name)
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(text = player.name)
+                            Spacer(modifier = Modifier.weight(1f))
+                            IconButton(
+                                onClick = { descriptionIsOpen = !descriptionIsOpen },
+                            ) {
+                                Icon(
+                                    imageVector =
+                                        if (descriptionIsOpen) HalfHatIcon.OnlineGameGameInitialisationPlayerMenuOpen
+                                        else HalfHatIcon.OnlineGameGameInitialisationPlayerMenuClose,
+                                    modifier = Modifier.size(24.dp),
+                                    contentDescription = null,
+                                )
+                            }
+                        }
+                        if (descriptionIsOpen) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            HorizontalDivider(
+                                modifier = Modifier.fillMaxWidth(),
+                                color = MaterialTheme.colorScheme.outline,
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            val areSettingsChangeable = gameState.selfRole.areSettingsChangeable
+                            var roleSelectionIsExpanded by remember { mutableStateOf(false) }
+                            ExposedDropdownMenuBox(
+                                modifier = Modifier.fillMaxWidth(),
+                                expanded = false,
+                                onExpandedChange = { roleSelectionIsExpanded = it },
+                            ) {
+                                OutlinedTextField(
+                                    modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, areSettingsChangeable),
+                                    enabled = areSettingsChangeable,
+                                    value = when (player.globalRole) {
+                                        is ServerApi.OnlineGame.PlayerDescription.GameInitialisation.GlobalRole.Player -> "Player"
+                                        is ServerApi.OnlineGame.PlayerDescription.GameInitialisation.GlobalRole.Spectator -> "Spectator"
+                                    },
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    singleLine = true,
+                                    label = {
+                                        Text(
+                                            text = "Role",
+                                        )
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = when (player.globalRole) {
+                                                is ServerApi.OnlineGame.PlayerDescription.GameInitialisation.GlobalRole.Player -> HalfHatIcon.OnlineGamePlayerIcon
+                                                is ServerApi.OnlineGame.PlayerDescription.GameInitialisation.GlobalRole.Spectator -> HalfHatIcon.OnlineGameSpectatorIcon
+                                            },
+                                            modifier = Modifier.size(24.dp),
+                                            contentDescription = null,
+                                        )
+                                    },
+                                    trailingIcon = {
+                                        Icon(
+                                            imageVector =
+                                                if (roleSelectionIsExpanded) HalfHatIcon.OnlineGameGameInitialisationPlayerMenuOpen
+                                                else HalfHatIcon.OnlineGameGameInitialisationPlayerMenuClose,
+                                            modifier = Modifier.size(24.dp),
+                                            contentDescription = null,
+                                        )
+                                    },
+                                )
+
+                                ExposedDropdownMenu(
+                                    expanded = roleSelectionIsExpanded,
+                                    onDismissRequest = { roleSelectionIsExpanded = false },
+                                ) {
+                                    val itemColors = MenuDefaults.selectableItemColors()
+                                    DropdownMenuItem(
+                                        selected = player.globalRole is ServerApi.OnlineGame.PlayerDescription.GameInitialisation.GlobalRole.Player,
+                                        text = {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                            ) {
+                                                Icon(
+                                                    imageVector = HalfHatIcon.OnlineGamePlayerIcon,
+                                                    modifier = Modifier.size(24.dp),
+                                                    contentDescription = null,
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(text = "Player", style = MaterialTheme.typography.bodyLarge)
+                                            }
+                                        },
+                                        onClick = {
+                                            component.onUpdateRoles(index, ServerApi.OnlineGame.PlayerDescription.GameInitialisation.GlobalRole.Player)
+                                            roleSelectionIsExpanded = false
+                                        },
+                                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                        shapes = MenuDefaults.itemShapes(),
+                                        colors = itemColors,
+                                    )
+                                    DropdownMenuItem(
+                                        selected = player.globalRole is ServerApi.OnlineGame.PlayerDescription.GameInitialisation.GlobalRole.Spectator,
+                                        text = {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                            ) {
+                                                Icon(
+                                                    imageVector = HalfHatIcon.OnlineGameSpectatorIcon,
+                                                    modifier = Modifier.size(24.dp),
+                                                    contentDescription = null,
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(text = "Spectator", style = MaterialTheme.typography.bodyLarge)
+                                            }
+                                        },
+                                        onClick = {
+                                            component.onUpdateRoles(index, ServerApi.OnlineGame.PlayerDescription.GameInitialisation.GlobalRole.Spectator)
+                                            roleSelectionIsExpanded = false
+                                        },
+                                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                        shapes = MenuDefaults.itemShapes(),
+                                        colors = itemColors,
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
