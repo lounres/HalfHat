@@ -292,10 +292,9 @@ class Connection(
                                 isHost = state.selfRole.isHost,
                                 isRoomFixable = state.selfRole.isRoomFixable,
                             ),
-                            playersList = state.playersList.mapIndexed { index, player ->
+                            playersList = state.playersList.map { player ->
                                 ServerApi.OnlineGame.PlayerDescription.RoomPlayersGathering(
                                     name = player.metadata.name,
-                                    userIndex = index,
                                     isOnline = player.isOnline,
                                     isHost = player.isHost,
                                 )
@@ -315,10 +314,9 @@ class Connection(
                                 isStartAvailable = state.selfRole.isStartAvailable,
                                 areSettingsChangeable = state.selfRole.areSettingsChangeable,
                             ),
-                            playersList = state.playersList.mapIndexed { index, player ->
+                            playersList = state.playersList.map { player ->
                                 ServerApi.OnlineGame.PlayerDescription.GameInitialisation(
                                     name = player.metadata.name,
-                                    userIndex = index,
                                     isOnline = player.isOnline,
                                     isHost = player.isHost,
                                     globalRole = when (val globalRole = player.globalRole) {
@@ -342,10 +340,9 @@ class Connection(
                                     Room.Outgoing.SelfRole.PlayersWordsCollection.GlobalRole.Spectator -> ServerApi.OnlineGame.SelfRole.PlayersWordsCollection.GlobalRole.Spectator
                                 },
                             ),
-                            playersList = state.playersList.mapIndexed { index, player ->
+                            playersList = state.playersList.map { player ->
                                 ServerApi.OnlineGame.PlayerDescription.PlayersWordsCollection(
                                     name = player.metadata.name,
-                                    userIndex = index,
                                     isOnline = player.isOnline,
                                     isHost = player.isHost,
                                     globalRole = when (val globalRole = player.globalRole) {
@@ -378,10 +375,9 @@ class Connection(
                                 },
                                 isGameFinishable = state.selfRole.isGameFinishable,
                             ),
-                            playersList = state.playersList.mapIndexed { index, player ->
+                            playersList = state.playersList.map { player ->
                                 ServerApi.OnlineGame.PlayerDescription.Round.Waiting(
                                     name = player.metadata.name,
-                                    userIndex = index,
                                     isOnline = player.isOnline,
                                     isHost = player.isHost,
                                     globalRole = when (val globalRole = player.globalRole) {
@@ -439,10 +435,9 @@ class Connection(
                                     Room.Outgoing.SelfRole.Round.Preparation.GlobalRole.Spectator -> ServerApi.OnlineGame.SelfRole.Round.Preparation.GlobalRole.Spectator
                                 },
                             ),
-                            playersList = state.playersList.mapIndexed { index, player ->
+                            playersList = state.playersList.map { player ->
                                 ServerApi.OnlineGame.PlayerDescription.Round.Preparation(
                                     name = player.metadata.name,
-                                    userIndex = index,
                                     isOnline = player.isOnline,
                                     isHost = player.isHost,
                                     globalRole = when (val globalRole = player.globalRole) {
@@ -499,10 +494,9 @@ class Connection(
                                     Room.Outgoing.SelfRole.Round.Explanation.GlobalRole.Spectator -> ServerApi.OnlineGame.SelfRole.Round.Explanation.GlobalRole.Spectator
                                 },
                             ),
-                            playersList = state.playersList.mapIndexed { index, player ->
+                            playersList = state.playersList.map { player ->
                                 ServerApi.OnlineGame.PlayerDescription.Round.Explanation(
                                     name = player.metadata.name,
-                                    userIndex = index,
                                     isOnline = player.isOnline,
                                     isHost = player.isHost,
                                     globalRole = when (val globalRole = player.globalRole) {
@@ -559,10 +553,9 @@ class Connection(
                                     Room.Outgoing.SelfRole.Round.LastGuess.GlobalRole.Spectator -> ServerApi.OnlineGame.SelfRole.Round.LastGuess.GlobalRole.Spectator
                                 },
                             ),
-                            playersList = state.playersList.mapIndexed { index, player ->
+                            playersList = state.playersList.map { player ->
                                 ServerApi.OnlineGame.PlayerDescription.Round.LastGuess(
                                     name = player.metadata.name,
-                                    userIndex = index,
                                     isOnline = player.isOnline,
                                     isHost = player.isHost,
                                     globalRole = when (val globalRole = player.globalRole) {
@@ -619,10 +612,9 @@ class Connection(
                                     Room.Outgoing.SelfRole.Round.Editing.GlobalRole.Spectator -> ServerApi.OnlineGame.SelfRole.Round.Editing.GlobalRole.Spectator
                                 },
                             ),
-                            playersList = state.playersList.mapIndexed { index, player ->
+                            playersList = state.playersList.map { player ->
                                 ServerApi.OnlineGame.PlayerDescription.Round.Editing(
                                     name = player.metadata.name,
-                                    userIndex = index,
                                     isOnline = player.isOnline,
                                     isHost = player.isHost,
                                     globalRole = when (val globalRole = player.globalRole) {
@@ -670,10 +662,9 @@ class Connection(
                                     Room.Outgoing.SelfRole.GameResults.GlobalRole.Spectator -> ServerApi.OnlineGame.SelfRole.GameResults.GlobalRole.Spectator
                                 },
                             ),
-                            playersList = state.playersList.mapIndexed { index, player ->
+                            playersList = state.playersList.map { player ->
                                 ServerApi.OnlineGame.PlayerDescription.GameResults(
                                     name = player.metadata.name,
-                                    userIndex = index,
                                     isOnline = player.isOnline,
                                     isHost = player.isHost,
                                     globalRole = when (val globalRole = player.globalRole) {

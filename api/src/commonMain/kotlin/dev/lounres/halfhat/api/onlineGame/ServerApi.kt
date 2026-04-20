@@ -91,14 +91,12 @@ public object ServerApi {
         @Serializable
         public sealed interface PlayerDescription {
             public val name: String
-            public val userIndex: UInt
             public val isOnline: Boolean
             public val isHost: Boolean
 
             @Serializable
             public data class RoomPlayersGathering(
                 override val name: String,
-                override val userIndex: UInt,
                 override val isOnline: Boolean,
                 override val isHost: Boolean,
             ) : PlayerDescription
@@ -119,7 +117,6 @@ public object ServerApi {
             @Serializable
             public data class GameInitialisation(
                 override val name: String,
-                override val userIndex: UInt,
                 override val isOnline: Boolean,
                 override val isHost: Boolean,
                 override val globalRole: GlobalRole,
@@ -149,7 +146,6 @@ public object ServerApi {
             @Serializable
             public data class PlayersWordsCollection(
                 override val name: String,
-                override val userIndex: UInt,
                 override val isOnline: Boolean,
                 override val isHost: Boolean,
                 override val globalRole: GlobalRole,
@@ -187,7 +183,6 @@ public object ServerApi {
                 @Serializable
                 public data class Waiting(
                     override val name: String,
-                    override val userIndex: UInt,
                     override val isOnline: Boolean,
                     override val isHost: Boolean,
                     override val globalRole: GlobalRole,
@@ -196,7 +191,6 @@ public object ServerApi {
                 @Serializable
                 public data class Preparation(
                     override val name: String,
-                    override val userIndex: UInt,
                     override val isOnline: Boolean,
                     override val isHost: Boolean,
                     override val globalRole: GlobalRole,
@@ -205,7 +199,6 @@ public object ServerApi {
                 @Serializable
                 public data class Explanation(
                     override val name: String,
-                    override val userIndex: UInt,
                     override val isOnline: Boolean,
                     override val isHost: Boolean,
                     override val globalRole: GlobalRole,
@@ -214,7 +207,6 @@ public object ServerApi {
                 @Serializable
                 public data class LastGuess(
                     override val name: String,
-                    override val userIndex: UInt,
                     override val isOnline: Boolean,
                     override val isHost: Boolean,
                     override val globalRole: GlobalRole,
@@ -223,7 +215,6 @@ public object ServerApi {
                 @Serializable
                 public data class Editing(
                     override val name: String,
-                    override val userIndex: UInt,
                     override val isOnline: Boolean,
                     override val isHost: Boolean,
                     override val globalRole: GlobalRole,
@@ -233,7 +224,6 @@ public object ServerApi {
             @Serializable
             public data class GameResults(
                 override val name: String,
-                override val userIndex: UInt,
                 override val isOnline: Boolean,
                 override val isHost: Boolean,
                 override val globalRole: GlobalRole,

@@ -126,19 +126,27 @@ public class Room<
             }
             
             public suspend fun submitWords(words: KoneSet<String>) {
-                val result = player.room.stateMachine.move { previousState ->
-                    Transition.GameInProgressTransition(
-                        player,
-                        GameStateMachine.Transition.SubmitPlayerWords(
-                            playerIndex = (Equality.defaultFor<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>()) { previousState.playersList.firstIndexOf(player) },
-                            playerWords = words,
+                val result = player.room.stateMachine.moveMaybe { previousState ->
+                    TransitionOrReason.Success(
+                        Transition.GameInProgressTransition(
+                            player,
+                            GameStateMachine.Transition.SubmitPlayerWords(
+                                playerIndex = (Equality.defaultFor<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>()) {
+                                    when (previousState) {
+                                        is State.RoomPlayersGathering -> return@moveMaybe TransitionOrReason.Failure(Outgoing.Error.CannotSubmitPlayerWordsNotDuringPlayersWordsCollection)
+                                        is State.GameInitialization -> return@moveMaybe TransitionOrReason.Failure(Outgoing.Error.CannotSubmitPlayerWordsNotDuringPlayersWordsCollection)
+                                        is State.GameInProgress -> previousState.playersList.firstIndexOf(player)
+                                    }
+                                },
+                                playerWords = words,
+                            )
                         )
                     )
                 }
                 when (result) {
-                    is MovementResult.NoNextState ->
-                        node.element.sendError(result.noNextStateReason)
-                    is MovementResult.Success -> {}
+                    is MovementMaybeResult.NoTransition -> node.element.sendError(result.noTransitionReason)
+                    is MovementMaybeResult.NoNextState -> node.element.sendError(result.noNextStateReason)
+                    is MovementMaybeResult.Success -> {}
                 }
             }
             
@@ -318,7 +326,6 @@ public class Room<
         ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>
     > {
         val roomMetadata: RoomMetadata
-        val playersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>
 
         data class RoomPlayersGathering<
             RoomMetadata,
@@ -330,7 +337,7 @@ public class Room<
             ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>
         >(
             override val roomMetadata: RoomMetadata,
-            override val playersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>,
+            val appearedPlayersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>,
         ) : State<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>
 
         data class GameInitialization<
@@ -343,7 +350,7 @@ public class Room<
             ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>
         >(
             override val roomMetadata: RoomMetadata,
-            override val playersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>,
+            val playersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>,
             val globalRoles: KoneList<GlobalRole>,
             val gameSettingsBuilder: GameSettings.Builder<WordsProviderDescription>,
             val extraSettings: ExtraSettings,
@@ -359,7 +366,7 @@ public class Room<
             ConnectionType: Connection<RoomMetadata, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason>
         >(
             override val roomMetadata: RoomMetadata,
-            override val playersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>,
+            val playersList: KoneList<Player<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>>,
             val globalRoles: KoneList<GlobalRole>,
             val gameSettingsBuilder: GameSettings.Builder<WordsProviderDescription>,
             val extraSettings: ExtraSettings,
@@ -473,20 +480,17 @@ public class Room<
 
         public sealed interface PlayerDescription<out PlayerMetadata> {
             public val metadata: PlayerMetadata
-            public val userIndex: UInt
             public val isOnline: Boolean
             public val isHost: Boolean
 
             public data class RoomPlayersGathering<out PlayerMetadata>(
                 override val metadata: PlayerMetadata,
-                override val userIndex: UInt,
                 override val isOnline: Boolean,
                 override val isHost: Boolean,
             ) : PlayerDescription<PlayerMetadata>
             
             public data class GameInitialisation<out PlayerMetadata>(
                 override val metadata: PlayerMetadata,
-                override val userIndex: UInt,
                 override val isOnline: Boolean,
                 override val isHost: Boolean,
                 public val globalRole: GlobalRole,
@@ -499,7 +503,6 @@ public class Room<
             
             public data class PlayersWordsCollection<out PlayerMetadata>(
                 override val metadata: PlayerMetadata,
-                override val userIndex: UInt,
                 override val isOnline: Boolean,
                 override val isHost: Boolean,
                 public val globalRole: GlobalRole,
@@ -529,7 +532,6 @@ public class Room<
                 
                 public data class Waiting<out PlayerMetadata>(
                     override val metadata: PlayerMetadata,
-                    override val userIndex: UInt,
                     override val isOnline: Boolean,
                     override val isHost: Boolean,
                     override val globalRole: GlobalRole,
@@ -537,7 +539,6 @@ public class Room<
                 
                 public data class Preparation<out PlayerMetadata>(
                     override val metadata: PlayerMetadata,
-                    override val userIndex: UInt,
                     override val isOnline: Boolean,
                     override val isHost: Boolean,
                     override val globalRole: GlobalRole,
@@ -545,7 +546,6 @@ public class Room<
                 
                 public data class Explanation<out PlayerMetadata>(
                     override val metadata: PlayerMetadata,
-                    override val userIndex: UInt,
                     override val isOnline: Boolean,
                     override val isHost: Boolean,
                     override val globalRole: GlobalRole,
@@ -553,7 +553,6 @@ public class Room<
                 
                 public data class LastGuess<out PlayerMetadata>(
                     override val metadata: PlayerMetadata,
-                    override val userIndex: UInt,
                     override val isOnline: Boolean,
                     override val isHost: Boolean,
                     override val globalRole: GlobalRole,
@@ -561,7 +560,6 @@ public class Room<
                 
                 public data class Editing<out PlayerMetadata>(
                     override val metadata: PlayerMetadata,
-                    override val userIndex: UInt,
                     override val isOnline: Boolean,
                     override val isHost: Boolean,
                     override val globalRole: GlobalRole,
@@ -570,7 +568,6 @@ public class Room<
             
             public data class GameResults<out PlayerMetadata>(
                 override val metadata: PlayerMetadata,
-                override val userIndex: UInt,
                 override val isOnline: Boolean,
                 override val isHost: Boolean,
                 public val globalRole: GlobalRole,
@@ -999,7 +996,7 @@ public class Room<
         mutex = Mutex(),
         initialState = State.RoomPlayersGathering(
             roomMetadata = metadata,
-            playersList = initialPlayersList.map { Player(this, it) },
+            appearedPlayersList = initialPlayersList.map { Player(this, it) },
         ),
         checkTransition = checkTransition@ { state, transition ->
             when (transition) {
@@ -1008,8 +1005,8 @@ public class Room<
                         CheckResult.Success(
                             State.RoomPlayersGathering(
                                 roomMetadata = state.roomMetadata,
-                                playersList = KoneList.build {
-                                    addAllFrom(state.playersList)
+                                appearedPlayersList = KoneList.build {
+                                    addAllFrom(state.appearedPlayersList)
                                     +transition.newPlayer
                                 }
                             )
@@ -1037,12 +1034,12 @@ public class Room<
                 is Transition.UpdatePlayersState -> CheckResult.Success(state)
                 is Transition.FixRoom -> when (state) {
                     is State.RoomPlayersGathering -> {
-                        val onlinePlayersIndices = state.playersList.withIndex().filter { it.value.isOnline }.map { it.index }.toKoneUIntArray()
+                        val onlinePlayersIndices = state.appearedPlayersList.withIndex().filter { it.value.isOnline }
                         CheckResult.Success(
                             State.GameInitialization(
                                 roomMetadata = state.roomMetadata,
-                                playersList = onlinePlayersIndices.map { state.playersList[it] },
-                                globalRoles = onlinePlayersIndices.map { initialGlobalRoles.getOrNull(it) ?: GlobalRole.Player },
+                                playersList = onlinePlayersIndices.map { it.value },
+                                globalRoles = onlinePlayersIndices.map { initialGlobalRoles.getOrNull(it.index) ?: GlobalRole.Player },
                                 gameSettingsBuilder = initialSettingsBuilder,
                                 extraSettings = initialExtraSettings,
                             )
@@ -1346,17 +1343,17 @@ public class Room<
     ) { _, _, nextState ->
         when (nextState) {
             is State.RoomPlayersGathering -> {
-                val onlinePlayersList = nextState.playersList.filter { it.isOnline }
+                val onlinePlayersList = nextState.appearedPlayersList.filter { it.isOnline }
                 val hostIndex = 0u
                 val playersList = onlinePlayersList.mapIndexed { index, player ->
                     Outgoing.PlayerDescription.RoomPlayersGathering(
                         metadata = player.metadata,
-                        userIndex = index,
                         isOnline = player.isOnline,
-                        isHost = index == hostIndex,
+                        isHost = index == 0u,
                     )
                 }
-                nextState.playersList.forEachIndexed { index, player ->
+                val isRoomFixable = onlinePlayersList.size >= 2u
+                onlinePlayersList.forEachIndexed { index, player ->
                     player.sendNewState(
                         Outgoing.State.RoomPlayersGathering(
                             roomMetadata = nextState.roomMetadata,
@@ -1364,7 +1361,7 @@ public class Room<
                                 metadata = player.metadata,
                                 userIndex = index,
                                 isHost = index == hostIndex,
-                                isRoomFixable = index == hostIndex,
+                                isRoomFixable = isRoomFixable && index == hostIndex,
                             ),
                             playersList = playersList,
                         )
@@ -1377,7 +1374,6 @@ public class Room<
                 val playersList = nextState.playersList.mapIndexed { index, player ->
                     Outgoing.PlayerDescription.GameInitialisation(
                         metadata = player.metadata,
-                        userIndex = index,
                         isOnline = player.isOnline,
                         isHost = index == hostIndex,
                         globalRole = when (val globalRole = nextState.globalRoles[index]) {
@@ -1416,7 +1412,6 @@ public class Room<
                         nextState.playersList.mapIndexed { index, player ->
                             Outgoing.PlayerDescription.PlayersWordsCollection(
                                 metadata = player.metadata,
-                                userIndex = index,
                                 isOnline = player.isOnline,
                                 isHost = index == hostIndex,
                                 globalRole = when (val globalRole = nextState.globalRoles[index]) {
@@ -1459,13 +1454,12 @@ public class Room<
                     }
                 }
                 is GameStateMachine.State.GameInitialised.Round.RoundWaiting -> {
-                val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
+                    val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
                     val playersList = scope {
                         var playingPlayerIndex = 0u
                         nextState.playersList.mapIndexed { index, player ->
                             Outgoing.PlayerDescription.Round.Waiting(
                                 metadata = player.metadata,
-                                userIndex = index,
                                 isOnline = player.isOnline,
                                 isHost = index == hostIndex,
                                 globalRole = when (val globalRole = nextState.globalRoles[index]) {
@@ -1551,13 +1545,12 @@ public class Room<
                     }
                 }
                 is GameStateMachine.State.GameInitialised.Round.RoundPreparation -> {
-                val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
+                    val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
                     val playersList = scope {
                         var playingPlayerIndex = 0u
                         nextState.playersList.mapIndexed { index, player ->
                             Outgoing.PlayerDescription.Round.Preparation(
                                 metadata = player.metadata,
-                                userIndex = index,
                                 isOnline = player.isOnline,
                                 isHost = index == hostIndex,
                                 globalRole = when (val globalRole = nextState.globalRoles[index]) {
@@ -1641,13 +1634,12 @@ public class Room<
                     }
                 }
                 is GameStateMachine.State.GameInitialised.Round.RoundExplanation -> {
-                val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
+                    val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
                     val playersList = scope {
                         var playingPlayerIndex = 0u
                         nextState.playersList.mapIndexed { index, player ->
                             Outgoing.PlayerDescription.Round.Explanation(
                                 metadata = player.metadata,
-                                userIndex = index,
                                 isOnline = player.isOnline,
                                 isHost = index == hostIndex,
                                 globalRole = when (val globalRole = nextState.globalRoles[index]) {
@@ -1731,13 +1723,12 @@ public class Room<
                     }
                 }
                 is GameStateMachine.State.GameInitialised.Round.RoundLastGuess -> {
-                val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
+                    val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
                     val playersList = scope {
                         var playingPlayerIndex = 0u
                         nextState.playersList.mapIndexed { index, player ->
                             Outgoing.PlayerDescription.Round.LastGuess(
                                 metadata = player.metadata,
-                                userIndex = index,
                                 isOnline = player.isOnline,
                                 isHost = index == hostIndex,
                                 globalRole = when (val globalRole = nextState.globalRoles[index]) {
@@ -1821,13 +1812,12 @@ public class Room<
                     }
                 }
                 is GameStateMachine.State.GameInitialised.Round.RoundEditing -> {
-                val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
+                    val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
                     val playersList = scope {
                         var playingPlayerIndex = 0u
                         nextState.playersList.mapIndexed { index, player ->
                             Outgoing.PlayerDescription.Round.Editing(
                                 metadata = player.metadata,
-                                userIndex = index,
                                 isOnline = player.isOnline,
                                 isHost = index == hostIndex,
                                 globalRole = when (val globalRole = nextState.globalRoles[index]) {
@@ -1910,12 +1900,11 @@ public class Room<
                     }
                 }
                 is GameStateMachine.State.GameInitialised.GameResults -> {
-                val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
+                    val hostIndex = nextState.playersList.firstIndexThat { _, player -> player.isOnline }
                     val playersList = scope {
                         nextState.playersList.mapIndexed { index, player ->
                             Outgoing.PlayerDescription.GameResults(
                                 metadata = player.metadata,
-                                userIndex = index,
                                 isOnline = player.isOnline,
                                 isHost = index == hostIndex,
                                 globalRole = when (val globalRole = nextState.globalRoles[index]) {
@@ -1974,13 +1963,18 @@ public class Room<
     public val description: Description<RoomMetadata, PlayerMetadata>
         get() {
             val state = stateMachine.state
-            val hostIndex = state.playersList.firstIndexThat { _, player -> player.isOnline }
-            val playersList = state.playersList.mapIndexed { index, player ->
+            val playersList = when (state) {
+                is State.RoomPlayersGathering -> state.appearedPlayersList.filter { it.isOnline }
+                is State.GameInitialization -> state.playersList
+                is State.GameInProgress -> state.playersList
+            }
+            val hostIndex = playersList.firstIndexThat { _, player -> player.isOnline }
+            val playersDescriptionsList = playersList.mapIndexed { index, player ->
                 Player.Description(metadata = player.metadata, isOnline = player.isOnline, isHost = index == hostIndex)
             }
             return Description(
                 metadata = metadata,
-                playersList = playersList,
+                playersList = playersDescriptionsList,
                 stateType = when (state) {
                     is State.RoomPlayersGathering -> StateType.RoomPlayersGathering
                     is State.GameInitialization -> StateType.GameInitialisation
@@ -1999,7 +1993,11 @@ public class Room<
     
     public suspend fun attachConnectionToPlayer(connection: ConnectionType, playerID: PlayerID): Player.Attachment<RoomMetadata, PlayerID, PlayerMetadata, WordsProviderID, WordsProviderDescription, NoWordsProviderReason, ConnectionType>? {
         val result = stateMachine.moveMaybeAndCompute { previousState ->
-            val player = previousState.playersList.firstThatOrNull { it.metadata.id == playerID }
+            val player = when (previousState) {
+                is State.RoomPlayersGathering -> previousState.appearedPlayersList
+                is State.GameInitialization -> previousState.playersList
+                is State.GameInProgress -> previousState.playersList
+            }.firstThatOrNull { it.metadata.id == playerID }
 
             if (player == null) {
                 val metadata = initialMetadataFactory(playerID)
